@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, Menu } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
-import { API_URL } from "~/config";
 import { useAuth } from "~/context/authContext";
-import { log } from "console";
+import { Navbar } from "~/components/unloged-navbar";
+import { api } from "~/api/api";
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -14,66 +14,52 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // @ts-ignore
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!API_URL) {
-      setError("Brak konfiguracji API.");
-      return;
-    }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, password }),
+      const response = await api.post("api/auth/login", {
+        name,
+        password,
       });
 
-      const data = await response.json().catch(() => ({}));
-      if (response.ok && response.isSuccess) {
-        const user = data.data;
-        if (data?.token) {
-          localStorage.setItem("token", data.token);
+      const result = response.data;
+
+      if (result.success && result.data?.token) {
+        login(result.data);
+        navigate("/dashboard");
+
+        const userRole = result.data.roles;
+
+        if (userRole.includes("Admin")) {
+          navigate("/admin-dashboard");
+        } else if (userRole.includes("Manager")) {
+          navigate("/manager-dashboard");
+        } else if (userRole.includes("User")) {
+          navigate("/dashboard");
+        } else {
+          setError("Error: Unrecognized user role");
         }
-        login(data);
-      } else {
-        const errorMessage =
-          data?.errors?.length > 0
-            ? data.errors[0]
-            : data?.message || "Nieudane logowanie. Sprobuj ponownie.";
-        setError(errorMessage);
       }
-    } catch {
-      setError("Blad polaczenia z serwerem");
+    } catch (errors: any) {
+      setError(errors[0] || "An unknown login error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#e8e8e8]">
-      <header className="h-20 w-full rounded-b-[10px] bg-[#004a8f] shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
-        <div className="mx-auto flex h-full max-w-[1200px] items-center justify-end px-4 lg:px-8">
-          <button
-            type="button"
-            className="inline-flex size-10 items-center justify-center text-white"
-            aria-label="Open menu"
-          >
-            <Menu className="size-8" strokeWidth={1.8} />
-          </button>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-[1200px] px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
-        <Card className="mx-auto w-full max-w-[680px] rounded-2xl border border-[#d6d9dd] bg-[#ebebeb] py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+    <main className="min-h-screen bg-white">
+      <Navbar />
+      <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
+        <Card className="mx-auto w-full max-w-170 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
           <CardContent className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
             <h1 className="text-center text-[24px] leading-none text-[#004a8f] sm:text-[30px] lg:text-[36px]">
               Logowanie
@@ -101,7 +87,7 @@ export default function Home() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   required
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-[#efefef] px-2 text-[12px] text-[#1f1f1f] 
+                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] 
                   placeholder:text-[#d0d2d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 
                   sm:h-10 sm:text-[14px] lg:h-11"
                 />
@@ -121,7 +107,7 @@ export default function Home() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
-                    className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-[#efefef] px-2 pr-10 
+                    className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 pr-10 
                     text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 
                     focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                   />
@@ -133,9 +119,9 @@ export default function Home() {
                     aria-label={showPassword ? "Ukryj haslo" : "Pokaz haslo"}
                   >
                     {showPassword ? (
-                      <EyeOff className="size-[18px]" strokeWidth={2} />
+                      <EyeOff className="size-4.5" strokeWidth={2} />
                     ) : (
-                      <Eye className="size-[18px]" strokeWidth={2} />
+                      <Eye className="size-4.5" strokeWidth={2} />
                     )}
                   </button>
                 </div>
@@ -163,7 +149,7 @@ export default function Home() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="mt-6 h-[34px] w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white 
+                className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white
                 hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11"
               >
                 {isLoading ? "Logowanie..." : "Zaloguj sie"}

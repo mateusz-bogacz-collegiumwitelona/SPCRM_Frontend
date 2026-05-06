@@ -6,20 +6,39 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const stroredUser = localStorage.getItem("user");
-    if (stroredUser) setUser(JSON.parse(stroredUser));
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error(
+          "Błąd parsowania danych użytkownika z localStorage:",
+          error,
+        );
+        localStorage.removeItem("user");
+      }
+    }
   }, []);
 
-  const login = (user) => {
-    setUser(user);
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", user.token);
+  const login = (userData) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("role", JSON.stringify(userData.roles));
+
+    localStorage.setItem("token", userData.token);
+    localStorage.setItem("userId", userData.userId);
+    localStorage.setItem("email", userData.email);
+    localStorage.setItem("userName", userData.userName);
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("userName");
   };
 
   return (
