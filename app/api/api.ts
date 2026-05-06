@@ -1,17 +1,17 @@
-import axios from "axios";
+import axios from 'axios';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/",
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/',
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
 
   if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
 
   return config;
@@ -31,6 +31,6 @@ api.interceptors.response.use(
       return Promise.reject([data.message]);
     }
 
-    return Promise.reject(["Server error. Please try again later."]);
+    return Promise.reject(['Server error. Please try again later.']);
   },
 );

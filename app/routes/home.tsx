@@ -1,31 +1,31 @@
-import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router";
-import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
-import { useAuth } from "~/context/authContext";
-import { Navbar } from "~/components/unloged-navbar";
-import { api } from "~/api/api";
+import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent } from '~/components/ui/card';
+import { useAuth } from '~/context/authContext';
+import { Navbar } from '~/components/unloged-navbar';
+import { api } from '~/api/api';
+import type ApiError from '~/interfaces/apiError';
 
 export default function Home() {
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // @ts-ignore
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     setIsLoading(true);
 
     try {
-      const response = await api.post("api/auth/login", {
+      const response = await api.post('api/auth/login', {
         name,
         password,
       });
@@ -34,22 +34,22 @@ export default function Home() {
 
       if (result.success && result.data?.token) {
         login(result.data);
-        navigate("/dashboard");
 
         const userRole = result.data.roles;
 
-        if (userRole.includes("Admin")) {
-          navigate("/admin-dashboard");
-        } else if (userRole.includes("Manager")) {
-          navigate("/manager-dashboard");
-        } else if (userRole.includes("User")) {
-          navigate("/dashboard");
+        if (userRole.includes('Admin')) {
+          navigate('/admin-dashboard');
+        } else if (userRole.includes('Manager')) {
+          navigate('/manager-dashboard');
+        } else if (userRole.includes('User')) {
+          navigate('/dashboard');
         } else {
-          setError("Error: Unrecognized user role");
+          setError('Error: Unrecognized user role');
         }
       }
-    } catch (errors: any) {
-      setError(errors[0] || "An unknown login error occurred");
+    } catch (error_: unknown) {
+      const err = error_ as ApiError;
+      setError(err.response?.data?.message || err.message || 'Błąd logowania');
     } finally {
       setIsLoading(false);
     }
@@ -74,10 +74,7 @@ export default function Home() {
               onSubmit={handleLogin}
             >
               <div className="space-y-2">
-                <label
-                  htmlFor="name"
-                  className="block text-[14px] text-[#004a8f] sm:text-[16px]"
-                >
+                <label htmlFor="name" className="block text-[14px] text-[#004a8f] sm:text-[16px]">
                   Nazwa uzytkownika lub Email
                 </label>
                 <input
@@ -103,7 +100,7 @@ export default function Home() {
                 <div className="relative">
                   <input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
@@ -116,7 +113,7 @@ export default function Home() {
                     onClick={() => setShowPassword((previous) => !previous)}
                     className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1 
                     text-[#7f8490] hover:text-[#5c6270] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30"
-                    aria-label={showPassword ? "Ukryj haslo" : "Pokaz haslo"}
+                    aria-label={showPassword ? 'Ukryj haslo' : 'Pokaz haslo'}
                   >
                     {showPassword ? (
                       <EyeOff className="size-4.5" strokeWidth={2} />
@@ -152,7 +149,7 @@ export default function Home() {
                 className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white
                 hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11"
               >
-                {isLoading ? "Logowanie..." : "Zaloguj sie"}
+                {isLoading ? 'Logowanie...' : 'Zaloguj sie'}
               </Button>
             </form>
           </CardContent>
