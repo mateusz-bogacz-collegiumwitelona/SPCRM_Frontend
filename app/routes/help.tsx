@@ -5,6 +5,7 @@ import { Textarea } from '~/components/ui/textarea';
 import { Navbar } from '~/components/unloged-navbar';
 import { api } from '~/api/api';
 import type ApiError from '~/interfaces/apiError';
+import { getErrorMessage } from '~/utils/errorMapper';
 
 export default function Help() {
   const [formData, setFormData] = useState({
@@ -44,7 +45,20 @@ export default function Help() {
       }
     } catch (error_: unknown) {
       const err = error_ as ApiError;
-      setError(err.response?.data?.message || err.message || 'Wystąpił nieznany błąd.');
+      const errorData = err.response?.data;
+
+      if (
+        errorData?.errorCode === 'VALIDATION_ERROR' &&
+        errorData.errors &&
+        errorData.errors.length > 0
+      ) {
+        const validationMessage = errorData.errors.map((code) => getErrorMessage(code)).join(' ');
+        setError(validationMessage);
+      } else if (errorData?.errorCode) {
+        setError(getErrorMessage(errorData.errorCode, errorData.message));
+      } else {
+        setError(err.message || 'Wystąpił nieznany błąd.');
+      }
     } finally {
       setIsLoading(false);
     }

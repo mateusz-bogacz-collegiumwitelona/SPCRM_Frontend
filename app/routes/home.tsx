@@ -7,6 +7,7 @@ import { useAuth } from '~/context/authContext';
 import { Navbar } from '~/components/unloged-navbar';
 import { api } from '~/api/api';
 import type ApiError from '~/interfaces/apiError';
+import { getErrorMessage } from '~/utils/errorMapper';
 
 export default function Home() {
   const [name, setName] = useState('');
@@ -49,7 +50,13 @@ export default function Home() {
       }
     } catch (error_: unknown) {
       const err = error_ as ApiError;
-      setError(err.response?.data?.message || err.message || 'Błąd logowania');
+      const errorData = err.response?.data;
+
+      if (errorData?.errorCode) {
+        setError(getErrorMessage(errorData.errorCode, errorData.message));
+      } else {
+        setError(err.message || 'Wystąpił nieznany błąd.');
+      }
     } finally {
       setIsLoading(false);
     }
