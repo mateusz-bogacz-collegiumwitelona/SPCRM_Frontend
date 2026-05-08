@@ -1,87 +1,58 @@
-# Welcome to React Router!
+# SPCRM (Simply Poor CRM) - Frontend
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Frontendowa część aplikacji CRM (Customer Relationship Management) przeznaczonej dla firmy handlującej wyrobami stalowymi. Projekt realizowany w ramach pracy inżynierskiej.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Technologie i narzędzia
 
-## Features
+Projekt wykorzystuje nowoczesny ekosystem frontendowy, nastawiony na wydajność, bezpieczeństwo typów i świetne Developer Experience (DX):
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- **React 19 & React Router 7** – Główne biblioteki do budowy interfejsu i zarządzania routingiem (wsparcie dla SSR i Data Loadingu)
+- **Vite** – Błyskawiczne narzędzie budujące (Bundler) i serwer deweloperski z Hot Module Replacement (HMR)
+- **TypeScript** – Statyczne typowanie zapewniające bezpieczeństwo kodu
+- **Tailwind CSS v4** – Utility-first CSS framework do szybkiego stylowania aplikacji
+- **Shadcn UI & Radix UI** – Dostępne, bezgłowe (headless) i w pełni modyfikowalne komponenty interfejsu użytkownika
+- **Axios** – Klient HTTP do komunikacji z API backendu
+- **Lucide React** – Nowoczesna biblioteka ikon
+- **ESLint** – Statyczna analiza kodu wyłapująca błędy logiczne i antywzorce (skonfigurowana pod Reacta i TypeScripta).
+- **Prettier** – Automatyczny formater dbający o absolutną spójność wizualną bazy kodowej.
 
-## Getting Started
+## Wymagania wstępne
 
-### Installation
+Aby uruchomić projekt lokalnie, upewnij się, że masz zainstalowane:
 
-Install the dependencies:
+- [Node.js](https://nodejs.org/) (zalecana wersja LTS, np. v20 lub v22)
+- Menedżer pakietów `npm` (zainstalowany domyślnie z Node.js)
 
-```bash
-npm install
-```
+## Uruchomienie projektu lokalnie
 
-### Development
+1. **Instalacja zależności**
+   Pobierz wszystkie wymagane pakiety definiowane w `package.json`:
 
-Start the development server with HMR:
+   ```
+   npm install
+   ```
 
-```bash
-npm run dev
-```
+2. Konfiguracja zmiennych środowiskowych
+   Skopiuj zawartość pliku .env.example i stwórz nowy plik .env. Upewnij się, że adres API jest poprawny (domyślnie wskazuje na port 8080, gdzie powinien działać lokalny backend):
 
-Your application will be available at `http://localhost:5173`.
+   ```
+   cp .env.example .env
+   ```
 
-## Building for Production
+   Twój plik .env powinien zawierać m.in.: VITE_API_URL=http://localhost:8080/api
 
-Create a production build:
+3. Uruchomienie serwera deweloperskiego
+   Wystartuj aplikację w trybie deweloperskim (z obsługą HMR):
 
-```bash
-npm run build
-```
+   ```
+   npm run dev
+   ```
 
-## Deployment
+   Aplikacja będzie dostępna w przeglądarce pod adresem: http://localhost:5173
 
-### Docker Deployment
+### Przydatne komendy
 
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+| Komenda                  | Opis                                                                     |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `npx prettier --write .` | Automatyczne formatowanie stylu i układu kodu we wszystkich plikach.     |
+| `npx eslint . --fix`     | Wykrywanie błędów logicznych i automatyczna naprawa naruszeń zasad kodu. |
