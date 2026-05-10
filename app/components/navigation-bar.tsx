@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, MapPinned, CirclePlus, Handshake, Building2 } from 'lucide-react';
+import { Building2, Calendar, CirclePlus, Handshake, MapPinned } from 'lucide-react';
 import { Link } from 'react-router';
 
 export type NavItem = {
@@ -22,7 +22,7 @@ export const defaultNavItems: NavItem[] = [
     id: 'map',
     label: 'Locations',
     icon: MapPinned,
-    href: '#',
+    href: '/map',
     ariaLabel: 'Locations',
   },
   {
@@ -49,45 +49,47 @@ export const defaultNavItems: NavItem[] = [
 ];
 
 interface NavigationBarProps {
-  items?: NavItem[];
+  desktopClassName?: string;
+  spacerClassName?: string;
+  desktopWidthClassName?: string;
+  spacerWidthClassName?: string;
 }
 
-export function NavigationBar({ items = defaultNavItems }: NavigationBarProps) {
+export function NavigationBar({
+  desktopClassName = '',
+  spacerClassName = '',
+  desktopWidthClassName = 'w-20',
+  spacerWidthClassName = 'md:w-20',
+}: Readonly<NavigationBarProps>) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   return (
     <>
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-40 bg-[#004a8f] border-t border-white/10 md:hidden"
-        role="navigation"
-        aria-label="Mobile navigation"
-      >
-        <div className="flex items-center justify-around h-[77px] px-2">
-          {items.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.id}
-                to={item.href}
-                className="relative flex items-center justify-center text-white transition-all duration-200 rounded-lg p-2.5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#004a8f]"
-                aria-label={item.ariaLabel || item.label}
-                title={item.label}
-                onMouseEnter={() => setHoveredItem(item.id)}
-                onMouseLeave={() => setHoveredItem(null)}
-              >
-                <Icon className="w-6 h-6" />
-              </Link>
-            );
-          })}
-        </div>
+      <nav className="fixed bottom-0 left-0 right-0 md:hidden flex items-center justify-around h-19.25 px-2 bg-[#004a8f] z-40">
+        {defaultNavItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.id}
+              to={item.href}
+              className="relative flex items-center justify-center text-white transition-all duration-200 rounded-lg p-2.5 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#004a8f]"
+              aria-label={item.ariaLabel || item.label}
+              title={item.label}
+              onMouseEnter={() => setHoveredItem(item.id)}
+              onMouseLeave={() => setHoveredItem(null)}
+            >
+              <Icon className="w-6 h-6" />
+            </Link>
+          );
+        })}
       </nav>
 
       <aside
-        className="hidden md:flex fixed left-0 top-0 bottom-0 w-auto bg-[#004a8f] border-r border-white/10 flex-col items-center justify-start pt-6 px-2.5 gap-2 z-40"
+        className={`hidden md:flex fixed left-0 top-0 bottom-0 ${desktopWidthClassName} bg-[#004a8f] flex-col items-center justify-start pt-6 px-2.5 gap-2 z-40 ${desktopClassName}`}
         role="navigation"
         aria-label="Desktop navigation"
       >
-        {items.map((item) => {
+        {defaultNavItems.map((item) => {
           const Icon = item.icon;
           const isHovered = hoveredItem === item.id;
 
@@ -106,7 +108,7 @@ export function NavigationBar({ items = defaultNavItems }: NavigationBarProps) {
                   isHovered ? 'bg-white/10 px-3 py-2.5 w-auto shadow-md' : 'p-2.5 w-auto'
                 }`}
               >
-                <Icon className="w-6 h-6 flex-shrink-0" />
+                <Icon className="w-6 h-6 shrink-0" />
                 {isHovered && (
                   <span className="text-white text-sm font-medium whitespace-nowrap opacity-100 transition-opacity duration-150">
                     {item.label}
@@ -118,7 +120,7 @@ export function NavigationBar({ items = defaultNavItems }: NavigationBarProps) {
         })}
       </aside>
 
-      <div className="hidden md:block md:w-[80px] flex-shrink-0" />
+      <div className={`hidden md:block ${spacerWidthClassName} shrink-0 ${spacerClassName}`} />
     </>
   );
 }

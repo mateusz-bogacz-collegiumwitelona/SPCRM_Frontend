@@ -2,11 +2,10 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 
 import { useNavigate } from 'react-router';
-import { useAuth } from '~/context/authContext';
+import { useAuth } from '~/context/auth-context';
 import { NavigationBar } from '~/components/navigation-bar';
+
 export default function Dashboard() {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
   const { logout } = useAuth();
   const navigate = useNavigate();
 

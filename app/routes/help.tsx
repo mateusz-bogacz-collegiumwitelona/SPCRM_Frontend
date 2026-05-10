@@ -5,7 +5,7 @@ import { Textarea } from '~/components/ui/textarea';
 import { Navbar } from '~/components/unloged-navbar';
 import { api } from '~/api/api';
 import type ApiError from '~/interfaces/apiError';
-import { getErrorMessage } from '~/utils/errorMapper';
+import { getErrorMessage } from '~/utils/error-mapper';
 
 export default function Help() {
   const [formData, setFormData] = useState({
@@ -31,7 +31,7 @@ export default function Help() {
     setIsLoading(true);
 
     try {
-      const request = await api.post('api/support', {
+      const request = await api.post('support', {
         email: formData.email,
         title: formData.title,
         message: formData.message,

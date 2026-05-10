@@ -3,11 +3,11 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
-import { useAuth } from '~/context/authContext';
+import { useAuth } from '~/context/auth-context';
 import { Navbar } from '~/components/unloged-navbar';
 import { api } from '~/api/api';
 import type ApiError from '~/interfaces/apiError';
-import { getErrorMessage } from '~/utils/errorMapper';
+import { getErrorMessage } from '~/utils/error-mapper';
 
 export default function Home() {
   const [name, setName] = useState('');
@@ -26,7 +26,7 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('api/auth/login', {
+      const response = await api.post('auth/login', {
         name,
         password,
       });
