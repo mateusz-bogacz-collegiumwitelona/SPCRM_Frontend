@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 
 import { useNavigate } from 'react-router';
 import { useAuth } from '~/context/authContext';
-
+import { NavigationBar } from '~/components/navigation-bar';
 export default function Dashboard() {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
@@ -28,6 +28,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+      <NavigationBar />
     </main>
   );
 }
