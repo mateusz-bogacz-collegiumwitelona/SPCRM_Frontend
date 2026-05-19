@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
@@ -13,17 +13,28 @@ export default function Home() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login } = useAuth();
+  const { login, user, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (user.roles.includes('Admin')) {
+        navigate('/admin-dashboard', { replace: true });
+      } else if (user.roles.includes('Manager')) {
+        navigate('/manager-dashboard', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isLoading, user, navigate]);
 
   const handleLogin = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError('');
-
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
       const response = await api.post('auth/login', {
@@ -39,11 +50,11 @@ export default function Home() {
         const userRole = result.data.roles;
 
         if (userRole.includes('Admin')) {
-          navigate('/admin-dashboard');
+          navigate('/admin-dashboard', { replace: true });
         } else if (userRole.includes('Manager')) {
-          navigate('/manager-dashboard');
+          navigate('/manager-dashboard', { replace: true });
         } else if (userRole.includes('User')) {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
         } else {
           setError('Error: Unrecognized user role');
         }
@@ -58,15 +69,25 @@ export default function Home() {
         setError(err.message || 'Wystąpił nieznany błąd.');
       }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#004a8f]" />
+      </main>
+    );
+  }
+
+  if (user) return null;
 
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
-      <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
-        <Card className="mx-auto w-full max-w-170 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+      <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14 ">
+        <Card className="mx-auto w-full max-w-170 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-20">
           <CardContent className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
             <h1 className="text-center text-[24px] leading-none text-[#004a8f] sm:text-[30px] lg:text-[36px]">
               Logowanie
@@ -91,8 +112,8 @@ export default function Home() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   required
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] 
-                  placeholder:text-[#d0d2d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 
+                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f]
+                  placeholder:text-[#d0d2d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
                   sm:h-10 sm:text-[14px] lg:h-11"
                 />
               </div>
@@ -111,14 +132,14 @@ export default function Home() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
-                    className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 pr-10 
-                    text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 
+                    className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 pr-10
+                    text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2
                     focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((previous) => !previous)}
-                    className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1 
+                    className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1
                     text-[#7f8490] hover:text-[#5c6270] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30"
                     aria-label={showPassword ? 'Ukryj haslo' : 'Pokaz haslo'}
                   >
@@ -152,11 +173,11 @@ export default function Home() {
 
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white
                 hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11"
               >
-                {isLoading ? 'Logowanie...' : 'Zaloguj sie'}
+                {isSubmitting ? 'Logowanie...' : 'Zaloguj sie'}
               </Button>
             </form>
           </CardContent>

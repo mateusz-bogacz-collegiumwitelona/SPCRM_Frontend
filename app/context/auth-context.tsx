@@ -7,8 +7,10 @@ interface User {
   userName: string;
   roles: string[];
 }
+
 interface AuthContextType {
   user: User | null;
+  isLoading: boolean;
   login: (userData: User) => void;
   logout: () => void;
 }
@@ -17,6 +19,7 @@ const authContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // <-- DODANE: Na start aplikacja "ładuje" stan
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -28,13 +31,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('user');
       }
     }
+    setIsLoading(false);
   }, []);
 
   const login = (userData: User) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('role', JSON.stringify(userData.roles));
-
     localStorage.setItem('token', userData.token);
     localStorage.setItem('userId', userData.userId);
     localStorage.setItem('email', userData.email);
@@ -49,10 +52,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo(
     () => ({
       user,
+      isLoading,
       login,
       logout,
     }),
-    [user],
+    [user, isLoading],
   );
 
   return <authContext.Provider value={value}>{children}</authContext.Provider>;
@@ -60,10 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(authContext);
-
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-
   return context;
 };
