@@ -2,13 +2,12 @@ import { type ComponentType, type SyntheticEvent, useEffect, useMemo, useState }
 import { useSearchParams } from 'react-router';
 import { MapPinned, Search } from 'lucide-react';
 
-import { NavigationBar } from '~/components/navigation-bar';
-import { Navbar } from '~/components/unloged-navbar';
 import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
 import type ApiError from '~/interfaces/apiError';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { RoleGuard } from '~/utils/role-guard';
+import { MainLayout } from '~/components/main-layout';
 
 export interface CompanyMapData {
   id: string;
@@ -145,12 +144,13 @@ export default function MapPage() {
 
   return (
     <RoleGuard allowedRoles={['Manager', 'User']}>
-      <main className="relative min-h-screen overflow-hidden bg-[#f1f5f9]">
-        <div className="fixed left-0 top-0 z-30 w-full h-20">
-          <Navbar />
-        </div>
-
-        <section className="w-full mt-20 pb-19.25 md:pb-0 md:pl-32 h-[calc(100vh-5rem)] md:h-[calc(100vh-5rem)] relative">
+      <MainLayout
+        wrapperClassName="relative min-h-screen overflow-hidden bg-[#f1f5f9] pt-20 md:pl-32"
+        contentClassName="relative w-full h-[calc(100vh-5rem)] p-0 m-0"
+        navDesktopWidthClass="w-32"
+        navDesktopClassName="top-20 border-r-0 pt-4"
+      >
+        <section className="w-full h-full relative">
           <div className="absolute top-4 right-4 z-400 md:right-6 w-72 md:w-96 shadow-lg rounded-md">
             <form
               id="search-form"
@@ -179,16 +179,10 @@ export default function MapPage() {
               {errorMessage}
             </div>
           )}
+
           {renderMapArea()}
         </section>
-
-        <NavigationBar
-          desktopClassName="top-20 border-r-0 pt-4"
-          spacerClassName="hidden"
-          desktopWidthClassName="w-32"
-          spacerWidthClassName="md:w-32"
-        />
-      </main>
+      </MainLayout>
     </RoleGuard>
   );
 }
