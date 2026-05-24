@@ -8,6 +8,7 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  CalendarIcon,
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -21,6 +22,12 @@ import {
 } from '@tanstack/react-table';
 import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
+import { format } from 'date-fns';
+import { pl } from 'date-fns/locale';
+import { Calendar } from '~/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
+import { cn } from '~/lib/utils';
+import type { DateRange } from 'react-day-picker';
 
 interface UserSalesResponse {
   id: string;
@@ -117,10 +124,22 @@ export default function UserSales() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('date');
   const [sortDescending, setSortDescending] = useState<boolean>(true);
+  const [date, setDate] = useState<DateRange | undefined>();
+  const [showFilters, setShowFilters] = useState(false);
 
   const [accumulatedMobileSales, setAccumulatedMobileSales] = useState<UserSalesResponse[]>([]);
 
+  const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500);
@@ -130,7 +149,7 @@ export default function UserSales() {
   useEffect(() => {
     isMobileAppend.current = false;
     setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize]);
+  }, [debouncedSearch, sortBy, sortDescending, pageSize, date]);
 
   const {
     data,
@@ -139,7 +158,7 @@ export default function UserSales() {
     isError,
     error: queryError,
   } = useQuery({
-    queryKey: ['sales', { pageNumber, pageSize, debouncedSearch, sortBy, sortDescending }],
+    queryKey: ['sales', { pageNumber, pageSize, debouncedSearch, sortBy, sortDescending, date }],
     queryFn: async () => {
       const params = {
         PageNumber: pageNumber,
@@ -147,6 +166,8 @@ export default function UserSales() {
         SearchTerm: debouncedSearch,
         SortBy: sortBy,
         SortDescending: sortDescending,
+        DateFrom: date?.from ? format(date.from, 'yyyy-MM-dd') : undefined,
+        DateTo: date?.to ? format(date.to, 'yyyy-MM-dd') : undefined,
       };
       const response = await api.get('/sales', { params });
       return response.data?.value || response.data?.data || response.data;
@@ -239,15 +260,94 @@ export default function UserSales() {
                   <ArrowUpNarrowWide className="w-4 h-4" />
                 )}
               </Button>
-            </div>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                >
+                  <Filter className="w-4 h-4" />
+                  <span>Filtry</span>
+                  {(date?.from || date?.to) && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900"></span>
+                    </span>
+                  )}
+                </Button>
 
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-            >
-              <Filter className="w-4 h-4" />
-              <span>Filtry</span>
-            </Button>
+                {showFilters && (
+                  <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj po dacie</h3>
+                    <div className="space-y-4">
+                      <div className="flex flex-col">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Zakres dat
+                        </label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              id="date"
+                              variant="outline"
+                              className={cn(
+                                'w-full justify-start text-left font-normal border-gray-300',
+                                !date && 'text-gray-500',
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {date?.from ? (
+                                date.to ? (
+                                  <>
+                                    {format(date.from, 'd MMM yyyy', { locale: pl })} -{' '}
+                                    {format(date.to, 'd MMM yyyy', { locale: pl })}
+                                  </>
+                                ) : (
+                                  format(date.from, 'd MMM yyyy', { locale: pl })
+                                )
+                              ) : (
+                                <span>Wybierz zakres dat</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-auto p-0 z-[100] max-h-[85vh] overflow-y-auto max-w-[95vw]"
+                            align={isMobile ? 'center' : 'start'}
+                          >
+                            <Calendar
+                              initialFocus
+                              mode="range"
+                              defaultMonth={date?.from}
+                              selected={date}
+                              onSelect={setDate}
+                              numberOfMonths={isMobile ? 1 : 2}
+                              locale={pl}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
+                        <button
+                          type="button"
+                          onClick={() => setDate(undefined)}
+                          className="text-xs text-gray-500 hover:text-gray-900 underline"
+                        >
+                          Wyczyść
+                        </button>
+
+                        <Button
+                          size="sm"
+                          onClick={() => setShowFilters(false)}
+                          className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
+                        >
+                          Zamknij
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
