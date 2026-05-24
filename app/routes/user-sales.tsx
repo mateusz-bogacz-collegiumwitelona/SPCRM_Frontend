@@ -126,6 +126,7 @@ export default function UserSales() {
   const [sortDescending, setSortDescending] = useState<boolean>(true);
   const [date, setDate] = useState<DateRange | undefined>();
   const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('');
 
   const [accumulatedMobileSales, setAccumulatedMobileSales] = useState<UserSalesResponse[]>([]);
 
@@ -149,7 +150,17 @@ export default function UserSales() {
   useEffect(() => {
     isMobileAppend.current = false;
     setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize, date]);
+  }, [debouncedSearch, sortBy, sortDescending, pageSize, date, statusFilter]);
+
+  const { data: statusesResponse } = useQuery({
+    queryKey: ['sales-statuses'],
+    queryFn: async () => {
+      const response = await api.get('/sales/statuses');
+      return response.data?.value || response.data?.data || response.data || [];
+    },
+  });
+
+  const availableStatuses: string[] = Array.isArray(statusesResponse) ? statusesResponse : [];
 
   const {
     data,
@@ -168,6 +179,7 @@ export default function UserSales() {
         SortDescending: sortDescending,
         DateFrom: date?.from ? format(date.from, 'yyyy-MM-dd') : undefined,
         DateTo: date?.to ? format(date.to, 'yyyy-MM-dd') : undefined,
+        StatusType: statusFilter ? statusFilter : undefined,
       };
       const response = await api.get('/sales', { params });
       return response.data?.value || response.data?.data || response.data;
@@ -272,6 +284,7 @@ export default function UserSales() {
                     <span className="absolute -top-1 -right-1 flex h-3 w-3 relative">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900"></span>
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3 relative"> ... </span>
                     </span>
                   )}
                 </Button>
@@ -324,12 +337,35 @@ export default function UserSales() {
                             />
                           </PopoverContent>
                         </Popover>
+                        <div className="flex flex-col">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Status sprzedaży
+                          </label>
+                          <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                          >
+                            <option value="">Wszystkie</option>
+                            {availableStatuses.map((status) => {
+                              const config = getStatusConfig(status);
+                              return (
+                                <option key={status} value={status}>
+                                  {config.label}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
                       </div>
 
                       <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
                         <button
                           type="button"
-                          onClick={() => setDate(undefined)}
+                          onClick={() => {
+                            setDate(undefined);
+                            setStatusFilter('');
+                          }}
                           className="text-xs text-gray-500 hover:text-gray-900 underline"
                         >
                           Wyczyść
