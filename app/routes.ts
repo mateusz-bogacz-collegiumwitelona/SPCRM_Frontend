@@ -8,4 +8,5 @@ export default [
   route('user-sales', 'routes/user-sales.tsx'),
   route('help', 'routes/help.tsx'),
   route('map', 'routes/map.tsx'),
+  route('contacts', 'routes/contacts.tsx'),
 ] satisfies RouteConfig;
