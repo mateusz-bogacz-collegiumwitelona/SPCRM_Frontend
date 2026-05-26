@@ -26,6 +26,7 @@ interface ContactResponse {
   id: string;
   firstName: string;
   lastName: string;
+  jobTitle: string;
   companyName: string;
   ownerFirstName: string;
   ownerLastName: string;
@@ -41,9 +42,12 @@ const columns = [
     cell: (info) => {
       const row = info.row.original;
       return (
-        <span className="font-medium text-blue-900">
-          {row.firstName} {row.lastName}
-        </span>
+        <div className="flex flex-col">
+          <span className="font-medium text-blue-900">
+            {row.firstName} {row.lastName}
+          </span>
+          {row.jobTitle && <span className="text-xs text-gray-500 mt-0.5">{row.jobTitle}</span>}
+        </div>
       );
     },
   }),
@@ -362,6 +366,11 @@ export default function ContactList() {
                       <p className="text-sm font-bold text-blue-900 truncate">
                         {contact.firstName} {contact.lastName}
                       </p>
+                      {contact.jobTitle && (
+                        <p className="text-xs font-semibold text-gray-600 mb-1 truncate">
+                          {contact.jobTitle}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-500 mb-1">{contact.companyName}</p>
                       <p className="text-sm text-gray-700">
                         Opiekun: {contact.ownerFirstName || ''} {contact.ownerLastName || ''}
