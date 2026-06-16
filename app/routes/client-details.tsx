@@ -39,12 +39,24 @@ interface CompanyContactResponse {
   ownerLastName: string;
 }
 
+interface CompanySalesResponse {
+  id: string;
+  salesmanFirstName: string;
+  salesmanLastName: string;
+  name: string;
+  value: number;
+  code: string;
+  decimalPlaces: number;
+  status: string;
+  closeDate: string;
+  createdAt: string;
+}
+
 interface PagedResult<T> {
   items: T[];
 }
 
 const contactColumnHelper = createColumnHelper<CompanyDetailResponse>();
-
 const contactColumns = [
   contactColumnHelper.display({
     id: 'fullName',
@@ -84,6 +96,85 @@ const contactColumns = [
     },
   }),
   contactColumnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: () => (
+      <a href="#" className="text-[#004a8f] hover:underline font-medium text-sm">
+        Szczegóły
+      </a>
+    ),
+  }),
+];
+
+const getStatusConfig = (status: string) => {
+  switch (status) {
+    case 'Complete':
+      return { label: 'Zakończona', style: 'bg-[#d4edda] text-[#28a745]' };
+    case 'InProgress':
+      return { label: 'W trakcie', style: 'bg-blue-100 text-[#004a8f]' };
+    case 'ToDo':
+      return { label: 'Do zrobienia', style: 'bg-yellow-100 text-yellow-800' };
+    case 'Cancelled':
+      return { label: 'Anulowana', style: 'bg-red-100 text-red-700' };
+    default:
+      return { label: status, style: 'bg-gray-100 text-gray-600' };
+  }
+};
+const saleColumnHelper = createColumnHelper<CompanySalesResponse>();
+const saleColumns = [
+  saleColumnHelper.display({
+    id: 'salesman',
+    header: 'Sprzedawca',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <div className="flex flex-col">
+          <span className="text-[#004a8f] font-normal text-sm">
+            {row.salesmanFirstName} {row.salesmanLastName}
+          </span>
+          <span className="text-xs text-gray-500 mt-0.5">{row.name}</span>
+        </div>
+      );
+    },
+  }),
+  saleColumnHelper.display({
+    id: 'amount',
+    header: 'Kwota',
+    cell: (info) => {
+      const row = info.row.original;
+      const formattedValue = new Intl.NumberFormat('pl-PL', {
+        minimumFractionDigits: row.decimalPlaces,
+        maximumFractionDigits: row.decimalPlaces,
+      }).format(row.value);
+      return (
+        <span className="text-sm text-gray-600 font-semibold">
+          {formattedValue} {row.code}
+        </span>
+      );
+    },
+  }),
+  saleColumnHelper.accessor('status', {
+    header: 'Status',
+    cell: (info) => {
+      const statusValue = info.getValue();
+      const { label, style } = getStatusConfig(statusValue);
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${style}`}
+        >
+          {label}
+        </span>
+      );
+    },
+  }),
+  saleColumnHelper.accessor('createdAt', {
+    header: 'Data utworzenia',
+    cell: (info) => {
+      const date = new Date(info.getValue());
+      return <span className="text-sm text-gray-500">{date.toLocaleDateString('pl-PL')}</span>;
+    },
+  }),
+  saleColumnHelper.display({
     id: 'actions',
     header: 'Akcje',
     cell: () => (
@@ -227,6 +318,47 @@ const ClientDetails: React.FC = () => {
   const contactsTable = useReactTable({
     data: contacts,
     columns: contactColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  // sales
+  const { data: salesData, isLoading: isSalesLoading } = useQuery({
+    queryKey: ['company-sales', clientId, salePage, salePageSize],
+    queryFn: async () => {
+      const response = await api.get('/company/sales', {
+        params: {
+          companyId: clientId,
+          PageNumber: salePage,
+          PageSize: salePageSize,
+        },
+      });
+      return response.data.data as PagedResult<CompanySalesResponse>;
+    },
+    enabled: !!clientId,
+  });
+
+  const sales = salesData?.items || [];
+  const totalSalePages = salesData?.totalPages || 1;
+  const totalSaleItems = salesData?.totalCount || 0;
+
+  const [accumulatedMobileSales, setAccumulatedMobileSales] = useState<CompanySalesResponse[]>([]);
+  useEffect(() => {
+    if (sales.length > 0) {
+      if (salePage === 1) {
+        setAccumulatedMobileSales(sales);
+      } else {
+        setAccumulatedMobileSales((prev) => {
+          const newItems = sales.filter((newSale) => !prev.some((p) => p.id === newSale.id));
+          return [...prev, ...newItems];
+        });
+      }
+    }
+  }, [sales, salePage]);
+
+  // 3. INICJALIZACJA REACT TABLE
+  const salesTable = useReactTable({
+    data: sales,
+    columns: saleColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -400,11 +532,6 @@ const ClientDetails: React.FC = () => {
     () => clientData.sales.filter((s) => s.person.toLowerCase().includes(saleSearch.toLowerCase())),
     [clientData.sales, saleSearch],
   );
-  const totalSalePages = Math.ceil(filteredSales.length / salePageSize) || 1;
-  const paginatedSales = filteredSales.slice(
-    (salePage - 1) * salePageSize,
-    salePage * salePageSize,
-  );
 
   // DŁUGI
   const filteredDebts = useMemo(
@@ -564,39 +691,61 @@ const ClientDetails: React.FC = () => {
 
             {/* SPRZEDAŻ - MOBILE */}
             <section>
-              <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6">Sprzedaż:</h2>
-              <div className="space-y-3">
-                {clientData.sales.slice(0, mobileLimits.sales).map((sale) => (
-                  <div
-                    key={sale.id}
-                    className="border border-black rounded-lg p-3 bg-white text-sm"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="text-[#004a8f] leading-tight space-y-1">
-                        <p>Kto: {sale.person}</p>
-                        <p>Kwota: {sale.amount}</p>
+              <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
+                Sprzedaż:
+                {isSalesLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
+              </h2>
+
+              {accumulatedMobileSales.length === 0 && !isSalesLoading ? (
+                <div className="p-4 text-gray-500 bg-gray-50 rounded-lg text-sm text-center border border-gray-200">
+                  Brak historii sprzedaży dla tej firmy.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {accumulatedMobileSales.map((sale) => (
+                    <div
+                      key={sale.id}
+                      className="border border-black rounded-lg p-3 bg-white text-sm"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="text-[#004a8f] leading-tight space-y-1">
+                          <p>
+                            Kto: {sale.salesmanFirstName} {sale.salesmanLastName}
+                          </p>
+                          <p>
+                            Kwota:{' '}
+                            {new Intl.NumberFormat('pl-PL', {
+                              minimumFractionDigits: sale.decimalPlaces,
+                              maximumFractionDigits: sale.decimalPlaces,
+                            }).format(sale.value)}{' '}
+                            {sale.code}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${getStatusConfig(sale.status).style}`}
+                        >
+                          {getStatusConfig(sale.status).label}
+                        </span>
                       </div>
-                      <span className="bg-[#d4edda] text-[#28a745] text-xs px-2 py-0.5 rounded-full">
-                        {sale.status}
-                      </span>
+                      <div className="border-t border-black pt-2 flex justify-between items-center">
+                        <p className="text-black text-xs font-medium">
+                          Utworzono: {new Date(sale.createdAt).toLocaleDateString('pl-PL')}
+                        </p>
+                        <a href="#" className="text-[#004a8f] text-sm hover:underline">
+                          Szczegóły
+                        </a>
+                      </div>
                     </div>
-                    <div className="border-t border-black pt-2 flex justify-between items-center">
-                      <p className="text-black text-xs font-medium">
-                        Data zawarcia: {sale.dateCreated}
-                      </p>
-                      <a href="#" className="text-[#004a8f] text-sm">
-                        Szczegóły
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {mobileLimits.sales < clientData.sales.length && (
+                  ))}
+                </div>
+              )}
+              {salePage < totalSalePages && (
                 <button
-                  className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium"
-                  onClick={() => loadMoreMobile('sales')}
+                  className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium disabled:opacity-50"
+                  onClick={() => setSalePage((prev) => prev + 1)}
+                  disabled={isSalesLoading}
                 >
-                  Pokaż więcej
+                  {isSalesLoading ? 'Ładowanie...' : 'Pokaż więcej'}
                 </button>
               )}
             </section>
@@ -809,55 +958,49 @@ const ClientDetails: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 2. Tabela */}
+                {/* Tabela sprzedaż */}
                 <div className="overflow-x-auto w-full">
                   <table className="w-full text-left">
                     <thead className="bg-white border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">
-                          Sprzedawca
-                        </th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Kwota</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Status</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">
-                          Data zawarcia
-                        </th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Akcje</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedSales.map((sale) => (
-                        <tr
-                          key={sale.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <span className="text-[#004a8f] font-normal text-sm">
-                              {sale.person}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{sale.amount}</td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${sale.status === 'Zakończona' ? 'bg-[#d4edda] text-[#28a745]' : sale.status === 'W trakcie' ? 'bg-blue-100 text-[#004a8f]' : 'bg-gray-100 text-gray-600'}`}
+                      {salesTable.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="px-6 py-4 text-sm font-semibold text-gray-800"
                             >
-                              {sale.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{sale.dateCreated}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <a href="#" className="text-[#004a8f] hover:underline font-medium">
-                              Szczegóły
-                            </a>
-                          </td>
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
+                          ))}
                         </tr>
                       ))}
-                      {paginatedSales.length === 0 && (
+                    </thead>
+                    <tbody>
+                      {isSalesLoading ? (
                         <tr>
                           <td colSpan={5} className="p-6 text-center text-gray-500">
-                            Brak wyników.
+                            Pobieranie danych...
                           </td>
                         </tr>
+                      ) : sales.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="p-6 text-center text-gray-500">
+                            Brak historii sprzedaży.
+                          </td>
+                        </tr>
+                      ) : (
+                        salesTable.getRowModel().rows.map((row) => (
+                          <tr
+                            key={row.id}
+                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <td key={cell.id} className="px-6 py-4">
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </td>
+                            ))}
+                          </tr>
+                        ))
                       )}
                     </tbody>
                   </table>
