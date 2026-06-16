@@ -221,7 +221,7 @@ const ClientDetails: React.FC = () => {
     queryKey: ['company-details', clientId],
     queryFn: async () => {
       const response = await api.get('/company', {
-        params: { id: clientId },
+        params: { companyId: clientId },
       });
 
       return response.data.data as CompanyDetailResponse;
