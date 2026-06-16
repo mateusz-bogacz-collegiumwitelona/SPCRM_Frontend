@@ -5,6 +5,12 @@ import { Filter, ChevronLeft, ChevronRight, MapPinned, ArrowDownWideNarrow } fro
 import { api } from '~/api/api';
 import { useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+  flexRender,
+} from '@tanstack/react-table';
 
 interface CompanyDetailResponse {
   id: string;
@@ -23,12 +29,98 @@ interface AddressDetailResponse {
   type: string;
 }
 
+interface CompanyContactResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  jobTitle?: string;
+  isPrimary: boolean;
+  ownerFirstName: string;
+  ownerLastName: string;
+}
+
 interface PagedResult<T> {
   items: T[];
 }
 
+const contactColumnHelper = createColumnHelper<CompanyDetailResponse>();
+
+const contactColumns = [
+  contactColumnHelper.display({
+    id: 'fullName',
+    header: 'Imię i nazwisko',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <div className="flex flex-col">
+          <span className="text-[#004a8f] font-normal text-sm">
+            {row.firstName} {row.lastName}
+          </span>
+          {row.jobTitle && <span className="text-xs text-gray-500 mt-0.5">{row.jobTitle}</span>}
+        </div>
+      );
+    },
+  }),
+  contactColumnHelper.accessor('isPrimary', {
+    header: 'Główny kontakt',
+    cell: (info) => {
+      const isPrimary = info.getValue();
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'}`}
+        >
+          {isPrimary ? 'Tak' : 'Nie'}
+        </span>
+      );
+    },
+  }),
+  contactColumnHelper.display({
+    id: 'owner',
+    header: 'Opiekun',
+    cell: (info) => {
+      const row = info.row.original;
+      const ownerName = `${row.ownerFirstName || ''} ${row.ownerLastName || ''}`.trim();
+      return <span className="text-sm text-gray-600">{ownerName || 'Brak'}</span>;
+    },
+  }),
+  contactColumnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: () => (
+      <a href="#" className="text-[#004a8f] hover:underline font-medium text-sm">
+        Szczegóły
+      </a>
+    ),
+  }),
+];
+
 const ClientDetails: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
+
+  const [mobileLimits, setMobileLimits] = useState({
+    addresses: 3,
+    contacts: 3,
+    sales: 3,
+    debts: 3,
+  });
+
+  const loadMoreMobile = (section: keyof typeof mobileLimits) => {
+    setMobileLimits((prev) => ({ ...prev, [section]: prev[section] + 3 }));
+  };
+
+  // Stany wyszukiwania i paginacji (Desktop)
+  const [contactSearch, setContactSearch] = useState('');
+  const [saleSearch, setSaleSearch] = useState('');
+  const [debtSearch, setDebtSearch] = useState('');
+
+  const [contactPage, setContactPage] = useState(1);
+  const [contactPageSize, setContactPageSize] = useState(4);
+
+  const [salePage, setSalePage] = useState(1);
+  const [salePageSize, setSalePageSize] = useState(4);
+
+  const [debtPage, setDebtPage] = useState(1);
+  const [debtPageSize, setDebtPageSize] = useState(4);
 
   const {
     data: basicInfo,
@@ -94,6 +186,49 @@ const ClientDetails: React.FC = () => {
       ? [firstWithCoords.latitude!, firstWithCoords.longitude!]
       : [51.9194, 19.1451];
   }, [addresses]);
+
+  const { data: contactsData, isLoading: isContactsLoading } = useQuery({
+    queryKey: ['company-contacts', clientId, contactPage, contactPageSize],
+    queryFn: async () => {
+      const response = await api.get('/company/contacts', {
+        params: {
+          companyId: clientId,
+          PageNumber: contactPage,
+          PageSize: contactPageSize,
+        },
+      });
+      return response.data.data as PagedResult<AddressDetailResponse>;
+    },
+    enabled: !!clientId,
+  });
+
+  const contacts = contactsData?.items || [];
+  const totalContactPages = contactsData?.totalPages || 1;
+  const totalContactItems = contactsData?.totalCount || 0;
+
+  const [accumulatedMobileContacts, setAccumulatedMobileContacts] = useState<
+    CompanyContactResponse[]
+  >([]);
+  useEffect(() => {
+    if (contacts.length > 0) {
+      if (contactPage === 1) {
+        setAccumulatedMobileContacts(contacts);
+      } else {
+        setAccumulatedMobileContacts((prev) => {
+          const newItems = contacts.filter(
+            (newContact) => !prev.some((p) => p.id === newContact.id),
+          );
+          return [...prev, ...newItems];
+        });
+      }
+    }
+  }, [contacts, contactPage]);
+
+  const contactsTable = useReactTable({
+    data: contacts,
+    columns: contactColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   // 1. MOCK DATA
   const [clientData] = useState({
@@ -245,31 +380,6 @@ const ClientDetails: React.FC = () => {
     ],
   });
 
-  // 2. STANY DLA MOBILE
-  const [mobileLimits, setMobileLimits] = useState({
-    addresses: 3,
-    contacts: 3,
-    sales: 3,
-    debts: 3,
-  });
-  const loadMoreMobile = (section: keyof typeof mobileLimits) => {
-    setMobileLimits((prev) => ({ ...prev, [section]: prev[section] + 3 }));
-  };
-
-  // 3. STANY WYSZUKIWANIA I PAGINACJI (Desktop)
-  const [contactSearch, setContactSearch] = useState('');
-  const [saleSearch, setSaleSearch] = useState('');
-  const [debtSearch, setDebtSearch] = useState('');
-
-  const [contactPage, setContactPage] = useState(1);
-  const [contactPageSize, setContactPageSize] = useState(4);
-
-  const [salePage, setSalePage] = useState(1);
-  const [salePageSize, setSalePageSize] = useState(4);
-
-  const [debtPage, setDebtPage] = useState(1);
-  const [debtPageSize, setDebtPageSize] = useState(4);
-
   useEffect(() => setContactPage(1), [contactSearch, contactPageSize]);
   useEffect(() => setSalePage(1), [saleSearch, salePageSize]);
   useEffect(() => setDebtPage(1), [debtSearch, debtPageSize]);
@@ -280,7 +390,6 @@ const ClientDetails: React.FC = () => {
       clientData.contacts.filter((c) => c.name.toLowerCase().includes(contactSearch.toLowerCase())),
     [clientData.contacts, contactSearch],
   );
-  const totalContactPages = Math.ceil(filteredContacts.length / contactPageSize) || 1;
   const paginatedContacts = filteredContacts.slice(
     (contactPage - 1) * contactPageSize,
     contactPage * contactPageSize,
@@ -399,37 +508,56 @@ const ClientDetails: React.FC = () => {
 
             {/* KONTAKTY - MOBILE */}
             <section>
-              <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6">Kontakty:</h2>
-              <div className="space-y-3">
-                {clientData.contacts.slice(0, mobileLimits.contacts).map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="border border-black rounded-lg p-3 bg-white text-sm"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="text-[#004a8f] leading-tight space-y-1">
-                        <p>{contact.name}</p>
-                        <p>{contact.department}</p>
+              <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
+                Kontakty:
+                {isContactsLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
+              </h2>
+
+              {accumulatedMobileContacts.length === 0 && !isContactsLoading ? (
+                <div className="p-4 text-gray-500 bg-gray-50 rounded-lg text-sm text-center border border-gray-200">
+                  Brak kontaktów dla tej firmy.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {accumulatedMobileContacts.map((contact) => (
+                    <div
+                      key={contact.id}
+                      className="border border-black rounded-lg p-3 bg-white text-sm"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="text-[#004a8f] leading-tight space-y-1">
+                          <p>
+                            {contact.firstName} {contact.lastName}
+                          </p>
+                          {contact.jobTitle && (
+                            <p className="text-gray-600 text-xs">{contact.jobTitle}</p>
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${contact.isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'}`}
+                        >
+                          {contact.isPrimary ? 'Główny' : 'Dodatkowy'}
+                        </span>
                       </div>
-                      <span className="bg-[#d4edda] text-[#28a745] text-xs px-2 py-0.5 rounded-full">
-                        {contact.type}
-                      </span>
+                      <div className="border-t border-black pt-2 flex justify-between items-center">
+                        <p className="text-black text-xs font-medium">
+                          Opiekun: {contact.ownerFirstName} {contact.ownerLastName}
+                        </p>
+                        <a href="#" className="text-[#004a8f] text-sm hover:underline">
+                          Szczegóły
+                        </a>
+                      </div>
                     </div>
-                    <div className="border-t border-black pt-2 flex justify-between items-center">
-                      <p className="text-black text-xs font-medium">Opiekun: {contact.guardian}</p>
-                      <a href="#" className="text-[#004a8f] text-sm">
-                        Szczegóły
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {mobileLimits.contacts < clientData.contacts.length && (
+                  ))}
+                </div>
+              )}
+              {contactPage < totalContactPages && (
                 <button
-                  className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium"
-                  onClick={() => loadMoreMobile('contacts')}
+                  className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium disabled:opacity-50"
+                  onClick={() => setContactPage((prev) => prev + 1)}
+                  disabled={isContactsLoading}
                 >
-                  Pokaż więcej
+                  {isContactsLoading ? 'Ładowanie...' : 'Pokaż więcej'}
                 </button>
               )}
             </section>
@@ -550,58 +678,49 @@ const ClientDetails: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 2. Tabela */}
+                {/* Tabela kontaktów */}
                 <div className="overflow-x-auto w-full">
                   <table className="w-full text-left">
                     <thead className="bg-white border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">
-                          Imię i nazwisko
-                        </th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Firma</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">
-                          Główny kontakt
-                        </th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Akcje</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedContacts.map((contact) => (
-                        <tr
-                          key={contact.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col">
-                              <span className="text-[#004a8f] font-normal text-sm">
-                                {contact.name}
-                              </span>
-                              <span className="text-xs text-gray-500 mt-0.5">
-                                {contact.department}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{contact.company}</td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${contact.type === 'Główny' ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'}`}
+                      {contactsTable.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="px-6 py-4 text-sm font-semibold text-gray-800"
                             >
-                              {contact.type === 'Główny' ? 'Tak' : 'Nie'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <a href="#" className="text-[#004a8f] hover:underline font-medium">
-                              Szczegóły
-                            </a>
-                          </td>
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
+                          ))}
                         </tr>
                       ))}
-                      {paginatedContacts.length === 0 && (
+                    </thead>
+                    <tbody>
+                      {isContactsLoading ? (
                         <tr>
                           <td colSpan={4} className="p-6 text-center text-gray-500">
-                            Brak wyników.
+                            Pobieranie danych...
                           </td>
                         </tr>
+                      ) : contacts.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="p-6 text-center text-gray-500">
+                            Brak przypisanych kontaktów.
+                          </td>
+                        </tr>
+                      ) : (
+                        contactsTable.getRowModel().rows.map((row) => (
+                          <tr
+                            key={row.id}
+                            className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                          >
+                            {row.getVisibleCells().map((cell) => (
+                              <td key={cell.id} className="px-6 py-4">
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </td>
+                            ))}
+                          </tr>
+                        ))
                       )}
                     </tbody>
                   </table>
