@@ -10,6 +10,60 @@ import { AddressesMobile } from '~/components/client/addresses-mobile';
 import { ContactsSection } from '~/components/client/contacts-section';
 import { SalesSection } from '~/components/client/sales-section';
 import { DebtsSection } from '~/components/client/debts-section';
+import type { OSMMapClientProps } from '~/components/osm-map-client';
+
+interface CompanyAddress {
+  id: string;
+  street: string;
+  city: string;
+  zipCode: string;
+  latitude?: number;
+  longitude?: number;
+  type: string;
+}
+
+const getDisplayRange = (page: number, size: number, total: number) => {
+  if (total === 0) return 'Wyświetlanie 0 do 0 z 0 wyników';
+  return `Wyświetlanie ${(page - 1) * size + 1} do ${Math.min(page * size, total)} z ${total} wyników`;
+};
+
+const renderMapContent = (
+  isAddressesLoading: boolean,
+  addresses: CompanyAddress[],
+  MapComponent: ComponentType<OSMMapClientProps> | null,
+  mapCenter: [number, number],
+  mapCompaniesData: OSMMapClientProps['companies'],
+) => {
+  if (isAddressesLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-gray-600 animate-pulse gap-2">
+        <MapPinned className="animate-bounce" /> Pobieranie adresów...
+      </div>
+    );
+  }
+  if (addresses.length === 0) {
+    return (
+      <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm text-center p-6">
+        Brak adresów do wyświetlenia na mapie.
+      </div>
+    );
+  }
+  if (MapComponent) {
+    return (
+      <MapComponent
+        center={mapCenter}
+        zoom={6}
+        className="h-full w-full"
+        companies={mapCompaniesData}
+      />
+    );
+  }
+  return (
+    <div className="flex h-full w-full items-center justify-center text-gray-600 animate-pulse gap-2">
+      <MapPinned className="animate-bounce" /> Ładowanie mapy...
+    </div>
+  );
+};
 
 const ClientDetails: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -24,7 +78,6 @@ const ClientDetails: React.FC = () => {
     enabled: !!clientId,
   });
 
-  // Adresy firmy
   const { data: addressesData, isLoading: isAddressesLoading } = useQuery({
     queryKey: ['company-addresses', clientId],
     queryFn: async () =>
@@ -36,22 +89,21 @@ const ClientDetails: React.FC = () => {
     enabled: !!clientId,
   });
 
-  const addresses = addressesData?.items || [];
+  const addresses: CompanyAddress[] = addressesData?.items || [];
 
-  // Dynamiczne ładowanie komponentu mapy
-  const [MapComponent, setMapComponent] = useState<ComponentType<any> | null>(null);
+  const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
+
   useEffect(() => {
     let isMounted = true;
     import('~/components/osm-map-client').then((module) => {
-      if (isMounted) setMapComponent(() => module.default);
+      if (isMounted) setMapComponent(() => module.default as ComponentType<OSMMapClientProps>);
     });
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Formatowanie danych pod mapę
-  const mapCompaniesData = useMemo(() => {
+  const mapCompaniesData = useMemo<OSMMapClientProps['companies']>(() => {
     return addresses.map((addr) => ({
       id: addr.id.toString(),
       name: 'Adres firmy',
@@ -71,11 +123,6 @@ const ClientDetails: React.FC = () => {
       ? [firstWithCoords.latitude!, firstWithCoords.longitude!]
       : [51.9194, 19.1451];
   }, [addresses]);
-
-  const getDisplayRange = (page: number, size: number, total: number) => {
-    if (total === 0) return 'Wyświetlanie 0 do 0 z 0 wyników';
-    return `Wyświetlanie ${(page - 1) * size + 1} do ${Math.min(page * size, total)} z ${total} wyników`;
-  };
 
   return (
     <MainLayout>
@@ -105,25 +152,12 @@ const ClientDetails: React.FC = () => {
               <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                 <h2 className="text-xl font-normal text-gray-800 mb-4">Lokalizacje adresów</h2>
                 <div className="border border-gray-300 rounded-lg overflow-hidden h-125 bg-gray-100 relative">
-                  {isAddressesLoading ? (
-                    <div className="flex h-full w-full items-center justify-center text-gray-600 animate-pulse gap-2">
-                      <MapPinned className="animate-bounce" /> Pobieranie adresów...
-                    </div>
-                  ) : addresses.length === 0 ? (
-                    <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm text-center p-6">
-                      Brak adresów do wyświetlenia na mapie.
-                    </div>
-                  ) : MapComponent ? (
-                    <MapComponent
-                      center={mapCenter}
-                      zoom={6}
-                      className="h-full w-full"
-                      companies={mapCompaniesData}
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-gray-600 animate-pulse gap-2">
-                      <MapPinned className="animate-bounce" /> Ładowanie mapy...
-                    </div>
+                  {renderMapContent(
+                    isAddressesLoading,
+                    addresses,
+                    MapComponent,
+                    mapCenter,
+                    mapCompaniesData,
                   )}
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   useReactTable,
@@ -9,7 +9,24 @@ import {
 import { Button } from '~/components/ui/button';
 import { api } from '~/api/api';
 
-const columnHelper = createColumnHelper<any>();
+// Definiujemy interfejsy zastępujące 'any'
+interface Debt {
+  id: string;
+  invoiceNumber: string;
+  amountLeft: number;
+  decimalPlaces: number;
+  currencyCode: string;
+  dueDate: string;
+  daysOverdue: number;
+}
+
+interface DebtSummary {
+  currencyCode: string;
+  totalAmount: number;
+  decimalPlace: number;
+}
+
+const columnHelper = createColumnHelper<Debt>();
 const columns = [
   columnHelper.accessor('invoiceNumber', {
     header: 'Numer faktury',
@@ -47,16 +64,15 @@ const columns = [
   }),
 ];
 
-export const DebtsSection: React.FC<{ clientId?: string; getDisplayRange: any }> = ({
-  clientId,
-  getDisplayRange,
-}) => {
+export const DebtsSection: React.FC<{
+  clientId?: string;
+  getDisplayRange: (page: number, pageSize: number, totalItems: number) => string;
+}> = ({ clientId, getDisplayRange }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [mobileDebts, setMobileDebts] = useState<any[]>([]);
+  const [mobileDebts, setMobileDebts] = useState<Debt[]>([]);
   const isMobileAppend = useRef(false);
 
-  // 1. Pobieranie podsumowania - poprawione mapowanie na .data.data oraz wielkość klucza CompanyId
   const { data: summaryResponse, isLoading: isSummaryLoading } = useQuery({
     queryKey: ['company-debt-summary', clientId],
     queryFn: async () => {
@@ -70,12 +86,7 @@ export const DebtsSection: React.FC<{ clientId?: string; getDisplayRange: any }>
 
   const summary = Array.isArray(summaryResponse) ? summaryResponse : [];
 
-  // 2. Pobieranie szczegółów - poprawione mapowanie oraz zamiana klucza na CompanyId (z wielkiej litery)
-  const {
-    data: debtsRes,
-    isLoading: isDebtsLoading,
-    isFetching,
-  } = useQuery({
+  const { data: debtsRes, isFetching } = useQuery({
     queryKey: ['company-debts', { clientId, page, pageSize }],
     queryFn: async () => {
       const response = await api.get('/company/debts', {
@@ -105,7 +116,7 @@ export const DebtsSection: React.FC<{ clientId?: string; getDisplayRange: any }>
     setMobileDebts((prev) => {
       if (page === 1) return debtsRes.items;
       return isMobileAppend.current
-        ? [...prev, ...debtsRes.items.filter((n: any) => !prev.some((p) => p.id === n.id))]
+        ? [...prev, ...debtsRes.items.filter((n: Debt) => !prev.some((p) => p.id === n.id))]
         : debtsRes.items;
     });
   }, [debtsRes, page]);
@@ -126,7 +137,7 @@ export const DebtsSection: React.FC<{ clientId?: string; getDisplayRange: any }>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {summary.map((item: any) => (
+          {summary.map((item: DebtSummary) => (
             <div
               key={item.currencyCode}
               className="bg-white p-4 border border-red-200 rounded-lg shadow-sm border-l-4 border-l-red-500"

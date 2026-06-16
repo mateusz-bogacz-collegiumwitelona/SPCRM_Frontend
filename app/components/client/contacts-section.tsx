@@ -1,16 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
   createColumnHelper,
   flexRender,
+  type Row,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight, ArrowDownWideNarrow, Filter } from 'lucide-react';
 import { api } from '~/api/api';
 
-const columnHelper = createColumnHelper<any>();
+interface Contact {
+  id: string;
+  firstName: string;
+  lastName: string;
+  jobTitle?: string;
+  isPrimary: boolean;
+  ownerFirstName?: string;
+  ownerLastName?: string;
+}
+
+const PrimaryBadge = ({ isPrimary }: { isPrimary: boolean }) => {
+  const className = isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600';
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded-full ${className}`}>
+      {isPrimary ? 'Główny' : 'Dodatkowy'}
+    </span>
+  );
+};
+
+const TableRow = ({ row }: { row: Row<Contact> }) => (
+  <tr className="border-b hover:bg-gray-50 transition-colors">
+    {row.getVisibleCells().map((cell) => (
+      <td key={cell.id} className="px-6 py-4">
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </td>
+    ))}
+  </tr>
+);
+
+const columnHelper = createColumnHelper<Contact>();
 const columns = [
   columnHelper.display({
     id: 'fullName',
@@ -29,13 +59,17 @@ const columns = [
   }),
   columnHelper.accessor('isPrimary', {
     header: 'Główny kontakt',
-    cell: (info) => (
-      <span
-        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${info.getValue() ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'}`}
-      >
-        {info.getValue() ? 'Tak' : 'Nie'}
-      </span>
-    ),
+    cell: (info) => {
+      const isPrimary = info.getValue();
+      const badgeClass = isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600';
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${badgeClass}`}
+        >
+          {isPrimary ? 'Tak' : 'Nie'}
+        </span>
+      );
+    },
   }),
   columnHelper.display({
     id: 'owner',
@@ -51,21 +85,19 @@ const columns = [
     id: 'actions',
     header: 'Akcje',
     cell: () => (
-      <a href="#" className="text-[#004a8f] hover:underline font-medium text-sm">
-        Szczegóły
-      </a>
+      <button className="text-[#004a8f] hover:underline font-medium text-sm">Szczegóły</button>
     ),
   }),
 ];
 
-export const ContactsSection: React.FC<{ clientId?: string; getDisplayRange: any }> = ({
-  clientId,
-  getDisplayRange,
-}) => {
+export const ContactsSection: React.FC<{
+  clientId?: string;
+  getDisplayRange: (page: number, pageSize: number, total: number) => string;
+}> = ({ clientId, getDisplayRange }) => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(4);
-  const [mobileContacts, setMobileContacts] = useState<any[]>([]);
+  const [mobileContacts, setMobileContacts] = useState<Contact[]>([]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['company-contacts', clientId, page, pageSize],
@@ -76,26 +108,51 @@ export const ContactsSection: React.FC<{ clientId?: string; getDisplayRange: any
       return res.data.data;
     },
     enabled: !!clientId,
+    placeholderData: keepPreviousData,
   });
 
-  const items = data?.items || [];
+  const items: Contact[] = data?.items || [];
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalCount || 0;
 
-  useEffect(() => setPage(1), [search, pageSize]);
+  useEffect(() => {
+    setPage(1);
+    setMobileContacts([]);
+  }, [search, pageSize]);
 
   useEffect(() => {
     if (items.length > 0) {
-      if (page === 1) setMobileContacts(items);
-      else
-        setMobileContacts((prev) => [
-          ...prev,
-          ...items.filter((item) => !prev.some((p) => p.id === item.id)),
-        ]);
+      setMobileContacts((prev) => {
+        if (page === 1) return items;
+        const newItems = items.filter((item) => !prev.some((p) => p.id === item.id));
+        return [...prev, ...newItems];
+      });
     }
   }, [items, page]);
 
   const table = useReactTable({ data: items, columns, getCoreRowModel: getCoreRowModel() });
+
+  const renderTableBody = () => {
+    if (isLoading) {
+      return (
+        <tr>
+          <td colSpan={4} className="p-6 text-center text-gray-500">
+            Pobieranie...
+          </td>
+        </tr>
+      );
+    }
+    if (items.length === 0) {
+      return (
+        <tr>
+          <td colSpan={4} className="p-6 text-center text-gray-500">
+            Brak danych.
+          </td>
+        </tr>
+      );
+    }
+    return table.getRowModel().rows.map((row) => <TableRow key={row.id} row={row} />);
+  };
 
   return (
     <>
@@ -119,19 +176,13 @@ export const ContactsSection: React.FC<{ clientId?: string; getDisplayRange: any
                     </p>
                     {c.jobTitle && <p className="text-gray-600 text-xs">{c.jobTitle}</p>}
                   </div>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${c.isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'}`}
-                  >
-                    {c.isPrimary ? 'Główny' : 'Dodatkowy'}
-                  </span>
+                  <PrimaryBadge isPrimary={c.isPrimary} />
                 </div>
                 <div className="border-t border-black pt-2 flex justify-between items-center text-xs">
                   <p>
                     Opiekun: {c.ownerFirstName} {c.ownerLastName}
                   </p>
-                  <a href="#" className="text-[#004a8f] hover:underline">
-                    Szczegóły
-                  </a>
+                  <button className="text-[#004a8f] hover:underline">Szczegóły</button>
                 </div>
               </div>
             ))}
@@ -184,31 +235,7 @@ export const ContactsSection: React.FC<{ clientId?: string; getDisplayRange: any
               </tr>
             ))}
           </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={4} className="p-6 text-center text-gray-500">
-                  Pobieranie...
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="p-6 text-center text-gray-500">
-                  Brak danych.
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b hover:bg-gray-50 transition-colors">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
+          <tbody>{renderTableBody()}</tbody>
         </table>
         <div className="p-4 border-t flex items-center justify-between text-xs bg-white rounded-b-lg">
           <select

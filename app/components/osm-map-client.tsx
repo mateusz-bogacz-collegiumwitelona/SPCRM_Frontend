@@ -3,7 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import type { CompanyMapData } from '~/routes/map';
 import 'leaflet/dist/leaflet.css';
 
-type OSMMapClientProps = {
+export type OSMMapClientProps = {
   center: [number, number];
   zoom: number;
   className?: string;
@@ -16,7 +16,6 @@ export default function OSMMapClient({
   className,
   companies = [],
 }: Readonly<OSMMapClientProps>) {
-  // Funkcja pomocnicza generująca link do Map Google
   const getGoogleMapsLink = (lat: number, lng: number) => {
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   };

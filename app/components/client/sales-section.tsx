@@ -5,10 +5,23 @@ import {
   getCoreRowModel,
   createColumnHelper,
   flexRender,
+  type Row,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight, ArrowDownWideNarrow, Filter } from 'lucide-react';
 import { api } from '~/api/api';
+
+interface Sale {
+  id: string;
+  salesmanFirstName: string;
+  salesmanLastName: string;
+  name: string;
+  value: number;
+  decimalPlaces: number;
+  code: string;
+  status: string;
+  createdAt: string;
+}
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -25,7 +38,46 @@ const getStatusConfig = (status: string) => {
   }
 };
 
-const columnHelper = createColumnHelper<any>();
+const StatusBadge = ({ status }: { status: string }) => {
+  const config = getStatusConfig(status);
+  return <span className={`text-xs px-2 py-0.5 rounded-full ${config.style}`}>{config.label}</span>;
+};
+
+const SaleCard = ({ s }: { s: Sale }) => (
+  <div className="border border-black rounded-lg p-3 bg-white text-sm">
+    <div className="flex justify-between items-start mb-3">
+      <div className="text-[#004a8f] leading-tight">
+        <p>
+          Kto: {s.salesmanFirstName} {s.salesmanLastName}
+        </p>
+        <p className="font-semibold">
+          Kwota:{' '}
+          {new Intl.NumberFormat('pl-PL', {
+            minimumFractionDigits: s.decimalPlaces,
+          }).format(s.value)}{' '}
+          {s.code}
+        </p>
+      </div>
+      <StatusBadge status={s.status} />
+    </div>
+    <div className="border-t border-black pt-2 flex justify-between items-center text-xs">
+      <p>Utworzono: {new Date(s.createdAt).toLocaleDateString('pl-PL')}</p>
+      <button className="text-[#004a8f] hover:underline">Szczegóły</button>
+    </div>
+  </div>
+);
+
+const TableRow = ({ row }: { row: Row<Sale> }) => (
+  <tr className="border-b hover:bg-gray-50 transition-colors">
+    {row.getVisibleCells().map((cell) => (
+      <td key={cell.id} className="px-6 py-4">
+        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+      </td>
+    ))}
+  </tr>
+);
+
+const columnHelper = createColumnHelper<Sale>();
 const columns = [
   columnHelper.display({
     id: 'salesman',
@@ -57,13 +109,16 @@ const columns = [
   }),
   columnHelper.accessor('status', {
     header: 'Status',
-    cell: (info) => (
-      <span
-        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${getStatusConfig(info.getValue()).style}`}
-      >
-        {getStatusConfig(info.getValue()).label}
-      </span>
-    ),
+    cell: (info) => {
+      const config = getStatusConfig(info.getValue());
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${config.style}`}
+        >
+          {config.label}
+        </span>
+      );
+    },
   }),
   columnHelper.accessor('createdAt', {
     header: 'Data utworzenia',
@@ -77,21 +132,43 @@ const columns = [
     id: 'actions',
     header: 'Akcje',
     cell: () => (
-      <a href="#" className="text-[#004a8f] hover:underline font-medium text-sm">
-        Szczegóły
-      </a>
+      <button className="text-[#004a8f] hover:underline font-medium text-sm">Szczegóły</button>
     ),
   }),
 ];
 
-export const SalesSection: React.FC<{ clientId?: string; getDisplayRange: any }> = ({
-  clientId,
-  getDisplayRange,
-}) => {
+const renderTableBody = (isLoading: boolean, items: Sale[], rows: Row<Sale>[]) => {
+  if (isLoading) {
+    return (
+      <tr>
+        <td colSpan={5} className="p-6 text-center text-gray-500">
+          Pobieranie...
+        </td>
+      </tr>
+    );
+  }
+  if (items.length === 0) {
+    return (
+      <tr>
+        <td colSpan={5} className="p-6 text-center text-gray-500">
+          Brak danych.
+        </td>
+      </tr>
+    );
+  }
+  return rows.map((row) => <TableRow key={row.id} row={row} />);
+};
+
+export const SalesSection: React.FC<{
+  clientId?: string;
+  getDisplayRange: (page: number, pageSize: number, total: number) => string;
+}> = ({ clientId, getDisplayRange }) => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(4);
-  const [mobileSales, setMobileSales] = useState<any[]>([]);
+
+  // Przenosimy stan mobilny tutaj i upraszczamy go, by nie gryzł się z tabelą desktopową
+  const [mobileSales, setMobileSales] = useState<Sale[]>([]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['company-sales', clientId, page, pageSize],
@@ -102,26 +179,33 @@ export const SalesSection: React.FC<{ clientId?: string; getDisplayRange: any }>
       return res.data.data;
     },
     enabled: !!clientId,
+    placeholderData: (previousData) => previousData,
   });
 
-  const items = data?.items || [];
+  const items: Sale[] = data?.items || [];
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalCount || 0;
 
-  useEffect(() => setPage(1), [search, pageSize]);
+  useEffect(() => {
+    setPage(1);
+    setMobileSales([]);
+  }, [search, pageSize]);
 
   useEffect(() => {
     if (items.length > 0) {
-      if (page === 1) setMobileSales(items);
-      else
-        setMobileSales((prev) => [
-          ...prev,
-          ...items.filter((item) => !prev.some((p) => p.id === item.id)),
-        ]);
+      setMobileSales((prev) => {
+        if (page === 1) return items;
+        const newItems = items.filter((item) => !prev.some((p) => p.id === item.id));
+        return [...prev, ...newItems];
+      });
     }
   }, [items, page]);
 
-  const table = useReactTable({ data: items, columns, getCoreRowModel: getCoreRowModel() });
+  const table = useReactTable({
+    data: items,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
     <>
@@ -137,33 +221,7 @@ export const SalesSection: React.FC<{ clientId?: string; getDisplayRange: any }>
         ) : (
           <div className="space-y-3">
             {mobileSales.map((s) => (
-              <div key={s.id} className="border border-black rounded-lg p-3 bg-white text-sm">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="text-[#004a8f] leading-tight">
-                    <p>
-                      Kto: {s.salesmanFirstName} {s.salesmanLastName}
-                    </p>
-                    <p className="font-semibold">
-                      Kwota:{' '}
-                      {new Intl.NumberFormat('pl-PL', {
-                        minimumFractionDigits: s.decimalPlaces,
-                      }).format(s.value)}{' '}
-                      {s.code}
-                    </p>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full ${getStatusConfig(s.status).style}`}
-                  >
-                    {getStatusConfig(s.status).label}
-                  </span>
-                </div>
-                <div className="border-t border-black pt-2 flex justify-between items-center text-xs">
-                  <p>Utworzono: {new Date(s.createdAt).toLocaleDateString('pl-PL')}</p>
-                  <a href="#" className="text-[#004a8f] hover:underline">
-                    Szczegóły
-                  </a>
-                </div>
-              </div>
+              <SaleCard key={s.id} s={s} />
             ))}
           </div>
         )}
@@ -214,31 +272,7 @@ export const SalesSection: React.FC<{ clientId?: string; getDisplayRange: any }>
               </tr>
             ))}
           </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-gray-500">
-                  Pobieranie...
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-gray-500">
-                  Brak danych.
-                </td>
-              </tr>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b hover:bg-gray-50 transition-colors">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
+          <tbody>{renderTableBody(isLoading, items, table.getRowModel().rows)}</tbody>
         </table>
         <div className="p-4 border-t flex items-center justify-between text-xs bg-white rounded-b-lg">
           <select
