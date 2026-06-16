@@ -13,6 +13,20 @@ interface CompanyDetailResponse {
   isYour: boolean;
 }
 
+interface AddressDetailResponse {
+  id: string;
+  street: string;
+  city: string;
+  zipCode: string;
+  latitude: number | null;
+  longitude: number | null;
+  type: string;
+}
+
+interface PagedResult<T> {
+  items: T[];
+}
+
 const ClientDetails: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
 
@@ -31,6 +45,55 @@ const ClientDetails: React.FC = () => {
     },
     enabled: !!clientId,
   });
+
+  const { data: addressesData, isLoading: isAddressesLoading } = useQuery({
+    queryKey: ['company-addresses', clientId],
+    queryFn: async () => {
+      const response = await api.get('/company/addresses', {
+        params: { companyId: clientId, PageNumber: 1, PageSize: 100 },
+      });
+      return response.data.data as PagedResult<AddressDetailResponse>;
+    },
+    enabled: !!clientId,
+  });
+
+  const addresses = addressesData?.items || [];
+
+  // 2. Dynamiczne ładowanie komponentu mapy (zapobiega błędom SSR / window is not defined)
+  const [MapComponent, setMapComponent] = useState<ComponentType<any> | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('~/components/osm-map-client').then((module) => {
+      if (isMounted) setMapComponent(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 3. Formatowanie danych pod Twój komponent 'osm-map-client'
+  const mapCompaniesData = useMemo(() => {
+    return addresses.map((addr) => ({
+      id: addr.id.toString(),
+      name: 'Adres firmy',
+      nip: 'Brak',
+      street: addr.street,
+      city: addr.city,
+      zipCode: addr.zipCode,
+      latitude: addr.latitude,
+      longitude: addr.longitude,
+      type: addr.type,
+    }));
+  }, [addresses]);
+
+  // 4. Ustawienie środka mapy na pierwszy prawidłowy adres (lub domyślnie na środek PL)
+  const mapCenter = useMemo<[number, number]>(() => {
+    const firstWithCoords = addresses.find((a) => a.latitude && a.longitude);
+    return firstWithCoords
+      ? [firstWithCoords.latitude!, firstWithCoords.longitude!]
+      : [51.9194, 19.1451];
+  }, [addresses]);
 
   // 1. MOCK DATA
   const [clientData] = useState({
@@ -249,35 +312,6 @@ const ClientDetails: React.FC = () => {
     (debtPage - 1) * debtPageSize,
     debtPage * debtPageSize,
   );
-
-  // 4. MAPA LEAFLET W REACT
-  const [MapComponent, setMapComponent] = useState<ComponentType<any> | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    import('~/components/osm-map-client').then((module) => {
-      if (isMounted) setMapComponent(() => module.default);
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const mapCompaniesData = useMemo(() => {
-    return clientData.addresses.map((addr) => ({
-      id: addr.id.toString(),
-      name: clientData.companyName,
-      nip: 'Brak',
-      street: addr.street,
-      city: addr.city,
-      zipCode: addr.postalCode,
-      latitude: addr.latitude,
-      longitude: addr.longitude,
-      type: addr.type,
-    }));
-  }, [clientData.addresses, clientData.companyName]);
-
-  const mapCenter = useMemo<[number, number]>(() => [51.9194, 19.1451], []);
 
   // POMOCNICZE FUNKCJE
   const getDisplayRange = (page: number, size: number, total: number) => {
@@ -889,7 +923,17 @@ const ClientDetails: React.FC = () => {
               <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                 <h2 className="text-xl font-normal text-gray-800 mb-4">Lokalizacje adresów</h2>
                 <div className="border border-gray-300 rounded-lg overflow-hidden h-[500px] bg-gray-100 relative z-0">
-                  {MapComponent ? (
+                  {isAddressesLoading ? (
+                    <div className="flex h-full w-full items-center justify-center text-gray-600">
+                      <div className="animate-pulse flex items-center gap-2">
+                        <MapPinned className="animate-bounce" /> Pobieranie adresów z bazy...
+                      </div>
+                    </div>
+                  ) : addresses.length === 0 ? (
+                    <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm text-center p-6">
+                      Brak adresów do wyświetlenia na mapie.
+                    </div>
+                  ) : MapComponent ? (
                     <MapComponent
                       center={mapCenter}
                       zoom={6}
@@ -899,7 +943,7 @@ const ClientDetails: React.FC = () => {
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-gray-600">
                       <div className="animate-pulse flex items-center gap-2">
-                        <MapPinned className="animate-bounce" /> Ładowanie mapy...
+                        <MapPinned className="animate-bounce" /> Ładowanie skryptu mapy...
                       </div>
                     </div>
                   )}

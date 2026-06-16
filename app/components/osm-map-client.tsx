@@ -1,4 +1,5 @@
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { ExternalLink } from 'lucide-react';
 import type { CompanyMapData } from '~/routes/map';
 import 'leaflet/dist/leaflet.css';
 
@@ -15,6 +16,11 @@ export default function OSMMapClient({
   className,
   companies = [],
 }: Readonly<OSMMapClientProps>) {
+  // Funkcja pomocnicza generująca link do Map Google
+  const getGoogleMapsLink = (lat: number, lng: number) => {
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  };
+
   return (
     <MapContainer center={center} zoom={zoom} scrollWheelZoom={true} className={className}>
       <TileLayer
@@ -44,6 +50,17 @@ export default function OSMMapClient({
                     {company.street} <br />
                     {company.zipCode} {company.city}
                   </p>
+
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <a
+                      href={getGoogleMapsLink(company.latitude, company.longitude)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#004a8f] text-sm font-medium flex items-center gap-1.5 hover:underline"
+                    >
+                      Pokaż na mapie <ExternalLink size={14} />
+                    </a>
+                  </div>
                 </div>
               </div>
             </Popup>
