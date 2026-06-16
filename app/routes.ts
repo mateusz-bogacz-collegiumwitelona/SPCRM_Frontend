@@ -9,4 +9,5 @@ export default [
   route('help', 'routes/help.tsx'),
   route('map', 'routes/map.tsx'),
   route('contacts', 'routes/contacts.tsx'),
+  route('client/:clientId', 'routes/client-details.tsx'),
 ] satisfies RouteConfig;

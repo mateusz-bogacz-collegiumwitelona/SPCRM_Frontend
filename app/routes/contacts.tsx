@@ -410,7 +410,6 @@ export default function ContactList() {
               )}
             </div>
 
-            {/* Widok Desktop */}
             <div className="hidden lg:block space-y-4">
               <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
                 <table className="w-full">
