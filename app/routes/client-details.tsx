@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useEffect, type ComponentType } from 'react';
+import React, { useState, useMemo, useEffect, type ComponentType, useRef } from 'react';
 import { MainLayout } from '~/components/main-layout';
 import { Button } from '~/components/ui/button';
 import { Filter, ChevronLeft, ChevronRight, MapPinned, ArrowDownWideNarrow } from 'lucide-react';
 import { api } from '~/api/api';
 import { useParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -52,11 +52,30 @@ interface CompanySalesResponse {
   createdAt: string;
 }
 
-interface PagedResult<T> {
-  items: T[];
+interface CompanyDebtSummaryResponse {
+  currencyCode: string;
+  totalAmount: number;
+  decimalPlace: number;
 }
 
-const contactColumnHelper = createColumnHelper<CompanyDetailResponse>();
+interface CompanyDebtDetailResponse {
+  id: string;
+  invoiceNumber: string;
+  amountLeft: number;
+  currencyCode: string;
+  decimalPlaces: number;
+  dueDate: string;
+  daysOverdue: number;
+}
+
+interface PagedResult<T> {
+  items: T[];
+  totalPages?: number;
+  totalItems?: number;
+  totalCount?: number;
+}
+
+const contactColumnHelper = createColumnHelper<any>();
 const contactColumns = [
   contactColumnHelper.display({
     id: 'fullName',
@@ -120,6 +139,7 @@ const getStatusConfig = (status: string) => {
       return { label: status, style: 'bg-gray-100 text-gray-600' };
   }
 };
+
 const saleColumnHelper = createColumnHelper<CompanySalesResponse>();
 const saleColumns = [
   saleColumnHelper.display({
@@ -190,9 +210,6 @@ const ClientDetails: React.FC = () => {
 
   const [mobileLimits, setMobileLimits] = useState({
     addresses: 3,
-    contacts: 3,
-    sales: 3,
-    debts: 3,
   });
 
   const loadMoreMobile = (section: keyof typeof mobileLimits) => {
@@ -202,7 +219,6 @@ const ClientDetails: React.FC = () => {
   // Stany wyszukiwania i paginacji (Desktop)
   const [contactSearch, setContactSearch] = useState('');
   const [saleSearch, setSaleSearch] = useState('');
-  const [debtSearch, setDebtSearch] = useState('');
 
   const [contactPage, setContactPage] = useState(1);
   const [contactPageSize, setContactPageSize] = useState(4);
@@ -210,9 +226,15 @@ const ClientDetails: React.FC = () => {
   const [salePage, setSalePage] = useState(1);
   const [salePageSize, setSalePageSize] = useState(4);
 
+  // Stany dedykowane dla zakładki/sekcji długów
   const [debtPage, setDebtPage] = useState(1);
-  const [debtPageSize, setDebtPageSize] = useState(4);
+  const [debtPageSize, setDebtPageSize] = useState(10);
+  const [accumulatedMobileDebts, setAccumulatedMobileDebts] = useState<CompanyDebtDetailResponse[]>(
+    [],
+  );
+  const isDebtMobileAppend = useRef(false);
 
+  // Podstawowe informacje o firmie
   const {
     data: basicInfo,
     isLoading: isBasicInfoLoading,
@@ -223,12 +245,12 @@ const ClientDetails: React.FC = () => {
       const response = await api.get('/company', {
         params: { companyId: clientId },
       });
-
       return response.data.data as CompanyDetailResponse;
     },
     enabled: !!clientId,
   });
 
+  // Adresy firmy
   const { data: addressesData, isLoading: isAddressesLoading } = useQuery({
     queryKey: ['company-addresses', clientId],
     queryFn: async () => {
@@ -242,7 +264,7 @@ const ClientDetails: React.FC = () => {
 
   const addresses = addressesData?.items || [];
 
-  // 2. Dynamiczne ładowanie komponentu mapy (zapobiega błędom SSR / window is not defined)
+  // Dynamiczne ładowanie komponentu mapy
   const [MapComponent, setMapComponent] = useState<ComponentType<any> | null>(null);
 
   useEffect(() => {
@@ -255,7 +277,7 @@ const ClientDetails: React.FC = () => {
     };
   }, []);
 
-  // 3. Formatowanie danych pod Twój komponent 'osm-map-client'
+  // Formatowanie danych pod mapę
   const mapCompaniesData = useMemo(() => {
     return addresses.map((addr) => ({
       id: addr.id.toString(),
@@ -270,7 +292,6 @@ const ClientDetails: React.FC = () => {
     }));
   }, [addresses]);
 
-  // 4. Ustawienie środka mapy na pierwszy prawidłowy adres (lub domyślnie na środek PL)
   const mapCenter = useMemo<[number, number]>(() => {
     const firstWithCoords = addresses.find((a) => a.latitude && a.longitude);
     return firstWithCoords
@@ -278,6 +299,7 @@ const ClientDetails: React.FC = () => {
       : [51.9194, 19.1451];
   }, [addresses]);
 
+  // Kontakty firmy
   const { data: contactsData, isLoading: isContactsLoading } = useQuery({
     queryKey: ['company-contacts', clientId, contactPage, contactPageSize],
     queryFn: async () => {
@@ -288,7 +310,7 @@ const ClientDetails: React.FC = () => {
           PageSize: contactPageSize,
         },
       });
-      return response.data.data as PagedResult<AddressDetailResponse>;
+      return response.data.data as PagedResult<any>;
     },
     enabled: !!clientId,
   });
@@ -321,7 +343,7 @@ const ClientDetails: React.FC = () => {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // sales
+  // Sprzedaż firmy
   const { data: salesData, isLoading: isSalesLoading } = useQuery({
     queryKey: ['company-sales', clientId, salePage, salePageSize],
     queryFn: async () => {
@@ -355,207 +377,149 @@ const ClientDetails: React.FC = () => {
     }
   }, [sales, salePage]);
 
-  // 3. INICJALIZACJA REACT TABLE
   const salesTable = useReactTable({
     data: sales,
     columns: saleColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // 1. MOCK DATA
-  const [clientData] = useState({
-    clientId: '12345',
-    companyName: 'Stal-Bud Sp. z o. o.',
-    status: 'Twój klient',
-    addresses: [
-      {
-        id: 1,
-        street: 'Prosta 12/4',
-        postalCode: '00-000',
-        city: 'Warszawa',
-        type: 'Siedziba',
-        addedDate: '02.03.2026',
-        editedDate: '02.03.2026',
-        latitude: 52.2297,
-        longitude: 21.0122,
-      },
-      {
-        id: 2,
-        street: 'Prosta 13/4',
-        postalCode: '32-020',
-        city: 'Sobięcin',
-        type: 'Oddział',
-        addedDate: '02.03.2026',
-        editedDate: '02.03.2026',
-        latitude: 50.761,
-        longitude: 16.2575,
-      },
-      {
-        id: 3,
-        street: 'Krzywa 12/4',
-        postalCode: '50-002',
-        city: 'Wrocław',
-        type: 'Magazyn',
-        addedDate: '05.04.2026',
-        editedDate: '05.04.2026',
-        latitude: 51.1079,
-        longitude: 17.0385,
-      },
-      {
-        id: 4,
-        street: 'Prosta 12/4',
-        postalCode: '00-000',
-        city: 'Warszawa',
-        type: 'Wysyłka',
-        addedDate: '06.05.2026',
-        editedDate: '06.05.2026',
-        latitude: 52.24,
-        longitude: 21.02,
-      },
-      {
-        id: 5,
-        street: 'Długa 8',
-        postalCode: '31-010',
-        city: 'Kraków',
-        type: 'Oddział',
-        addedDate: '10.05.2026',
-        editedDate: '11.05.2026',
-        latitude: 50.0647,
-        longitude: 19.945,
-      },
-    ],
-    contacts: [
-      {
-        id: 1,
-        name: 'Mateusz Flamel',
-        department: 'Dział handlu',
-        type: 'Główny',
-        guardian: 'Stanisław Warga',
-        company: 'Stal-Bud Sp. z o. o.',
-      },
-      {
-        id: 2,
-        name: 'Anna Nowak',
-        department: 'Księgowość',
-        type: 'Dodatkowy',
-        guardian: 'Stanisław Warga',
-        company: 'Stal-Bud Sp. z o. o.',
-      },
-      {
-        id: 3,
-        name: 'Jan Kowalski',
-        department: 'Zarząd',
-        type: 'Główny',
-        guardian: 'Piotr Kruk',
-        company: 'Stal-Bud Sp. z o. o.',
-      },
-      {
-        id: 4,
-        name: 'Katarzyna Lis',
-        department: 'Logistyka',
-        type: 'Dodatkowy',
-        guardian: 'Piotr Kruk',
-        company: 'Stal-Bud Sp. z o. o.',
-      },
-      {
-        id: 5,
-        name: 'Michał Anioł',
-        department: 'IT',
-        type: 'Dodatkowy',
-        guardian: 'Stanisław Warga',
-        company: 'Stal-Bud Sp. z o. o.',
-      },
-    ],
-    sales: [
-      {
-        id: 1,
-        person: 'Jan Brzechwa',
-        amount: '2 137 zł',
-        status: 'W trakcie',
-        dateCreated: '21.04.2024',
-      },
-      {
-        id: 2,
-        person: 'Jan Brzechwa',
-        amount: '2 137 zł',
-        status: 'Zakończona',
-        dateCreated: '21.04.2024',
-      },
-      {
-        id: 3,
-        person: 'Tomasz Lis',
-        amount: '5 000 zł',
-        status: 'W trakcie',
-        dateCreated: '15.05.2024',
-      },
-      {
-        id: 4,
-        person: 'Anna Nowak',
-        amount: '12 000 zł',
-        status: 'Zakończona',
-        dateCreated: '10.06.2024',
-      },
-      {
-        id: 5,
-        person: 'Krzysztof Krawczyk',
-        amount: '850 zł',
-        status: 'Anulowana',
-        dateCreated: '01.07.2024',
-      },
-    ],
-    debts: [
-      { id: 1, amount: '20 131', currency: 'PLN', lastUpdate: '21.04.2022' },
-      { id: 2, amount: '2 137', currency: 'JPY', lastUpdate: '21.04.2022' },
-      { id: 3, amount: '500', currency: 'PLN', lastUpdate: '10.05.2023' },
-      { id: 4, amount: '1 200', currency: 'EUR', lastUpdate: '15.06.2023' },
-      { id: 5, amount: '8 000', currency: 'PLN', lastUpdate: '01.01.2024' },
-    ],
+  // 1. Pobieranie podsumowania długów (Kafelki)
+  const { data: debtSummaryResponse, isLoading: isDebtSummaryLoading } = useQuery({
+    queryKey: ['company-debt-summary', clientId],
+    queryFn: async () => {
+      const response = await api.get('/company/debts/summary', {
+        params: { companyId: clientId },
+      });
+      return response.data?.value || response.data?.data || response.data || [];
+    },
+    enabled: !!clientId,
   });
 
-  useEffect(() => setContactPage(1), [contactSearch, contactPageSize]);
-  useEffect(() => setSalePage(1), [saleSearch, salePageSize]);
-  useEffect(() => setDebtPage(1), [debtSearch, debtPageSize]);
+  const debtSummary: CompanyDebtSummaryResponse[] = Array.isArray(debtSummaryResponse)
+    ? debtSummaryResponse
+    : [];
 
-  // KONTAKTY
-  const filteredContacts = useMemo(
-    () =>
-      clientData.contacts.filter((c) => c.name.toLowerCase().includes(contactSearch.toLowerCase())),
-    [clientData.contacts, contactSearch],
-  );
-  const paginatedContacts = filteredContacts.slice(
-    (contactPage - 1) * contactPageSize,
-    contactPage * contactPageSize,
-  );
+  // 2. Pobieranie szczegółowych faktur (Tabela / Lista)
+  const {
+    data: debtsResponse,
+    isLoading: isDebtsLoading,
+    isFetching: isDebtsFetching,
+  } = useQuery({
+    queryKey: ['company-debts', { clientId, debtPage, debtPageSize }],
+    queryFn: async () => {
+      const params = {
+        companyId: clientId,
+        PageNumber: debtPage,
+        PageSize: debtPageSize,
+      };
+      const response = await api.get('/company/debts', { params });
+      return response.data?.value || response.data?.data || response.data;
+    },
+    enabled: !!clientId,
+    placeholderData: keepPreviousData,
+  });
 
-  // SPRZEDAŻ
-  const filteredSales = useMemo(
-    () => clientData.sales.filter((s) => s.person.toLowerCase().includes(saleSearch.toLowerCase())),
-    [clientData.sales, saleSearch],
-  );
+  const desktopDebts = useMemo(() => debtsResponse?.items || [], [debtsResponse]);
+  const totalDebtPages = debtsResponse?.totalPages || 1;
+  const totalDebtItems =
+    debtsResponse?.totalItems || debtsResponse?.totalCount || desktopDebts.length;
 
-  // DŁUGI
-  const filteredDebts = useMemo(
-    () =>
-      clientData.debts.filter(
-        (d) =>
-          d.currency.toLowerCase().includes(debtSearch.toLowerCase()) ||
-          d.amount.includes(debtSearch),
+  // Resetowanie dopisywania stron przy zmianie rozmiaru bazy na stronę
+  useEffect(() => {
+    isDebtMobileAppend.current = false;
+    setDebtPage(1);
+  }, [debtPageSize]);
+
+  // Akumulacja danych dla widoku mobilnego (infinite scroll)
+  useEffect(() => {
+    if (!debtsResponse?.items) return;
+
+    setAccumulatedMobileDebts((prev) => {
+      if (debtPage === 1) return debtsResponse.items;
+
+      if (isDebtMobileAppend.current) {
+        const newItems = debtsResponse.items.filter(
+          (newItem: CompanyDebtDetailResponse) => !prev.some((p) => p.id === newItem.id),
+        );
+        return [...prev, ...newItems];
+      }
+
+      return debtsResponse.items;
+    });
+  }, [debtsResponse, debtPage]);
+
+  const debtColumnHelper = createColumnHelper<CompanyDebtDetailResponse>();
+  const debtColumns = [
+    debtColumnHelper.accessor('invoiceNumber', {
+      header: 'Numer faktury',
+      cell: (info) => <span className="font-medium text-blue-900">{info.getValue()}</span>,
+    }),
+    debtColumnHelper.accessor('amountLeft', {
+      header: 'Do zapłaty',
+      cell: (info) => {
+        const row = info.row.original;
+        return (
+          <span className="font-bold text-red-600">
+            {row.amountLeft.toLocaleString('pl-PL', { minimumFractionDigits: row.decimalPlaces })}{' '}
+            {row.currencyCode}
+          </span>
+        );
+      },
+    }),
+    debtColumnHelper.accessor('dueDate', {
+      header: 'Termin płatności',
+      cell: (info) => (
+        <span className="text-gray-500">
+          {new Date(info.getValue()).toLocaleDateString('pl-PL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          })}
+        </span>
       ),
-    [clientData.debts, debtSearch],
-  );
-  const totalDebtPages = Math.ceil(filteredDebts.length / debtPageSize) || 1;
-  const paginatedDebts = filteredDebts.slice(
-    (debtPage - 1) * debtPageSize,
-    debtPage * debtPageSize,
-  );
+    }),
+    debtColumnHelper.accessor('daysOverdue', {
+      header: 'Status opóźnienia',
+      cell: (info) => {
+        const days = info.getValue();
+        return days > 0 ? (
+          <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+            {days} dni po terminie
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+            W terminie
+          </span>
+        );
+      },
+    }),
+  ];
 
-  // POMOCNICZE FUNKCJE
+  const debtTable = useReactTable({
+    data: desktopDebts,
+    columns: debtColumns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const handleDebtMobileLoadMore = () => {
+    isDebtMobileAppend.current = true;
+    setDebtPage((prev) => prev + 1);
+  };
+
+  const handleDebtDesktopPageChange = (newPage: number) => {
+    isDebtMobileAppend.current = false;
+    setDebtPage(newPage);
+  };
+
   const getDisplayRange = (page: number, size: number, total: number) => {
     if (total === 0) return 'Wyświetlanie 0 do 0 z 0 wyników';
     const start = (page - 1) * size + 1;
     const end = Math.min(page * size, total);
     return `Wyświetlanie ${start} do ${end} z ${total} wyników`;
   };
+
+  useEffect(() => setContactPage(1), [contactSearch, contactPageSize]);
+  useEffect(() => setSalePage(1), [saleSearch, salePageSize]);
 
   return (
     <MainLayout>
@@ -596,7 +560,7 @@ const ClientDetails: React.FC = () => {
             <section>
               <h2 className="text-xl text-[#004a8f] font-normal mb-3">Adresy:</h2>
               <div className="space-y-3">
-                {clientData.addresses.slice(0, mobileLimits.addresses).map((addr) => (
+                {addresses.slice(0, mobileLimits.addresses).map((addr) => (
                   <div
                     key={addr.id}
                     className="border border-black rounded-lg p-3 bg-white text-sm"
@@ -604,7 +568,7 @@ const ClientDetails: React.FC = () => {
                     <div className="flex justify-between items-start mb-3">
                       <div className="text-[#004a8f] leading-tight space-y-1">
                         <p>Ulica: {addr.street}</p>
-                        <p>Kod pocztowy: {addr.postalCode}</p>
+                        <p>Kod pocztowy: {addr.zipCode}</p>
                         <p>Miasto: {addr.city}</p>
                       </div>
                       <span className="bg-[#d4edda] text-[#28a745] text-xs px-2 py-0.5 rounded-full">
@@ -612,18 +576,14 @@ const ClientDetails: React.FC = () => {
                       </span>
                     </div>
                     <div className="border-t border-black pt-2 flex justify-between items-end">
-                      <div className="text-black text-xs space-y-0.5 font-medium">
-                        <p>Dodano: {addr.addedDate}</p>
-                        <p>Edytowano: {addr.editedDate}</p>
-                      </div>
-                      <a href="#" className="text-[#004a8f] text-sm">
+                      <a href="#" className="text-[#004a8f] text-sm ml-auto">
                         Otwórz nawigację
                       </a>
                     </div>
                   </div>
                 ))}
               </div>
-              {mobileLimits.addresses < clientData.addresses.length && (
+              {mobileLimits.addresses < addresses.length && (
                 <button
                   className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium"
                   onClick={() => loadMoreMobile('addresses')}
@@ -753,34 +713,55 @@ const ClientDetails: React.FC = () => {
             {/* DŁUGI - MOBILE */}
             <section>
               <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6">Długi:</h2>
-              <div className="space-y-3">
-                {clientData.debts.slice(0, mobileLimits.debts).map((debt) => (
-                  <div
-                    key={debt.id}
-                    className="border border-black rounded-lg p-3 bg-white text-sm"
-                  >
-                    <div className="text-[#004a8f] leading-tight space-y-1 mb-3">
-                      <p>
-                        Kwota: {debt.amount} {debt.currency}
-                      </p>
+              {accumulatedMobileDebts.length === 0 && !isDebtsLoading ? (
+                <div className="p-4 text-gray-500 bg-green-50 rounded-lg text-sm text-center border border-green-200 text-green-700">
+                  Brak zadłużenia. Wszystkie faktury są opłacone.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {accumulatedMobileDebts.map((debt) => (
+                    <div
+                      key={debt.id}
+                      className="rounded-lg border border-red-100 bg-white p-4 shadow-sm border-t-2 border-t-red-400 text-sm"
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">{debt.invoiceNumber}</p>
+                          <p className="text-xs text-gray-500">
+                            Termin: {new Date(debt.dueDate).toLocaleDateString('pl-PL')}
+                          </p>
+                        </div>
+                        {debt.daysOverdue > 0 ? (
+                          <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+                            {debt.daysOverdue} dni po terminie
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                            W terminie
+                          </span>
+                        )}
+                      </div>
+                      <div className="border-t border-gray-100 pt-2 flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Pozostała kwota:</span>
+                        <span className="text-sm font-bold text-red-600">
+                          {debt.amountLeft.toLocaleString('pl-PL', {
+                            minimumFractionDigits: debt.decimalPlaces,
+                          })}{' '}
+                          {debt.currencyCode}
+                        </span>
+                      </div>
                     </div>
-                    <div className="border-t border-black pt-2 flex justify-between items-center">
-                      <p className="text-black text-xs font-medium">
-                        Ostatnia aktualizacja: {debt.lastUpdate}
-                      </p>
-                      <a href="#" className="text-[#004a8f] text-sm">
-                        Szczegóły
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {mobileLimits.debts < clientData.debts.length && (
+                  ))}
+                </div>
+              )}
+
+              {debtPage < totalDebtPages && (
                 <button
-                  className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium"
-                  onClick={() => loadMoreMobile('debts')}
+                  className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium disabled:opacity-50"
+                  onClick={handleDebtMobileLoadMore}
+                  disabled={isDebtsFetching}
                 >
-                  Pokaż więcej
+                  {isDebtsFetching ? 'Ładowanie...' : 'Pokaż więcej faktur'}
                 </button>
               )}
             </section>
@@ -792,7 +773,6 @@ const ClientDetails: React.FC = () => {
             <div className="flex-1 min-w-0">
               {/* === SEKCJA KONTAKTÓW === */}
               <div className="mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col">
-                {/* 1. Toolbar */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                   <div className="flex items-center gap-4 w-full">
                     <h2 className="text-xl font-normal text-gray-800 shrink-0 w-32">Kontakty</h2>
@@ -827,7 +807,6 @@ const ClientDetails: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Tabela kontaktów */}
                 <div className="overflow-x-auto w-full">
                   <table className="w-full text-left">
                     <thead className="bg-white border-b border-gray-200">
@@ -875,25 +854,20 @@ const ClientDetails: React.FC = () => {
                   </table>
                 </div>
 
-                {/* 3. Paginacja */}
                 <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-between rounded-b-lg">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Pozycji na stronie:</span>
                     <select
                       value={contactPageSize}
-                      onChange={(e) => {
-                        setContactPageSize(Number(e.target.value));
-                        setContactPage(1);
-                      }}
+                      onChange={(e) => setContactPageSize(Number(e.target.value))}
                       className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
                     >
                       <option value={4}>4</option>
                       <option value={10}>10</option>
-                      <option value={20}>20</option>
                     </select>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {getDisplayRange(contactPage, contactPageSize, filteredContacts.length)}
+                    {getDisplayRange(contactPage, contactPageSize, totalContactItems)}
                   </div>
                   <div className="flex items-center gap-3">
                     <Button
@@ -923,7 +897,6 @@ const ClientDetails: React.FC = () => {
 
               {/* === SEKCJA SPRZEDAŻY === */}
               <div className="mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col">
-                {/* 1. Toolbar */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                   <div className="flex items-center gap-4 w-full">
                     <h2 className="text-xl font-normal text-gray-800 shrink-0 w-32">Sprzedaż</h2>
@@ -958,7 +931,6 @@ const ClientDetails: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Tabela sprzedaż */}
                 <div className="overflow-x-auto w-full">
                   <table className="w-full text-left">
                     <thead className="bg-white border-b border-gray-200">
@@ -1006,16 +978,12 @@ const ClientDetails: React.FC = () => {
                   </table>
                 </div>
 
-                {/* 3. Paginacja */}
                 <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-between rounded-b-lg">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Pozycji na stronie:</span>
                     <select
                       value={salePageSize}
-                      onChange={(e) => {
-                        setSalePageSize(Number(e.target.value));
-                        setSalePage(1);
-                      }}
+                      onChange={(e) => setSalePageSize(Number(e.target.value))}
                       className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
                     >
                       <option value={4}>4</option>
@@ -1023,7 +991,7 @@ const ClientDetails: React.FC = () => {
                     </select>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {getDisplayRange(salePage, salePageSize, filteredSales.length)}
+                    {getDisplayRange(salePage, salePageSize, totalSaleItems)}
                   </div>
                   <div className="flex items-center gap-3">
                     <Button
@@ -1051,132 +1019,131 @@ const ClientDetails: React.FC = () => {
                 </div>
               </div>
 
-              {/* === SEKCJA DŁUGÓW === */}
-              <div className="mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col">
-                {/* 1. Toolbar */}
-                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center gap-4 w-full">
-                    <h2 className="text-xl font-normal text-gray-800 shrink-0 w-32">Długi</h2>
-                    <div className="w-80">
-                      <input
-                        type="text"
-                        placeholder="Wyszukaj walutę lub kwotę..."
-                        value={debtSearch}
-                        onChange={(e) => setDebtSearch(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                      />
+              {/* === SEKCJA FINANSOWA (DŁUGI) === */}
+              <div className="mb-10 flex flex-col gap-6">
+                <div className="border-b border-gray-200 pb-3">
+                  <h2 className="text-xl font-normal text-gray-800">
+                    Sytuacja finansowa i zadłużenie
+                  </h2>
+                </div>
+
+                {isDebtSummaryLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+                  </div>
+                ) : debtSummary.length === 0 ? (
+                  <div className="flex items-center gap-2 p-4 text-green-700 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm font-medium">
+                      Brak zaległych płatności. Wszystkie faktury tej firmy są opłacone.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {debtSummary.map((item) => (
+                      <div
+                        key={item.currencyCode}
+                        className="bg-white p-4 border border-red-200 rounded-lg shadow-sm border-l-4 border-l-red-500"
+                      >
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+                          Suma zadłużenia ({item.currencyCode})
+                        </p>
+                        <p className="text-2xl font-bold text-red-600">
+                          {item.totalAmount.toLocaleString('pl-PL', {
+                            minimumFractionDigits: item.decimalPlace,
+                          })}{' '}
+                          {item.currencyCode}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {desktopDebts.length > 0 && (
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col mt-2">
+                    <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <table className="w-full text-left">
+                        <thead className="bg-gray-50">
+                          {debtTable.getHeaderGroups().map((headerGroup) => (
+                            <tr key={headerGroup.id}>
+                              {headerGroup.headers.map((header) => (
+                                <th
+                                  key={header.id}
+                                  className="px-6 py-3.5 text-sm font-semibold text-gray-900 uppercase tracking-wider"
+                                >
+                                  {flexRender(header.column.columnDef.header, header.getContext())}
+                                </th>
+                              ))}
+                            </tr>
+                          ))}
+                        </thead>
+                        <tbody>
+                          {isDebtsLoading ? (
+                            <tr>
+                              <td colSpan={4} className="text-center py-8 text-sm text-gray-500">
+                                Ładowanie faktur...
+                              </td>
+                            </tr>
+                          ) : (
+                            debtTable.getRowModel().rows.map((row) => (
+                              <tr
+                                key={row.id}
+                                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                              >
+                                {row.getVisibleCells().map((cell) => (
+                                  <td key={cell.id} className="px-6 py-3.5 text-sm text-gray-700">
+                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-white p-4 rounded-b-lg border-t border-gray-200 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600">Pozycji:</span>
+                        <select
+                          value={debtPageSize}
+                          onChange={(e) => setDebtPageSize(Number(e.target.value))}
+                          className="border border-gray-300 rounded-md bg-white px-2 py-1 text-gray-700 focus:outline-none"
+                        >
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                        </select>
+                      </div>
+                      <div className="text-gray-500">
+                        {getDisplayRange(debtPage, debtPageSize, totalDebtItems)}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          onClick={() => handleDebtDesktopPageChange(Math.max(debtPage - 1, 1))}
+                          disabled={debtPage === 1 || isDebtsFetching}
+                          variant="outline"
+                          size="sm"
+                          className="px-2 h-8 disabled:opacity-40"
+                        >
+                          Poprzednia
+                        </Button>
+                        <span className="font-medium text-gray-700 px-2">
+                          {debtPage} z {totalDebtPages}
+                        </span>
+                        <Button
+                          onClick={() =>
+                            handleDebtDesktopPageChange(Math.min(debtPage + 1, totalDebtPages))
+                          }
+                          disabled={debtPage === totalDebtPages || isDebtsFetching}
+                          variant="outline"
+                          size="sm"
+                          className="px-2 h-8 disabled:opacity-40"
+                        >
+                          Następna
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-sm text-gray-500">Sortuj po:</span>
-                    <select className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#004a8f]">
-                      <option>Ostatnia aktualizacja</option>
-                      <option>Kwota</option>
-                    </select>
-                    <Button
-                      variant="outline"
-                      className="px-3 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    >
-                      <ArrowDownWideNarrow className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    >
-                      <Filter className="w-4 h-4" /> Filtry
-                    </Button>
-                  </div>
-                </div>
-
-                {/* 2. Tabela */}
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left">
-                    <thead className="bg-white border-b border-gray-200">
-                      <tr>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Kwota</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Waluta</th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">
-                          Ostatnia aktualizacja
-                        </th>
-                        <th className="px-6 py-4 text-sm font-semibold text-gray-800">Akcje</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedDebts.map((debt) => (
-                        <tr
-                          key={debt.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <span className="text-red-600 font-bold text-sm">{debt.amount}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="bg-gray-100 text-gray-700 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium">
-                              {debt.currency}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{debt.lastUpdate}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <a href="#" className="text-[#004a8f] hover:underline font-medium">
-                              Szczegóły
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                      {paginatedDebts.length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="p-6 text-center text-gray-500">
-                            Brak wyników.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* 3. Paginacja */}
-                <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-between rounded-b-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Pozycji na stronie:</span>
-                    <select
-                      value={debtPageSize}
-                      onChange={(e) => {
-                        setDebtPageSize(Number(e.target.value));
-                        setDebtPage(1);
-                      }}
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                    >
-                      <option value={4}>4</option>
-                      <option value={10}>10</option>
-                    </select>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {getDisplayRange(debtPage, debtPageSize, filteredDebts.length)}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setDebtPage((p) => Math.max(1, p - 1))}
-                      disabled={debtPage === 1}
-                      className="h-8 w-8 rounded-full border-gray-300"
-                    >
-                      <ChevronLeft className="h-4 w-4 text-gray-600" />
-                    </Button>
-                    <span className="text-sm text-gray-700 font-medium">
-                      Strona {debtPage} z {totalDebtPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setDebtPage((p) => Math.min(totalDebtPages, p + 1))}
-                      disabled={debtPage === totalDebtPages}
-                      className="h-8 w-8 rounded-full border-gray-300"
-                    >
-                      <ChevronRight className="h-4 w-4 text-gray-600" />
-                    </Button>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
