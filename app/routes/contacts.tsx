@@ -159,7 +159,7 @@ export default function ContactList() {
         SearchTerm: debouncedSearch || undefined,
         SortBy: sortBy,
         SortDescending: sortDescending,
-        CompanyName: companyFilter ? companyFilter : undefined,
+        CompanyName: companyFilter || undefined,
         IsPrimary:
           isPrimaryFilter === 'true' ? true : isPrimaryFilter === 'false' ? false : undefined,
       };
