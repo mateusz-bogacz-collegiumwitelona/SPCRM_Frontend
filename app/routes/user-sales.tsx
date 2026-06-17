@@ -330,7 +330,6 @@ export default function UserSales() {
                             align={isMobile ? 'center' : 'start'}
                           >
                             <Calendar
-                              initialFocus
                               mode="range"
                               defaultMonth={date?.from}
                               selected={date}

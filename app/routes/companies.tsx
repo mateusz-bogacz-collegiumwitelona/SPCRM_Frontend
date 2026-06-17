@@ -62,11 +62,11 @@ const columns = [
     header: 'NIP',
     cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
   }),
-  columnHelper.accessor('isYour', {
+  (columnHelper.accessor('isYour', {
     header: 'Opiektun',
     cell: (info) => {
       const row = info.row.original;
-      if (row.isYour === true) {
+      if (row.isYour) {
         return <span className="text-green-500 font-medium">Twój klient</span>;
       } else {
         return (
@@ -77,7 +77,8 @@ const columns = [
       }
     },
   }),
-  columnHelper.accessor('adress', {
+  columnHelper.display({
+    id: 'adress',
     header: 'Adres',
     cell: (info) => {
       const row = info.row.original;
@@ -87,7 +88,7 @@ const columns = [
         </span>
       );
     },
-  }),
+  })),
   columnHelper.accessor('lastDealDate', {
     header: 'Data ostatniej transakcji',
     cell: (info) => {
@@ -351,7 +352,6 @@ export default function Companies() {
                             align={isMobile ? 'center' : 'start'}
                           >
                             <Calendar
-                              initialFocus
                               mode="range"
                               defaultMonth={date?.from}
                               selected={date}

@@ -101,7 +101,7 @@ export default function ContactList() {
   const [companyFilter, setCompanyFilter] = useState<string>('');
   const [isPrimaryFilter, setIsPrimaryFilter] = useState<string>('');
   const [accumulatedMobileContacts, setAccumulatedMobileContacts] = useState<ContactResponse[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
+  const [setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
 
   useEffect(() => {
