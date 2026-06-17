@@ -169,12 +169,15 @@ export default function UserSales() {
     isError,
     error: queryError,
   } = useQuery({
-    queryKey: ['sales', { pageNumber, pageSize, debouncedSearch, sortBy, sortDescending, date }],
+    queryKey: [
+      'sales',
+      { pageNumber, pageSize, debouncedSearch, sortBy, sortDescending, date, statusFilter },
+    ],
     queryFn: async () => {
       const params = {
         PageNumber: pageNumber,
         PageSize: pageSize,
-        SearchTerm: debouncedSearch,
+        SearchTerm: debouncedSearch || undefined,
         SortBy: sortBy,
         SortDescending: sortDescending,
         DateFrom: date?.from ? format(date.from, 'yyyy-MM-dd') : undefined,
