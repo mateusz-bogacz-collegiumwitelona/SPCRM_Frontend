@@ -11,4 +11,5 @@ export default [
   route('contacts', 'routes/contacts.tsx'),
   route('client/:clientId', 'routes/client-details.tsx'),
   route('companies', 'routes/companies.tsx'),
+  route('contact/:contactId', 'routes/contact-details.tsx'),
 ] satisfies RouteConfig;
