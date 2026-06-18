@@ -11,7 +11,7 @@ interface ContactBasicInfo {
   companyName: string;
   ownerFirstName?: string;
   ownerLastName?: string;
-  isPrimary: boolean; // Poprawiona literówka!
+  isPrimary: boolean;
 }
 
 export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) => {
@@ -45,7 +45,7 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
   return (
     <div className="mb-6 lg:mb-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
-        {/* Lewa strona: Dane osobowe (jak na obrazku) */}
+        {/* Lewa strona: Dane osobowe */}
         <div>
           <h1 className="text-4xl font-normal text-gray-900 leading-tight">
             {info.firstName} {info.lastName}
@@ -56,7 +56,7 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
           )}
         </div>
 
-        {/* Prawa strona: Tagi i opiekun (wyrównane do prawej na desktopie, do lewej na mobile) */}
+        {/* Prawa strona: Tagi i opiekun */}
         <div className="flex flex-col items-start lg:items-end gap-2 mt-2 lg:mt-0">
           <div
             className={`inline-block px-3 py-1 rounded-full ${
