@@ -15,11 +15,11 @@ const getIcon = (type: string) => {
     case 'EMAIL':
       return <Mail className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
     case 'PHONE':
-    case 'MOBILE_PHONE':
+    case 'PHONE_MOBILE':
       return <Phone className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
     case 'FAX':
       return <Printer className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
-    case 'LINKDIN':
+    case 'LINKEDIN':
       return <ExternalLink className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
     default:
       return <Globe className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
@@ -27,10 +27,11 @@ const getIcon = (type: string) => {
 };
 
 const getTypePrefix = (type: string) => {
-  if (type.includes('PHONE')) return 'Tel:';
-  if (type === 'EMAIL') return 'Email:';
-  if (type === 'LINKDIN') return 'LinkedIn:';
-  if (type === 'FAX') return 'Fax:';
+  const upperType = type.toUpperCase();
+  if (upperType.includes('PHONE')) return 'Tel:';
+  if (upperType === 'EMAIL') return 'Email:';
+  if (upperType === 'LINKEDIN') return 'LinkedIn:'; // Poprawione
+  if (upperType === 'FAX') return 'Fax:';
   return '';
 };
 
@@ -46,18 +47,30 @@ export const ContactWays: React.FC<{ contactId: string }> = ({ contactId }) => {
   if (isLoading || !ways || ways.length === 0) return null;
 
   return (
-    <div className="border border-gray-800 rounded-xl p-4 bg-white shadow-sm">
-      <ul className="space-y-3">
+    <div className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+      <ul className="space-y-4 sm:space-y-3">
         {ways.map((way, index) => (
-          <li key={index} className="flex items-center text-sm text-gray-800">
-            {getIcon(way.type)}
-            <span className="font-medium mr-1">{getTypePrefix(way.type)}</span>
-            <span>{way.value}</span>
-            {way.label && <span className="text-xs text-gray-400 ml-2">({way.label})</span>}
+          <li
+            key={index}
+            className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-800"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 flex-1 min-w-0">
+              <div className="flex items-center shrink-0">
+                {getIcon(way.type)}
+                <span className="font-medium">{getTypePrefix(way.type)}</span>
+              </div>
+
+              <span className="break-all sm:break-normal">{way.value}</span>
+
+              {way.label && <span className="text-xs text-gray-400">({way.label})</span>}
+            </div>
+
             {way.isPrimary && (
-              <span className="ml-auto text-[10px] uppercase tracking-wider bg-[#d4edda] text-[#28a745] px-2 py-0.5 rounded-full">
-                Główny
-              </span>
+              <div className="shrink-0 self-start sm:self-auto">
+                <span className="text-[10px] uppercase tracking-wider bg-[#d4edda] text-[#28a745] px-2 py-0.5 rounded-full">
+                  Główny
+                </span>
+              </div>
             )}
           </li>
         ))}
