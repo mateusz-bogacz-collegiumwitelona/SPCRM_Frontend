@@ -143,7 +143,7 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
 
   return (
     <>
-      <div className="mt-8 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10">
             <Loader2 className="h-8 w-8 animate-spin text-blue-900 mb-2" />

@@ -14,10 +14,18 @@ export default function ContactDetails() {
   return (
     <AuthGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
-        <div className="max-w-3xl mx-auto p-4 lg:p-6 space-y-6">
+        <div className="w-full mx-auto p-4 lg:p-6">
           <ContactHeader contactId={contactId} />
-          <ContactWays contactId={contactId} />
-          <ContactNotes contactId={contactId} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-1">
+              <ContactWays contactId={contactId} />
+            </div>
+
+            <div className="lg:col-span-2">
+              <ContactNotes contactId={contactId} />
+            </div>
+          </div>
         </div>
       </MainLayout>
     </AuthGuard>
