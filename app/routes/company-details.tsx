@@ -65,7 +65,7 @@ const renderMapContent = (
   );
 };
 
-const ClientDetails: React.FC = () => {
+const CompanyDetails: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
 
   const {
@@ -169,4 +169,4 @@ const ClientDetails: React.FC = () => {
   );
 };
 
-export default ClientDetails;
+export default CompanyDetails;

@@ -21,6 +21,7 @@ import {
 } from '@tanstack/react-table';
 import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
+import { Link } from 'react-router';
 
 interface ContactResponse {
   id: string;
@@ -82,10 +83,13 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: 'Akcje',
-    cell: () => (
-      <a href="#" className="font-medium text-blue-900 hover:underline">
+    cell: (info) => (
+      <Link
+        to={`/contact/${info.row.original.id}`}
+        className="font-medium text-blue-900 hover:underline"
+      >
         Szczegóły
-      </a>
+      </Link>
     ),
   }),
 ];

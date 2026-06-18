@@ -28,6 +28,7 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import { Link } from 'react-router';
 
 interface GetCompanyResponse {
   id: string;
@@ -115,10 +116,13 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: 'Akcje',
-    cell: () => (
-      <a href="#" className="font-medium text-blue-900 hover:underline">
+    cell: (info) => (
+      <Link
+        to={`/company/${info.row.original.id}`}
+        className="font-medium text-blue-900 hover:underline"
+      >
         Szczegóły
-      </a>
+      </Link>
     ),
   }),
 ];
@@ -433,9 +437,14 @@ export default function Companies() {
                     <p className="text-xs text-gray-500">
                       Z transakcją: {item.lastDealDate ? formatDate(item.lastDealDate) : 'Brak'}
                     </p>
-                    <a href="#" className="text-xs font-medium text-blue-900 hover:underline">
-                      Szczegóły
-                    </a>
+                    <div className="border-t border-gray-100 pt-3 flex items-center justify-end">
+                      <Link
+                        to={`/company/${item.id}`}
+                        className="text-xs font-medium text-blue-900 hover:underline"
+                      >
+                        Szczegóły
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
