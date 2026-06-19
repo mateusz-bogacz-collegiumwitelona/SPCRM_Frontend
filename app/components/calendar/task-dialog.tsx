@@ -6,6 +6,8 @@ import { Link } from 'react-router';
 import { Calendar, User, Briefcase, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '~/api/api';
 
 interface TaskDialogProps {
   task: TaskCalendarResponse | null;
@@ -14,7 +16,25 @@ interface TaskDialogProps {
 }
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose }) => {
+  const { data: dictionaries } = useQuery({
+    queryKey: ['task-dictionaries'],
+    queryFn: async () => {
+      const res = await api.get('/tasks/dictionaries');
+      return res.data.data;
+    },
+    staleTime: Infinity,
+  });
+
   if (!task) return null;
+
+  const statusLabel =
+    dictionaries?.statuses?.find((s: { value: string; label: string }) => s.value === task.status)
+      ?.label || task.status;
+
+  const priorityLabel =
+    dictionaries?.priorities?.find(
+      (p: { value: string; label: string }) => p.value === task.priority,
+    )?.label || task.priority;
 
   const isCompleted = task.status === 'Complete' || task.status === 'Zakończona';
   const isOverdue = new Date(task.dueAt) < new Date() && !isCompleted;
@@ -47,14 +67,16 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose })
                 />
               )}
               <span className="font-medium">Status:</span>
-              <span>{task.status}</span>
+              {/* Wyświetlamy przetłumaczoną etykietę statusu */}
+              <span>{statusLabel}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-700 px-1">
             <span className="font-medium">Priorytet:</span>
+            {/* Wyświetlamy przetłumaczoną etykietę priorytetu */}
             <span className="bg-gray-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider">
-              {task.priority}
+              {priorityLabel}
             </span>
           </div>
 
@@ -81,7 +103,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose })
                 <div className="flex items-center gap-3 text-sm">
                   <Briefcase className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">Transakcja:</span>
-                  {/* NA PRZYŁOŚĆ */}
+                  {/* NA PRZYSZŁOŚĆ */}
                   <Link
                     to={`/deal/${task.dealId}`}
                     className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
