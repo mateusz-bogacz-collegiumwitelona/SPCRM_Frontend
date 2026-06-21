@@ -21,7 +21,7 @@ export const TaskContactDetails = ({ taskId }: { taskId: string }) => {
       try {
         const response = await api.get(`/tasks/${taskId}/contact`);
         return response.data.data;
-      } catch (error) {
+      } catch {
         return null;
       }
     },

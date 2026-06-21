@@ -6,8 +6,6 @@ import { Link } from 'react-router';
 import { Calendar, User, Briefcase, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 
 interface TaskDialogProps {
@@ -18,15 +16,6 @@ interface TaskDialogProps {
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose }) => {
   const { getStatusLabel, getPriorityLabel } = useTaskDictionaries();
-
-  const { data: dictionaries } = useQuery({
-    queryKey: ['task-dictionaries'],
-    queryFn: async () => {
-      const res = await api.get('/tasks/dictionaries');
-      return res.data.data;
-    },
-    staleTime: Infinity,
-  });
 
   if (!task) return null;
 

@@ -21,7 +21,7 @@ export const TaskDeals = ({ taskId }: { taskId: string }) => {
       try {
         const response = await api.get(`/tasks/${taskId}/deal`);
         return response.data.data;
-      } catch (error) {
+      } catch {
         return null;
       }
     },
