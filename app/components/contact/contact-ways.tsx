@@ -1,39 +1,8 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { Mail, Phone, Printer, Globe, ExternalLink } from 'lucide-react';
-
-interface ContactWay {
-  type: string;
-  value: string;
-  label?: string;
-  isPrimary: boolean;
-}
-
-const getIcon = (type: string) => {
-  switch (type.toUpperCase()) {
-    case 'EMAIL':
-      return <Mail className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
-    case 'PHONE':
-    case 'PHONE_MOBILE':
-      return <Phone className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
-    case 'FAX':
-      return <Printer className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
-    case 'LINKEDIN':
-      return <ExternalLink className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
-    default:
-      return <Globe className="w-4 h-4 text-gray-500 mr-2 shrink-0" />;
-  }
-};
-
-const getTypePrefix = (type: string) => {
-  const upperType = type.toUpperCase();
-  if (upperType.includes('PHONE')) return 'Tel:';
-  if (upperType === 'EMAIL') return 'Email:';
-  if (upperType === 'LINKEDIN') return 'LinkedIn:'; // Poprawione
-  if (upperType === 'FAX') return 'Fax:';
-  return '';
-};
+import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
+import { type ContactWay } from '~/interfaces/contact-way';
 
 export const ContactWays: React.FC<{ contactId: string }> = ({ contactId }) => {
   const { data: ways, isLoading } = useQuery<ContactWay[]>({

@@ -5,11 +5,11 @@ import { api } from '~/api/api';
 import { useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 
-import { ClientHeader } from '~/components/client/client-header';
-import { AddressesMobile } from '~/components/client/addresses-mobile';
-import { ContactsSection } from '~/components/client/contacts-section';
-import { SalesSection } from '~/components/client/sales-section';
-import { DebtsSection } from '~/components/client/debts-section';
+import { ClientHeader } from '~/components/companies/client-header';
+import { AddressesMobile } from '~/components/companies/addresses-mobile';
+import { ContactsSection } from '~/components/companies/contacts-section';
+import { SalesSection } from '~/components/companies/sales-section';
+import { DebtsSection } from '~/components/companies/debts-section';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 
 interface CompanyAddress {

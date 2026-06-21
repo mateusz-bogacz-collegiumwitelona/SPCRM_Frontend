@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
+import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 
 interface TaskDialogProps {
   task: TaskCalendarResponse | null;
@@ -16,6 +17,8 @@ interface TaskDialogProps {
 }
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose }) => {
+  const { getStatusLabel, getPriorityLabel } = useTaskDictionaries();
+
   const { data: dictionaries } = useQuery({
     queryKey: ['task-dictionaries'],
     queryFn: async () => {
@@ -27,14 +30,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose })
 
   if (!task) return null;
 
-  const statusLabel =
-    dictionaries?.statuses?.find((s: { value: string; label: string }) => s.value === task.status)
-      ?.label || task.status;
-
-  const priorityLabel =
-    dictionaries?.priorities?.find(
-      (p: { value: string; label: string }) => p.value === task.priority,
-    )?.label || task.priority;
+  const statusLabel = getStatusLabel(task.status);
+  const priorityLabel = getPriorityLabel(task.priority);
 
   const isCompleted = task.status === 'Complete' || task.status === 'Zakończona';
   const isOverdue = new Date(task.dueAt) < new Date() && !isCompleted;

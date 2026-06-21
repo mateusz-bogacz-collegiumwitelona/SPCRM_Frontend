@@ -28,6 +28,7 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import { formatCurrency } from '~/utils/currency-formatter';
 
 interface UserSalesResponse {
   id: string;
@@ -83,8 +84,7 @@ const columns = [
       const row = info.row.original;
       return (
         <span className="font-medium text-gray-900">
-          {row.value.toLocaleString('pl-PL', { minimumFractionDigits: row.decimalPlace })}{' '}
-          {row.currency}
+          {formatCurrency(row.value, row.decimalPlace)} {row.currency}
         </span>
       );
     },
@@ -284,10 +284,10 @@ export default function UserSales() {
                   <Filter className="w-4 h-4" />
                   <span>Filtry</span>
                   {(date?.from || date?.to) && (
-                    <span className="absolute -top-1 -right-1 flex h-3 w-3 relative">
+                    <span className="-top-1 -right-1 flex h-3 w-3 relative">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900"></span>
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3 relative"> ... </span>
+                      <span className="-top-1 -right-1 flex h-3 w-3 relative"> ... </span>
                     </span>
                   )}
                 </Button>
@@ -326,7 +326,7 @@ export default function UserSales() {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent
-                            className="w-auto p-0 z-[100] max-h-[85vh] overflow-y-auto max-w-[95vw]"
+                            className="w-auto p-0 z-100 max-h-[85vh] overflow-y-auto max-w-[95vw]"
                             align={isMobile ? 'center' : 'start'}
                           >
                             <Calendar
@@ -422,10 +422,7 @@ export default function UserSales() {
                         </p>
                         <p className="text-xs text-gray-500 mb-1">NIP: {item.nip}</p>
                         <p className="text-sm font-medium text-gray-700">
-                          {item.value.toLocaleString('pl-PL', {
-                            minimumFractionDigits: item.decimalPlace,
-                          })}{' '}
-                          {item.currency}
+                          {formatCurrency(item.value, item.decimalPlace)} {item.currency}
                         </p>
                       </div>
                       <span
