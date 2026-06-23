@@ -29,6 +29,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { cn } from '~/lib/utils';
 import type { DateRange } from 'react-day-picker';
 import { formatCurrency } from '~/utils/currency-formatter';
+import { Link } from 'react-router';
+import { getStatusConfig } from '~/utils/deal-status';
 
 interface UserSalesResponse {
   id: string;
@@ -41,20 +43,6 @@ interface UserSalesResponse {
   currency: string;
   companyName: string;
 }
-
-const getStatusConfig = (rawStatus: string) => {
-  const status = (rawStatus || '').toLowerCase();
-  if (status.includes('trakcie') || status.includes('progress') || status.includes('w_trakcie')) {
-    return { label: 'W trakcie', bgColor: 'bg-green-100', textColor: 'text-green-700' };
-  }
-  if (status.includes('zakończ') || status.includes('complet')) {
-    return { label: 'Zakończona', bgColor: 'bg-blue-100', textColor: 'text-blue-700' };
-  }
-  if (status.includes('oczek') || status.includes('pend')) {
-    return { label: 'Oczekująca', bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' };
-  }
-  return { label: rawStatus || 'Nieznany', bgColor: 'bg-gray-100', textColor: 'text-gray-700' };
-};
 
 const formatDate = (isoDate: string) => {
   return new Date(isoDate).toLocaleDateString('pl-PL', {
@@ -109,10 +97,13 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: 'Akcje',
-    cell: () => (
-      <a href="#" className="font-medium text-blue-900 hover:underline">
+    cell: (info) => (
+      <Link
+        to={`/sale/${info.row.original.id}`}
+        className="font-medium text-blue-900 hover:underline"
+      >
         Szczegóły
-      </a>
+      </Link>
     ),
   }),
 ];
@@ -438,6 +429,12 @@ export default function UserSales() {
                       <p className="text-xs font-medium text-gray-900 truncate max-w-30">
                         {item.name}
                       </p>
+                      <Link
+                        to={`/sale/${item.id}`}
+                        className="text-sm font-medium text-blue-900 hover:underline"
+                      >
+                        Szczegóły
+                      </Link>
                     </div>
                   </div>
                 );

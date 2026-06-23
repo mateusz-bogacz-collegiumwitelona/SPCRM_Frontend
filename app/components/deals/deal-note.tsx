@@ -3,11 +3,11 @@ import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/ note-response';
 import { NotesSection } from '~/components/notes-section';
 
-export const TaskNote = ({ taskId }: { taskId: string }) => {
+export const DealNote = ({ dealId }: { dealId: string }) => {
   const { data: notes, isLoading } = useQuery<NoteResponse[]>({
-    queryKey: ['task-notes', taskId],
+    queryKey: ['deal-notes', dealId],
     queryFn: async () => {
-      const response = await api.get(`/tasks/${taskId}/notes`);
+      const response = await api.get(`/sales/${dealId}/notes`);
       return response.data.data;
     },
   });
