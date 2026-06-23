@@ -3,7 +3,7 @@ import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/ note-response';
 import { NotesSection } from '~/components/notes-section';
 
-export const DealNote = ({ dealId }: { dealId: string }) => {
+export const SaleNote = ({ dealId }: { dealId: string }) => {
   const { data: notes, isLoading } = useQuery<NoteResponse[]>({
     queryKey: ['deal-notes', dealId],
     queryFn: async () => {

@@ -121,7 +121,7 @@ const columns = [
   }),
 ];
 
-export const DealProductsTable = ({ dealId }: { dealId: string }) => {
+export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');

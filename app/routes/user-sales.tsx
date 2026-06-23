@@ -30,7 +30,7 @@ import { cn } from '~/lib/utils';
 import type { DateRange } from 'react-day-picker';
 import { formatCurrency } from '~/utils/currency-formatter';
 import { Link } from 'react-router';
-import { getStatusConfig } from '~/utils/deal-status';
+import { getStatusConfig } from '~/utils/sale-status';
 
 interface UserSalesResponse {
   id: string;

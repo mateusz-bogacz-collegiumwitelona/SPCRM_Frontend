@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { Building2, Calendar, CircleDollarSign, Tag, User } from 'lucide-react';
 import { formatCurrency } from '~/utils/currency-formatter';
-import { getStatusConfig } from '~/utils/deal-status';
+import { getStatusConfig } from '~/utils/sale-status';
 
 interface SaleDetailResponse {
   id: string;
@@ -17,7 +17,7 @@ interface SaleDetailResponse {
   companyName: string;
 }
 
-export const DealInfo = ({ dealId }: { dealId: string }) => {
+export const SaleInfo = ({ dealId }: { dealId: string }) => {
   const {
     data: deal,
     isLoading,
