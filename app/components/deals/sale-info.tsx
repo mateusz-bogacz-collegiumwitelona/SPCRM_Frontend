@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { Building2, Calendar, CircleDollarSign, Tag, User } from 'lucide-react';
+import {
+  AlertCircle,
+  Building2,
+  Calendar,
+  CircleDollarSign,
+  Receipt,
+  Tag,
+  User,
+} from 'lucide-react';
 import { formatCurrency } from '~/utils/currency-formatter';
 import { getStatusConfig } from '~/utils/sale-status';
 
@@ -15,6 +23,10 @@ interface SaleDetailResponse {
   ownerFirstName: string;
   ownerLastName: string;
   companyName: string;
+  invoicedAmount: number;
+  paidAmount: number;
+  isOverdueInvoices: boolean;
+  paymentPercentage: number;
 }
 
 export const SaleInfo = ({ dealId }: { dealId: string }) => {
@@ -43,6 +55,7 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
     return <div className="text-red-500 mb-6">Nie udało się pobrać danych zadania.</div>;
 
   const status = getStatusConfig(deal.status);
+  const isFullyPaid = deal.paidAmount >= deal.value;
 
   return (
     <div className="mb-6">
@@ -51,7 +64,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
         <h1 className="text-3xl lg:text-4xl font-normal text-[#004a8f] mb-4">{deal.name}</h1>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Status - można tu w przyszłości dodać dynamiczne kolory na podstawie statusu */}
           <span
             className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${status.bgColor} ${status.textColor}`}
           >
@@ -59,7 +71,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
             {status.label}
           </span>
 
-          {/* Data Zamknięcia */}
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
             <Calendar className="w-4 h-4" />
             {new Date(deal.closeDate).toLocaleDateString('pl-PL', {
@@ -68,12 +79,20 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
               year: 'numeric',
             })}
           </span>
+
+          {/* OSTRZEŻENIE O ZALEGŁOŚCIACH */}
+          {deal.isOverdueInvoices && (
+            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-red-700 bg-red-100 px-3 py-1 rounded-full border border-red-200 shadow-sm">
+              <AlertCircle className="w-4 h-4" />
+              Zaległe płatności!
+            </span>
+          )}
         </div>
       </div>
 
       {/* KARTA ZE SZCZEGÓŁAMI BIZNESOWYMI */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Klient */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
@@ -85,21 +104,49 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
           {/* Opiekun Handlowy */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
-              <User className="w-4 h-4 text-gray-400" /> Opiekun handlowy
+              <User className="w-4 h-4 text-gray-400" /> Opiekun
             </span>
             <span className="text-base text-gray-900 font-medium">
               {deal.ownerFirstName} {deal.ownerLastName}
             </span>
           </div>
 
-          {/* Wartość */}
+          {/* Wartość Całkowita */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
-              <CircleDollarSign className="w-4 h-4 text-gray-400" /> Wartość netto
+              <CircleDollarSign className="w-4 h-4 text-gray-400" /> Wartość zamówienia
             </span>
-            <span className="text-xl text-green-600 font-bold tracking-tight">
+            <span className="text-xl text-gray-900 font-bold tracking-tight">
               {formatCurrency(deal.value, deal.decimalPlaces)} {deal.currencyCode}
             </span>
+          </div>
+
+          {/* SEKCJA ROZLICZEŃ (Nowa!) */}
+          <div className="flex flex-col gap-2 bg-gray-50 p-3 rounded-md border border-gray-100">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-500 flex items-center gap-1.5 font-medium">
+                <Receipt className="w-4 h-4 text-gray-400" /> Rozliczenie
+              </span>
+              <span className={`font-bold ${isFullyPaid ? 'text-green-600' : 'text-[#004a8f]'}`}>
+                {deal.paymentPercentage}%
+              </span>
+            </div>
+
+            {/* Pasek postępu płatności */}
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full ${deal.paymentPercentage >= 100 ? 'bg-green-500' : 'bg-[#004a8f]'}`}
+                  style={{ width: `${deal.paymentPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>
+                Opłacono: {formatCurrency(deal.paidAmount, deal.decimalPlaces)} {deal.currencyCode}
+              </span>
+            </div>
           </div>
         </div>
       </div>
