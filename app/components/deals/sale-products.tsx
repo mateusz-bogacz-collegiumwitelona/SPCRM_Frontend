@@ -139,7 +139,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const isMobileAppend = useRef(false);
 
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300); // 300ms to standard dla debounce
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
@@ -179,7 +179,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
         SteelGrade: steelGradeFilter || undefined,
       };
 
-      // DODANE `params` do zapytania!
       const response = await api.get(`/sales/${dealId}/products`, { params });
       return response.data?.value || response.data?.data || response.data;
     },
