@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { cn } from '~/lib/utils';
+import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
 import { formatCurrency } from '~/utils/currency-formatter';
 import { Link } from 'react-router';

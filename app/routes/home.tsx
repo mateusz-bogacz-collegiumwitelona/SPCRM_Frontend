@@ -42,22 +42,8 @@ export default function Home() {
         password,
       });
 
-      const result = response.data;
-
-      if (result.success && result.data?.token) {
-        login(result.data);
-
-        const userRole = result.data.roles;
-
-        if (userRole.includes('Admin')) {
-          navigate('/admin-dashboard', { replace: true });
-        } else if (userRole.includes('Manager')) {
-          navigate('/manager-dashboard', { replace: true });
-        } else if (userRole.includes('User')) {
-          navigate('/dashboard', { replace: true });
-        } else {
-          setError('Error: Unrecognized user role');
-        }
+      if (response.status >= 200 && response.status < 300) {
+        await login();
       }
     } catch (error_: unknown) {
       const err = error_ as ApiError;

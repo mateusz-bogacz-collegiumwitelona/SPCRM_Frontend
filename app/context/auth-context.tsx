@@ -1,7 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { api } from '~/api/api';
 
 interface User {
-  token: string;
   userId: string;
   email: string;
   userName: string;
@@ -11,8 +11,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (userData: User) => void;
-  logout: () => void;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const authContext = createContext<AuthContextType | null>(null);
@@ -21,32 +21,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true); // <-- DODANE: Na start aplikacja "ładuje" stan
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing user data from localStorage:', error);
-        localStorage.removeItem('user');
+  const fetchUser = async () => {
+    try {
+      const response = await api.get('/auth/me');
+      if (response.data?.success) {
+        setUser(response.data.data);
+      } else {
+        setUser(null);
       }
+    } catch {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, []);
-
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('role', JSON.stringify(userData.roles));
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('userId', userData.userId);
-    localStorage.setItem('email', userData.email);
-    localStorage.setItem('userName', userData.userName);
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.clear();
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const login = async () => {
+    await fetchUser();
+  };
+
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Błąd podczas wylogowywania:', error);
+    } finally {
+      setUser(null);
+    }
   };
 
   const value = useMemo(

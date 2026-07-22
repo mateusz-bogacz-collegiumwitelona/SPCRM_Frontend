@@ -6,7 +6,7 @@ import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
 import type ApiError from '~/interfaces/apiError';
 import { getErrorMessage } from '~/utils/error-mapper';
-import { RoleGuard } from '~/utils/role-guard';
+import { RoleGuard } from '~/lib/role-guard';
 import { MainLayout } from '~/components/main-layout';
 
 export interface CompanyMapData {
@@ -82,10 +82,10 @@ export default function MapPage() {
       }
     };
 
-    if (user?.token) {
+    if (user) {
       void fetchCompanies();
     }
-  }, [searchTerm, user?.token]);
+  }, [searchTerm, user]);
 
   useEffect(() => {
     let isMounted = true;

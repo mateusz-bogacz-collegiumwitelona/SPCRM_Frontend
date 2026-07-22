@@ -4,10 +4,9 @@ import { Loader2 } from 'lucide-react';
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  allowedRoles: string[];
 }
 
-export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
+export const AuthGuard = ({ children }: AuthGuardProps) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -19,10 +18,6 @@ export const AuthGuard = ({ children, allowedRoles }: AuthGuardProps) => {
   }
 
   if (!user) return <Navigate to="/" replace />;
-
-  const hasRequiredRole = user.roles.some((role) => allowedRoles.includes(role));
-
-  if (!hasRequiredRole) return <Navigate to="/" replace />;
 
   return <>{children}</>;
 };
