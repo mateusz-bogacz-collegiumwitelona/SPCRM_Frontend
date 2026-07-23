@@ -22,6 +22,7 @@ import {
 import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
 import { Link } from 'react-router';
+import { RoleGuard } from '~/lib/role-guard';
 
 interface ContactResponse {
   id: string;
@@ -218,7 +219,7 @@ export default function ContactList() {
     : null;
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
           <h1 className="text-lg lg:text-2xl font-semibold">Kontakty</h1>
@@ -499,6 +500,6 @@ export default function ContactList() {
           </>
         )}
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 }

@@ -5,6 +5,7 @@ import { MainLayout } from '~/components/main-layout';
 import { ContactHeader } from '~/components/contact/contact-header';
 import { ContactWays } from '~/components/contact/contact-ways';
 import { ContactNotes } from '~/components/contact/contact-notes';
+import { RoleGuard } from '~/lib/role-guard';
 
 export default function ContactDetails() {
   const { contactId } = useParams<{ contactId: string }>();
@@ -12,7 +13,7 @@ export default function ContactDetails() {
   if (!contactId) return null;
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         <div className="w-full mx-auto p-4 lg:p-6">
           <ContactHeader contactId={contactId} />
@@ -28,6 +29,6 @@ export default function ContactDetails() {
           </div>
         </div>
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 }

@@ -5,6 +5,7 @@ import { SaleInfo } from '~/components/deals/sale-info';
 import React from 'react';
 import { SaleProductsTable } from '~/components/deals/sale-products';
 import { SaleNote } from '~/components/deals/sale-note';
+import { RoleGuard } from '~/lib/role-guard';
 
 export default function SaleDetail() {
   const { dealId } = useParams<{ dealId: string }>();
@@ -12,7 +13,7 @@ export default function SaleDetail() {
   if (!dealId) return null;
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         <div className="w-full mx-auto p-4 lg:p-6">
           <SaleInfo dealId={dealId} />
@@ -28,6 +29,6 @@ export default function SaleDetail() {
           </div>
         </div>
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 }

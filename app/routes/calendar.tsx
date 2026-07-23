@@ -15,6 +15,7 @@ import plLocale from '@fullcalendar/core/locales/pl';
 
 import { type TaskCalendarResponse } from '~/interfaces/task-calendar-response';
 import { TaskDialog } from '~/components/calendar/task-dialog';
+import { RoleGuard } from '~/lib/role-guard';
 
 export default function CalendarPage() {
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
@@ -88,7 +89,7 @@ export default function CalendarPage() {
   if (!isMounted) return null;
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         {/* Pasek nagłówka */}
         <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 flex justify-between items-center">
@@ -210,6 +211,6 @@ export default function CalendarPage() {
           }
         `}</style>
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 }

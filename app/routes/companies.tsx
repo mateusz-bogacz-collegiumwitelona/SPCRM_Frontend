@@ -29,6 +29,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
 import { Link } from 'react-router';
+import { RoleGuard } from '~/lib/role-guard';
 
 interface GetCompanyResponse {
   id: string;
@@ -243,7 +244,7 @@ export default function Companies() {
     : null;
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
           <h1 className="text-lg lg:text-2xl font-semibold">Baza firm</h1>
@@ -555,6 +556,6 @@ export default function Companies() {
           </>
         )}
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 }

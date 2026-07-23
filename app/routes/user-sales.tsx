@@ -31,6 +31,7 @@ import type { DateRange } from 'react-day-picker';
 import { formatCurrency } from '~/utils/currency-formatter';
 import { Link } from 'react-router';
 import { getStatusConfig } from '~/utils/sale-status';
+import { RoleGuard } from '~/lib/role-guard';
 
 interface UserSalesResponse {
   id: string;
@@ -224,7 +225,7 @@ export default function UserSales() {
     : null;
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
           <h1 className="text-lg lg:text-2xl font-semibold">Sprzedaż</h1>
@@ -545,6 +546,6 @@ export default function UserSales() {
           </>
         )}
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 }

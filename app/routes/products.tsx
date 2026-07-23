@@ -22,6 +22,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
+import { RoleGuard } from '~/lib/role-guard';
 
 interface ProductResonse {
   id: string;
@@ -217,7 +218,7 @@ export default function ProductsList() {
     : null;
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         {/* NAGŁÓWEK */}
         <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
@@ -498,6 +499,6 @@ export default function ProductsList() {
           </>
         )}
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 }

@@ -5,6 +5,7 @@ import { TaskContactDetails } from '~/components/task/task-contact';
 import { TaskNote } from '~/components/task/task-note';
 import { TaskDeals } from '~/components/task/task-deals';
 import { TaskInfo } from '~/components/task/task-info';
+import { RoleGuard } from '~/lib/role-guard';
 const TaskDetails: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
 
@@ -18,7 +19,7 @@ const TaskDetails: React.FC = () => {
   }
 
   return (
-    <AuthGuard allowedRoles={['User', 'Manager']}>
+    <RoleGuard allowedRoles={['User', 'Manager']}>
       <MainLayout>
         {/* Desktop */}
         <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
@@ -45,7 +46,7 @@ const TaskDetails: React.FC = () => {
           </div>
         </div>
       </MainLayout>
-    </AuthGuard>
+    </RoleGuard>
   );
 };
 
