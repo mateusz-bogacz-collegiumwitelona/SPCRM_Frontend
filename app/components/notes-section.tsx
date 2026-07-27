@@ -1,16 +1,18 @@
 import type { NoteResponse } from '~/interfaces/ note-response';
-import { MessageSquare } from 'lucide-react';
+import { Edit2, MessageSquare } from 'lucide-react';
 
 interface NotesSectionProps {
   notes?: NoteResponse[];
   isLoading: boolean;
   emptyMessage?: string;
+  onEditClick?: (note: NoteResponse) => void;
 }
 
 export const NotesSection = ({
   notes,
   isLoading,
   emptyMessage = 'Brak notatek',
+  onEditClick,
 }: NotesSectionProps) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
@@ -40,6 +42,15 @@ export const NotesSection = ({
                 </span>
                 <span className="text-xs text-gray-500">
                   {new Date(note.createdAt).toLocaleDateString('pl-PL')}
+                  {onEditClick && (
+                    <button
+                      onClick={() => onEditClick(note)}
+                      className="text-gray-400 hover:text-[#004a8f] transition-colors"
+                      title="Edytuj notatkę"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </span>
               </div>
               {/* Dodane wyświetlanie tytułu notatki */}

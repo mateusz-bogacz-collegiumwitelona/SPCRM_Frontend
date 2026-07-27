@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
@@ -10,11 +10,15 @@ import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2, Search, MessageSquare } from 'lucide-react';
 
+import { useEditNote } from '~/hooks/use-edit-note';
+import { NoteEditDialog } from '~/components/note-edit-dialog';
 import { ContactNoteDialog, type ContactNote } from './contact-note-dialog';
 
 const columnHelper = createColumnHelper<ContactNote>();
 
 export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => {
+  const queryClient = useQueryClient();
+
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +28,13 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   const isMobileAppend = useRef(false);
 
   const [selectedNote, setSelectedNote] = useState<ContactNote | null>(null);
+  const [editingNote, setEditingNote] = useState<ContactNote | null>(null);
+
+  const { mutateAsync: editNoteAsync } = useEditNote({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
+    },
+  });
 
   const columns = useMemo(
     () => [
@@ -67,12 +78,20 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
         id: 'actions',
         header: 'Akcje',
         cell: (info) => (
-          <button
-            onClick={() => setSelectedNote(info.row.original)}
-            className="text-blue-900 font-medium text-sm hover:underline"
-          >
-            Szczegóły
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setSelectedNote(info.row.original)}
+              className="text-blue-900 font-medium text-sm hover:underline"
+            >
+              Szczegóły
+            </button>
+            <button
+              onClick={() => setEditingNote(info.row.original)}
+              className="text-gray-500 font-medium text-sm hover:text-blue-900 hover:underline"
+            >
+              Edytuj
+            </button>
+          </div>
         ),
       }),
     ],
@@ -188,16 +207,24 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                     {note.content}
                   </p>
 
-                  {/* NOWY, WYGODNY PRZYCISK MOBILNY */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedNote(note)}
-                    className="w-full mb-4 text-blue-900 border-gray-200 hover:bg-gray-50 bg-white shadow-sm"
-                  >
-                    Przeczytaj całą notatkę
-                  </Button>
-
+                  <div className="flex gap-2 w-full mb-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedNote(note)}
+                      className="flex-1 text-blue-900 border-gray-200 hover:bg-gray-50 bg-white shadow-sm"
+                    >
+                      Przeczytaj
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingNote(note)}
+                      className="flex-1 text-gray-700 border-gray-200 hover:bg-gray-50 bg-white shadow-sm"
+                    >
+                      Edytuj
+                    </Button>
+                  </div>
                   <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-gray-500">
                     <span className="font-medium bg-gray-50 px-2 py-1 rounded text-gray-700">
                       {note.authorFirstName} {note.authorLastName}
@@ -332,6 +359,13 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
         note={selectedNote}
         isOpen={!!selectedNote}
         onClose={() => setSelectedNote(null)}
+      />
+
+      <NoteEditDialog
+        isOpen={!!editingNote}
+        onClose={() => setEditingNote(null)}
+        note={editingNote}
+        onSave={editNoteAsync}
       />
     </>
   );
