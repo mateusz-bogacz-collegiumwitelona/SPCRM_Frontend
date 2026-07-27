@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
 import { format } from 'date-fns';
 import { Filter, Loader2 } from 'lucide-react';

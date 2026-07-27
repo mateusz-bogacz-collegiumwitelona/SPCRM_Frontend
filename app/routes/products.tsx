@@ -20,7 +20,6 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 

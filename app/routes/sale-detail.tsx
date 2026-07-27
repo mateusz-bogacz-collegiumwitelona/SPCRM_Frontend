@@ -1,4 +1,3 @@
-import { AuthGuard } from '~/lib/auth-guard';
 import { useParams } from 'react-router';
 import { MainLayout } from '~/components/main-layout';
 import { SaleInfo } from '~/components/deals/sale-info';

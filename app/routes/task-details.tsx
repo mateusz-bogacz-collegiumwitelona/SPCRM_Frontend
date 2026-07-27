@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
 import { TaskContactDetails } from '~/components/task/task-contact';
 import { TaskNote } from '~/components/task/task-note';

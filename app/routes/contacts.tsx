@@ -19,7 +19,6 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
 import { Link } from 'react-router';
 import { RoleGuard } from '~/lib/role-guard';
@@ -106,17 +105,7 @@ export default function ContactList() {
   const [companyFilter, setCompanyFilter] = useState<string>('');
   const [isPrimaryFilter, setIsPrimaryFilter] = useState<string>('');
   const [accumulatedMobileContacts, setAccumulatedMobileContacts] = useState<ContactResponse[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 100);

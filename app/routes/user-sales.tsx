@@ -20,7 +20,6 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/main-layout';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';

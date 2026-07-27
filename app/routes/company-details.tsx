@@ -17,8 +17,8 @@ interface CompanyAddress {
   street: string;
   city: string;
   zipCode: string;
-  latitude?: number;
-  longitude?: number;
+  latitude?: number | null;
+  longitude?: number | null;
   type: string;
 }
 
@@ -111,8 +111,8 @@ const CompanyDetails: React.FC = () => {
       street: addr.street,
       city: addr.city,
       zipCode: addr.zipCode,
-      latitude: addr.latitude,
-      longitude: addr.longitude,
+      latitude: addr.latitude ?? null,
+      longitude: addr.longitude ?? null,
       type: addr.type,
     }));
   }, [addresses]);
