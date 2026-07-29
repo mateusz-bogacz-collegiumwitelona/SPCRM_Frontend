@@ -8,11 +8,14 @@ import {
 } from '@tanstack/react-table';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
-import { ChevronLeft, ChevronRight, Loader2, Search, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Search, MessageSquare, Plus } from 'lucide-react';
 
 import { useEditNote } from '~/hooks/use-edit-note';
 import { NoteEditDialog } from '~/components/note-edit-dialog';
 import { ContactNoteDialog, type ContactNote } from './contact-note-dialog';
+
+import { useAddNote } from '~/hooks/use-add-note';
+import { NoteAddDialog } from '~/components/note-add-dialog';
 
 const columnHelper = createColumnHelper<ContactNote>();
 
@@ -23,6 +26,8 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const [accumulatedMobileNotes, setAccumulatedMobileNotes] = useState<ContactNote[]>([]);
   const isMobileAppend = useRef(false);
@@ -36,6 +41,24 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     },
   });
 
+  // Mutacja dla dodawania nowej notatki
+  const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
+      setSearchTerm('');
+      setPageNumber(1);
+    },
+  });
+
+  const handleSaveNewNote = async (title: string, content: string) => {
+    await addNoteAsync({
+      targetId: contactId,
+      title,
+      content,
+      noteType: 'Contact',
+    });
+  };
+
   const columns = useMemo(
     () => [
       columnHelper.accessor('title', {
@@ -45,7 +68,7 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
       columnHelper.accessor('content', {
         header: 'Treść',
         cell: (info) => (
-          <span className="text-gray-700 whitespace-pre-wrap break-words line-clamp-3">
+          <span className="text-gray-700 whitespace-pre-wrap wrap-break-word line-clamp-3">
             {info.getValue()}
           </span>
         ),
@@ -169,16 +192,31 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
             <p className="text-gray-500 text-sm">Wczytywanie notatek...</p>
           </div>
         ) : !desktopNotes || desktopNotes.length === 0 ? (
-          <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center gap-2">
+          <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center gap-3">
             <MessageSquare className="h-8 w-8 text-gray-300" />
             <p className="text-gray-500 font-medium text-sm">Brak notatek do wyświetlenia.</p>
+            {/* Przycisk w pustym stanie */}
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              variant="outline"
+              size="sm"
+              className="mt-2 text-blue-900 border-gray-300"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Dodaj pierwszą notatkę
+            </Button>
           </div>
         ) : (
           <>
-            {/* WIDOK MOBILNY (Karty) */}
             <div className="block lg:hidden space-y-4">
               <div className="flex items-center justify-between gap-4 mb-4">
                 <h2 className="text-xl font-normal text-gray-800">Notatki</h2>
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  size="sm"
+                  className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Dodaj
+                </Button>
               </div>
 
               <div className="relative w-full mb-4">
@@ -251,10 +289,9 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
               )}
             </div>
 
-            {/* WIDOK DESKTOPOWY (Tabela) */}
             <div className="hidden lg:flex bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-4 w-full">
+                <div className="flex items-center gap-4">
                   <h2 className="text-xl font-normal text-gray-800 w-32">Notatki</h2>
                   <div className="relative w-80">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -269,6 +306,14 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                     />
                   </div>
                 </div>
+                {/* Przycisk dodawania nowej notatki w desktopie */}
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  size="sm"
+                  className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Dodaj notatkę
+                </Button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
@@ -366,6 +411,13 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
         onClose={() => setEditingNote(null)}
         note={editingNote}
         onSave={editNoteAsync}
+      />
+
+      <NoteAddDialog
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleSaveNewNote}
+        isLoading={isAdding}
       />
     </>
   );

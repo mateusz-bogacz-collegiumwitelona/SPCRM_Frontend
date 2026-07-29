@@ -1,11 +1,13 @@
 import type { NoteResponse } from '~/interfaces/ note-response';
-import { Edit2, MessageSquare } from 'lucide-react';
+import { Edit2, MessageSquare, Plus } from 'lucide-react';
+import { Button } from '~/components/ui/button';
 
 interface NotesSectionProps {
   notes?: NoteResponse[];
   isLoading: boolean;
   emptyMessage?: string;
   onEditClick?: (note: NoteResponse) => void;
+  onAddClick?: () => void;
 }
 
 export const NotesSection = ({
@@ -13,6 +15,7 @@ export const NotesSection = ({
   isLoading,
   emptyMessage = 'Brak notatek',
   onEditClick,
+  onAddClick,
 }: NotesSectionProps) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
@@ -20,10 +23,15 @@ export const NotesSection = ({
         <MessageSquare className="text-[#004a8f] w-5 h-5" /> Historia działań i notatki
       </h2>
 
-      {/* Miejsce na formularz dla nowej notatki */}
-      <div className="mb-6 p-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center text-gray-500 text-sm">
-        [Miejsce na formularz: Dodaj nową notatkę]
-      </div>
+      {onAddClick && (
+        <Button
+          onClick={onAddClick}
+          size="sm"
+          className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-1"
+        >
+          <Plus className="w-4 h-4" /> Dodaj notatkę
+        </Button>
+      )}
 
       {isLoading ? (
         <div className="space-y-4">
@@ -53,7 +61,6 @@ export const NotesSection = ({
                   )}
                 </span>
               </div>
-              {/* Dodane wyświetlanie tytułu notatki */}
               <h4 className="font-semibold text-sm text-gray-800 mb-1">{note.title}</h4>
               <p className="text-sm text-gray-700">{note.content}</p>
             </div>
