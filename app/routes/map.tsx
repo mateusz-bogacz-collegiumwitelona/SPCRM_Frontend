@@ -8,6 +8,7 @@ import type ApiError from '~/interfaces/apiError';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { RoleGuard } from '~/lib/role-guard';
 import { MainLayout } from '~/components/main-layout';
+import { AuthGuard } from '~/lib/auth-guard';
 
 export interface CompanyMapData {
   id: string;
@@ -143,46 +144,48 @@ export default function MapPage() {
   };
 
   return (
-    <RoleGuard allowedRoles={['Manager', 'User']}>
-      <MainLayout
-        wrapperClassName="relative min-h-screen overflow-hidden bg-[#f1f5f9] pt-20 md:pl-32"
-        contentClassName="relative w-full h-[calc(100vh-5rem)] p-0 m-0"
-        navDesktopWidthClass="w-32"
-        navDesktopClassName="top-20 border-r-0 pt-4"
-      >
-        <section className="w-full h-full relative">
-          <div className="absolute top-4 right-4 z-400 md:right-6 w-72 md:w-96 shadow-lg rounded-md">
-            <form
-              id="search-form"
-              role="search"
-              className="flex w-full bg-white rounded-md overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-[#004a8f]"
-              onSubmit={handleSearch}
-            >
-              <input
-                type="search"
-                name="searchTerm"
-                placeholder="Szukaj (nazwa, miasto, NIP)..."
-                defaultValue={searchTerm}
-                className="w-full px-4 py-3 text-sm focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="px-4 py-3 bg-white text-[#004a8f] hover:bg-gray-50 flex items-center justify-center"
+    <AuthGuard>
+      <RoleGuard allowedRoles={['Manager', 'User']}>
+        <MainLayout
+          wrapperClassName="relative min-h-screen overflow-hidden bg-[#f1f5f9] pt-20 md:pl-32"
+          contentClassName="relative w-full h-[calc(100vh-5rem)] p-0 m-0"
+          navDesktopWidthClass="w-32"
+          navDesktopClassName="top-20 border-r-0 pt-4"
+        >
+          <section className="w-full h-full relative">
+            <div className="absolute top-4 right-4 z-400 md:right-6 w-72 md:w-96 shadow-lg rounded-md">
+              <form
+                id="search-form"
+                role="search"
+                className="flex w-full bg-white rounded-md overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-[#004a8f]"
+                onSubmit={handleSearch}
               >
-                <Search size={20} />
-              </button>
-            </form>
-          </div>
-
-          {errorMessage && (
-            <div className="absolute top-20 right-4 z-400 md:right-6 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded shadow-md text-sm">
-              {errorMessage}
+                <input
+                  type="search"
+                  name="searchTerm"
+                  placeholder="Szukaj (nazwa, miasto, NIP)..."
+                  defaultValue={searchTerm}
+                  className="w-full px-4 py-3 text-sm focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-3 bg-white text-[#004a8f] hover:bg-gray-50 flex items-center justify-center"
+                >
+                  <Search size={20} />
+                </button>
+              </form>
             </div>
-          )}
 
-          {renderMapArea()}
-        </section>
-      </MainLayout>
-    </RoleGuard>
+            {errorMessage && (
+              <div className="absolute top-20 right-4 z-400 md:right-6 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded shadow-md text-sm">
+                {errorMessage}
+              </div>
+            )}
+
+            {renderMapArea()}
+          </section>
+        </MainLayout>
+      </RoleGuard>
+    </AuthGuard>
   );
 }

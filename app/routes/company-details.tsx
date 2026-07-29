@@ -11,6 +11,7 @@ import { ContactsSection } from '~/components/companies/contacts-section';
 import { SalesSection } from '~/components/companies/sales-section';
 import { DebtsSection } from '~/components/companies/debts-section';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
+import { AuthGuard } from '~/lib/auth-guard';
 
 interface CompanyAddress {
   id: string;
@@ -125,47 +126,49 @@ const CompanyDetails: React.FC = () => {
   }, [addresses]);
 
   return (
-    <MainLayout>
-      <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
-        <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
-          <ClientHeader isLoading={isBasicInfoLoading} isError={isError} basicInfo={basicInfo} />
+    <AuthGuard>
+      <MainLayout>
+        <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
+          <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
+            <ClientHeader isLoading={isBasicInfoLoading} isError={isError} basicInfo={basicInfo} />
 
-          {/* === WIDOK MOBILNY === */}
-          <div className="block lg:hidden space-y-6">
-            <AddressesMobile addresses={addresses} />
-            <ContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
-            <SalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
-            <DebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
-          </div>
-
-          {/* === WIDOK DESKTOP === */}
-          <div className="hidden lg:flex flex-row gap-8 items-start relative">
-            {/* LEWA KOLUMNA - TABELE */}
-            <div className="flex-1 min-w-0">
+            {/* === WIDOK MOBILNY === */}
+            <div className="block lg:hidden space-y-6">
+              <AddressesMobile addresses={addresses} />
               <ContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <SalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <DebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
             </div>
 
-            {/* PRAWA KOLUMNA - MAPA (Sticky) */}
-            <div className="w-100 xl:w-112.5 shrink-0 sticky top-24">
-              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                <h2 className="text-xl font-normal text-gray-800 mb-4">Lokalizacje adresów</h2>
-                <div className="border border-gray-300 rounded-lg overflow-hidden h-125 bg-gray-100 relative">
-                  {renderMapContent(
-                    isAddressesLoading,
-                    addresses,
-                    MapComponent,
-                    mapCenter,
-                    mapCompaniesData,
-                  )}
+            {/* === WIDOK DESKTOP === */}
+            <div className="hidden lg:flex flex-row gap-8 items-start relative">
+              {/* LEWA KOLUMNA - TABELE */}
+              <div className="flex-1 min-w-0">
+                <ContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
+                <SalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
+                <DebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
+              </div>
+
+              {/* PRAWA KOLUMNA - MAPA (Sticky) */}
+              <div className="w-100 xl:w-112.5 shrink-0 sticky top-24">
+                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <h2 className="text-xl font-normal text-gray-800 mb-4">Lokalizacje adresów</h2>
+                  <div className="border border-gray-300 rounded-lg overflow-hidden h-125 bg-gray-100 relative">
+                    {renderMapContent(
+                      isAddressesLoading,
+                      addresses,
+                      MapComponent,
+                      mapCenter,
+                      mapCompaniesData,
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </MainLayout>
+      </MainLayout>
+    </AuthGuard>
   );
 };
 

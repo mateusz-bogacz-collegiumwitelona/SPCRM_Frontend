@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Navbar } from '~/components/unloged-navbar';
+import { Navbar } from '~/components/logged-navbar';
 import { NavigationBar } from '~/components/navigation-bar';
 
 interface MainLayoutProps {

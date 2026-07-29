@@ -68,7 +68,7 @@ export default function Help() {
   const maxCharacters = 5000;
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white pt-20">
       <Navbar />
 
       <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">

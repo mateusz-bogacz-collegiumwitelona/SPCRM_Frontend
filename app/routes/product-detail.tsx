@@ -5,6 +5,7 @@ import { api } from '~/api/api';
 import { MainLayout } from '~/components/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AlertCircle, Box, Scale, Banknote, Loader2, ArrowLeft } from 'lucide-react';
+import { AuthGuard } from '~/lib/auth-guard';
 
 interface ProductDetailResponse {
   id: string;
@@ -153,38 +154,40 @@ export default function ProductDetails() {
   if (!productId) return null;
 
   return (
-    <RoleGuard allowedRoles={['User', 'Manager']}>
-      <MainLayout>
-        <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
-          <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
-            {/* NAGŁÓWEK */}
-            <ProductHeader isLoading={isLoading} isError={isError} product={product} />
+    <AuthGuard>
+      <RoleGuard allowedRoles={['User', 'Manager']}>
+        <MainLayout>
+          <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
+            <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
+              {/* NAGŁÓWEK */}
+              <ProductHeader isLoading={isLoading} isError={isError} product={product} />
 
-            {product && (
-              <>
-                <div className="block lg:hidden space-y-6">
-                  <ProductLogisticsInfo product={product} />
-                  <ProductPricingInfo product={product} />
-                </div>
-
-                <div className="hidden lg:flex flex-row gap-8 items-start relative">
-                  <div className="flex-1 min-w-0">
-                    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm min-h-100 flex items-center justify-center text-gray-400 border-dashed">
-                      Tutaj w przyszłości pojawi się tabela &#34;Otwarte szanse sprzedaży
-                      (Deals)&#34; lub &#34;Historia dostaw&#34; powiązana z tym produktem.
-                    </div>
-                  </div>
-
-                  <div className="w-100 xl:w-112.5 shrink-0 sticky top-24">
+              {product && (
+                <>
+                  <div className="block lg:hidden space-y-6">
                     <ProductLogisticsInfo product={product} />
                     <ProductPricingInfo product={product} />
                   </div>
-                </div>
-              </>
-            )}
+
+                  <div className="hidden lg:flex flex-row gap-8 items-start relative">
+                    <div className="flex-1 min-w-0">
+                      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm min-h-100 flex items-center justify-center text-gray-400 border-dashed">
+                        Tutaj w przyszłości pojawi się tabela &#34;Otwarte szanse sprzedaży
+                        (Deals)&#34; lub &#34;Historia dostaw&#34; powiązana z tym produktem.
+                      </div>
+                    </div>
+
+                    <div className="w-100 xl:w-112.5 shrink-0 sticky top-24">
+                      <ProductLogisticsInfo product={product} />
+                      <ProductPricingInfo product={product} />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </MainLayout>
-    </RoleGuard>
+        </MainLayout>
+      </RoleGuard>
+    </AuthGuard>
   );
 }

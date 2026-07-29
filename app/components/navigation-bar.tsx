@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Calendar, CirclePlus, Handshake, MapPinned } from 'lucide-react';
+import { Building2, Calendar, CirclePlus, Handshake, MapPinned, Package } from 'lucide-react';
 import { Link } from 'react-router';
 
 export type NavItem = {
@@ -13,38 +13,45 @@ export type NavItem = {
 export const defaultNavItems: NavItem[] = [
   {
     id: 'calendar',
-    label: 'Calendar',
+    label: 'Kalendarz',
     icon: Calendar,
-    href: '#',
-    ariaLabel: 'Calendar',
+    href: '/calendar',
+    ariaLabel: 'Kalendarz',
   },
   {
     id: 'map',
-    label: 'Locations',
+    label: 'Mapa',
     icon: MapPinned,
     href: '/map',
-    ariaLabel: 'Locations',
+    ariaLabel: 'Mapa',
   },
   {
     id: 'add',
-    label: 'Add',
+    label: 'Dodaj',
     icon: CirclePlus,
     href: '#',
-    ariaLabel: 'Add new item',
+    ariaLabel: 'Dodaj nowy element',
   },
   {
     id: 'handshake',
-    label: 'Partners',
+    label: 'Kontakty',
     icon: Handshake,
-    href: '#',
-    ariaLabel: 'Partners',
+    href: '/contacts',
+    ariaLabel: 'Kontakty',
   },
   {
     id: 'building',
-    label: 'Buildings',
+    label: 'Firmy',
     icon: Building2,
-    href: '#',
-    ariaLabel: 'Buildings',
+    href: '/companies',
+    ariaLabel: 'Firmy',
+  },
+  {
+    id: 'products',
+    label: 'Produkty',
+    icon: Package,
+    href: '/products',
+    ariaLabel: 'Produkty',
   },
 ];
 
