@@ -6,6 +6,7 @@ export interface ContactNote {
   id: string;
   title: string;
   content: string;
+  authorId: string;
   authorFirstName: string;
   authorLastName: string;
   createdAt: string;

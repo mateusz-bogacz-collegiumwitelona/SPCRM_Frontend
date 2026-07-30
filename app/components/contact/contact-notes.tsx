@@ -16,6 +16,7 @@ import { ContactNoteDialog, type ContactNote } from './contact-note-dialog';
 
 import { useAddNote } from '~/hooks/use-add-note';
 import { NoteAddDialog } from '~/components/note-add-dialog';
+import { ActionGuard } from '~/lib/action-guard';
 
 const columnHelper = createColumnHelper<ContactNote>();
 
@@ -41,7 +42,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     },
   });
 
-  // Mutacja dla dodawania nowej notatki
   const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
@@ -108,12 +108,15 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
             >
               Szczegóły
             </button>
-            <button
-              onClick={() => setEditingNote(info.row.original)}
-              className="text-gray-500 font-medium text-sm hover:text-blue-900 hover:underline"
-            >
-              Edytuj
-            </button>
+
+            <ActionGuard authorId={info.row.original.authorId}>
+              <button
+                onClick={() => setEditingNote(info.row.original)}
+                className="text-gray-500 font-medium text-sm hover:text-blue-900 hover:underline"
+              >
+                Edytuj
+              </button>
+            </ActionGuard>
           </div>
         ),
       }),
@@ -254,14 +257,17 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                     >
                       Przeczytaj
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingNote(note)}
-                      className="flex-1 text-gray-700 border-gray-200 hover:bg-gray-50 bg-white shadow-sm"
-                    >
-                      Edytuj
-                    </Button>
+
+                    <ActionGuard authorId={note.authorId}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingNote(note)}
+                        className="flex-1 text-gray-700 border-gray-200 hover:bg-gray-50 bg-white shadow-sm"
+                      >
+                        Edytuj
+                      </Button>
+                    </ActionGuard>
                   </div>
                   <div className="border-t border-gray-100 pt-3 flex items-center justify-between text-xs text-gray-500">
                     <span className="font-medium bg-gray-50 px-2 py-1 rounded text-gray-700">

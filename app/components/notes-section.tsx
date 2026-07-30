@@ -1,6 +1,8 @@
 import type { NoteResponse } from '~/interfaces/ note-response';
 import { Edit2, MessageSquare, Plus } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import { AuthGuard } from '~/lib/auth-guard';
+import { ActionGuard } from '~/lib/action-guard';
 
 interface NotesSectionProps {
   notes?: NoteResponse[];
@@ -51,13 +53,15 @@ export const NotesSection = ({
                 <span className="text-xs text-gray-500">
                   {new Date(note.createdAt).toLocaleDateString('pl-PL')}
                   {onEditClick && (
-                    <button
-                      onClick={() => onEditClick(note)}
-                      className="text-gray-400 hover:text-[#004a8f] transition-colors"
-                      title="Edytuj notatkę"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
+                    <ActionGuard authorId={note.authorId}>
+                      <button
+                        onClick={() => onEditClick(note)}
+                        className="text-gray-400 hover:text-[#004a8f] transition-colors"
+                        title="Edytuj notatkę"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </ActionGuard>
                   )}
                 </span>
               </div>
