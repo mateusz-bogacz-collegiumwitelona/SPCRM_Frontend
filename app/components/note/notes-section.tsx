@@ -1,7 +1,6 @@
 import type { NoteResponse } from '~/interfaces/ note-response';
-import { Edit2, MessageSquare, Plus } from 'lucide-react';
+import { Edit2, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { AuthGuard } from '~/lib/auth-guard';
 import { ActionGuard } from '~/lib/action-guard';
 
 interface NotesSectionProps {
@@ -10,6 +9,7 @@ interface NotesSectionProps {
   emptyMessage?: string;
   onEditClick?: (note: NoteResponse) => void;
   onAddClick?: () => void;
+  onDeleteClick?: (note: NoteResponse) => void;
 }
 
 export const NotesSection = ({
@@ -18,6 +18,7 @@ export const NotesSection = ({
   emptyMessage = 'Brak notatek',
   onEditClick,
   onAddClick,
+  onDeleteClick,
 }: NotesSectionProps) => {
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
@@ -60,6 +61,18 @@ export const NotesSection = ({
                         title="Edytuj notatkę"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    </ActionGuard>
+                  )}
+
+                  {onDeleteClick && (
+                    <ActionGuard authorId={note.authorId}>
+                      <button
+                        onClick={() => onDeleteClick(note)}
+                        className="text-gray-400 hover:text-red-600 transition-colors ml-2"
+                        title="Usuń notatkę"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </ActionGuard>
                   )}

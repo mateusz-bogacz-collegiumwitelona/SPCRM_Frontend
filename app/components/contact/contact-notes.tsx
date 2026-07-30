@@ -11,12 +11,14 @@ import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2, Search, MessageSquare, Plus } from 'lucide-react';
 
 import { useEditNote } from '~/hooks/use-edit-note';
-import { NoteEditDialog } from '~/components/note-edit-dialog';
+import { NoteEditDialog } from '~/components/note/note-edit-dialog';
 import { ContactNoteDialog, type ContactNote } from './contact-note-dialog';
 
 import { useAddNote } from '~/hooks/use-add-note';
-import { NoteAddDialog } from '~/components/note-add-dialog';
+import { NoteAddDialog } from '~/components/note/note-add-dialog';
 import { ActionGuard } from '~/lib/action-guard';
+import { UseDeleteNote } from '~/hooks/use-delete-note';
+import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 
 const columnHelper = createColumnHelper<ContactNote>();
 
@@ -36,6 +38,8 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [selectedNote, setSelectedNote] = useState<ContactNote | null>(null);
   const [editingNote, setEditingNote] = useState<ContactNote | null>(null);
 
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+
   const { mutateAsync: editNoteAsync } = useEditNote({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
@@ -49,6 +53,17 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
       setPageNumber(1);
     },
   });
+
+  const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
+      setDeletingNoteId(null);
+    },
+  });
+
+  const handleDeleteConfirm = async () => {
+    if (deletingNoteId) await deleteNoteAsync(deletingNoteId);
+  };
 
   const handleSaveNewNote = async (title: string, content: string) => {
     await addNoteAsync({
@@ -115,6 +130,14 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                 className="text-gray-500 font-medium text-sm hover:text-blue-900 hover:underline"
               >
                 Edytuj
+              </button>
+            </ActionGuard>
+            <ActionGuard authorId={info.row.original.authorId}>
+              <button
+                onClick={() => setDeletingNoteId(info.row.original.id)}
+                className="text-gray-500 font-medium text-sm hover:text-red-600 hover:underline"
+              >
+                Usuń
               </button>
             </ActionGuard>
           </div>
@@ -266,6 +289,17 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                         className="flex-1 text-gray-700 border-gray-200 hover:bg-gray-50 bg-white shadow-sm"
                       >
                         Edytuj
+                      </Button>
+                    </ActionGuard>
+
+                    <ActionGuard authorId={note.authorId}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeletingNoteId(note.id)}
+                        className="flex-1 text-gray-700 border-gray-200 hover:bg-gray-50 hover:text-red-600 bg-white shadow-sm"
+                      >
+                        Usuń
                       </Button>
                     </ActionGuard>
                   </div>
@@ -424,6 +458,13 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewNote}
         isLoading={isAdding}
+      />
+
+      <NoteDeleteDialog
+        isOpen={!!deletingNoteId}
+        onClose={() => setDeletingNoteId(null)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleting}
       />
     </>
   );

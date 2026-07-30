@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, type ComponentType } from 'react';
-import { MainLayout } from '~/components/main-layout';
+import { MainLayout } from '~/components/layout/main-layout';
 import { MapPinned } from 'lucide-react';
 import { api } from '~/api/api';
 import { useParams } from 'react-router';

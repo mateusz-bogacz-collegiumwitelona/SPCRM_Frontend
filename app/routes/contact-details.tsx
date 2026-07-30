@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router';
-import { MainLayout } from '~/components/main-layout';
+import { MainLayout } from '~/components/layout/main-layout';
 import { ContactHeader } from '~/components/contact/contact-header';
 import { ContactWays } from '~/components/contact/contact-ways';
 import { ContactNotes } from '~/components/contact/contact-notes';

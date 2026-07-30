@@ -20,7 +20,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { MainLayout } from '~/components/main-layout';
+import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Calendar } from '~/components/ui/calendar';

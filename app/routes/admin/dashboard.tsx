@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 
 import { useNavigate } from 'react-router';
 import { useAuth } from '~/context/auth-context';
-import { NavigationBar } from '~/components/navigation-bar';
+import { NavigationBar } from '~/components/layout/navigation-bar';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
 

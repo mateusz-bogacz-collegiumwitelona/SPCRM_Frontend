@@ -7,7 +7,7 @@ import { useAuth } from '~/context/auth-context';
 import type ApiError from '~/interfaces/apiError';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { RoleGuard } from '~/lib/role-guard';
-import { MainLayout } from '~/components/main-layout';
+import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 
 export interface CompanyMapData {

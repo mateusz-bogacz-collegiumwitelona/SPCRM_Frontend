@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import type { NoteEditData } from '~/components/note-edit-dialog';
+import type { NoteEditData } from '~/components/note/note-edit-dialog';
 import { api } from '~/api/api';
 
 interface UseEditNoteOptions {

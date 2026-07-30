@@ -1,5 +1,5 @@
 import { useParams } from 'react-router';
-import { MainLayout } from '~/components/main-layout';
+import { MainLayout } from '~/components/layout/main-layout';
 import { TaskContactDetails } from '~/components/task/task-contact';
 import { TaskNote } from '~/components/task/task-note';
 import { TaskDeals } from '~/components/task/task-deals';

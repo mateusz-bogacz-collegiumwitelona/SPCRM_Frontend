@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
-import { Navbar } from '~/components/unloged-navbar';
+import { Navbar } from '~/components/layout/unloged-navbar';
 import { api } from '~/api/api';
 import type ApiError from '~/interfaces/apiError';
 import { getErrorMessage } from '~/utils/error-mapper';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { MainLayout } from '~/components/main-layout';
+import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
 import { Filter, Loader2 } from 'lucide-react';
 

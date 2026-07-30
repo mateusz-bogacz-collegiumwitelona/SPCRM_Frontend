@@ -19,7 +19,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
-import { MainLayout } from '~/components/main-layout';
+import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';

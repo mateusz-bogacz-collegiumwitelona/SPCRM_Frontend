@@ -1,18 +1,21 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/ note-response';
-import { NotesSection } from '~/components/notes-section';
+import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
-import { NoteEditDialog, type NoteEditData } from '~/components/note-edit-dialog';
+import { NoteEditDialog, type NoteEditData } from '~/components/note/note-edit-dialog';
 import { useState } from 'react';
 import { useAddNote } from '~/hooks/use-add-note';
-import { NoteAddDialog } from '~/components/note-add-dialog';
+import { NoteAddDialog } from '~/components/note/note-add-dialog';
+import { UseDeleteNote } from '~/hooks/use-delete-note';
+import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 
 export const TaskNote = ({ taskId }: { taskId: string }) => {
   const queryClient = useQueryClient();
 
   const [editingNote, setEditingNote] = useState<NoteEditData | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const { data: notes, isLoading } = useQuery<NoteResponse[]>({
     queryKey: ['task-notes', taskId],
@@ -33,6 +36,17 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
       queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
     },
   });
+
+  const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
+      setDeletingNoteId(null);
+    },
+  });
+
+  const handleDeleteConfirm = async () => {
+    if (deletingNoteId) await deleteNoteAsync(deletingNoteId);
+  };
 
   const handleEditClick = (note: NoteResponse) => {
     setEditingNote({
@@ -59,6 +73,7 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
         emptyMessage="Brak notatek dla tego zadania"
         onEditClick={handleEditClick}
         onAddClick={() => setIsAddModalOpen(true)}
+        onDeleteClick={(note) => setDeletingNoteId(note.noteId)}
       />
 
       <NoteEditDialog
@@ -73,6 +88,13 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewNote}
         isLoading={isAdding}
+      />
+
+      <NoteDeleteDialog
+        isOpen={!!deletingNoteId}
+        onClose={() => setDeletingNoteId(null)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleting}
       />
     </>
   );

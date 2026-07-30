@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { useAuth } from '~/context/auth-context';
-import { Navbar } from '~/components/unloged-navbar';
+import { Navbar } from '~/components/layout/unloged-navbar';
 import { api } from '~/api/api';
 import type ApiError from '~/interfaces/apiError';
 import { getErrorMessage } from '~/utils/error-mapper';
