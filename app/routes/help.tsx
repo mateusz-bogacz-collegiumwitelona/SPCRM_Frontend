@@ -31,7 +31,7 @@ export default function Help() {
     setIsLoading(true);
 
     try {
-      const request = await api.post('support', {
+      const request = await api.post('mailing/support', {
         email: formData.email,
         title: formData.title,
         message: formData.message,
