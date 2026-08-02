@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import type { NoteResponse } from '~/interfaces/ note-response';
+import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
 import { NoteEditDialog, type NoteEditData } from '~/components/note/note-edit-dialog';

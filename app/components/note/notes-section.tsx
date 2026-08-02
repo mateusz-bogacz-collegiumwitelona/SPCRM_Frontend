@@ -1,4 +1,4 @@
-import type { NoteResponse } from '~/interfaces/ note-response';
+import type { NoteResponse } from '~/interfaces/note-response';
 import { Edit2, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { ActionGuard } from '~/lib/action-guard';

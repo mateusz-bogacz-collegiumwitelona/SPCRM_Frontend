@@ -17,4 +17,5 @@ export default [
   route('sale/:dealId', 'routes/sale-detail.tsx'),
   route('products', 'routes/products.tsx'),
   route('products/:productId', 'routes/product-detail.tsx'),
+  route('mailing', 'routes/mailing-creator.tsx'),
 ] satisfies RouteConfig;
