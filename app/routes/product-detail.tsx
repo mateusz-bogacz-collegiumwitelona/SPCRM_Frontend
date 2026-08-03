@@ -7,6 +7,14 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AlertCircle, Box, Scale, Banknote, Loader2, ArrowLeft } from 'lucide-react';
 import { AuthGuard } from '~/lib/auth-guard';
 
+interface ActivePromotionResponse {
+  name: string;
+  discountPercentage?: number;
+  promotionalPrice?: number;
+  endDate?: string;
+  minQuantity?: number;
+}
+
 interface ProductDetailResponse {
   id: string;
   name: string;
@@ -18,6 +26,7 @@ interface ProductDetailResponse {
   unitSymbol: string;
   pricePerUnit: number;
   weight: number;
+  activePromotion?: ActivePromotionResponse;
 }
 
 const ProductHeader = ({
@@ -48,7 +57,13 @@ const ProductHeader = ({
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 relative overflow-hidden">
+      {product.activePromotion && (
+        <div className="absolute top-4 -right-8 bg-red-600 text-white text-xs font-bold px-10 py-1 rotate-45 shadow-md">
+          PROMOCJA
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -59,6 +74,11 @@ const ProductHeader = ({
             <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
               {product.category}
             </span>
+            {product.activePromotion && (
+              <span className="bg-red-100 text-red-700 border border-red-200 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1">
+                {product.activePromotion.name}
+              </span>
+            )}
           </div>
           <p className="text-gray-500 ml-8">
             Gatunek: <span className="font-medium text-gray-900">{product.steelGrade}</span> |
@@ -108,23 +128,87 @@ const ProductLogisticsInfo = ({ product }: { product: ProductDetailResponse }) =
 };
 
 const ProductPricingInfo = ({ product }: { product: ProductDetailResponse }) => {
+  const promo = product.activePromotion;
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pl-PL', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mt-6">
       <h2 className="text-lg font-medium text-gray-900 mb-4">Cennik i Logistyka</h2>
 
       <div className="space-y-4">
-        <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
-          <Banknote className="w-6 h-6 text-blue-900" />
-          <div>
-            <p className="text-xs text-gray-500">Cena bazowa za 1 {product.unitSymbol}</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {product.pricePerUnit.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
-            </p>
+        <div
+          className={`flex items-center gap-4 p-4 rounded-md border ${promo ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100'}`}
+        >
+          <Banknote className={`w-6 h-6 shrink-0 ${promo ? 'text-red-600' : 'text-blue-900'}`} />
+
+          <div className="w-full">
+            <div className="flex justify-between items-start">
+              <p className="text-xs text-gray-500">Cena za 1 {product.unitSymbol}</p>
+              {promo?.discountPercentage && (
+                <span className="text-xs font-bold text-white bg-red-500 px-2 rounded-full">
+                  -{promo.discountPercentage}%
+                </span>
+              )}
+            </div>
+
+            {promo ? (
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-xl font-bold text-red-700">
+                  {promo.promotionalPrice
+                    ? promo.promotionalPrice.toLocaleString('pl-PL', {
+                        style: 'currency',
+                        currency: 'PLN',
+                      })
+                    : (
+                        product.pricePerUnit *
+                        (1 - (promo.discountPercentage || 0) / 100)
+                      ).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
+                </span>
+                <span className="text-sm font-medium text-gray-400 line-through">
+                  {product.pricePerUnit.toLocaleString('pl-PL', {
+                    style: 'currency',
+                    currency: 'PLN',
+                  })}
+                </span>
+              </div>
+            ) : (
+              <p className="text-sm font-semibold text-gray-900 mt-1">
+                {product.pricePerUnit.toLocaleString('pl-PL', {
+                  style: 'currency',
+                  currency: 'PLN',
+                })}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
-          <Scale className="w-6 h-6 text-blue-900" />
+        {promo && (promo.endDate || promo.minQuantity) && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-xs text-yellow-800 space-y-1">
+            {promo.endDate && (
+              <p>
+                Ważna do: <strong>{formatDate(promo.endDate)}</strong>
+              </p>
+            )}
+            {promo.minQuantity && (
+              <p>
+                Minimalna ilość zamówienia:{' '}
+                <strong>
+                  {promo.minQuantity} {product.unitSymbol}
+                </strong>
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-md border border-gray-100">
+          <Scale className="w-6 h-6 text-blue-900 shrink-0" />
           <div>
             <p className="text-xs text-gray-500">Waga dla 1 {product.unitSymbol}</p>
             <p className="text-sm font-semibold text-gray-900">{product.weight} kg</p>
