@@ -25,6 +25,7 @@ interface MailingProductResponse {
   dimmension: string;
   stockQuantity: number;
   stockPrice: number;
+  promotionalPrice?: number;
 }
 
 interface SelectedProduct {
@@ -91,13 +92,17 @@ export default function MailingCreator() {
   const addProduct = (product: MailingProductResponse) => {
     if (selectedProducts.some((p) => p.productId === product.productId)) return;
 
+    const initialPrice = product.promotionalPrice
+      ? product.promotionalPrice / 10000
+      : product.stockPrice / 10000;
+
     setSelectedProducts((prev) => [
       ...prev,
       {
         productId: product.productId,
         name: product.name,
         dimmension: product.dimmension,
-        price: product.stockPrice / 10000,
+        price: initialPrice,
         quantity: 1,
       },
     ]);
@@ -367,12 +372,26 @@ export default function MailingCreator() {
                       >
                         <div>
                           <p className="text-sm font-bold text-gray-900">{product.name}</p>
-                          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                             <span>{product.dimmension}</span>
                             <span>•</span>
-                            <span className="font-medium text-[#004a8f]">
-                              Cena bazowa: {formatCurrency(product.stockPrice)} PLN
-                            </span>
+                            {product.promotionalPrice ? (
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-gray-400 line-through">
+                                  {formatCurrency(product.stockPrice)} PLN
+                                </span>
+                                <span className="font-bold text-red-600">
+                                  {formatCurrency(product.promotionalPrice)} PLN
+                                </span>
+                                <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                                  Promocja
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="font-medium text-[#004a8f]">
+                                Cena bazowa: {formatCurrency(product.stockPrice)} PLN
+                              </span>
+                            )}
                           </div>
                         </div>
                         <Plus className="h-5 w-5 text-gray-400" />
