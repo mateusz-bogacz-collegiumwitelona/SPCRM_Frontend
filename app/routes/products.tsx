@@ -32,6 +32,7 @@ interface ProductResonse {
   dimensions: string;
   stockQuantity: number;
   unitSymbol: string;
+  isActivePromotion: boolean;
 }
 
 const columnHelper = createColumnHelper<ProductResonse>();
@@ -42,7 +43,16 @@ const columns = [
     header: 'Nazwa produktu',
     cell: (info) => {
       const row = info.row.original;
-      return <span className="font-medium text-gray-900">{row.name}</span>;
+      return (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-gray-900">{row.name}</span>
+          {row.isActivePromotion && (
+            <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+              Promocja
+            </span>
+          )}
+        </div>
+      );
     },
   }),
   columnHelper.accessor('category', {
@@ -107,6 +117,8 @@ export default function ProductsList() {
   const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<ProductResonse[]>([]);
   const isMobileAppend = useRef(false);
 
+  const [hasActivePromotion, setHasActivePromotion] = useState<boolean>(false);
+
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(handler);
@@ -154,6 +166,7 @@ export default function ProductsList() {
         sortDescending,
         productFilter,
         steelGradeFilter,
+        hasActivePromotion,
       },
     ],
     queryFn: async () => {
@@ -165,6 +178,7 @@ export default function ProductsList() {
         SortDescending: sortDescending,
         ProductCategory: productFilter || undefined,
         SteelGrade: steelGradeFilter || undefined,
+        HasActivePromotion: hasActivePromotion ? true : undefined,
       };
 
       const response = await api.get(`products`, { params });
@@ -244,7 +258,7 @@ export default function ProductsList() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
                   <option value="name">Nazwa</option>
                   <option value="steelgrade">Gatunek</option>
@@ -272,7 +286,7 @@ export default function ProductsList() {
                   >
                     <Filter className="w-4 h-4" />
                     <span>Filtry</span>
-                    {(productFilter || steelGradeFilter) && (
+                    {(productFilter || steelGradeFilter || hasActivePromotion) && (
                       <span className="absolute -top-1 -right-1 flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900"></span>
@@ -293,7 +307,7 @@ export default function ProductsList() {
                           <select
                             value={productFilter}
                             onChange={(e) => setProductFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                           >
                             <option value="">Wszystkie kategorie</option>
                             {availableCategories.map((category) => (
@@ -312,7 +326,7 @@ export default function ProductsList() {
                           <select
                             value={steelGradeFilter}
                             onChange={(e) => setSteelGradeFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                           >
                             <option value="">Wszystkie gatunki</option>
                             {availableSteelGrades.map((grade) => (
@@ -323,12 +337,29 @@ export default function ProductsList() {
                           </select>
                         </div>
 
+                        <div className="flex items-center gap-2 mt-4 bg-gray-50 p-2 rounded border border-gray-100">
+                          <input
+                            type="checkbox"
+                            id="promoFilter"
+                            checked={hasActivePromotion}
+                            onChange={(e) => setHasActivePromotion(e.target.checked)}
+                            className="rounded border-gray-300 text-blue-900 focus:ring-blue-900 h-4 w-4"
+                          />
+                          <label
+                            htmlFor="promoFilter"
+                            className="text-xs font-medium text-gray-700 cursor-pointer select-none"
+                          >
+                            Pokaż tylko w promocji
+                          </label>
+                        </div>
+
                         <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
                           <button
                             type="button"
                             onClick={() => {
                               setProductFilter('');
                               setSteelGradeFilter('');
+                              setHasActivePromotion(false);
                             }}
                             className="text-xs text-gray-500 hover:text-gray-900 underline"
                           >
@@ -459,7 +490,7 @@ export default function ProductsList() {
                     <select
                       value={pageSize}
                       onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700 shadow-sm"
+                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
                     >
                       <option value={10}>10</option>
                       <option value={25}>25</option>
