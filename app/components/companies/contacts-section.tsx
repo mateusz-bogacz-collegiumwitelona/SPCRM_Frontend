@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,8 +8,10 @@ import {
   type Row,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowDownWideNarrow, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowDownWideNarrow, Filter, UserPlus } from 'lucide-react';
 import { api } from '~/api/api';
+import { AddContactDialog, type AddContactRequest } from './add-contact-dialog';
+import { Link } from 'react-router';
 
 interface Contact {
   id: string;
@@ -99,6 +101,9 @@ export const ContactsSection: React.FC<{
   const [pageSize, setPageSize] = useState(4);
   const [mobileContacts, setMobileContacts] = useState<Contact[]>([]);
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   const { data, isLoading } = useQuery({
     queryKey: ['company-contacts', clientId, page, pageSize],
     queryFn: async () => {
@@ -110,6 +115,29 @@ export const ContactsSection: React.FC<{
     enabled: !!clientId,
     placeholderData: keepPreviousData,
   });
+
+  const addContactMutation = useMutation({
+    mutationFn: async (newContact: AddContactRequest) => {
+      return await api.post('/contacts', newContact);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
+      setIsAddModalOpen(false);
+    },
+    onError: (error) => {
+      console.error('Błąd podczas dodawania kontaktu', error);
+      alert('Nie udało się zapisać kontaktu. Sprawdź konsolę.');
+    },
+  });
+
+  const handleSaveContact = async (contactData: Omit<AddContactRequest, 'companyId'>) => {
+    if (!clientId) return;
+
+    await addContactMutation.mutateAsync({
+      ...contactData,
+      companyId: clientId,
+    });
+  };
 
   const items: Contact[] = data?.items || [];
   const totalPages = data?.totalPages || 1;
@@ -156,11 +184,17 @@ export const ContactsSection: React.FC<{
 
   return (
     <>
-      {/* MOBILE */}
+      {/* WIDOK MOBILNY (dla małych ekranów < 768px) */}
       <section className="block lg:hidden">
         <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
-          Kontakty: {isLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
+          <span>
+            Kontakty: {isLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
+          </span>
+          <Button size="icon" variant="ghost" onClick={() => setIsAddModalOpen(true)}>
+            <UserPlus className="w-5 h-5 text-[#004a8f]" />
+          </Button>
         </h2>
+        {/* ... reszta kodu sekcji mobilnej (bez zmian) ... */}
         {mobileContacts.length === 0 && !isLoading ? (
           <div className="p-4 text-gray-500 bg-gray-50 rounded-lg text-sm text-center border">
             Brak kontaktów.
@@ -182,7 +216,9 @@ export const ContactsSection: React.FC<{
                   <p>
                     Opiekun: {c.ownerFirstName} {c.ownerLastName}
                   </p>
-                  <button className="text-[#004a8f] hover:underline">Szczegóły</button>
+                  <Link className="text-[#004a8f] hover:underline" to={`contact/${c.id}`}>
+                    Szczegóły
+                  </Link>
                 </div>
               </div>
             ))}
@@ -198,20 +234,30 @@ export const ContactsSection: React.FC<{
         )}
       </section>
 
-      {/* DESKTOP */}
-      <div className="hidden lg:flex mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center gap-4 w-full">
-            <h2 className="text-xl font-normal text-gray-800 w-32">Kontakty</h2>
+      {/* WIDOK DESKTOP (od 1024px wzwyż) */}
+      <div className="hidden lg:flex mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex-col w-full overflow-hidden">
+        {/* Nagłówek z responsywnym zawijaniem elementów (flex-wrap) */}
+        <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto flex-1">
+            <h2 className="text-xl font-normal text-gray-800">Kontakty</h2>
+
+            <Button
+              className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2 shrink-0"
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <UserPlus className="w-4 h-4" /> Dodaj
+            </Button>
+
             <input
               type="text"
               placeholder="Wyszukaj..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-80 border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+              className="w-full sm:w-64 md:w-72 border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
             />
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2 flex-wrap">
             <select className="border rounded-md px-3 py-2 text-sm bg-white">
               <option>Nazwisko</option>
             </select>
@@ -223,21 +269,27 @@ export const ContactsSection: React.FC<{
             </Button>
           </div>
         </div>
-        <table className="w-full text-left">
-          <thead className="bg-white border-b">
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((h) => (
-                  <th key={h.id} className="px-6 py-4 text-sm font-semibold">
-                    {flexRender(h.column.columnDef.header, h.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>{renderTableBody()}</tbody>
-        </table>
-        <div className="p-4 border-t flex items-center justify-between text-xs bg-white rounded-b-lg">
+
+        {/* Kontener tabeli zabezpieczony przed wyjściem poza ekran */}
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left min-w-137.5">
+            <thead className="bg-white border-b">
+              {table.getHeaderGroups().map((hg) => (
+                <tr key={hg.id}>
+                  {hg.headers.map((h) => (
+                    <th key={h.id} className="px-6 py-4 text-sm font-semibold">
+                      {flexRender(h.column.columnDef.header, h.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>{renderTableBody()}</tbody>
+          </table>
+        </div>
+
+        {/* Pasek paginacji */}
+        <div className="p-4 border-t flex flex-wrap items-center justify-between gap-3 text-xs bg-white rounded-b-lg">
           <select
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
@@ -272,6 +324,13 @@ export const ContactsSection: React.FC<{
           </div>
         </div>
       </div>
+
+      <AddContactDialog
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleSaveContact}
+        isLoading={addContactMutation.isPending}
+      />
     </>
   );
 };
