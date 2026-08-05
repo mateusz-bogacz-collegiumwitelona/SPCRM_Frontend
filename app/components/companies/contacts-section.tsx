@@ -185,7 +185,7 @@ export const ContactsSection: React.FC<{
   return (
     <>
       {/* WIDOK MOBILNY (dla małych ekranów < 768px) */}
-      <section className="block lg:hidden">
+      <section className="block xl:hidden">
         <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
           <span>
             Kontakty: {isLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
@@ -235,7 +235,7 @@ export const ContactsSection: React.FC<{
       </section>
 
       {/* WIDOK DESKTOP (od 1024px wzwyż) */}
-      <div className="hidden lg:flex mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex-col w-full overflow-hidden">
+      <div className="hidden xl:flex mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex-col w-full overflow-hidden">
         {/* Nagłówek z responsywnym zawijaniem elementów (flex-wrap) */}
         <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto flex-1">

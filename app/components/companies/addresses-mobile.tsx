@@ -12,7 +12,7 @@ export const AddressesMobile: React.FC<{ addresses: Address[] }> = ({ addresses 
   const [limit, setLimit] = useState(3);
 
   return (
-    <section className="block lg:hidden">
+    <section className="block xl:hidden">
       <h2 className="text-xl text-[#004a8f] font-normal mb-3">Adresy:</h2>
       <div className="space-y-3">
         {addresses.slice(0, limit).map((addr) => (

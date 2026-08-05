@@ -210,7 +210,7 @@ export const SalesSection: React.FC<{
   return (
     <>
       {/* MOBILE */}
-      <section className="block lg:hidden">
+      <section className="block xl:hidden">
         <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
           Sprzedaż: {isLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
         </h2>
@@ -236,19 +236,20 @@ export const SalesSection: React.FC<{
       </section>
 
       {/* DESKTOP */}
-      <div className="hidden lg:flex mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center gap-4 w-full">
+      <div className="hidden xl:flex mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
+        <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto flex-1">
             <h2 className="text-xl font-normal text-gray-800 w-32">Sprzedaż</h2>
             <input
               type="text"
               placeholder="Wyszukaj sprzedawcę..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-80 border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+              className="w-full max-w-xs border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* tu pozostają Twoje selecty i przyciski filtrów, nic w nich nie zmieniaj */}
             <select className="border rounded-md px-3 py-2 text-sm bg-white">
               <option>Data zawarcia</option>
             </select>
@@ -260,20 +261,22 @@ export const SalesSection: React.FC<{
             </Button>
           </div>
         </div>
-        <table className="w-full text-left">
-          <thead className="bg-white border-b">
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((h) => (
-                  <th key={h.id} className="px-6 py-4 text-sm font-semibold">
-                    {flexRender(h.column.columnDef.header, h.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>{renderTableBody(isLoading, items, table.getRowModel().rows)}</tbody>
-        </table>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left min-w-200">
+            <thead className="bg-white border-b">
+              {table.getHeaderGroups().map((hg) => (
+                <tr key={hg.id}>
+                  {hg.headers.map((h) => (
+                    <th key={h.id} className="px-6 py-4 text-sm font-semibold">
+                      {flexRender(h.column.columnDef.header, h.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>{renderTableBody(isLoading, items, table.getRowModel().rows)}</tbody>
+          </table>
+        </div>
         <div className="p-4 border-t flex items-center justify-between text-xs bg-white rounded-b-lg">
           <select
             value={pageSize}

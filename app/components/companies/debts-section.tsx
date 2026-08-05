@@ -9,7 +9,6 @@ import {
 import { Button } from '~/components/ui/button';
 import { api } from '~/api/api';
 
-// Definiujemy interfejsy zastępujące 'any'
 interface Debt {
   id: string;
   invoiceNumber: string;
@@ -136,7 +135,8 @@ export const DebtsSection: React.FC<{
           Brak zaległych płatności. Wszystkie faktury tej firmy są opłacone.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {' '}
           {summary.map((item: DebtSummary) => (
             <div
               key={item.currencyCode}
@@ -159,7 +159,7 @@ export const DebtsSection: React.FC<{
       {items.length > 0 && (
         <>
           {/* MOBILE */}
-          <div className="block lg:hidden space-y-4">
+          <div className="block xl:hidden space-y-4">
             {mobileDebts.map((debt) => (
               <div
                 key={debt.id}
@@ -202,8 +202,8 @@ export const DebtsSection: React.FC<{
             )}
           </div>
 
-          {/* DESKTOP */}
-          <div className="hidden lg:flex bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
+          <div className="hidden xl:flex bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
+            {' '}
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-gray-50">

@@ -268,7 +268,7 @@ export default function Companies() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
                   {/* Wartości dopasowane do instrukcji switch w CompanyQueryExtension.cs */}
                   <option value="name">Nazwa</option>
@@ -316,7 +316,7 @@ export default function Companies() {
                           <select
                             value={isYourFilter}
                             onChange={(e) => setIsYourFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                           >
                             <option value="">Wszyscy klienci</option>
                             <option value="true">Tylko moi klienci</option>
@@ -415,7 +415,7 @@ export default function Companies() {
           ) : (
             <>
               {/* WIDOK MOBILNY (Karty) */}
-              <div className="block lg:hidden space-y-4">
+              <div className="block xl:hidden space-y-4">
                 {accumulatedMobileCompanies.map((item) => (
                   <div
                     key={item.id}
@@ -514,7 +514,7 @@ export default function Companies() {
                     <select
                       value={pageSize}
                       onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700 shadow-sm"
+                      className="border rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700 shadow-sm"
                     >
                       <option value={10}>10</option>
                       <option value={25}>25</option>
