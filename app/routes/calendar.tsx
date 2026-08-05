@@ -146,6 +146,7 @@ export default function CalendarPage() {
           <div className="bg-white p-3 lg:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="calendar-container">
               <FullCalendar
+                key={isMobile ? 'mobile-calendar' : 'desktop-calendar'}
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
                 initialView={isMobile ? 'listMonth' : 'dayGridMonth'}
                 locales={[plLocale]}
