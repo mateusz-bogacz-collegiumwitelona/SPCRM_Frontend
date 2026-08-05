@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react'; // Dodane ikony
+import { Plus, Trash2 } from 'lucide-react';
 
 export interface AddContactRequest {
   companyId: string;
@@ -43,7 +43,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
   const [lastName, setLastName] = useState('');
   const [jobTitle, setJobTitle] = useState('');
 
-  // Zamiast pojedynczych pól, trzymamy tablicę detali
   const [details, setDetails] = useState<AddContactDetailRequest[]>([
     { label: '', value: '', type: '', isPrimary: true },
   ]);
@@ -57,20 +56,13 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
     enabled: isOpen,
   });
 
-  // --- FUNKCJE DO ZARZĄDZANIA LISTĄ DETALI ---
-
   const handleAddDetail = () => {
-    setDetails([
-      ...details,
-      // Nowy detal domyślnie nie jest główny
-      { label: '', value: '', type: '', isPrimary: false },
-    ]);
+    setDetails([...details, { label: '', value: '', type: '', isPrimary: false }]);
   };
 
   const handleRemoveDetail = (indexToRemove: number) => {
     const newDetails = details.filter((_, index) => index !== indexToRemove);
 
-    // Jeśli usunęliśmy główny kontakt, a lista nie jest pusta, ustawiamy pierwszy element jako główny
     if (newDetails.length > 0 && !newDetails.some((d) => d.isPrimary)) {
       newDetails[0].isPrimary = true;
     }
@@ -103,12 +95,9 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
     setDetails([{ label: '', value: '', type: '', isPrimary: true }]);
   };
 
-  // --- WYSYŁKA FORMULARZA ---
-
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Zatrzymuje domyślne przeładowanie strony
+    e.preventDefault();
 
-    // Prosta walidacja na wypadek, gdyby atrybuty 'required' w HTML zawiodły
     const isAnyDetailInvalid = details.some(
       (d) => !d.label.trim() || !d.value.trim() || !d.type.trim(),
     );
@@ -148,7 +137,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {/* DANE OSOBOWE */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-800 border-b pb-1">Dane osobowe</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -181,7 +169,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
             </div>
           </div>
 
-          {/* DANE KONTAKTOWE (Dynamiczna Lista) */}
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b pb-1">
               <h3 className="text-sm font-semibold text-gray-800">Szczegóły kontaktowe</h3>
@@ -201,7 +188,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                 key={index}
                 className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg relative"
               >
-                {/* Opcja głównego kontaktu */}
                 <div className="flex flex-col items-center justify-start pt-2 px-1">
                   <input
                     type="radio"
@@ -258,7 +244,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                   </div>
                 </div>
 
-                {/* Przycisk usunięcia pokazywany tylko, gdy jest więcej niż 1 detal */}
                 {details.length > 1 && (
                   <Button
                     type="button"

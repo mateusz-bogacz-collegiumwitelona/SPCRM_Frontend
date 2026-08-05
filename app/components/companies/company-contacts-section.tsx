@@ -92,7 +92,7 @@ const columns = [
   }),
 ];
 
-export const ContactsSection: React.FC<{
+export const CompanyContactsSection: React.FC<{
   clientId?: string;
   getDisplayRange: (page: number, pageSize: number, total: number) => string;
 }> = ({ clientId, getDisplayRange }) => {
@@ -184,7 +184,6 @@ export const ContactsSection: React.FC<{
 
   return (
     <>
-      {/* WIDOK MOBILNY (dla małych ekranów < 768px) */}
       <section className="block xl:hidden">
         <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
           <span>
@@ -194,7 +193,6 @@ export const ContactsSection: React.FC<{
             <UserPlus className="w-5 h-5 text-[#004a8f]" />
           </Button>
         </h2>
-        {/* ... reszta kodu sekcji mobilnej (bez zmian) ... */}
         {mobileContacts.length === 0 && !isLoading ? (
           <div className="p-4 text-gray-500 bg-gray-50 rounded-lg text-sm text-center border">
             Brak kontaktów.
@@ -234,43 +232,16 @@ export const ContactsSection: React.FC<{
         )}
       </section>
 
-      {/* WIDOK DESKTOP (od 1024px wzwyż) */}
       <div className="hidden xl:flex mb-10 bg-white border border-gray-200 rounded-lg shadow-sm flex-col w-full overflow-hidden">
-        {/* Nagłówek z responsywnym zawijaniem elementów (flex-wrap) */}
-        <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto flex-1">
-            <h2 className="text-xl font-normal text-gray-800">Kontakty</h2>
-
-            <Button
-              className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2 shrink-0"
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              <UserPlus className="w-4 h-4" /> Dodaj
-            </Button>
-
-            <input
-              type="text"
-              placeholder="Wyszukaj..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-64 md:w-72 border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <select className="border rounded-md px-3 py-2 text-sm bg-white">
-              <option>Nazwisko</option>
-            </select>
-            <Button variant="outline" className="px-3">
-              <ArrowDownWideNarrow className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Filter className="w-4 h-4" /> Filtry
-            </Button>
-          </div>
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-xl font-normal text-gray-800">Kontakty</h2>
+          <Button
+            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <UserPlus className="w-4 h-4" /> Dodaj
+          </Button>
         </div>
-
-        {/* Kontener tabeli zabezpieczony przed wyjściem poza ekran */}
         <div className="w-full overflow-x-auto">
           <table className="w-full text-left min-w-137.5">
             <thead className="bg-white border-b">
@@ -288,7 +259,6 @@ export const ContactsSection: React.FC<{
           </table>
         </div>
 
-        {/* Pasek paginacji */}
         <div className="p-4 border-t flex flex-wrap items-center justify-between gap-3 text-xs bg-white rounded-b-lg">
           <select
             value={pageSize}

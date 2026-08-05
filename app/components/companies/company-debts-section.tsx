@@ -158,7 +158,6 @@ export const CompanyDebtsSection: React.FC<{
 
       {items.length > 0 && (
         <>
-          {/* MOBILE */}
           <div className="block xl:hidden space-y-4">
             {mobileDebts.map((debt) => (
               <div

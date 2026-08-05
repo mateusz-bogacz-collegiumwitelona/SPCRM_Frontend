@@ -123,7 +123,6 @@ export default function MailingCreator() {
     );
   };
 
-  // Wysyłanie formularza
   const handleSubmit = async () => {
     setErrorMsg('');
     setSuccessMsg('');

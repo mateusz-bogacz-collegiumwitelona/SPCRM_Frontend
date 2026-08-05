@@ -350,7 +350,6 @@ export default function ContactList() {
             </div>
           ) : (
             <>
-              {/* Widok Mobilny */}
               <div className="block lg:hidden space-y-4">
                 {accumulatedMobileContacts.map((contact) => (
                   <div

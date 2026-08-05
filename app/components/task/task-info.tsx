@@ -35,7 +35,6 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
 
   return (
     <div className="mb-6">
-      {/* NAGŁÓWEK */}
       <div className="mb-6">
         <h1 className="text-3xl lg:text-4xl font-normal text-[#004a8f] mb-3">{task.title}</h1>
         <div className="flex flex-wrap items-center gap-3">

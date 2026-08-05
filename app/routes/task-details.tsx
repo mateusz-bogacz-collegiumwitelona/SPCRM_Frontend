@@ -22,7 +22,6 @@ const TaskDetails: React.FC = () => {
     <AuthGuard>
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
-          {/* Desktop */}
           <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
               <div className="block lg:hidden space-y-4">
@@ -32,7 +31,6 @@ const TaskDetails: React.FC = () => {
                 <TaskNote taskId={taskId} />
               </div>
 
-              {/* Mobile */}
               <div className="hidden lg:flex flex-row gap-8 items-start relative">
                 <div className="flex-1 min-w-0 flex flex-col">
                   <TaskInfo taskId={taskId} />

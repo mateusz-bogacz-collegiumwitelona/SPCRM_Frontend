@@ -235,12 +235,10 @@ export default function ProductsList() {
     <AuthGuard>
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
-          {/* NAGŁÓWEK */}
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Produkty</h1>
           </div>
 
-          {/* PASEK WYSZUKIWANIA I FILTROWANIA */}
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <div className="w-full md:w-80 shrink-0">
               <input
@@ -277,7 +275,6 @@ export default function ProductsList() {
                   )}
                 </Button>
 
-                {/* PRZYCISK FILTRÓW */}
                 <div className="relative">
                   <Button
                     variant="outline"
@@ -294,12 +291,10 @@ export default function ProductsList() {
                     )}
                   </Button>
 
-                  {/* POPOVER Z FILTRAMI */}
                   {showFilters && (
                     <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
                       <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
                       <div className="space-y-4">
-                        {/* SELEKTOR KATEGORII */}
                         <div className="flex flex-col">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
                             Kategoria
@@ -318,7 +313,6 @@ export default function ProductsList() {
                           </select>
                         </div>
 
-                        {/* SELEKTOR GATUNKU STALI */}
                         <div className="flex flex-col">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
                             Gatunek stali
@@ -381,7 +375,6 @@ export default function ProductsList() {
             </div>
           </div>
 
-          {/* OBSŁUGA BŁĘDÓW I ŁADOWANIA */}
           {errorMessage && (
             <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
               <AlertCircle className="w-5 h-5 shrink-0" />
@@ -400,7 +393,6 @@ export default function ProductsList() {
             </div>
           ) : (
             <>
-              {/* WIDOK MOBILNY */}
               <div className="block lg:hidden space-y-4">
                 {accumulatedMobileProducts.map((product) => {
                   return (
@@ -446,7 +438,6 @@ export default function ProductsList() {
                 )}
               </div>
 
-              {/* WIDOK DESKTOPOWY (TABELA) */}
               <div className="hidden lg:block space-y-4">
                 <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
                   <table className="w-full">
@@ -483,7 +474,6 @@ export default function ProductsList() {
                   </table>
                 </div>
 
-                {/* PAGINACJA DESKTOPOWA */}
                 <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Pozycji na stronie:</span>

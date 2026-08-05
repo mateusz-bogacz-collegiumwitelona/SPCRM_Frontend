@@ -221,7 +221,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
           <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center gap-3">
             <MessageSquare className="h-8 w-8 text-gray-300" />
             <p className="text-gray-500 font-medium text-sm">Brak notatek do wyświetlenia.</p>
-            {/* Przycisk w pustym stanie */}
             <Button
               onClick={() => setIsAddModalOpen(true)}
               variant="outline"
@@ -346,7 +345,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                     />
                   </div>
                 </div>
-                {/* Przycisk dodawania nowej notatki w desktopie */}
                 <Button
                   onClick={() => setIsAddModalOpen(true)}
                   size="sm"
@@ -391,7 +389,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                 </table>
               </div>
 
-              {/* Paginacja Desktopowa */}
               <div className="flex items-center justify-between p-4 bg-white rounded-b-lg">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">Pozycji na stronie:</span>

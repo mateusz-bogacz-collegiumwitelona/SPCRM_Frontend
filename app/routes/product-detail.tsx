@@ -243,7 +243,6 @@ export default function ProductDetails() {
         <MainLayout>
           <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
-              {/* NAGŁÓWEK */}
               <ProductHeader isLoading={isLoading} isError={isError} product={product} />
 
               {product && (

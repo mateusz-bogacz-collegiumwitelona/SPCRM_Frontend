@@ -59,7 +59,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
 
   return (
     <div className="mb-6">
-      {/* NAGŁÓWEK */}
       <div className="mb-6">
         <h1 className="text-3xl lg:text-4xl font-normal text-[#004a8f] mb-4">{deal.name}</h1>
 
@@ -80,7 +79,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
             })}
           </span>
 
-          {/* OSTRZEŻENIE O ZALEGŁOŚCIACH */}
           {deal.isOverdueInvoices && (
             <span className="inline-flex items-center gap-1.5 text-sm font-bold text-red-700 bg-red-100 px-3 py-1 rounded-full border border-red-200 shadow-sm">
               <AlertCircle className="w-4 h-4" />
@@ -90,10 +88,8 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
         </div>
       </div>
 
-      {/* KARTA ZE SZCZEGÓŁAMI BIZNESOWYMI */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Klient */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
               <Building2 className="w-4 h-4 text-gray-400" /> Klient
@@ -101,7 +97,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
             <span className="text-base text-gray-900 font-semibold">{deal.companyName}</span>
           </div>
 
-          {/* Opiekun Handlowy */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
               <User className="w-4 h-4 text-gray-400" /> Opiekun
@@ -111,7 +106,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
             </span>
           </div>
 
-          {/* Wartość Całkowita */}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
               <CircleDollarSign className="w-4 h-4 text-gray-400" /> Wartość zamówienia
@@ -121,7 +115,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
             </span>
           </div>
 
-          {/* SEKCJA ROZLICZEŃ (Nowa!) */}
           <div className="flex flex-col gap-2 bg-gray-50 p-3 rounded-md border border-gray-100">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-500 flex items-center gap-1.5 font-medium">
@@ -132,7 +125,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
               </span>
             </div>
 
-            {/* Pasek postępu płatności */}
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div

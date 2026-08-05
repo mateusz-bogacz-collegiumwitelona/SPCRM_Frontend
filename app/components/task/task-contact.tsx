@@ -61,13 +61,10 @@ export const TaskContactDetails = ({ taskId }: { taskId: string }) => {
 
       <div className="space-y-2 border-t border-gray-100 pt-3">
         {contact.contactWays?.map((way: ContactWay, idx: number) => (
-          // Usunąłem gap-3, ponieważ Twoja funkcja getIcon już dodaje margines (mr-2)
           <div key={idx} className="flex items-center text-sm">
-            {/* 1. Użycie funkcji do pobrania odpowiedniej ikonki */}
             {getIcon(way.type)}
 
             <span className="font-medium text-gray-800">
-              {/* 2. Użycie funkcji do dodania przedrostka (np. Tel:, Email:) */}
               <span className="text-gray-500 font-normal mr-1">{getTypePrefix(way.type)}</span>
               {way.value}
             </span>

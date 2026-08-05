@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
 import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
-import { ContactsSection } from '~/components/companies/contacts-section';
+import { CompanyContactsSection } from '~/components/companies/company-contacts-section';
 import { CompanySalesSection } from '~/components/companies/company-sales-section';
 import { CompanyDebtsSection } from '~/components/companies/company-debts-section';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
@@ -136,24 +136,20 @@ const CompanyDetails: React.FC = () => {
               basicInfo={basicInfo}
             />
 
-            {/* === WIDOK MOBILNY === */}
             <div className="block lg:hidden space-y-6">
               <CompanyAddressesMobile addresses={addresses} />
-              <ContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
+              <CompanyContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanySalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
             </div>
 
-            {/* === WIDOK DESKTOP === */}
             <div className="hidden lg:flex flex-row gap-8 items-start relative">
-              {/* LEWA KOLUMNA - TABELE */}
               <div className="flex-1 min-w-0">
-                <ContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
+                <CompanyContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
                 <CompanySalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
                 <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               </div>
 
-              {/* PRAWA KOLUMNA - MAPA (Sticky) */}
               <div className="w-100 xl:w-112.5 shrink-0 sticky top-24">
                 <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                   <h2 className="text-xl font-normal text-gray-800 mb-4">Lokalizacje adresów</h2>

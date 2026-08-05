@@ -53,14 +53,12 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose })
                 />
               )}
               <span className="font-medium">Status:</span>
-              {/* Wyświetlamy przetłumaczoną etykietę statusu */}
               <span>{statusLabel}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-gray-700 px-1">
             <span className="font-medium">Priorytet:</span>
-            {/* Wyświetlamy przetłumaczoną etykietę priorytetu */}
             <span className="bg-gray-100 px-2 py-0.5 rounded text-xs uppercase tracking-wider">
               {priorityLabel}
             </span>
@@ -89,7 +87,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose })
                 <div className="flex items-center gap-3 text-sm">
                   <Briefcase className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">Transakcja:</span>
-                  {/* NA PRZYSZŁOŚĆ */}
                   <Link
                     to={`/deal/${task.dealId}`}
                     className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
@@ -102,12 +99,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose })
           )}
         </div>
 
-        {/* Przyciski akcji na dole */}
         <div className="pt-5 mt-2 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
             Zamknij
           </Button>
-          {/* Przycisk do przyszłej dedykowanej strony ze szczegółami zadań */}
           <Link to={`/task/${task.id}`}>
             <Button className="w-full sm:w-auto bg-blue-900 text-white hover:bg-blue-800">
               Szczegóły zadania

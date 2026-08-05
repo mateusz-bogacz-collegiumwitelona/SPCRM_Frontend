@@ -237,7 +237,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
           Pozycje zamówienia
         </h2>
 
-        {/* PASEK WYSZUKIWANIA I FILTROWANIA */}
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
           <input
             type="text"
@@ -271,7 +270,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
               )}
             </Button>
 
-            {/* PRZYCISK FILTRÓW */}
             <div className="relative">
               <Button
                 variant="outline"
@@ -288,7 +286,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                 )}
               </Button>
 
-              {/* POPOVER Z FILTRAMI */}
               {showFilters && (
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
                   <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
@@ -342,7 +339,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
         </div>
       </div>
 
-      {/* OBSŁUGA BŁĘDÓW I ŁADOWANIA */}
       <div className="p-4 lg:p-6">
         {errorMessage && (
           <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
@@ -362,7 +358,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
           </div>
         ) : (
           <>
-            {/* WIDOK MOBILNY */}
             <div className="block lg:hidden space-y-4">
               {accumulatedMobileProducts.map((product) => {
                 const hasDiscount = product.baseUnitPrice > product.unitPrice;
@@ -416,7 +411,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
               )}
             </div>
 
-            {/* WIDOK DESKTOPOWY (TABELA) */}
             <div className="hidden lg:block">
               <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table className="w-full text-left text-sm text-gray-600">
@@ -447,7 +441,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                 </table>
               </div>
 
-              {/* PAGINACJA DESKTOPOWA */}
               <div className="mt-4 flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600">Pozycji:</span>

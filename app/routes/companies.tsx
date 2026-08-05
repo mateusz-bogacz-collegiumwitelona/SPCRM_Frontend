@@ -270,7 +270,6 @@ export default function Companies() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
-                  {/* Wartości dopasowane do instrukcji switch w CompanyQueryExtension.cs */}
                   <option value="name">Nazwa</option>
                   <option value="nip">NIP</option>
                   <option value="city">Miasto</option>
@@ -414,7 +413,6 @@ export default function Companies() {
             </div>
           ) : (
             <>
-              {/* WIDOK MOBILNY (Karty) */}
               <div className="block xl:hidden space-y-4">
                 {accumulatedMobileCompanies.map((item) => (
                   <div
@@ -470,7 +468,6 @@ export default function Companies() {
                 )}
               </div>
 
-              {/* WIDOK DESKTOPOWY (Tabela) */}
               <div className="hidden lg:block space-y-4">
                 <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
                   <table className="w-full">
@@ -507,7 +504,6 @@ export default function Companies() {
                   </table>
                 </div>
 
-                {/* Paginacja */}
                 <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Pozycji na stronie:</span>

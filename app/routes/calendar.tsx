@@ -92,7 +92,6 @@ export default function CalendarPage() {
     <AuthGuard>
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
-          {/* Pasek nagłówka */}
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-3">
               Mój Kalendarz
@@ -100,7 +99,6 @@ export default function CalendarPage() {
             </h1>
           </div>
 
-          {/* --- PASEK FILTRÓW --- */}
           <div className="mb-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex items-center gap-2 text-gray-700 font-medium shrink-0">
               <Filter className="w-4 h-4" />
@@ -142,7 +140,6 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* Główny kontener kalendarza */}
           <div className="bg-white p-3 lg:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="calendar-container">
               <FullCalendar

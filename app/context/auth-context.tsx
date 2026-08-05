@@ -19,7 +19,7 @@ const authContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // <-- DODANE: Na start aplikacja "ładuje" stan
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchUser = async () => {
     try {
