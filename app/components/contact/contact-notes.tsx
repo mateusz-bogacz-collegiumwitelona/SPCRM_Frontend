@@ -330,10 +330,10 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
             </div>
 
             <div className="hidden lg:flex bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-xl font-normal text-gray-800 w-32">Notatki</h2>
-                  <div className="relative w-80">
+              <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto flex-1">
+                  <h2 className="text-xl font-normal text-gray-800 shrink-0">Notatki</h2>
+                  <div className="relative w-full max-w-xs">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Search className="h-4 w-4 text-gray-400" />
                     </div>
@@ -350,7 +350,7 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
                 <Button
                   onClick={() => setIsAddModalOpen(true)}
                   size="sm"
-                  className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-1"
+                  className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-1 shrink-0"
                 >
                   <Plus className="w-4 h-4" /> Dodaj notatkę
                 </Button>

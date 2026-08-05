@@ -379,9 +379,12 @@ export default function ContactList() {
                       )}
                     </div>
                     <div className="border-t border-gray-100 pt-3 flex items-center justify-end">
-                      <a href="#" className="text-xs font-medium text-blue-900 hover:underline">
+                      <Link
+                        to={`/contact/${contact.id}`}
+                        className="text-xs font-medium text-blue-900 hover:underline"
+                      >
                         Szczegóły
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 ))}
