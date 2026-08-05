@@ -8,7 +8,7 @@ import {
   type Row,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowDownWideNarrow, Filter, UserPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { api } from '~/api/api';
 import { AddCompanyContactDialog, type AddContactRequest } from './add-company-contact-dialog';
 import { Link } from 'react-router';
@@ -96,7 +96,6 @@ export const CompanyContactsSection: React.FC<{
   clientId?: string;
   getDisplayRange: (page: number, pageSize: number, total: number) => string;
 }> = ({ clientId, getDisplayRange }) => {
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(4);
   const [mobileContacts, setMobileContacts] = useState<Contact[]>([]);
@@ -146,7 +145,7 @@ export const CompanyContactsSection: React.FC<{
   useEffect(() => {
     setPage(1);
     setMobileContacts([]);
-  }, [search, pageSize]);
+  }, [pageSize]);
 
   useEffect(() => {
     if (items.length > 0) {

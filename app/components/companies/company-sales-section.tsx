@@ -8,7 +8,7 @@ import {
   type Row,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowDownWideNarrow, Filter } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '~/api/api';
 
 interface Sale {
@@ -163,7 +163,6 @@ export const CompanySalesSection: React.FC<{
   clientId?: string;
   getDisplayRange: (page: number, pageSize: number, total: number) => string;
 }> = ({ clientId, getDisplayRange }) => {
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(4);
   const [mobileSales, setMobileSales] = useState<Sale[]>([]);
@@ -187,7 +186,7 @@ export const CompanySalesSection: React.FC<{
   useEffect(() => {
     setPage(1);
     setMobileSales([]);
-  }, [search, pageSize]);
+  }, [pageSize]);
 
   useEffect(() => {
     if (items.length > 0) {
