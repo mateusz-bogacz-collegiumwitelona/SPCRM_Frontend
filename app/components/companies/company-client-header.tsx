@@ -10,7 +10,11 @@ interface ClientHeaderProps {
   };
 }
 
-export const ClientHeader: React.FC<ClientHeaderProps> = ({ isLoading, isError, basicInfo }) => {
+export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({
+  isLoading,
+  isError,
+  basicInfo,
+}) => {
   if (isLoading) {
     return (
       <div className="mb-6 lg:mb-8 animate-pulse">

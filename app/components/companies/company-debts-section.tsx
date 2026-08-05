@@ -63,7 +63,7 @@ const columns = [
   }),
 ];
 
-export const DebtsSection: React.FC<{
+export const CompanyDebtsSection: React.FC<{
   clientId?: string;
   getDisplayRange: (page: number, pageSize: number, totalItems: number) => string;
 }> = ({ clientId, getDisplayRange }) => {

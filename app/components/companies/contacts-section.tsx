@@ -10,7 +10,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight, ArrowDownWideNarrow, Filter, UserPlus } from 'lucide-react';
 import { api } from '~/api/api';
-import { AddContactDialog, type AddContactRequest } from './add-contact-dialog';
+import { AddCompanyContactDialog, type AddContactRequest } from './add-company-contact-dialog';
 import { Link } from 'react-router';
 
 interface Contact {
@@ -325,7 +325,7 @@ export const ContactsSection: React.FC<{
         </div>
       </div>
 
-      <AddContactDialog
+      <AddCompanyContactDialog
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveContact}

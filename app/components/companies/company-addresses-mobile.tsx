@@ -8,7 +8,7 @@ interface Address {
   type: string;
 }
 
-export const AddressesMobile: React.FC<{ addresses: Address[] }> = ({ addresses }) => {
+export const CompanyAddressesMobile: React.FC<{ addresses: Address[] }> = ({ addresses }) => {
   const [limit, setLimit] = useState(3);
 
   return (

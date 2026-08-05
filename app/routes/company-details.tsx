@@ -5,11 +5,11 @@ import { api } from '~/api/api';
 import { useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 
-import { ClientHeader } from '~/components/companies/client-header';
-import { AddressesMobile } from '~/components/companies/addresses-mobile';
+import { CompanyClientHeader } from '~/components/companies/company-client-header';
+import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
 import { ContactsSection } from '~/components/companies/contacts-section';
-import { SalesSection } from '~/components/companies/sales-section';
-import { DebtsSection } from '~/components/companies/debts-section';
+import { CompanySalesSection } from '~/components/companies/company-sales-section';
+import { CompanyDebtsSection } from '~/components/companies/company-debts-section';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { AuthGuard } from '~/lib/auth-guard';
 
@@ -130,14 +130,18 @@ const CompanyDetails: React.FC = () => {
       <MainLayout>
         <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
           <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
-            <ClientHeader isLoading={isBasicInfoLoading} isError={isError} basicInfo={basicInfo} />
+            <CompanyClientHeader
+              isLoading={isBasicInfoLoading}
+              isError={isError}
+              basicInfo={basicInfo}
+            />
 
             {/* === WIDOK MOBILNY === */}
             <div className="block lg:hidden space-y-6">
-              <AddressesMobile addresses={addresses} />
+              <CompanyAddressesMobile addresses={addresses} />
               <ContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
-              <SalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
-              <DebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
+              <CompanySalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
+              <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
             </div>
 
             {/* === WIDOK DESKTOP === */}
@@ -145,8 +149,8 @@ const CompanyDetails: React.FC = () => {
               {/* LEWA KOLUMNA - TABELE */}
               <div className="flex-1 min-w-0">
                 <ContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
-                <SalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
-                <DebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
+                <CompanySalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
+                <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               </div>
 
               {/* PRAWA KOLUMNA - MAPA (Sticky) */}

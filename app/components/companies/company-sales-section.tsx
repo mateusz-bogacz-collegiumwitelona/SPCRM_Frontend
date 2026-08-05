@@ -159,7 +159,7 @@ const renderTableBody = (isLoading: boolean, items: Sale[], rows: Row<Sale>[]) =
   return rows.map((row) => <TableRow key={row.id} row={row} />);
 };
 
-export const SalesSection: React.FC<{
+export const CompanySalesSection: React.FC<{
   clientId?: string;
   getDisplayRange: (page: number, pageSize: number, total: number) => string;
 }> = ({ clientId, getDisplayRange }) => {

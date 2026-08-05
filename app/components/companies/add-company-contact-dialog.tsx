@@ -33,7 +33,7 @@ interface AddContactDialogProps {
   isLoading?: boolean;
 }
 
-export const AddContactDialog: React.FC<AddContactDialogProps> = ({
+export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
   isOpen,
   onClose,
   onSave,
