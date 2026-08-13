@@ -9,7 +9,9 @@ import {
   DialogFooter,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 export interface EditContactDetailRequest {
   contactDetailId: string | null;
@@ -54,6 +56,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
   const [lastName, setLastName] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [details, setDetails] = useState<EditContactDetailRequest[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data: contactData, isLoading: isFetchingContact } = useQuery({
     queryKey: ['contact-edit-detail', contactId],
@@ -100,6 +103,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
     setLastName('');
     setJobTitle('');
     setDetails([]);
+    setErrorMessage(null);
   };
 
   const handleAddDetail = () => {
@@ -136,6 +140,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
 
     if (!contactId) return;
 
@@ -144,7 +149,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
     );
 
     if (!firstName.trim() || !lastName.trim() || isAnyDetailInvalid || details.length === 0) {
-      alert('Proszę poprawnie wypełnić wszystkie wymagane pola we wszystkich detalach.');
+      setErrorMessage('Proszę poprawnie wypełnić wszystkie wymagane pola we wszystkich detalach.');
       return;
     }
 
@@ -156,9 +161,16 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
       details,
     };
 
-    await onSave(payload);
-    resetForm();
-    onClose();
+    try {
+      await onSave(payload);
+      resetForm();
+      onClose();
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (err as Error)?.message || 'Nie udało się zapisać zmian.';
+      setErrorMessage(getErrorMessage(code, fallback));
+    }
   };
 
   const isModalLoading = isFetchingContact || isTypesLoading;
@@ -185,6 +197,13 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 py-4">
+            {errorMessage && (
+              <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <p>{errorMessage}</p>
+              </div>
+            )}
+
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-800 border-b pb-1">Dane osobowe</h3>
               <div className="grid grid-cols-2 gap-4">

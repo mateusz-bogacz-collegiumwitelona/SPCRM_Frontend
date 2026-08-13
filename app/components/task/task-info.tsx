@@ -2,12 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { Calendar, CheckCircle2, AlertCircle, AlignLeft } from 'lucide-react';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 export const TaskInfo = ({ taskId }: { taskId: string }) => {
   const {
     data: task,
     isLoading,
     isError,
+    error: queryError,
   } = useQuery({
     queryKey: ['task-core-details', taskId],
     queryFn: async () => {
@@ -27,8 +30,13 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
     );
   }
 
-  if (isError || !task)
-    return <div className="text-red-500 mb-6">Nie udało się pobrać danych zadania.</div>;
+  if (isError || !task) {
+    const errorMessage = getErrorMessage(
+      (queryError as ApiError)?.response?.data?.errorCode,
+      'Nie udało się pobrać danych zadania.',
+    );
+    return <div className="text-red-500 mb-6 font-medium">{errorMessage}</div>;
+  }
 
   const isCompleted = task.status === 'Complete';
   const isOverdue = new Date(task.dueAt) < new Date() && !isCompleted;

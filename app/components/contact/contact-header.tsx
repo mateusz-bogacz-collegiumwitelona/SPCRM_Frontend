@@ -7,6 +7,7 @@ import { RoleGuard } from '~/lib/role-guard';
 import { DeleteContactDialog } from './delete-contact-dialog';
 import { Button } from '~/components/ui/button';
 import type ApiError from '~/interfaces/apiError';
+import { getErrorMessage } from '~/utils/error-mapper';
 
 interface ContactBasicInfo {
   id: string;
@@ -45,14 +46,11 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
       queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
       navigate('/contacts');
     },
-    onError: (error: ApiError) => {
-      if (error.response?.status === 400) {
-        alert(
-          'Nie można usunąć głównego kontaktu firmy. Najpierw przypisz status głównego kontaktu innej osobie.',
-        );
-      } else {
-        alert('Wystąpił błąd podczas usuwania kontaktu.');
-      }
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = 'Wystąpił błąd podczas usuwania kontaktu.';
+      alert(getErrorMessage(code, fallback));
       setIsDeleteDialogOpen(false);
     },
   });

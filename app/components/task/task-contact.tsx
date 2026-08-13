@@ -2,8 +2,10 @@ import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
 import { type ContactWay } from '~/interfaces/contact-way';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { Building2, User } from 'lucide-react';
+import { AlertCircle, Building2, User } from 'lucide-react';
 import { Link } from 'react-router';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 interface TaskContactResponse {
   contactId: string;
@@ -15,18 +17,35 @@ interface TaskContactResponse {
 }
 
 export const TaskContactDetails = ({ taskId }: { taskId: string }) => {
-  const { data: contact, isLoading } = useQuery<TaskContactResponse>({
+  const {
+    data: contact,
+    isLoading,
+    isError,
+    error: queryError,
+  } = useQuery<TaskContactResponse>({
     queryKey: ['task-contact', taskId],
     queryFn: async () => {
-      try {
-        const response = await api.get(`/tasks/${taskId}/contact`);
-        return response.data.data;
-      } catch {
-        return null;
-      }
+      const response = await api.get(`/tasks/${taskId}/contact`);
+      return response.data.data;
     },
     retry: false,
   });
+
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać powiązanego kontaktu.',
+      )
+    : null;
+
+  if (errorMessage) {
+    return (
+      <div className="flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+        <AlertCircle className="w-5 h-5 shrink-0" />
+        <p className="font-medium">{errorMessage}</p>
+      </div>
+    );
+  }
 
   if (isLoading) return <div className="h-48 bg-gray-100 animate-pulse rounded-lg"></div>;
 

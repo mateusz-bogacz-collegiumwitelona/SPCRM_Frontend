@@ -153,9 +153,11 @@ export default function ContactList() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       setEditingContactId(null);
     },
-    onError: (error) => {
-      console.error('Błąd podczas edycji kontaktu', error);
-      alert('Nie udało się zapisać zmian.');
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się zapisać zmian.';
+      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -167,9 +169,11 @@ export default function ContactList() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       setSettingPrimaryId(null);
     },
-    onError: (error) => {
-      console.error('Błąd podczas ustawiania głównego kontaktu', error);
-      alert('Nie udało się zmienić głównego kontaktu.');
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się zmienić głównego kontaktu.';
+      alert(getErrorMessage(code, fallback));
       setSettingPrimaryId(null);
     },
   });

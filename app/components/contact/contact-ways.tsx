@@ -3,15 +3,39 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
 import { type ContactWay } from '~/interfaces/contact-way';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
+import { AlertCircle } from 'lucide-react';
 
 export const ContactWays: React.FC<{ contactId: string }> = ({ contactId }) => {
-  const { data: ways, isLoading } = useQuery<ContactWay[]>({
+  const {
+    data: ways,
+    isLoading,
+    isError,
+    error: queryError,
+  } = useQuery<ContactWay[]>({
     queryKey: ['contact-ways', contactId],
     queryFn: async () => {
       const res = await api.get(`/contacts/${contactId}/ways`);
       return res.data.data;
     },
   });
+
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać danych kontaktowych.',
+      )
+    : null;
+
+  if (errorMessage) {
+    return (
+      <div className="flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+        <AlertCircle className="w-5 h-5 shrink-0" />
+        <p className="font-medium">{errorMessage}</p>
+      </div>
+    );
+  }
 
   if (isLoading || !ways || ways.length === 0) return null;
 

@@ -9,7 +9,9 @@ import {
   DialogFooter,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 export interface AddContactRequest {
   companyId: string;
@@ -42,6 +44,8 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [jobTitle, setJobTitle] = useState('');
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [details, setDetails] = useState<AddContactDetailRequest[]>([
     { label: '', value: '', type: '', isPrimary: true },
@@ -93,6 +97,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
     setLastName('');
     setJobTitle('');
     setDetails([{ label: '', value: '', type: '', isPrimary: true }]);
+    setErrorMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,10 +118,16 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
       jobTitle,
       details,
     };
-
-    await onSave(newContact);
-    resetForm();
-    onClose();
+    try {
+      await onSave(newContact);
+      resetForm();
+      onClose();
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (err as Error)?.message || 'Nie udało się dodać kontaktu.';
+      setErrorMessage(getErrorMessage(code, fallback));
+    }
   };
 
   return (
@@ -137,6 +148,12 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
+          {errorMessage && (
+            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <p>{errorMessage}</p>
+            </div>
+          )}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-800 border-b pb-1">Dane osobowe</h3>
             <div className="grid grid-cols-2 gap-4">

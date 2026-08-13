@@ -3,6 +3,9 @@ import { api } from '~/api/api';
 import { Briefcase } from 'lucide-react';
 import { Link } from 'react-router';
 import { formatCurrency } from '~/utils/currency-formatter';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
+import { AlertCircle } from 'lucide-react';
 
 interface TaskDealResponse {
   dealId: string;
@@ -15,20 +18,38 @@ interface TaskDealResponse {
 }
 
 export const TaskDeals = ({ taskId }: { taskId: string }) => {
-  const { data: deal, isLoading } = useQuery<TaskDealResponse>({
+  const {
+    data: deal,
+    isLoading,
+    isError,
+    error: queryError,
+  } = useQuery<TaskDealResponse>({
     queryKey: ['task-deal', taskId],
     queryFn: async () => {
-      try {
-        const response = await api.get(`/tasks/${taskId}/deal`);
-        return response.data.data;
-      } catch {
-        return null;
-      }
+      const response = await api.get(`/tasks/${taskId}/deal`);
+      return response.data.data;
     },
     retry: false,
   });
 
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać danych transakcji.',
+      )
+    : null;
+
   if (isLoading) return <div className="h-32 bg-gray-100 animate-pulse rounded-lg"></div>;
+
+  if (errorMessage) {
+    return (
+      <div className="flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+        <AlertCircle className="w-5 h-5 shrink-0" />
+        <p className="font-medium">{errorMessage}</p>
+      </div>
+    );
+  }
+
   if (!deal) return null;
 
   return (

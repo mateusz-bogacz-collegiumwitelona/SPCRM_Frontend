@@ -8,12 +8,16 @@ export interface AddNotePayload {
   noteType: 'Contact' | 'Deal' | 'Task';
 }
 
-export const useAddNote = (options?: { onSuccess?: () => void }) => {
+export const useAddNote = (options?: {
+  onSuccess?: () => void;
+  onError?: (error: unknown) => void;
+}) => {
   return useMutation({
     mutationFn: async (payload: AddNotePayload) => {
       const response = await api.post('/note', payload);
       return response.data;
     },
     onSuccess: options?.onSuccess,
+    onError: options?.onError,
   });
 };

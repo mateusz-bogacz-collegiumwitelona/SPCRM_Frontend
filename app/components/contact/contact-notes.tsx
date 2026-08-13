@@ -20,6 +20,10 @@ import { ActionGuard } from '~/lib/action-guard';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
 import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
+import { AlertCircle } from 'lucide-react';
+
 const columnHelper = createColumnHelper<ContactNote>();
 
 export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => {
@@ -44,6 +48,12 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
     },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się edytować notatki.';
+      alert(getErrorMessage(code, fallback));
+    },
   });
 
   const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
@@ -52,12 +62,24 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
       setSearchTerm('');
       setPageNumber(1);
     },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się dodać notatki.';
+      alert(getErrorMessage(code, fallback));
+    },
   });
 
   const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
       setDeletingNoteId(null);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się usunąć notatki.';
+      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -157,7 +179,13 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     setPageNumber(1);
   }, [debouncedSearch, pageSize]);
 
-  const { data, isLoading, isFetching } = useQuery({
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error: queryError,
+  } = useQuery({
     queryKey: ['contact-notes', { contactId, pageNumber, pageSize, debouncedSearch }],
     queryFn: async () => {
       const params = {
@@ -209,9 +237,22 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać listy notatek.',
+      )
+    : null;
+
   return (
     <>
       <div className="flex flex-col gap-4">
+        {errorMessage && (
+          <div className="flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <p className="font-medium">{errorMessage}</p>
+          </div>
+        )}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10">
             <Loader2 className="h-8 w-8 animate-spin text-blue-900 mb-2" />

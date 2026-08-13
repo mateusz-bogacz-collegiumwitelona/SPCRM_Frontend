@@ -95,8 +95,7 @@ export default function Help() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="example@example.com"
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f]
-                  placeholder:text-[#d0d2d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
+                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
                   sm:h-10 sm:text-[14px] lg:h-11"
                   required
                 />
@@ -115,8 +114,7 @@ export default function Help() {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="Przykładowy tytuł"
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f]
-                  placeholder:text-[#d0d2d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
+                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
                   sm:h-10 sm:text-[14px] lg:h-11"
                   required
                 />
@@ -135,8 +133,7 @@ export default function Help() {
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Przykładowa treść"
-                    className="w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f]
-                    placeholder:text-[#d0d2d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
+                    className="w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
                     min-h-50 sm:text-[14px]"
                     maxLength={maxCharacters}
                     required

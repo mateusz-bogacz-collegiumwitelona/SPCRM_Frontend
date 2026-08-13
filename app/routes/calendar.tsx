@@ -3,7 +3,9 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
-import { Filter, Loader2 } from 'lucide-react';
+import { Filter, Loader2, AlertCircle } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -33,7 +35,12 @@ export default function CalendarPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const { data: tasks, isFetching } = useQuery({
+  const {
+    data: tasks,
+    isFetching,
+    isError,
+    error: queryError,
+  } = useQuery({
     queryKey: [
       'calendar-tasks',
       dateRange ? format(dateRange.start, 'yyyy-MM-dd') : null,
@@ -57,6 +64,13 @@ export default function CalendarPage() {
     enabled: !!dateRange,
     placeholderData: keepPreviousData,
   });
+
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać zadań do kalendarza.',
+      )
+    : null;
 
   const { data: dictionaries } = useQuery({
     queryKey: ['task-dictionaries'],
@@ -139,6 +153,13 @@ export default function CalendarPage() {
               </div>
             </div>
           </div>
+
+          {errorMessage && (
+            <div className="mb-4 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <p className="text-sm font-medium">{errorMessage}</p>
+            </div>
+          )}
 
           <div className="bg-white p-3 lg:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="calendar-container">

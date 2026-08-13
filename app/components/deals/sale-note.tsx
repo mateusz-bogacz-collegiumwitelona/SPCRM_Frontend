@@ -7,6 +7,8 @@ import { NoteAddDialog } from '~/components/note/note-add-dialog';
 import { useState } from 'react';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
 import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 export const SaleNote = ({ dealId }: { dealId: string }) => {
   const queryClient = useQueryClient();
@@ -14,7 +16,12 @@ export const SaleNote = ({ dealId }: { dealId: string }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
-  const { data: notes, isLoading } = useQuery<NoteResponse[]>({
+  const {
+    data: notes,
+    isLoading,
+    isError,
+    error: queryError,
+  } = useQuery<NoteResponse[]>({
     queryKey: ['deal-notes', dealId],
     queryFn: async () => {
       const response = await api.get(`/sales/${dealId}/notes`);
@@ -25,6 +32,13 @@ export const SaleNote = ({ dealId }: { dealId: string }) => {
   const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
+      setIsAddModalOpen(false);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się dodać notatki.';
+      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -32,6 +46,12 @@ export const SaleNote = ({ dealId }: { dealId: string }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
       setDeletingNoteId(null);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się usunąć notatki.';
+      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -48,8 +68,20 @@ export const SaleNote = ({ dealId }: { dealId: string }) => {
     });
   };
 
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać listy notatek.',
+      )
+    : null;
+
   return (
     <>
+      {errorMessage && (
+        <div className="mb-4 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm font-medium">
+          {errorMessage}
+        </div>
+      )}
       <NotesSection
         notes={notes}
         isLoading={isLoading}

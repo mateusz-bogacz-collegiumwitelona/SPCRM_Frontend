@@ -8,6 +8,9 @@ import {
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
 import { api } from '~/api/api';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
+import { AlertCircle } from 'lucide-react';
 
 interface Debt {
   id: string;
@@ -72,7 +75,12 @@ export const CompanyDebtsSection: React.FC<{
   const [mobileDebts, setMobileDebts] = useState<Debt[]>([]);
   const isMobileAppend = useRef(false);
 
-  const { data: summaryResponse, isLoading: isSummaryLoading } = useQuery({
+  const {
+    data: summaryResponse,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+    error: summaryError,
+  } = useQuery({
     queryKey: ['company-debt-summary', clientId],
     queryFn: async () => {
       const response = await api.get('/company/debts/summary', {
@@ -85,7 +93,12 @@ export const CompanyDebtsSection: React.FC<{
 
   const summary = Array.isArray(summaryResponse) ? summaryResponse : [];
 
-  const { data: debtsRes, isFetching } = useQuery({
+  const {
+    data: debtsRes,
+    isFetching,
+    isError: isDebtsError,
+    error: debtsError,
+  } = useQuery({
     queryKey: ['company-debts', { clientId, page, pageSize }],
     queryFn: async () => {
       const response = await api.get('/company/debts', {
@@ -122,11 +135,28 @@ export const CompanyDebtsSection: React.FC<{
 
   const table = useReactTable({ data: items, columns, getCoreRowModel: getCoreRowModel() });
 
+  const hasError = isSummaryError || isDebtsError;
+  const activeError = summaryError || debtsError;
+
+  const errorMessage = hasError
+    ? getErrorMessage(
+        (activeError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać danych o zadłużeniu.',
+      )
+    : null;
+
   return (
     <div className="mb-10 flex flex-col gap-6">
       <div className="border-b pb-3">
         <h2 className="text-xl font-normal text-gray-800">Sytuacja finansowa i zadłużenie</h2>
       </div>
+
+      {errorMessage && (
+        <div className="flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="font-medium">{errorMessage}</p>
+        </div>
+      )}
 
       {isSummaryLoading ? (
         <div className="h-24 bg-gray-100 rounded-lg animate-pulse" />

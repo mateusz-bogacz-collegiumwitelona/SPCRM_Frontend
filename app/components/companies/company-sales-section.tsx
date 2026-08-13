@@ -10,6 +10,9 @@ import {
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '~/api/api';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
+import { AlertCircle } from 'lucide-react';
 
 interface Sale {
   id: string;
@@ -167,7 +170,12 @@ export const CompanySalesSection: React.FC<{
   const [pageSize, setPageSize] = useState(4);
   const [mobileSales, setMobileSales] = useState<Sale[]>([]);
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    error: queryError,
+  } = useQuery({
     queryKey: ['company-sales', clientId, page, pageSize],
     queryFn: async () => {
       const res = await api.get('/company/sales', {
@@ -204,8 +212,22 @@ export const CompanySalesSection: React.FC<{
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać historii sprzedaży.',
+      )
+    : null;
+
   return (
     <>
+      {errorMessage && (
+        <div className="mb-4 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="font-medium">{errorMessage}</p>
+        </div>
+      )}
+
       <section className="block xl:hidden">
         <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
           Sprzedaż: {isLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}

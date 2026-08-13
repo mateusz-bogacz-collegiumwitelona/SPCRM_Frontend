@@ -17,6 +17,8 @@ import {
   type EditContactRequest,
 } from '~/components/contact/edit-contact-dialog';
 import { SetCompanyPrimaryContactDialog } from '~/components/companies/set-company-primary-contact-dialog';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 interface Contact {
   id: string;
@@ -116,7 +118,6 @@ const columns = [
             Edytuj
           </button>
 
-          {/* Przycisk pokazujemy tylko wtedy, gdy kontakt nie jest jeszcze główny */}
           {!isPrimary && (
             <button
               onClick={() => meta.onSetPrimary(info.row.original.id)}
@@ -166,9 +167,11 @@ export const CompanyContactsSection: React.FC<{
       queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
       setIsAddModalOpen(false);
     },
-    onError: (error) => {
-      console.error('Błąd podczas dodawania kontaktu', error);
-      alert('Nie udało się zapisać kontaktu. Sprawdź konsolę.');
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się zapisać kontaktu.';
+      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -180,9 +183,11 @@ export const CompanyContactsSection: React.FC<{
       queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
       setEditingContactId(null);
     },
-    onError: (error) => {
-      console.error('Błąd podczas edycji kontaktu', error);
-      alert('Nie udało się zapisać zmian.');
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się zapisać zmian.';
+      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -194,9 +199,11 @@ export const CompanyContactsSection: React.FC<{
       queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
       setSettingPrimaryId(null);
     },
-    onError: (error) => {
-      console.error('Błąd podczas ustawiania głównego kontaktu', error);
-      alert('Nie udało się zmienić głównego kontaktu.');
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się zmienić głównego kontaktu.';
+      alert(getErrorMessage(code, fallback));
     },
   });
 

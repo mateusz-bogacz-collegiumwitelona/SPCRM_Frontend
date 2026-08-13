@@ -157,11 +157,20 @@ export default function MailingCreator() {
       setLanguage('pl');
     } catch (error_: unknown) {
       const err = error_ as ApiError;
-      setErrorMsg(
-        err.response?.data?.message ||
-          getErrorMessage(err.response?.data?.errorCode) ||
-          'Błąd podczas wysyłania mailingu.',
-      );
+      const errorData = err.response?.data;
+
+      if (
+        errorData?.errorCode === 'VALIDATION_ERROR' &&
+        Array.isArray(errorData.errors) &&
+        errorData.errors.length > 0
+      ) {
+        const validationMessage = errorData.errors.map((code) => getErrorMessage(code)).join(' ');
+        setErrorMsg(validationMessage);
+      } else if (errorData?.errorCode) {
+        setErrorMsg(getErrorMessage(errorData.errorCode, errorData.message));
+      } else {
+        setErrorMsg(err.message || 'Błąd podczas wysyłania mailingu.');
+      }
     } finally {
       setIsSending(false);
     }

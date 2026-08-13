@@ -6,6 +6,8 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AlertCircle, Box, Scale, Banknote, Loader2, ArrowLeft } from 'lucide-react';
 import { AuthGuard } from '~/lib/auth-guard';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
 
 interface ActivePromotionResponse {
   name: string;
@@ -32,10 +34,12 @@ interface ProductDetailResponse {
 const ProductHeader = ({
   isLoading,
   isError,
+  errorMessage,
   product,
 }: {
   isLoading: boolean;
   isError: boolean;
+  errorMessage?: string;
   product?: ProductDetailResponse;
 }) => {
   if (isLoading) {
@@ -47,7 +51,16 @@ const ProductHeader = ({
     );
   }
 
-  if (isError || !product) {
+  if (isError) {
+    return (
+      <div className="bg-red-50 p-6 rounded-lg border border-red-200 mb-6 flex items-center gap-2 text-red-700">
+        <AlertCircle className="w-6 h-6 shrink-0" />
+        <span className="font-medium">{errorMessage}</span>
+      </div>
+    );
+  }
+
+  if (!product) {
     return (
       <div className="bg-red-50 p-6 rounded-lg border border-red-200 mb-6 flex items-center gap-2 text-red-700">
         <AlertCircle className="w-6 h-6" />
@@ -226,6 +239,7 @@ export default function ProductDetails() {
     data: product,
     isLoading,
     isError,
+    error: queryError,
   } = useQuery({
     queryKey: ['product-details', productId],
     queryFn: async () => {
@@ -235,6 +249,13 @@ export default function ProductDetails() {
     enabled: !!productId,
   });
 
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się załadować danych produktu.',
+      )
+    : undefined;
+
   if (!productId) return null;
 
   return (
@@ -243,8 +264,12 @@ export default function ProductDetails() {
         <MainLayout>
           <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
-              <ProductHeader isLoading={isLoading} isError={isError} product={product} />
-
+              <ProductHeader
+                isLoading={isLoading}
+                isError={isError}
+                errorMessage={errorMessage}
+                product={product}
+              />
               {product && (
                 <>
                   <div className="block lg:hidden space-y-6">

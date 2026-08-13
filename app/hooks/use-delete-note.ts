@@ -3,6 +3,7 @@ import { api } from '~/api/api';
 
 interface UseDeleteNoteOptions {
   onSuccess: () => void;
+  onError?: (error: unknown) => void;
 }
 
 export const UseDeleteNote = (options?: UseDeleteNoteOptions) => {
@@ -13,6 +14,9 @@ export const UseDeleteNote = (options?: UseDeleteNoteOptions) => {
     },
     onSuccess: () => {
       options?.onSuccess?.();
+    },
+    onError: (err) => {
+      options?.onError?.(err);
     },
   });
 };

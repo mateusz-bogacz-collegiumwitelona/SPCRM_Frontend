@@ -12,6 +12,9 @@ import {
 import { formatCurrency } from '~/utils/currency-formatter';
 import { getStatusConfig } from '~/utils/sale-status';
 
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
+
 interface SaleDetailResponse {
   id: string;
   name: string;
@@ -34,6 +37,7 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
     data: deal,
     isLoading,
     isError,
+    error: queryError,
   } = useQuery<SaleDetailResponse>({
     queryKey: ['deal-info', dealId],
     queryFn: async () => {
@@ -51,8 +55,13 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
     );
   }
 
-  if (isError || !deal)
-    return <div className="text-red-500 mb-6">Nie udało się pobrać danych zadania.</div>;
+  if (isError || !deal) {
+    const errorMessage = getErrorMessage(
+      (queryError as ApiError)?.response?.data?.errorCode,
+      'Nie udało się pobrać danych zamówienia.',
+    );
+    return <div className="text-red-500 mb-6 font-medium">{errorMessage}</div>;
+  }
 
   const status = getStatusConfig(deal.status);
   const isFullyPaid = deal.paidAmount >= deal.value;

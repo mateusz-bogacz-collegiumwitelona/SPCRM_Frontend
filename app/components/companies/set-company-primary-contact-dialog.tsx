@@ -24,7 +24,7 @@ export const SetCompanyPrimaryContactDialog: React.FC<SetPrimaryContactDialogPro
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && onClose()}>
-      <DialogContent className="sm:max-w-[450px]">
+      <DialogContent className="sm:max-w-112.5">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mt-2">
             <Star className="w-6 h-6 text-[#004a8f]" />
