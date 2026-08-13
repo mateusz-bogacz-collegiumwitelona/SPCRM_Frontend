@@ -12,6 +12,10 @@ import { ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
 import { api } from '~/api/api';
 import { AddCompanyContactDialog, type AddContactRequest } from './add-company-contact-dialog';
 import { Link } from 'react-router';
+import {
+  EditContactDialog,
+  type EditContactRequest,
+} from '~/components/contact/edit-contact-dialog';
 
 interface Contact {
   id: string;
@@ -43,6 +47,7 @@ const TableRow = ({ row }: { row: Row<Contact> }) => (
 );
 
 const columnHelper = createColumnHelper<Contact>();
+
 const columns = [
   columnHelper.display({
     id: 'fullName',
@@ -86,8 +91,21 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: 'Akcje',
-    cell: () => (
-      <button className="text-[#004a8f] hover:underline font-medium text-sm">Szczegóły</button>
+    cell: (info) => (
+      <div className="flex gap-3">
+        <Link
+          to={`/contact/${info.row.original.id}`}
+          className="text-[#004a8f] hover:underline font-medium text-sm"
+        >
+          Szczegóły
+        </Link>
+        <button
+          onClick={() => info.table.options.meta?.onEdit?.(info.row.original.id)}
+          className="text-gray-500 hover:text-[#004a8f] hover:underline font-medium text-sm"
+        >
+          Edytuj
+        </button>
+      </div>
     ),
   }),
 ];
@@ -102,6 +120,8 @@ export const CompanyContactsSection: React.FC<{
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['company-contacts', clientId, page, pageSize],
@@ -126,6 +146,20 @@ export const CompanyContactsSection: React.FC<{
     onError: (error) => {
       console.error('Błąd podczas dodawania kontaktu', error);
       alert('Nie udało się zapisać kontaktu. Sprawdź konsolę.');
+    },
+  });
+
+  const editContactMutation = useMutation({
+    mutationFn: async (updatedContact: EditContactRequest) => {
+      return await api.patch('/contacts/edit', updatedContact);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
+      setEditingContactId(null);
+    },
+    onError: (error) => {
+      console.error('Błąd podczas edycji kontaktu', error);
+      alert('Nie udało się zapisać zmian.');
     },
   });
 
@@ -157,7 +191,14 @@ export const CompanyContactsSection: React.FC<{
     }
   }, [items, page]);
 
-  const table = useReactTable({ data: items, columns, getCoreRowModel: getCoreRowModel() });
+  const table = useReactTable({
+    data: items,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    meta: {
+      onEdit: (id: string) => setEditingContactId(id),
+    },
+  });
 
   const renderTableBody = () => {
     if (isLoading) {
@@ -213,9 +254,17 @@ export const CompanyContactsSection: React.FC<{
                   <p>
                     Opiekun: {c.ownerFirstName} {c.ownerLastName}
                   </p>
-                  <Link className="text-[#004a8f] hover:underline" to={`contact/${c.id}`}>
-                    Szczegóły
-                  </Link>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setEditingContactId(c.id)}
+                      className="text-gray-500 hover:text-[#004a8f] hover:underline font-medium"
+                    >
+                      Edytuj
+                    </button>
+                    <Link className="text-[#004a8f] hover:underline" to={`/contact/${c.id}`}>
+                      Szczegóły
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
@@ -299,6 +348,16 @@ export const CompanyContactsSection: React.FC<{
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveContact}
         isLoading={addContactMutation.isPending}
+      />
+
+      <EditContactDialog
+        contactId={editingContactId}
+        isOpen={!!editingContactId}
+        onClose={() => setEditingContactId(null)}
+        onSave={async (data) => {
+          await editContactMutation.mutateAsync(data);
+        }}
+        isLoading={editContactMutation.isPending}
       />
     </>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '~/components/ui/button';
 import {
   Filter,
@@ -12,7 +12,7 @@ import {
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
@@ -23,6 +23,10 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import {
+  EditContactDialog,
+  type EditContactRequest,
+} from '~/components/contact/edit-contact-dialog';
 
 interface ContactResponse {
   id: string;
@@ -85,12 +89,20 @@ const columns = [
     id: 'actions',
     header: 'Akcje',
     cell: (info) => (
-      <Link
-        to={`/contact/${info.row.original.id}`}
-        className="font-medium text-blue-900 hover:underline"
-      >
-        Szczegóły
-      </Link>
+      <div className="border-t border-gray-100 pt-3 flex items-center justify-end gap-3">
+        <button
+          onClick={() => (info.table.options.meta as any)?.onEdit(info.row.original.id)}
+          className="text-xs font-medium text-gray-500 hover:text-[#004a8f] hover:underline"
+        >
+          Edytuj
+        </button>
+        <Link
+          to={`/contact/${info.row.original.id}`}
+          className="text-xs font-medium text-blue-900 hover:underline"
+        >
+          Szczegóły
+        </Link>
+      </div>
     ),
   }),
 ];
@@ -107,6 +119,23 @@ export default function ContactList() {
   const [isPrimaryFilter, setIsPrimaryFilter] = useState<string>('');
   const [accumulatedMobileContacts, setAccumulatedMobileContacts] = useState<ContactResponse[]>([]);
   const isMobileAppend = useRef(false);
+
+  const [editingContactId, setEditingContactId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const editContactMutation = useMutation({
+    mutationFn: async (updatedContact: EditContactRequest) => {
+      return await api.patch('/contacts/edit', updatedContact);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      setEditingContactId(null);
+    },
+    onError: (error) => {
+      console.error('Błąd podczas edycji kontaktu', error);
+      alert('Nie udało się zapisać zmian.');
+    },
+  });
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 100);
@@ -199,6 +228,9 @@ export default function ContactList() {
     data: desktopContacts,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      onEdit: (id: string) => setEditingContactId(id),
+    },
   });
 
   const errorMessage = isError
@@ -233,7 +265,7 @@ export default function ContactList() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
                   <option value="lastName">Nazwisko</option>
                   <option value="firstName">Imię</option>
@@ -278,7 +310,7 @@ export default function ContactList() {
                           <select
                             value={companyFilter}
                             onChange={(e) => setCompanyFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                           >
                             <option value="">Wszystkie firmy</option>
                             {availableCompanies.map((company) => (
@@ -296,7 +328,7 @@ export default function ContactList() {
                           <select
                             value={isPrimaryFilter}
                             onChange={(e) => setIsPrimaryFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                           >
                             <option value="">Wszystkie</option>
                             <option value="true">Tylko główne kontakty</option>
@@ -450,7 +482,7 @@ export default function ContactList() {
                     <select
                       value={pageSize}
                       onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700 shadow-sm"
+                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
                     >
                       <option value={10}>10</option>
                       <option value={25}>25</option>
@@ -492,6 +524,15 @@ export default function ContactList() {
               </div>
             </>
           )}
+          <EditContactDialog
+            contactId={editingContactId}
+            isOpen={!!editingContactId}
+            onClose={() => setEditingContactId(null)}
+            onSave={async (data) => {
+              await editContactMutation.mutateAsync(data);
+            }}
+            isLoading={editContactMutation.isPending}
+          />
         </MainLayout>
       </RoleGuard>
     </AuthGuard>
