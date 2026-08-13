@@ -1,7 +1,12 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
 import { api } from '~/api/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
+import { RoleGuard } from '~/lib/role-guard';
+import { DeleteContactDialog } from './delete-contact-dialog';
+import { Button } from '~/components/ui/button';
+import type ApiError from '~/interfaces/apiError';
 
 interface ContactBasicInfo {
   id: string;
@@ -15,6 +20,10 @@ interface ContactBasicInfo {
 }
 
 export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const {
     data: info,
     isLoading,
@@ -24,6 +33,27 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
     queryFn: async () => {
       const res = await api.get(`/contacts/${contactId}`);
       return res.data.data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      return await api.delete(`/contacts/${contactId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
+      navigate('/contacts');
+    },
+    onError: (error: ApiError) => {
+      if (error.response?.status === 400) {
+        alert(
+          'Nie można usunąć głównego kontaktu firmy. Najpierw przypisz status głównego kontaktu innej osobie.',
+        );
+      } else {
+        alert('Wystąpił błąd podczas usuwania kontaktu.');
+      }
+      setIsDeleteDialogOpen(false);
     },
   });
 
@@ -43,39 +73,65 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
   }
 
   return (
-    <div className="mb-6 lg:mb-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
-        <div>
-          <h1 className="text-4xl font-normal text-gray-900 leading-tight">
-            {info.firstName} {info.lastName}
-          </h1>
-          <p className="text-lg text-gray-900 mt-1.5">{info.companyName}</p>
-          {info.jobTitle && (
-            <p className="text-sm font-medium text-[#004a8f] mt-0.5">{info.jobTitle}</p>
-          )}
-        </div>
+    <>
+      <div className="mb-6 lg:mb-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-4xl font-normal text-gray-900 leading-tight">
+                {info.firstName} {info.lastName}
+              </h1>
 
-        <div className="flex flex-col items-start lg:items-end gap-2 mt-2 lg:mt-0">
-          <div
-            className={`inline-block px-3 py-1 rounded-full ${
-              info.isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'
-            }`}
-          >
-            <span className="font-medium text-sm">
-              {info.isPrimary ? 'Główny kontakt' : 'Kontakt dodatkowy'}
-            </span>
+              <RoleGuard allowedRoles={['Manager', 'Admin']}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:bg-red-50 hover:text-red-700 h-8 w-8"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  title="Usuń kontakt"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </RoleGuard>
+            </div>
+
+            <p className="text-lg text-gray-900 mt-1.5">{info.companyName}</p>
+            {info.jobTitle && (
+              <p className="text-sm font-medium text-[#004a8f] mt-0.5">{info.jobTitle}</p>
+            )}
           </div>
 
-          {(info.ownerFirstName || info.ownerLastName) && (
-            <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-200">
-              Opiekun:{' '}
-              <span className="font-medium text-gray-700">
-                {info.ownerFirstName} {info.ownerLastName}
+          <div className="flex flex-col items-start lg:items-end gap-2 mt-2 lg:mt-0">
+            <div
+              className={`inline-block px-3 py-1 rounded-full ${
+                info.isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              <span className="font-medium text-sm">
+                {info.isPrimary ? 'Główny kontakt' : 'Kontakt dodatkowy'}
               </span>
             </div>
-          )}
+
+            {(info.ownerFirstName || info.ownerLastName) && (
+              <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-200">
+                Opiekun:{' '}
+                <span className="font-medium text-gray-700">
+                  {info.ownerFirstName} {info.ownerLastName}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      <DeleteContactDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={async () => {
+          await deleteMutation.mutateAsync();
+        }}
+        isLoading={deleteMutation.isPending}
+      />
+    </>
   );
 };
