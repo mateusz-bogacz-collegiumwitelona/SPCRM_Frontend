@@ -16,6 +16,7 @@ import {
   EditContactDialog,
   type EditContactRequest,
 } from '~/components/contact/edit-contact-dialog';
+import { SetCompanyPrimaryContactDialog } from '~/components/companies/set-company-primary-contact-dialog';
 
 interface Contact {
   id: string;
@@ -25,6 +26,11 @@ interface Contact {
   isPrimary: boolean;
   ownerFirstName?: string;
   ownerLastName?: string;
+}
+
+export interface CompanyContactTableMeta {
+  onEdit: (id: string) => void;
+  onSetPrimary: (id: string) => void;
 }
 
 const PrimaryBadge = ({ isPrimary }: { isPrimary: boolean }) => {
@@ -91,22 +97,37 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: 'Akcje',
-    cell: (info) => (
-      <div className="flex gap-3">
-        <Link
-          to={`/contact/${info.row.original.id}`}
-          className="text-[#004a8f] hover:underline font-medium text-sm"
-        >
-          Szczegóły
-        </Link>
-        <button
-          onClick={() => info.table.options.meta?.onEdit?.(info.row.original.id)}
-          className="text-gray-500 hover:text-[#004a8f] hover:underline font-medium text-sm"
-        >
-          Edytuj
-        </button>
-      </div>
-    ),
+    cell: (info) => {
+      const meta = info.table.options.meta as CompanyContactTableMeta;
+      const isPrimary = info.row.original.isPrimary;
+
+      return (
+        <div className="flex gap-3 items-center">
+          <Link
+            to={`/contact/${info.row.original.id}`}
+            className="text-[#004a8f] hover:underline font-medium text-sm"
+          >
+            Szczegóły
+          </Link>
+          <button
+            onClick={() => meta.onEdit(info.row.original.id)}
+            className="text-gray-500 hover:text-[#004a8f] hover:underline font-medium text-sm"
+          >
+            Edytuj
+          </button>
+
+          {/* Przycisk pokazujemy tylko wtedy, gdy kontakt nie jest jeszcze główny */}
+          {!isPrimary && (
+            <button
+              onClick={() => meta.onSetPrimary(info.row.original.id)}
+              className="text-gray-500 hover:text-green-600 hover:underline font-medium text-sm"
+            >
+              Ustaw główny
+            </button>
+          )}
+        </div>
+      );
+    },
   }),
 ];
 
@@ -122,6 +143,8 @@ export const CompanyContactsSection: React.FC<{
   const queryClient = useQueryClient();
 
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
+
+  const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['company-contacts', clientId, page, pageSize],
@@ -163,6 +186,20 @@ export const CompanyContactsSection: React.FC<{
     },
   });
 
+  const setPrimaryMutation = useMutation({
+    mutationFn: async (contactId: string) => {
+      return await api.patch(`/contacts/${contactId}/set-primary`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
+      setSettingPrimaryId(null);
+    },
+    onError: (error) => {
+      console.error('Błąd podczas ustawiania głównego kontaktu', error);
+      alert('Nie udało się zmienić głównego kontaktu.');
+    },
+  });
+
   const handleSaveContact = async (contactData: Omit<AddContactRequest, 'companyId'>) => {
     if (!clientId) return;
 
@@ -197,6 +234,7 @@ export const CompanyContactsSection: React.FC<{
     getCoreRowModel: getCoreRowModel(),
     meta: {
       onEdit: (id: string) => setEditingContactId(id),
+      onSetPrimary: (id: string) => setSettingPrimaryId(id),
     },
   });
 
@@ -358,6 +396,17 @@ export const CompanyContactsSection: React.FC<{
           await editContactMutation.mutateAsync(data);
         }}
         isLoading={editContactMutation.isPending}
+      />
+
+      <SetCompanyPrimaryContactDialog
+        isOpen={!!settingPrimaryId}
+        onClose={() => setSettingPrimaryId(null)}
+        onConfirm={async () => {
+          if (settingPrimaryId) {
+            await setPrimaryMutation.mutateAsync(settingPrimaryId);
+          }
+        }}
+        isLoading={setPrimaryMutation.isPending}
       />
     </>
   );
