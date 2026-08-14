@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { api } from '~/api/api';
 import { Loader2, Trash2 } from 'lucide-react';
-import { RoleGuard } from '~/lib/role-guard';
+import { useAuth } from '~/context/auth-context';
 import { DeleteContactDialog } from './delete-contact-dialog';
 import { Button } from '~/components/ui/button';
 import type ApiError from '~/interfaces/apiError';
@@ -24,6 +24,9 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const { user } = useAuth();
+  const canDelete = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
 
   const {
     data: info,
@@ -80,7 +83,7 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
                 {info.firstName} {info.lastName}
               </h1>
 
-              <RoleGuard allowedRoles={['Manager', 'Admin']}>
+              {canDelete && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -90,7 +93,7 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
                 >
                   <Trash2 className="w-5 h-5" />
                 </Button>
-              </RoleGuard>
+              )}
             </div>
 
             <p className="text-lg text-gray-900 mt-1.5">{info.companyName}</p>
