@@ -96,7 +96,7 @@ const columns = [
           to={`/products/${info.row.original.id}`}
           className="font-medium text-blue-900 hover:underline"
         >
-          Detale
+          Szczegóły
         </Link>
       );
     },

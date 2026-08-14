@@ -8,6 +8,9 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  MoreHorizontal,
+  Edit2,
+  Star,
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -28,6 +31,12 @@ import {
   type EditContactRequest,
 } from '~/components/contact/edit-contact-dialog';
 import { SetCompanyPrimaryContactDialog } from '~/components/companies/set-company-primary-contact-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 
 interface ContactResponse {
   id: string;
@@ -99,29 +108,46 @@ const columns = [
       const isPrimary = info.row.original.isPrimary;
 
       return (
-        <div className="border-t border-gray-100 pt-3 flex items-center justify-end gap-3">
-          <button
-            onClick={() => meta.onEdit(info.row.original.id)}
-            className="text-xs font-medium text-gray-500 hover:text-[#004a8f] hover:underline"
-          >
-            Edytuj
-          </button>
-
-          {!isPrimary && (
-            <button
-              onClick={() => meta.onSetPrimary(info.row.original.id)}
-              className="text-xs font-medium text-gray-500 hover:text-green-600 hover:underline"
-            >
-              Ustaw główny
-            </button>
-          )}
-
+        <div className="flex items-center justify-start gap-2">
           <Link
             to={`/contact/${info.row.original.id}`}
-            className="text-xs font-medium text-blue-900 hover:underline"
+            className="text-xs font-medium text-blue-900 hover:underline px-2"
           >
             Szczegóły
           </Link>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
+              >
+                <span className="sr-only">Otwórz menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-40 bg-white">
+              <DropdownMenuItem
+                onClick={() => meta.onEdit(info.row.original.id)}
+                className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+              >
+                <Edit2 className="mr-2 h-4 w-4" />
+                <span>Edytuj</span>
+              </DropdownMenuItem>
+
+              {!isPrimary && (
+                <DropdownMenuItem
+                  onClick={() => meta.onSetPrimary(info.row.original.id)}
+                  className="cursor-pointer text-sm text-gray-700 focus:bg-green-50"
+                >
+                  <Star className="mr-2 h-4 w-4 text-gray-400" />
+                  <span>Ustaw główny</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       );
     },
@@ -505,7 +531,9 @@ export default function ContactList() {
                           {headerGroup.headers.map((header) => (
                             <th
                               key={header.id}
-                              className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
+                              className={`border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900 ${
+                                header.column.id === 'actions' ? 'w-0 whitespace-nowrap' : ''
+                              }`}
                             >
                               {header.isPlaceholder
                                 ? null
@@ -522,7 +550,12 @@ export default function ContactList() {
                           className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                         >
                           {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
+                            <td
+                              key={cell.id}
+                              className={`px-6 py-4 text-sm text-gray-700 ${
+                                cell.column.id === 'actions' ? 'w-0 whitespace-nowrap' : ''
+                              }`}
+                            >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </td>
                           ))}
