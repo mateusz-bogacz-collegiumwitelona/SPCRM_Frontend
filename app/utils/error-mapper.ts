@@ -4,6 +4,8 @@ export const ErrorMapper: Record<string, string> = {
   INTERNAL_ERROR: 'Wystąpił błąd wewnętrzny. Proszę spróbować ponownie później.',
   BAD_REQUEST: 'Nieprawidłowe żądanie. Proszę sprawdzić wprowadzone dane.',
   NOT_FOUND: 'Nie znaleziono żądanego zasobu.',
+  INVALID_DATE: 'Nieprawidłowa data',
+  INVALID_SORT_COLUMN: 'Nieprawidłowa kolumna sortowania',
 
   // Validation
   VAL_001: 'Email jest wymagany',
@@ -55,6 +57,10 @@ export const ErrorMapper: Record<string, string> = {
 
   // Mailing
   MAIL_001: 'Nie znaleziono klienta do którego ma być wysłany mailing',
+
+  // Promotion
+  PROMO_001: 'Nieprawidłowa wartość przeceny',
+  PROMO_002: 'Nieprawidłowa cena promocyjna',
 };
 
 export const getErrorMessage = (code?: string, fallbackMessage?: string): string => {
