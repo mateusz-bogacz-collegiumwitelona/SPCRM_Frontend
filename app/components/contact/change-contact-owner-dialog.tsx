@@ -12,6 +12,7 @@ import { Button } from '~/components/ui/button';
 import { Loader2, AlertCircle, UserCog } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
+import { translateRole } from '~/utils/role-translator';
 
 interface OwnerResponse {
   id: string;
@@ -121,7 +122,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
                 </option>
                 {owners.map((owner) => (
                   <option key={owner.id} value={owner.id}>
-                    {owner.firstName} {owner.lastName} ({owner.role})
+                    {owner.firstName} {owner.lastName} ({translateRole(owner.role)})
                   </option>
                 ))}
               </select>
