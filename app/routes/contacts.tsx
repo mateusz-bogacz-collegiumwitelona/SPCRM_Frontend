@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Edit2,
   Star,
+  UserCog,
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -37,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
+import { ChangeContactOwnerDialog } from '~/components/contact/change-contact-owner-dialog';
 
 interface ContactResponse {
   id: string;
@@ -52,6 +54,7 @@ interface ContactResponse {
 export interface ContactListTableMeta {
   onEdit: (id: string) => void;
   onSetPrimary: (id: string) => void;
+  onChangeOwner: (id: string) => void;
 }
 
 const columnHelper = createColumnHelper<ContactResponse>();
@@ -137,6 +140,16 @@ const columns = [
                 <span>Edytuj</span>
               </DropdownMenuItem>
 
+              <RoleGuard allowedRoles={['Manager', 'Admin']}>
+                <DropdownMenuItem
+                  onClick={() => meta.onChangeOwner(info.row.original.id)}
+                  className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+                >
+                  <UserCog className="mr-2 h-4 w-4" />
+                  <span>Zmień opiekuna</span>
+                </DropdownMenuItem>
+              </RoleGuard>
+
               {!isPrimary && (
                 <DropdownMenuItem
                   onClick={() => meta.onSetPrimary(info.row.original.id)}
@@ -169,6 +182,8 @@ export default function ContactList() {
 
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
+  const [changingOwnerContactId, setChangingOwnerContactId] = useState<string | null>(null);
+
   const queryClient = useQueryClient();
 
   const editContactMutation = useMutation({
@@ -201,6 +216,26 @@ export default function ContactList() {
       const fallback = (error as Error)?.message || 'Nie udało się zmienić głównego kontaktu.';
       alert(getErrorMessage(code, fallback));
       setSettingPrimaryId(null);
+    },
+  });
+
+  const changeOwnerMutation = useMutation({
+    mutationFn: async (data: { contactId: string; newOwnerId: string }) => {
+      return await api.patch(`/contacts/change-owner`, {
+        contactId: data.contactId,
+        newOwnerId: data.newOwnerId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      setChangingOwnerContactId(null);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (error as Error)?.message || 'Nie udało się zmienić opiekuna.';
+      alert(getErrorMessage(code, fallback));
+      setChangingOwnerContactId(null);
     },
   });
 
@@ -298,6 +333,7 @@ export default function ContactList() {
     meta: {
       onEdit: (id: string) => setEditingContactId(id),
       onSetPrimary: (id: string) => setSettingPrimaryId(id),
+      onChangeOwner: (id: string) => setChangingOwnerContactId(id),
     },
   });
 
@@ -484,6 +520,14 @@ export default function ContactList() {
                       >
                         Edytuj
                       </button>
+
+                      <button
+                        onClick={() => setChangingOwnerContactId(contact.id)}
+                        className="text-xs font-medium text-gray-500 hover:text-[#004a8f] hover:underline"
+                      >
+                        Zmień opiekuna
+                      </button>
+
                       {!contact.isPrimary && (
                         <button
                           onClick={() => setSettingPrimaryId(contact.id)}
@@ -633,6 +677,21 @@ export default function ContactList() {
               }
             }}
             isLoading={setPrimaryMutation.isPending}
+          />
+
+          <ChangeContactOwnerDialog
+            contactId={changingOwnerContactId}
+            isOpen={!!changingOwnerContactId}
+            onClose={() => setChangingOwnerContactId(null)}
+            onSave={async (newOwnerId) => {
+              if (changingOwnerContactId) {
+                await changeOwnerMutation.mutateAsync({
+                  contactId: changingOwnerContactId,
+                  newOwnerId,
+                });
+              }
+            }}
+            isLoading={changeOwnerMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
