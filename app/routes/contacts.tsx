@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { ChangeContactOwnerDialog } from '~/components/contact/change-contact-owner-dialog';
+import { useAuth } from '~/context/auth-context';
 
 interface ContactResponse {
   id: string;
@@ -186,6 +187,10 @@ export default function ContactList() {
 
   const queryClient = useQueryClient();
 
+  const [ownerFilter, setOwnerFilter] = useState<string>('');
+  const { user } = useAuth();
+  const isManagerOrAdmin = user?.roles.some((r) => ['Manager', 'Admin'].includes(r));
+
   const editContactMutation = useMutation({
     mutationFn: async (updatedContact: EditContactRequest) => {
       return await api.patch('/contacts/edit', updatedContact);
@@ -247,7 +252,15 @@ export default function ContactList() {
   useEffect(() => {
     isMobileAppend.current = false;
     setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize, companyFilter, isPrimaryFilter]);
+  }, [
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    pageSize,
+    companyFilter,
+    isPrimaryFilter,
+    ownerFilter,
+  ]);
 
   const { data: companiesResponse } = useQuery({
     queryKey: ['contact-companies'],
@@ -255,6 +268,15 @@ export default function ContactList() {
       const response = await api.get('/contacts/companies');
       return response.data?.value || response.data?.data || response.data || [];
     },
+  });
+
+  const { data: availableOwners = [] } = useQuery({
+    queryKey: ['available-owners'],
+    queryFn: async () => {
+      const res = await api.get('/contacts/available-owners');
+      return res.data.data;
+    },
+    enabled: !!isManagerOrAdmin,
   });
 
   const availableCompanies: string[] = Array.isArray(companiesResponse) ? companiesResponse : [];
@@ -276,6 +298,7 @@ export default function ContactList() {
         sortDescending,
         companyFilter,
         isPrimaryFilter,
+        ownerFilter,
       },
     ],
     queryFn: async () => {
@@ -288,6 +311,7 @@ export default function ContactList() {
         CompanyName: companyFilter || undefined,
         IsPrimary:
           isPrimaryFilter === 'true' ? true : isPrimaryFilter === 'false' ? false : undefined,
+        OwnerId: ownerFilter === 'me' ? user?.userId : ownerFilter || undefined,
       };
       const response = await api.get('/contacts', { params });
       return response.data?.value || response.data?.data || response.data;
@@ -440,12 +464,37 @@ export default function ContactList() {
                           </select>
                         </div>
 
+                        <div className="flex flex-col">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Opiekun
+                          </label>
+                          <select
+                            value={ownerFilter}
+                            onChange={(e) => setOwnerFilter(e.target.value)}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+                          >
+                            <option value="">Wszyscy</option>
+                            <option value="me">Tylko moje kontakty</option>
+
+                            {isManagerOrAdmin &&
+                              availableOwners.map(
+                                (owner: any) =>
+                                  owner.id !== user?.userId && (
+                                    <option key={owner.id} value={owner.id}>
+                                      {owner.firstName} {owner.lastName}
+                                    </option>
+                                  ),
+                              )}
+                          </select>
+                        </div>
+
                         <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
                           <button
                             type="button"
                             onClick={() => {
                               setCompanyFilter('');
                               setIsPrimaryFilter('');
+                              setOwnerFilter('');
                             }}
                             className="text-xs text-gray-500 hover:text-gray-900 underline"
                           >
