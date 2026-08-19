@@ -30,6 +30,7 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
+import { Link } from 'react-router';
 
 interface PromotionResponse {
   id: string;
@@ -119,7 +120,11 @@ const columns = [
     header: 'Akcje',
     cell: (info) => {
       const row = info.row.original;
-      return <a>Szczegóły</a>;
+      return (
+        <Link to={`/promotion/${row.id}`} className="font-medium text-blue-900 hover:underline">
+          Szczegóły
+        </Link>
+      );
     },
   }),
 ];
