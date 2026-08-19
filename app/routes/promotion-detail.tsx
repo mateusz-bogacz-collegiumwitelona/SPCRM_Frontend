@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { useAuth } from '~/context/auth-context';
+import { Button } from '~/components/ui/button';
+import { DeactivatePromotionDialog } from '~/components/promotion/deactivate-promotion-dialog';
+
 import {
   AlertCircle,
   ArrowLeft,
@@ -12,6 +16,7 @@ import {
   Layers,
   Loader2,
   Package,
+  PowerOff,
   Scale,
   Sparkles,
   Tag,
@@ -57,6 +62,33 @@ const PromotionHeader: React.FC<{
   isError: boolean;
   errorMessage?: string;
 }> = ({ promotion, isLoading, isError, errorMessage }) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
+
+  const canManage = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
+
+  const deactivateMutation = useMutation({
+    mutationFn: async () => {
+      if (!promotion) return;
+      return await api.patch(`/promotion/${promotion.id}/deactivate`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
+      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+      setIsDeactivateOpen(false);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas dezaktywacji promocji.',
+        ),
+      );
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 flex items-center gap-4">
@@ -80,54 +112,77 @@ const PromotionHeader: React.FC<{
   const isExpired = promotion.endDate && new Date(promotion.endDate) < new Date();
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 relative overflow-hidden">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-3 mb-2">
-            <Link
-              to="/promotions"
-              className="text-gray-500 hover:text-blue-900 transition-colors"
-              title="Powrót do listy promocji"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <h1 className="text-2xl font-semibold text-gray-900">{promotion.name}</h1>
+    <>
+      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-3 mb-2">
+              <Link
+                to="/promotions"
+                className="text-gray-500 hover:text-blue-900 transition-colors"
+                title="Powrót do listy promocji"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <h1 className="text-2xl font-semibold text-gray-900">{promotion.name}</h1>
 
-            {promotion.isActive && !isExpired ? (
-              <span className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Aktywna
-              </span>
-            ) : (
-              <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                {isExpired ? 'Wygasła' : 'Zakończona'}
-              </span>
-            )}
+              {promotion.isActive && !isExpired ? (
+                <span className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Aktywna
+                </span>
+              ) : (
+                <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  {isExpired ? 'Wygasła' : 'Zakończona'}
+                </span>
+              )}
 
-            {promotion.discountPercentage != null && (
-              <span className="bg-red-50 text-red-700 border border-red-200 text-xs font-bold px-2.5 py-0.5 rounded-full">
-                -{promotion.discountPercentage}%
+              {promotion.discountPercentage != null && (
+                <span className="bg-red-50 text-red-700 border border-red-200 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                  -{promotion.discountPercentage}%
+                </span>
+              )}
+            </div>
+
+            <p className="text-gray-500 ml-8 text-sm">
+              Utworzono:{' '}
+              <span className="font-medium text-gray-900">
+                {format(new Date(promotion.createdAt), 'dd MMMM yyyy, HH:mm', { locale: pl })}
               </span>
-            )}
+              {promotion.updateAt && (
+                <>
+                  {' '}
+                  | Ostatnia zmiana:{' '}
+                  <span className="font-medium text-gray-900">
+                    {format(new Date(promotion.updateAt), 'dd MMMM yyyy, HH:mm', { locale: pl })}
+                  </span>
+                </>
+              )}
+            </p>
           </div>
 
-          <p className="text-gray-500 ml-8 text-sm">
-            Utworzono:{' '}
-            <span className="font-medium text-gray-900">
-              {format(new Date(promotion.createdAt), 'dd MMMM yyyy, HH:mm', { locale: pl })}
-            </span>
-            {promotion.updateAt && (
-              <>
-                {' '}
-                | Ostatnia zmiana:{' '}
-                <span className="font-medium text-gray-900">
-                  {format(new Date(promotion.updateAt), 'dd MMMM yyyy, HH:mm', { locale: pl })}
-                </span>
-              </>
-            )}
-          </p>
+          {canManage && promotion.isActive && (
+            <Button
+              variant="outline"
+              onClick={() => setIsDeactivateOpen(true)}
+              className="self-start md:self-auto text-amber-700 border-amber-300 hover:bg-amber-50 hover:text-amber-800 flex items-center gap-2"
+            >
+              <PowerOff className="w-4 h-4" />
+              Zakończ promocję
+            </Button>
+          )}
         </div>
       </div>
-    </div>
+
+      <DeactivatePromotionDialog
+        isOpen={isDeactivateOpen}
+        onClose={() => setIsDeactivateOpen(false)}
+        onConfirm={async () => {
+          await deactivateMutation.mutateAsync();
+        }}
+        isLoading={deactivateMutation.isPending}
+        promotionName={promotion.name}
+      />
+    </>
   );
 };
 
