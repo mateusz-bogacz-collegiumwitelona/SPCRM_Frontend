@@ -10,6 +10,10 @@ import { Button } from '~/components/ui/button';
 import { DeactivatePromotionDialog } from '~/components/promotion/deactivate-promotion-dialog';
 import { ActivatePromotionDialog } from '~/components/promotion/activate-promotion-dialog';
 import { DeletePromotionDialog } from '~/components/promotion/delete-promotion-dialog';
+import {
+  EditPromotionDialog,
+  type EditPromotionRequestPayload,
+} from '~/components/promotion/edit-promotion-dialog';
 
 import {
   AlertCircle,
@@ -18,6 +22,7 @@ import {
   Layers,
   Loader2,
   Package,
+  Pencil,
   Play,
   PowerOff,
   Scale,
@@ -72,6 +77,7 @@ const PromotionHeader: React.FC<{
   const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
   const [isActivateOpen, setIsActivateOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const canManage = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
 
@@ -141,6 +147,26 @@ const PromotionHeader: React.FC<{
     },
   });
 
+  const editMutation = useMutation({
+    mutationFn: async (payload: EditPromotionRequestPayload) => {
+      return await api.patch('/promotion/edit', payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
+      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+      setIsEditOpen(false);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas edycji promocji.',
+        ),
+      );
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 flex items-center gap-4">
@@ -179,15 +205,26 @@ const PromotionHeader: React.FC<{
               <h1 className="text-2xl font-semibold text-gray-900">{promotion.name}</h1>
 
               {canManage && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-500 hover:bg-red-50 hover:text-red-700 h-8 w-8"
-                  onClick={() => setIsDeleteOpen(true)}
-                  title="Usuń promocję"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-blue-900 hover:bg-blue-50 h-8 w-8"
+                    onClick={() => setIsEditOpen(true)}
+                    title="Edytuj promocję"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:bg-red-50 hover:text-red-700 h-8 w-8"
+                    onClick={() => setIsDeleteOpen(true)}
+                    title="Usuń promocję"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                </div>
               )}
 
               {promotion.isActive && !isExpired ? (
@@ -278,6 +315,16 @@ const PromotionHeader: React.FC<{
         }}
         isLoading={deleteMutation.isPending}
         promotionName={promotion.name}
+      />
+
+      <EditPromotionDialog
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSave={async (payload) => {
+          await editMutation.mutateAsync(payload);
+        }}
+        isLoading={editMutation.isPending}
+        initialData={promotion}
       />
     </>
   );
