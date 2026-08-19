@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams, Link, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -9,6 +9,7 @@ import { useAuth } from '~/context/auth-context';
 import { Button } from '~/components/ui/button';
 import { DeactivatePromotionDialog } from '~/components/promotion/deactivate-promotion-dialog';
 import { ActivatePromotionDialog } from '~/components/promotion/activate-promotion-dialog';
+import { DeletePromotionDialog } from '~/components/promotion/delete-promotion-dialog';
 
 import {
   AlertCircle,
@@ -22,6 +23,7 @@ import {
   Scale,
   Sparkles,
   Tag,
+  Trash2,
   User,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -64,10 +66,12 @@ const PromotionHeader: React.FC<{
   isError: boolean;
   errorMessage?: string;
 }> = ({ promotion, isLoading, isError, errorMessage }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
   const [isActivateOpen, setIsActivateOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const canManage = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
 
@@ -116,6 +120,27 @@ const PromotionHeader: React.FC<{
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!promotion) return;
+      return await api.delete(`/promotion/${promotion.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+      navigate('/promotions');
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas usuwania promocji.',
+        ),
+      );
+      setIsDeleteOpen(false);
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6 flex items-center gap-4">
@@ -152,6 +177,18 @@ const PromotionHeader: React.FC<{
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               <h1 className="text-2xl font-semibold text-gray-900">{promotion.name}</h1>
+
+              {canManage && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-500 hover:bg-red-50 hover:text-red-700 h-8 w-8"
+                  onClick={() => setIsDeleteOpen(true)}
+                  title="Usuń promocję"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              )}
 
               {promotion.isActive && !isExpired ? (
                 <span className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
@@ -230,6 +267,16 @@ const PromotionHeader: React.FC<{
           await activateMutation.mutateAsync(endDate);
         }}
         isLoading={activateMutation.isPending}
+        promotionName={promotion.name}
+      />
+
+      <DeletePromotionDialog
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={async () => {
+          await deleteMutation.mutateAsync();
+        }}
+        isLoading={deleteMutation.isPending}
         promotionName={promotion.name}
       />
     </>
