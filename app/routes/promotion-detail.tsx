@@ -8,6 +8,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { useAuth } from '~/context/auth-context';
 import { Button } from '~/components/ui/button';
 import { DeactivatePromotionDialog } from '~/components/promotion/deactivate-promotion-dialog';
+import { ActivatePromotionDialog } from '~/components/promotion/activate-promotion-dialog';
 
 import {
   AlertCircle,
@@ -16,6 +17,7 @@ import {
   Layers,
   Loader2,
   Package,
+  Play,
   PowerOff,
   Scale,
   Sparkles,
@@ -65,6 +67,7 @@ const PromotionHeader: React.FC<{
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
+  const [isActivateOpen, setIsActivateOpen] = useState(false);
 
   const canManage = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
 
@@ -84,6 +87,30 @@ const PromotionHeader: React.FC<{
         getErrorMessage(
           apiError.response?.data?.errorCode,
           'Wystąpił błąd podczas dezaktywacji promocji.',
+        ),
+      );
+    },
+  });
+
+  const activateMutation = useMutation({
+    mutationFn: async (endDate: Date) => {
+      if (!promotion) return;
+      return await api.patch('/promotion/activate', {
+        id: promotion.id,
+        endDate: endDate.toISOString(),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
+      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+      setIsActivateOpen(false);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas aktywacji promocji.',
         ),
       );
     },
@@ -160,15 +187,28 @@ const PromotionHeader: React.FC<{
             </p>
           </div>
 
-          {canManage && promotion.isActive && (
-            <Button
-              variant="outline"
-              onClick={() => setIsDeactivateOpen(true)}
-              className="self-start md:self-auto text-amber-700 border-amber-300 hover:bg-amber-50 hover:text-amber-800 flex items-center gap-2"
-            >
-              <PowerOff className="w-4 h-4" />
-              Zakończ promocję
-            </Button>
+          {canManage && (
+            <div>
+              {promotion.isActive ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDeactivateOpen(true)}
+                  className="text-amber-700 border-amber-300 hover:bg-amber-50 hover:text-amber-800 flex items-center gap-2"
+                >
+                  <PowerOff className="w-4 h-4" />
+                  Zakończ promocję
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsActivateOpen(true)}
+                  className="text-green-700 border-green-300 hover:bg-green-50 hover:text-green-800 flex items-center gap-2"
+                >
+                  <Play className="w-4 h-4" />
+                  Wznów promocję
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -180,6 +220,16 @@ const PromotionHeader: React.FC<{
           await deactivateMutation.mutateAsync();
         }}
         isLoading={deactivateMutation.isPending}
+        promotionName={promotion.name}
+      />
+
+      <ActivatePromotionDialog
+        isOpen={isActivateOpen}
+        onClose={() => setIsActivateOpen(false)}
+        onConfirm={async (endDate) => {
+          await activateMutation.mutateAsync(endDate);
+        }}
+        isLoading={activateMutation.isPending}
         promotionName={promotion.name}
       />
     </>
@@ -317,9 +367,9 @@ const PromotionTermsCard: React.FC<{ promotion: PromotionDetailResponse }> = ({ 
   );
 };
 
-const PromotionProductSidebar: React.FC<{ promotion: PromotionDetailResponse }> = ({
-  promotion,
-}) => {
+const PromotionProductSidebar: React.FC<{
+  promotion: PromotionDetailResponse;
+}> = ({ promotion }) => {
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
       <div className="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -427,7 +477,7 @@ export default function PromotionDetails() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={['Manager']}>
         <MainLayout>
           <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
