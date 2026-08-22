@@ -5,7 +5,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
@@ -18,11 +18,13 @@ import {
   ChevronRight,
   Filter,
   Loader2,
+  Plus,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { useAuth } from '~/context/auth-context';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { formatCurrency } from '~/utils/currency-formatter';
@@ -30,7 +32,11 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import {
+  AddPromotionDialog,
+  type AddPromotionRequestPayload,
+} from '~/components/promotion/add-promotion-dialog';
 
 interface PromotionResponse {
   id: string;
@@ -130,6 +136,13 @@ const columns = [
 ];
 
 export default function PromotionsList() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const canManage = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
+
+  const [isAddOpen, setIsAddOpen] = useState(false);
+
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -241,6 +254,29 @@ export default function PromotionsList() {
     placeholderData: keepPreviousData,
   });
 
+  const addMutation = useMutation({
+    mutationFn: async (payload: AddPromotionRequestPayload) => {
+      const res = await api.post('/promotion', payload);
+      return res.data?.data;
+    },
+    onSuccess: (newPromotionId) => {
+      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+      setIsAddOpen(false);
+      if (newPromotionId) {
+        navigate(`/promotion/${newPromotionId}`);
+      }
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas tworzenia promocji.',
+        ),
+      );
+    },
+  });
+
   const desktopPromotions = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopPromotions.length;
@@ -298,8 +334,17 @@ export default function PromotionsList() {
     <AuthGuard>
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
-          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
+          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex items-center justify-between">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Promocje</h1>
+            {canManage && (
+              <Button
+                onClick={() => setIsAddOpen(true)}
+                className="bg-white text-blue-900 hover:bg-gray-100 flex items-center gap-2 font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                Dodaj promocję
+              </Button>
+            )}
           </div>
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -666,6 +711,15 @@ export default function PromotionsList() {
               </div>
             </>
           )}
+
+          <AddPromotionDialog
+            isOpen={isAddOpen}
+            onClose={() => setIsAddOpen(false)}
+            onSave={async (payload) => {
+              await addMutation.mutateAsync(payload);
+            }}
+            isLoading={addMutation.isPending}
+          />
         </MainLayout>
       </RoleGuard>
     </AuthGuard>
