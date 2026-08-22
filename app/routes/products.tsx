@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
@@ -18,11 +18,13 @@ import {
   ChevronRight,
   Filter,
   Loader2,
+  Plus,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { AddProductDialog, type AddProductRequest } from '~/components/products/add-product-dialog';
 
 interface ProductResonse {
   id: string;
@@ -118,6 +120,19 @@ export default function ProductsList() {
   const isMobileAppend = useRef(false);
 
   const [hasActivePromotion, setHasActivePromotion] = useState<boolean>(false);
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const addProductMutation = useMutation({
+    mutationFn: async (newProduct: AddProductRequest) => {
+      await api.post('/products', newProduct);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products-list'] });
+      setIsAddModalOpen(false);
+    },
+  });
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -235,8 +250,14 @@ export default function ProductsList() {
     <AuthGuard>
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
-          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
+          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Produkty</h1>
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-white text-blue-900 hover:bg-gray-100 font-medium text-xs sm:text-sm flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Dodaj produkt
+            </Button>
           </div>
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -520,6 +541,15 @@ export default function ProductsList() {
               </div>
             </>
           )}
+
+          <AddProductDialog
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onSave={async (data) => {
+              await addProductMutation.mutateAsync(data);
+            }}
+            isLoading={addProductMutation.isPending}
+          />
         </MainLayout>
       </RoleGuard>
     </AuthGuard>
