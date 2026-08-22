@@ -111,7 +111,6 @@ export const ActivatePromotionDialog: React.FC<ActivatePromotionDialogProps> = (
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   disabled={(date) => date <= new Date()}
-                  initialFocus
                   locale={pl}
                 />
               </PopoverContent>

@@ -13,6 +13,7 @@ import {
   Star,
   UserCog,
 } from 'lucide-react';
+
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
@@ -50,6 +51,13 @@ interface ContactResponse {
   ownerFirstName: string;
   ownerLastName: string;
   isPrimary: boolean;
+}
+
+interface OwnerOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role?: string;
 }
 
 export interface ContactListTableMeta {
@@ -270,11 +278,11 @@ export default function ContactList() {
     },
   });
 
-  const { data: availableOwners = [] } = useQuery({
+  const { data: availableOwners = [] } = useQuery<OwnerOption[]>({
     queryKey: ['available-owners'],
     queryFn: async () => {
       const res = await api.get('/contacts/available-owners');
-      return res.data.data;
+      return res.data?.data || [];
     },
     enabled: !!isManagerOrAdmin,
   });
@@ -478,7 +486,7 @@ export default function ContactList() {
 
                             {isManagerOrAdmin &&
                               availableOwners.map(
-                                (owner: any) =>
+                                (owner) =>
                                   owner.id !== user?.userId && (
                                     <option key={owner.id} value={owner.id}>
                                       {owner.firstName} {owner.lastName}
@@ -729,7 +737,6 @@ export default function ContactList() {
           />
 
           <ChangeContactOwnerDialog
-            contactId={changingOwnerContactId}
             isOpen={!!changingOwnerContactId}
             onClose={() => setChangingOwnerContactId(null)}
             onSave={async (newOwnerId) => {

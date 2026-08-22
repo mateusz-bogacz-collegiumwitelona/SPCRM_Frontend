@@ -22,7 +22,6 @@ interface OwnerResponse {
 }
 
 interface ChangeContactOwnerDialogProps {
-  contactId: string | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: (newOwnerId: string) => Promise<void>;
@@ -30,7 +29,6 @@ interface ChangeContactOwnerDialogProps {
 }
 
 export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> = ({
-  contactId,
   isOpen,
   onClose,
   onSave,
@@ -59,7 +57,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
     }
   }, [isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage(null);
 

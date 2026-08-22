@@ -329,7 +329,6 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
                     mode="single"
                     selected={startDate}
                     onSelect={setStartDate}
-                    initialFocus
                     locale={pl}
                   />
                 </PopoverContent>
@@ -367,13 +366,7 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 z-100" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    locale={pl}
-                  />
+                  <Calendar mode="single" selected={endDate} onSelect={setEndDate} locale={pl} />
                 </PopoverContent>
               </Popover>
             </div>
