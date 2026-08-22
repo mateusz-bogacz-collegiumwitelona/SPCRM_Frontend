@@ -4,7 +4,7 @@ import {
   useReactTable,
   flexRender,
 } from '@tanstack/react-table';
-import { formatCurrency } from '~/utils/currency-formatter';
+import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
@@ -83,13 +83,13 @@ const columns = [
         <div className="flex flex-col items-start">
           {isHasDiscount && (
             <span className="text-xs text-gray-400 line-through mb-0.5">
-              {formatCurrency(row.baseUnitPrice, row.decimalPlaces)} {row.currencyCode}
+              {formatCurrency(row.baseUnitPrice, row.currencyCode, row.decimalPlaces)}
             </span>
           )}
           <span
             className={isHasDiscount ? 'text-green-600 font-bold' : 'text-gray-900 font-medium'}
           >
-            {formatCurrency(row.unitPrice, row.decimalPlaces)} {row.currencyCode}
+            {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
           </span>
         </div>
       );
@@ -102,7 +102,7 @@ const columns = [
       const row = info.row.original;
       return (
         <span className="font-bold text-gray-900">
-          {formatCurrency(row.totalPrice, row.decimalPlaces)} {row.currencyCode}
+          {formatCurrency(row.totalPrice, row.currencyCode, row.decimalPlaces)}
         </span>
       );
     },
@@ -380,12 +380,19 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                       <div className="text-right">
                         {hasDiscount && (
                           <p className="text-[10px] text-gray-400 line-through">
-                            {formatCurrency(product.baseUnitPrice, product.decimalPlaces)}{' '}
-                            {product.currencyCode}
+                            {formatCurrency(
+                              product.baseUnitPrice,
+                              product.currencyCode,
+                              product.decimalPlaces,
+                            )}
                           </p>
                         )}
                         <p className="font-bold text-gray-900">
-                          {formatCurrency(product.unitPrice, product.decimalPlaces)}{' '}
+                          {formatCurrency(
+                            product.unitPrice,
+                            product.currencyCode,
+                            product.decimalPlaces,
+                          )}{' '}
                           {product.currencyCode}
                         </p>
                       </div>

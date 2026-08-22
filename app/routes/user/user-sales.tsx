@@ -27,7 +27,7 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
-import { formatCurrency } from '~/utils/currency-formatter';
+import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { getStatusConfig } from '~/utils/sale-status';
 import { RoleGuard } from '~/lib/role-guard';

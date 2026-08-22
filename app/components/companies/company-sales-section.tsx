@@ -13,6 +13,7 @@ import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
 import { AlertCircle } from 'lucide-react';
+import { formatCurrency } from '~/utils/data-formatters';
 
 interface Sale {
   id: string;
@@ -53,13 +54,7 @@ const SaleCard = ({ s }: { s: Sale }) => (
         <p>
           Kto: {s.salesmanFirstName} {s.salesmanLastName}
         </p>
-        <p className="font-semibold">
-          Kwota:{' '}
-          {new Intl.NumberFormat('pl-PL', {
-            minimumFractionDigits: s.decimalPlaces,
-          }).format(s.value)}{' '}
-          {s.code}
-        </p>
+        <p className="font-semibold">Kwota: {formatCurrency(s.value, s.code, s.decimalPlaces)}</p>
       </div>
       <StatusBadge status={s.status} />
     </div>
@@ -101,11 +96,7 @@ const columns = [
       const row = info.row.original;
       return (
         <span className="text-sm text-gray-600 font-semibold">
-          {new Intl.NumberFormat('pl-PL', {
-            minimumFractionDigits: row.decimalPlaces,
-            maximumFractionDigits: row.decimalPlaces,
-          }).format(row.value)}{' '}
-          {row.code}
+          {formatCurrency(row.value, row.code, row.decimalPlaces)}
         </span>
       );
     },

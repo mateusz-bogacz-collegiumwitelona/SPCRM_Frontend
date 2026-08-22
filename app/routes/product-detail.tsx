@@ -8,6 +8,7 @@ import { AlertCircle, Box, Scale, Banknote, Loader2, ArrowLeft } from 'lucide-re
 import { AuthGuard } from '~/lib/auth-guard';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
+import { formatCurrency, formatWeight } from '~/utils/data-formatters';
 
 interface ActivePromotionResponse {
   name: string;
@@ -175,28 +176,18 @@ const ProductPricingInfo = ({ product }: { product: ProductDetailResponse }) => 
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-xl font-bold text-red-700">
                   {promo.promotionalPrice
-                    ? promo.promotionalPrice.toLocaleString('pl-PL', {
-                        style: 'currency',
-                        currency: 'PLN',
-                      })
-                    : (
-                        product.pricePerUnit *
-                        (1 - (promo.discountPercentage || 0) / 100)
-                      ).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
+                    ? formatCurrency(promo.promotionalPrice)
+                    : formatCurrency(
+                        product.pricePerUnit * (1 - (promo.discountPercentage || 0) / 100),
+                      )}
                 </span>
                 <span className="text-sm font-medium text-gray-400 line-through">
-                  {product.pricePerUnit.toLocaleString('pl-PL', {
-                    style: 'currency',
-                    currency: 'PLN',
-                  })}
+                  {formatCurrency(product.pricePerUnit)}
                 </span>
               </div>
             ) : (
               <p className="text-sm font-semibold text-gray-900 mt-1">
-                {product.pricePerUnit.toLocaleString('pl-PL', {
-                  style: 'currency',
-                  currency: 'PLN',
-                })}
+                {formatCurrency(product.pricePerUnit)}
               </p>
             )}
           </div>
@@ -224,14 +215,14 @@ const ProductPricingInfo = ({ product }: { product: ProductDetailResponse }) => 
           <Scale className="w-6 h-6 text-blue-900 shrink-0" />
           <div>
             <p className="text-xs text-gray-500">Waga dla 1 {product.unitSymbol}</p>
-            <p className="text-sm font-semibold text-gray-900">{product.weight} kg</p>
+            {/* Użycie formatWeight dla pola wagi */}
+            <p className="text-sm font-semibold text-gray-900">{formatWeight(product.weight)}</p>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
 export default function ProductDetails() {
   const { productId } = useParams<{ productId: string }>();
 

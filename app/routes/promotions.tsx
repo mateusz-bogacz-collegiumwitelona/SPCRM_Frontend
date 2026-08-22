@@ -27,7 +27,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { useAuth } from '~/context/auth-context';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { formatCurrency } from '~/utils/currency-formatter';
+import { formatCurrency } from '~/utils/data-formatters';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
@@ -70,16 +70,12 @@ const columns = [
           </span>
         );
       } else if (row.promotionalPrice != null) {
-        const formattedPrice = formatCurrency(
-          row.promotionalPrice,
-          row.promotionalPriceDecimalPlace ?? 2,
-        );
+        const currencyCode = row.promotionalPriceCode || 'PLN';
+        const decimals = row.promotionalPriceDecimalPlace ?? 2;
 
-        return (
-          <span className="font-medium text-green-700">
-            {formattedPrice} {row.promotionalPriceCode || 'PLN'}
-          </span>
-        );
+        const formattedPrice = formatCurrency(row.promotionalPrice, currencyCode, decimals);
+
+        return <span className="font-medium text-green-700">{formattedPrice}</span>;
       }
 
       return <span className="text-gray-400 italic">Brak danych</span>;
@@ -591,7 +587,11 @@ export default function PromotionsList() {
                           {promo.discountPercentage != null ? (
                             <span className="text-red-600">-{promo.discountPercentage}%</span>
                           ) : promo.promotionalPrice != null ? (
-                            `${formatCurrency(promo.promotionalPrice, promo.promotionalPriceDecimalPlace ?? 2)} ${promo.promotionalPriceCode || 'PLN'}`
+                            formatCurrency(
+                              promo.promotionalPrice,
+                              promo.promotionalPriceCode || 'PLN',
+                              promo.promotionalPriceDecimalPlace ?? 2,
+                            )
                           ) : (
                             '-'
                           )}

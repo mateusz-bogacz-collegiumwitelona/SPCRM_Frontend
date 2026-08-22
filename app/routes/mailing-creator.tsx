@@ -9,7 +9,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
 import type ApiError from '~/interfaces/apiError';
 import { getErrorMessage } from '~/utils/error-mapper';
-import { formatCurrency } from '~/utils/currency-formatter';
+import { formatCurrency } from '~/utils/data-formatters';
 
 interface MailingClientResponse {
   companyName: string;
@@ -34,6 +34,14 @@ interface SelectedProduct {
   dimmension: string;
   price: number;
   quantity: number;
+  stockPrice: number; // Dodane, aby pamiętać bazową cenę produktu
+}
+
+interface Currency {
+  currencyId: string;
+  name: string;
+  code: string;
+  decimalPlace: number;
 }
 
 export default function MailingCreator() {
@@ -51,6 +59,19 @@ export default function MailingCreator() {
   const [isSending, setIsSending] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  const [currencyCode, setCurrencyCode] = useState('PLN');
+
+  const { data: currencies = [] } = useQuery<Currency[]>({
+    queryKey: ['currencies-simple'],
+    queryFn: async () => {
+      const response = await api.get('/currency/simple');
+      return response.data?.data || response.data || [];
+    },
+  });
+
+  const selectedCurrency = currencies.find((c) => c.code === currencyCode);
+  const currentDecimalPlaces = selectedCurrency ? selectedCurrency.decimalPlace : 2;
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedContactSearch(contactSearch), 300);
@@ -145,7 +166,7 @@ export default function MailingCreator() {
           productId: p.productId,
           quantity: p.quantity,
           price: Math.round(p.price * 10000),
-          currencyCode: 'PLN',
+          currencyCode: currencyCode,
         })),
       };
 
@@ -261,7 +282,15 @@ export default function MailingCreator() {
                           <X className="h-5 w-5" />
                         </button>
                         <h3 className="pr-8 text-sm font-bold text-gray-900">{p.name}</h3>
-                        <p className="mb-4 text-xs text-gray-500">{p.dimmension}</p>
+                        <p className="mb-2 text-xs text-gray-500">{p.dimmension}</p>
+
+                        {/* Wyświetlanie ceny bazowej systemu */}
+                        <p className="mb-4 text-xs text-gray-600 font-medium">
+                          Cena bazowa w systemie:{' '}
+                          <span className="text-gray-900">
+                            {formatCurrency(p.stockPrice, 'PLN', 2)}
+                          </span>
+                        </p>
 
                         <div className="flex flex-wrap items-center gap-4">
                           <div className="flex items-center gap-2">
@@ -281,7 +310,7 @@ export default function MailingCreator() {
                             />
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">Cena promocyjna:</span>
+                            <span className="text-sm text-gray-600">Cena promocyjna oferty:</span>
                             <Input
                               type="number"
                               step="0.01"
@@ -291,7 +320,8 @@ export default function MailingCreator() {
                               }
                               className="h-8 w-24 bg-white px-2 py-1 text-sm font-medium"
                             />
-                            <span className="text-sm font-bold text-gray-900">PLN</span>
+                            {/* Wyświetlanie dynamicznej wybranej waluty oferty */}
+                            <span className="text-sm font-bold text-[#004a8f]">{currencyCode}</span>
                           </div>
                         </div>
                       </div>
@@ -310,18 +340,37 @@ export default function MailingCreator() {
 
             <div className="mb-8 overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
               <div className="border-b border-gray-200 px-4 py-3">
-                <h2 className="text-lg font-medium text-[#004a8f]">3. Ustawienia wiadomości</h2>
+                <h2 className="text-lg font-medium text-[#004a8f]">
+                  3. Ustawienia wiadomości i waluty
+                </h2>
               </div>
-              <div className="p-4">
-                <label className="mb-2 block text-sm text-gray-700">Wybierz język szablonu</label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                >
-                  <option value="pl">Polski (PL)</option>
-                  <option value="en">English (EN)</option>
-                </select>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm text-gray-700">Wybierz język szablonu</label>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  >
+                    <option value="pl">Polski (PL)</option>
+                    <option value="en">English (EN)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm text-gray-700">Waluta oferty</label>
+                  <select
+                    value={currencyCode}
+                    onChange={(e) => setCurrencyCode(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  >
+                    {currencies.map((curr) => (
+                      <option key={curr.currencyId} value={curr.code}>
+                        {curr.name} ({curr.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -386,10 +435,18 @@ export default function MailingCreator() {
                             {product.promotionalPrice ? (
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-400 line-through">
-                                  {formatCurrency(product.stockPrice)} PLN
+                                  {formatCurrency(
+                                    product.stockPrice,
+                                    currencyCode,
+                                    currentDecimalPlaces,
+                                  )}
                                 </span>
                                 <span className="font-bold text-red-600">
-                                  {formatCurrency(product.promotionalPrice)} PLN
+                                  {formatCurrency(
+                                    product.promotionalPrice,
+                                    currencyCode,
+                                    currentDecimalPlaces,
+                                  )}
                                 </span>
                                 <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                                   Promocja
@@ -397,7 +454,12 @@ export default function MailingCreator() {
                               </div>
                             ) : (
                               <span className="font-medium text-[#004a8f]">
-                                Cena bazowa: {formatCurrency(product.stockPrice)} PLN
+                                Cena bazowa:{' '}
+                                {formatCurrency(
+                                  product.stockPrice,
+                                  currencyCode,
+                                  currentDecimalPlaces,
+                                )}
                               </span>
                             )}
                           </div>

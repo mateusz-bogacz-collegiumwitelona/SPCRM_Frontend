@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { Briefcase } from 'lucide-react';
 import { Link } from 'react-router';
-import { formatCurrency } from '~/utils/currency-formatter';
+import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
 import { AlertCircle } from 'lucide-react';
@@ -69,7 +69,7 @@ export const TaskDeals = ({ taskId }: { taskId: string }) => {
         <div>
           <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Wartość</p>
           <p className="text-lg font-bold text-gray-900">
-            {formatCurrency(deal.value, deal.decimalPlaces)} {deal.currencyCode}
+            {formatCurrency(deal.value, deal.currencyCode, deal.decimalPlaces)}
           </p>
         </div>
         <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">{deal.status}</span>

@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { formatCurrency } from '~/utils/currency-formatter';
+import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
 
@@ -331,28 +331,26 @@ const PromotionHeader: React.FC<{
 };
 
 const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = ({ promotion }) => {
-  const basePriceFormatted = formatCurrency(promotion.productPricePerUnit, 2);
+  const currencyCode = promotion.currencyCode || 'PLN';
+  const decimals = promotion.currencyDecimalPlaces ?? 2;
+
+  const basePriceFormatted = formatCurrency(promotion.productPricePerUnit, currencyCode, decimals);
   let finalPriceFormatted = basePriceFormatted;
   let savingsFormatted: string | null = null;
 
   if (promotion.promotionalPrice != null) {
-    finalPriceFormatted = formatCurrency(
-      promotion.promotionalPrice,
-      promotion.currencyDecimalPlaces ?? 2,
-    );
+    finalPriceFormatted = formatCurrency(promotion.promotionalPrice, currencyCode, decimals);
     const savings = promotion.productPricePerUnit - promotion.promotionalPrice;
     if (savings > 0) {
-      savingsFormatted = formatCurrency(savings, promotion.currencyDecimalPlaces ?? 2);
+      savingsFormatted = formatCurrency(savings, currencyCode, decimals);
     }
   } else if (promotion.discountPercentage != null) {
     const discountedPrice =
       promotion.productPricePerUnit * (1 - promotion.discountPercentage / 100);
-    finalPriceFormatted = formatCurrency(discountedPrice, 2);
+    finalPriceFormatted = formatCurrency(discountedPrice, currencyCode, decimals);
     const savings = promotion.productPricePerUnit - discountedPrice;
-    savingsFormatted = formatCurrency(savings, 2);
+    savingsFormatted = formatCurrency(savings, currencyCode, decimals);
   }
-
-  const currencyCode = promotion.currencyCode || 'PLN';
 
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm h-full">
@@ -367,15 +365,14 @@ const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = (
           </p>
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-bold text-red-600">
-              {finalPriceFormatted} {currencyCode}
+              {/* Tutaj funkcja sama doklei symbol waluty, lub możesz zostawić samą kwotę */}
+              {finalPriceFormatted}
             </span>
-            <span className="text-sm text-gray-400 line-through">
-              {basePriceFormatted} {currencyCode}
-            </span>
+            <span className="text-sm text-gray-400 line-through">{basePriceFormatted}</span>
           </div>
           {savingsFormatted && (
             <p className="text-xs font-semibold text-green-700 mt-1">
-              Oszczędność: {savingsFormatted} {currencyCode} / {promotion.unitSymbol}
+              Oszczędność: {savingsFormatted} / {promotion.unitSymbol}
             </p>
           )}
         </div>
@@ -393,9 +390,7 @@ const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = (
           </div>
           <div>
             <p className="text-xs text-gray-500 mb-1">Cena katalogowa</p>
-            <p className="text-sm font-semibold text-gray-700">
-              {basePriceFormatted} {currencyCode}
-            </p>
+            <p className="text-sm font-semibold text-gray-700">{basePriceFormatted}</p>
           </div>
         </div>
       </div>
@@ -571,7 +566,7 @@ export default function PromotionDetails() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Manager']}>
+      <RoleGuard allowedRoles={['Manager', 'User']}>
         <MainLayout>
           <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">

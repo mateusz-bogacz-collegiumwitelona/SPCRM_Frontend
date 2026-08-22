@@ -9,7 +9,7 @@ import {
   Tag,
   User,
 } from 'lucide-react';
-import { formatCurrency } from '~/utils/currency-formatter';
+import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
 
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -120,7 +120,7 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
               <CircleDollarSign className="w-4 h-4 text-gray-400" /> Wartość zamówienia
             </span>
             <span className="text-xl text-gray-900 font-bold tracking-tight">
-              {formatCurrency(deal.value, deal.decimalPlaces)} {deal.currencyCode}
+              {formatCurrency(deal.value, deal.currencyCode, deal.decimalPlaces)}
             </span>
           </div>
 
@@ -145,7 +145,7 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
 
             <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>
-                Opłacono: {formatCurrency(deal.paidAmount, deal.decimalPlaces)} {deal.currencyCode}
+                Opłacono: {formatCurrency(deal.paidAmount, deal.currencyCode, deal.decimalPlaces)}
               </span>
             </div>
           </div>

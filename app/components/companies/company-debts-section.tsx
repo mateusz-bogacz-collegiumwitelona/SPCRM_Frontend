@@ -11,6 +11,7 @@ import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
 import { AlertCircle } from 'lucide-react';
+import { formatCurrency } from '~/utils/data-formatters';
 
 interface Debt {
   id: string;
@@ -38,10 +39,11 @@ const columns = [
     header: 'Do zapłaty',
     cell: (info) => (
       <span className="font-bold text-red-600">
-        {info
-          .getValue()
-          .toLocaleString('pl-PL', { minimumFractionDigits: info.row.original.decimalPlaces })}{' '}
-        {info.row.original.currencyCode}
+        {formatCurrency(
+          info.getValue(),
+          info.row.original.currencyCode,
+          info.row.original.decimalPlaces,
+        )}
       </span>
     ),
   }),
@@ -176,10 +178,7 @@ export const CompanyDebtsSection: React.FC<{
                 Suma zadłużenia ({item.currencyCode})
               </p>
               <p className="text-2xl font-bold text-red-600">
-                {item.totalAmount.toLocaleString('pl-PL', {
-                  minimumFractionDigits: item.decimalPlace,
-                })}{' '}
-                {item.currencyCode}
+                {formatCurrency(item.totalAmount, item.currencyCode, item.decimalPlace)}
               </p>
             </div>
           ))}
