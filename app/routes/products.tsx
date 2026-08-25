@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Filter,
   Loader2,
+  Pencil,
   Plus,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
@@ -25,6 +26,10 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { AddProductDialog, type AddProductRequest } from '~/components/products/add-product-dialog';
+import {
+  EditProductDialog,
+  type EditProductRequest,
+} from '~/components/products/edit-product-dialog';
 
 interface ProductResonse {
   id: string;
@@ -44,72 +49,6 @@ interface SteelGradeResponse {
 
 const columnHelper = createColumnHelper<ProductResonse>();
 
-const columns = [
-  columnHelper.display({
-    id: 'productName',
-    header: 'Nazwa produktu',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-900">{row.name}</span>
-          {row.isActivePromotion && (
-            <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-              Promocja
-            </span>
-          )}
-        </div>
-      );
-    },
-  }),
-  columnHelper.accessor('category', {
-    header: 'Kategoria',
-    cell: (info) => (
-      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-        {info.getValue()}
-      </span>
-    ),
-  }),
-  columnHelper.accessor('steelGrade', {
-    header: 'Gatunek',
-    cell: (info) => (
-      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-        {info.getValue()}
-      </span>
-    ),
-  }),
-  columnHelper.accessor('dimensions', {
-    header: 'Wymiary',
-    cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
-  }),
-  columnHelper.display({
-    id: 'quantity',
-    header: 'Ilość na stanie',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <span className="font-medium text-gray-900">
-          {row.stockQuantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
-        </span>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'actions',
-    header: 'Akcje',
-    cell: (info) => {
-      return (
-        <Link
-          to={`/products/${info.row.original.id}`}
-          className="font-medium text-blue-900 hover:underline"
-        >
-          Szczegóły
-        </Link>
-      );
-    },
-  }),
-];
-
 export default function ProductsList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -127,6 +66,8 @@ export default function ProductsList() {
   const [hasActivePromotion, setHasActivePromotion] = useState<boolean>(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+
   const queryClient = useQueryClient();
 
   const addProductMutation = useMutation({
@@ -138,6 +79,98 @@ export default function ProductsList() {
       setIsAddModalOpen(false);
     },
   });
+
+  const editProductMutation = useMutation({
+    mutationFn: async (updatedProduct: EditProductRequest) => {
+      await api.put(`/products/${updatedProduct.productId}`, updatedProduct);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products-list'] });
+      queryClient.invalidateQueries({ queryKey: ['product-details'] });
+      queryClient.invalidateQueries({ queryKey: ['product-for-edit'] });
+      setEditingProductId(null);
+    },
+  });
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: 'productName',
+        header: 'Nazwa produktu',
+        cell: (info) => {
+          const row = info.row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-gray-900">{row.name}</span>
+              {row.isActivePromotion && (
+                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                  Promocja
+                </span>
+              )}
+            </div>
+          );
+        },
+      }),
+      columnHelper.accessor('category', {
+        header: 'Kategoria',
+        cell: (info) => (
+          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('steelGrade', {
+        header: 'Gatunek',
+        cell: (info) => (
+          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('dimensions', {
+        header: 'Wymiary',
+        cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
+      }),
+      columnHelper.display({
+        id: 'quantity',
+        header: 'Ilość na stanie',
+        cell: (info) => {
+          const row = info.row.original;
+          return (
+            <span className="font-medium text-gray-900">
+              {row.stockQuantity}{' '}
+              <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
+            </span>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Akcje',
+        cell: (info) => {
+          const product = info.row.original;
+          return (
+            <div className="flex items-center gap-3">
+              <Link
+                to={`/products/${product.id}`}
+                className="font-medium text-blue-900 hover:underline"
+              >
+                Szczegóły
+              </Link>
+              <button
+                type="button"
+                onClick={() => setEditingProductId(product.id)}
+                className="font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1 transition-colors"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Edytuj
+              </button>
+            </div>
+          );
+        },
+      }),
+    ],
+    [],
+  );
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -434,19 +467,28 @@ export default function ProductsList() {
                         <div className="text-gray-600">
                           Ilość: {product.stockQuantity} {product.unitSymbol}
                         </div>
-                        <Link
-                          to={`/products/${product.id}`}
-                          className="text-xs font-medium text-blue-900 hover:underline"
-                        >
-                          Detale
-                        </Link>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setEditingProductId(product.id)}
+                            className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1"
+                          >
+                            <Pencil className="w-3 h-3" /> Edytuj
+                          </button>
+                          <Link
+                            to={`/products/${product.id}`}
+                            className="text-xs font-medium text-blue-900 hover:underline"
+                          >
+                            Detale
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
 
                 {pageNumber < totalPages && (
-                  <div className="mt-6 flex justify-center pzt-2">
+                  <div className="mt-6 flex justify-center pt-2">
                     <Button
                       onClick={handleMobileLoadMore}
                       disabled={isFetching}
@@ -554,6 +596,16 @@ export default function ProductsList() {
               await addProductMutation.mutateAsync(data);
             }}
             isLoading={addProductMutation.isPending}
+          />
+
+          <EditProductDialog
+            productId={editingProductId}
+            isOpen={!!editingProductId}
+            onClose={() => setEditingProductId(null)}
+            onSave={async (data) => {
+              await editProductMutation.mutateAsync(data);
+            }}
+            isLoading={editProductMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>

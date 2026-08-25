@@ -264,6 +264,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
               <label className="text-sm font-medium text-gray-700">Grubość (mm)</label>
               <input
                 type="number"
+                step="any"
                 value={thickness}
                 onChange={(e) => setThickness(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
@@ -274,6 +275,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
               <label className="text-sm font-medium text-gray-700">Szerokość (mm)</label>
               <input
                 type="number"
+                step="any"
                 value={width}
                 onChange={(e) => setWidth(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
@@ -284,6 +286,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
               <label className="text-sm font-medium text-gray-700">Długość (mm)</label>
               <input
                 type="number"
+                step="any"
                 value={length}
                 onChange={(e) => setLength(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
@@ -296,6 +299,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
               </label>
               <input
                 type="number"
+                step="any"
                 value={diameter}
                 onChange={(e) => setDiameter(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
@@ -347,6 +351,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
               <label className="text-sm font-medium text-gray-700">Ilość na stanie</label>
               <input
                 type="number"
+                step="any"
                 value={stockQuantity}
                 onChange={(e) => setStockQuantity(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
