@@ -16,10 +16,13 @@ import {
   ArrowUpNarrowWide,
   ChevronLeft,
   ChevronRight,
+  Edit2,
   Filter,
   Loader2,
+  MoreHorizontal,
   Pencil,
   Plus,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -30,6 +33,13 @@ import {
   EditProductDialog,
   type EditProductRequest,
 } from '~/components/products/edit-product-dialog';
+import { DeleteProductDialog } from '~/components/products/delete-product-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 
 interface ProductResonse {
   id: string;
@@ -92,6 +102,18 @@ export default function ProductsList() {
     },
   });
 
+  const [deletingProduct, setDeletingProduct] = useState<{ id: string; name: string } | null>(null);
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      await api.delete(`/products/${productId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products-list'] });
+      setDeletingProduct(null);
+    },
+  });
+
   const columns = useMemo(
     () => [
       columnHelper.display({
@@ -131,7 +153,7 @@ export default function ProductsList() {
         header: 'Wymiary',
         cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
       }),
-      columnHelper.display({
+      (columnHelper.display({
         id: 'quantity',
         header: 'Ilość na stanie',
         cell: (info) => {
@@ -157,17 +179,42 @@ export default function ProductsList() {
               >
                 Szczegóły
               </Link>
-              <button
-                type="button"
-                onClick={() => setEditingProductId(product.id)}
-                className="font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1 transition-colors"
-              >
-                <Pencil className="w-3.5 h-3.5" /> Edytuj
-              </button>
+              <RoleGuard allowedRoles={['Manager', 'Admin']}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
+                    >
+                      <span className="sr-only">Otwórz menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent align="end" className="w-40 bg-white">
+                    <DropdownMenuItem
+                      onClick={() => setEditingProductId(product.id)}
+                      className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+                    >
+                      <Edit2 className="mr-2 h-4 w-4" />
+                      <span>Edytuj</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={() => setDeletingProduct({ id: product.id, name: product.name })}
+                      className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Usuń</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </RoleGuard>
             </div>
           );
         },
-      }),
+      })),
     ],
     [],
   );
@@ -286,16 +333,18 @@ export default function ProductsList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={['User', 'Manager', 'Admin']} redirectTo="/dashboard">
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Produkty</h1>
-            <Button
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-white text-blue-900 hover:bg-gray-100 font-medium text-xs sm:text-sm flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> Dodaj produkt
-            </Button>
+            <RoleGuard allowedRoles={['Admin']}>
+              <Button
+                onClick={() => setIsAddModalOpen(true)}
+                className="bg-white text-blue-900 hover:bg-gray-100 font-medium text-xs sm:text-sm flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Dodaj produkt
+              </Button>
+            </RoleGuard>
           </div>
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -606,6 +655,14 @@ export default function ProductsList() {
               await editProductMutation.mutateAsync(data);
             }}
             isLoading={editProductMutation.isPending}
+          />
+
+          <DeleteProductDialog
+            isOpen={!!deletingProduct}
+            productName={deletingProduct?.name}
+            onClose={() => setDeletingProduct(null)}
+            onConfirm={() => deletingProduct && deleteProductMutation.mutate(deletingProduct.id)}
+            isLoading={deleteProductMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>

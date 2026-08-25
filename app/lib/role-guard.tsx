@@ -6,9 +6,10 @@ import { Loader2 } from 'lucide-react';
 interface RoleGuardProps {
   allowedRoles: string[];
   children: ReactNode;
+  redirectTo?: string;
 }
 
-export function RoleGuard({ allowedRoles, children }: Readonly<RoleGuardProps>) {
+export function RoleGuard({ allowedRoles, children, redirectTo }: Readonly<RoleGuardProps>) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -23,7 +24,9 @@ export function RoleGuard({ allowedRoles, children }: Readonly<RoleGuardProps>) 
 
   const hasAccess = user.roles.some((role) => allowedRoles.includes(role));
 
-  if (!hasAccess) return <Navigate to="/dashboard" replace />;
+  if (!hasAccess) {
+    return redirectTo ? <Navigate to={redirectTo} replace /> : null;
+  }
 
   return <>{children}</>;
 }
