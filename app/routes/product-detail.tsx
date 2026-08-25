@@ -25,6 +25,8 @@ interface ProductDetailResponse {
   category: string;
   dimensions: string;
   stockQuantity: number;
+  decimalPlaces: number;
+  currencyCode: string;
   reservedQuantity: number;
   unitSymbol: string;
   pricePerUnit: number;
@@ -143,6 +145,8 @@ const ProductLogisticsInfo = ({ product }: { product: ProductDetailResponse }) =
 
 const ProductPricingInfo = ({ product }: { product: ProductDetailResponse }) => {
   const promo = product.activePromotion;
+  const currency = product.currencyCode || 'PLN';
+  const decimals = product.decimalPlaces ?? 2;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pl-PL', {
@@ -176,18 +180,20 @@ const ProductPricingInfo = ({ product }: { product: ProductDetailResponse }) => 
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-xl font-bold text-red-700">
                   {promo.promotionalPrice
-                    ? formatCurrency(promo.promotionalPrice)
+                    ? formatCurrency(promo.promotionalPrice, currency, decimals)
                     : formatCurrency(
                         product.pricePerUnit * (1 - (promo.discountPercentage || 0) / 100),
+                        currency,
+                        decimals,
                       )}
                 </span>
                 <span className="text-sm font-medium text-gray-400 line-through">
-                  {formatCurrency(product.pricePerUnit)}
+                  {formatCurrency(product.pricePerUnit, currency, decimals)}
                 </span>
               </div>
             ) : (
               <p className="text-sm font-semibold text-gray-900 mt-1">
-                {formatCurrency(product.pricePerUnit)}
+                {formatCurrency(product.pricePerUnit, currency, decimals)}
               </p>
             )}
           </div>

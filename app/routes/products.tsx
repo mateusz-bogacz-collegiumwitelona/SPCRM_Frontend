@@ -37,6 +37,11 @@ interface ProductResonse {
   isActivePromotion: boolean;
 }
 
+interface SteelGradeResponse {
+  id: string;
+  name: string;
+}
+
 const columnHelper = createColumnHelper<ProductResonse>();
 
 const columns = [
@@ -153,14 +158,14 @@ export default function ProductsList() {
   });
   const availableCategories: string[] = Array.isArray(categoriesResponse) ? categoriesResponse : [];
 
-  const { data: steelGradesResponse } = useQuery({
+  const { data: steelGradesResponse } = useQuery<SteelGradeResponse[]>({
     queryKey: ['product-steel-grades'],
     queryFn: async () => {
       const response = await api.get('/products/steel-grades');
       return response.data?.value || response.data?.data || response.data || [];
     },
   });
-  const availableSteelGrades: string[] = Array.isArray(steelGradesResponse)
+  const availableSteelGrades: SteelGradeResponse[] = Array.isArray(steelGradesResponse)
     ? steelGradesResponse
     : [];
 
@@ -345,8 +350,8 @@ export default function ProductsList() {
                           >
                             <option value="">Wszystkie gatunki</option>
                             {availableSteelGrades.map((grade) => (
-                              <option key={grade} value={grade}>
-                                {grade}
+                              <option key={grade.id} value={grade.name}>
+                                {grade.name}
                               </option>
                             ))}
                           </select>
@@ -441,7 +446,7 @@ export default function ProductsList() {
                 })}
 
                 {pageNumber < totalPages && (
-                  <div className="mt-6 flex justify-center pt-2">
+                  <div className="mt-6 flex justify-center pzt-2">
                     <Button
                       onClick={handleMobileLoadMore}
                       disabled={isFetching}

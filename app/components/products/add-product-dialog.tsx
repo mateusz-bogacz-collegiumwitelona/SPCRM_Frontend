@@ -15,13 +15,14 @@ import type ApiError from '~/interfaces/apiError';
 
 export interface AddProductRequest {
   name: string;
-  steelGrade: string;
+  steelGradeId: string;
   thickness: number;
   width: number;
   length: number;
   diameter?: number | null;
   weight: number;
   unitId: string;
+  currencyId: string;
   pricePerUnit: number;
   stockQuantity: number;
   category: string;
@@ -34,6 +35,18 @@ interface AddProductDialogProps {
   isLoading?: boolean;
 }
 
+interface SteelGradeResponse {
+  id: string;
+  name: string;
+}
+
+interface CurrencyResponse {
+  currencyId: string;
+  name: string;
+  code: string;
+  decimalPlace: number;
+}
+
 export const AddProductDialog: React.FC<AddProductDialogProps> = ({
   isOpen,
   onClose,
@@ -41,25 +54,34 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
   isLoading = false,
 }) => {
   const [name, setName] = useState('');
-  const [steelGrade, setSteelGrade] = useState('');
+  const [steelGradeId, setSteelGradeId] = useState('');
   const [thickness, setThickness] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
   const [length, setLength] = useState<number>(0);
   const [diameter, setDiameter] = useState<number | ''>('');
   const [weight, setWeight] = useState<number>(0);
   const [unitId, setUnitId] = useState('');
+  const [currencyId, setCurrencyId] = useState('');
   const [pricePerUnit, setPricePerUnit] = useState<number>(0);
   const [stockQuantity, setStockQuantity] = useState<number>(0);
   const [category, setCategory] = useState('');
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Pobieranie kategorii produktów z backendu
   const { data: categories = [] } = useQuery({
     queryKey: ['product-categories'],
     queryFn: async () => {
       const res = await api.get('/products/categories');
       return (res.data?.value || res.data?.data || res.data || []) as string[];
+    },
+    enabled: isOpen,
+  });
+
+  const { data: steelGrades = [] } = useQuery<SteelGradeResponse[]>({
+    queryKey: ['product-steel-grades'],
+    queryFn: async () => {
+      const res = await api.get('/products/steel-grades');
+      return (res.data?.value || res.data?.data || res.data || []) as SteelGradeResponse[];
     },
     enabled: isOpen,
   });
@@ -80,15 +102,30 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
     },
     enabled: isOpen,
   });
+
+  const { data: currencies = [] } = useQuery<CurrencyResponse[]>({
+    queryKey: ['currencies-simple'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/currency/simple');
+        return (res.data?.value || res.data?.data || res.data || []) as CurrencyResponse[];
+      } catch {
+        return [];
+      }
+    },
+    enabled: isOpen,
+  });
+
   const resetForm = () => {
     setName('');
-    setSteelGrade('');
+    setSteelGradeId('');
     setThickness(0);
     setWidth(0);
     setLength(0);
     setDiameter('');
     setWeight(0);
     setUnitId('');
+    setCurrencyId('');
     setPricePerUnit(0);
     setStockQuantity(0);
     setCategory('');
@@ -98,20 +135,21 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !steelGrade.trim() || !category || !unitId) {
+    if (!name.trim() || !steelGradeId || !category || !unitId || !currencyId) {
       setErrorMessage('Proszę wypełnić wszystkie wymagane pola.');
       return;
     }
 
     const payload: AddProductRequest = {
-      name,
-      steelGrade,
+      name: name.trim(),
+      steelGradeId,
       thickness: Number(thickness),
       width: Number(width),
       length: Number(length),
       diameter: diameter === '' ? null : Number(diameter),
       weight: Number(weight),
       unitId,
+      currencyId,
       pricePerUnit: Number(pricePerUnit),
       stockQuantity: Number(stockQuantity),
       category,
@@ -167,13 +205,21 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Gatunek stali *</label>
-              <input
-                value={steelGrade}
-                onChange={(e) => setSteelGrade(e.target.value)}
-                placeholder="np. S350"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+              <select
+                value={steelGradeId}
+                onChange={(e) => setSteelGradeId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
                 required
-              />
+              >
+                <option value="" disabled>
+                  Wybierz gatunek...
+                </option>
+                {steelGrades.map((grade) => (
+                  <option key={grade.id} value={grade.id}>
+                    {grade.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">
@@ -268,14 +314,33 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Cena za jednostkę</label>
-              <input
-                type="number"
-                step="0.01"
-                value={pricePerUnit}
-                onChange={(e) => setPricePerUnit(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-              />
+              <label className="text-sm font-medium text-gray-700">Cena i Waluta *</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={pricePerUnit}
+                  onChange={(e) => setPricePerUnit(Number(e.target.value))}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  required
+                />
+                <select
+                  value={currencyId}
+                  onChange={(e) => setCurrencyId(e.target.value)}
+                  className="w-28 shrink-0 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  required
+                >
+                  <option value="" disabled>
+                    Waluta
+                  </option>
+                  {currencies.map((c) => (
+                    <option key={c.currencyId} value={c.currencyId}>
+                      {c.code}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
