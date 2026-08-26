@@ -3,7 +3,7 @@ import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
-import { NoteEditDialog, type NoteEditData } from '~/components/note/note-edit-dialog';
+import { type NoteEditData, NoteEditDialog } from '~/components/note/note-edit-dialog';
 import { useState } from 'react';
 import { useAddNote } from '~/hooks/use-add-note';
 import { NoteAddDialog } from '~/components/note/note-add-dialog';

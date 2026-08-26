@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { Calendar, CheckCircle2, AlertCircle, AlignLeft } from 'lucide-react';
+import { AlertCircle, AlignLeft, Calendar, CheckCircle2 } from 'lucide-react';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';

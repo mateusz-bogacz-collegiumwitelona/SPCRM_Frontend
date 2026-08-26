@@ -1,10 +1,10 @@
 import React from 'react';
-import { useParams, Link } from 'react-router';
+import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
-import { AlertCircle, Box, Scale, Banknote, Loader2, ArrowLeft } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Banknote, Box, Loader2, Scale } from 'lucide-react';
 import { AuthGuard } from '~/lib/auth-guard';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, LifeBuoy } from 'lucide-react';
+import { LifeBuoy, Menu } from 'lucide-react';
 import { Link } from 'react-router';
 
 export function Navbar() {

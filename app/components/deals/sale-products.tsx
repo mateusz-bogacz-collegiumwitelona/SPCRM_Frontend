@@ -1,8 +1,8 @@
 import {
   createColumnHelper,
+  flexRender,
   getCoreRowModel,
   useReactTable,
-  flexRender,
 } from '@tanstack/react-table';
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
@@ -12,13 +12,13 @@ import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
 import {
+  AlertCircle,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
-  Filter,
-  Loader2,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Filter,
+  Loader2,
   PackageOpen,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';

@@ -2,9 +2,9 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { Loader2, Star } from 'lucide-react';

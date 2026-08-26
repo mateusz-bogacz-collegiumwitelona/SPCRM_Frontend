@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ProductItem {
   id: string;
@@ -36,7 +36,6 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
   const [reassignments, setReassignments] = useState<Record<string, string>>({});
   const [bulkGradeId, setBulkGradeId] = useState<string>('');
 
-  // 1. Pobieramy produkty przypisane do tego gatunku
   const { data: associatedProducts = [], isLoading: isLoadingProducts } = useQuery<ProductItem[]>({
     queryKey: ['steel-grade-products', steelGradeId],
     queryFn: async () => {
@@ -45,8 +44,6 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
     },
     enabled: isOpen && !!steelGradeId,
   });
-
-  // 2. Pobieramy pozostałe dostępne gatunki stali
   const { data: steelGrades = [] } = useQuery<SteelGradeOption[]>({
     queryKey: ['product-steel-grades'],
     queryFn: async () => {
@@ -58,7 +55,6 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
 
   const availableReplacements = steelGrades.filter((g) => g.id !== steelGradeId);
 
-  // Ustawienie masowe dla wszystkich
   const handleBulkChange = (targetGradeId: string) => {
     setBulkGradeId(targetGradeId);
     if (!targetGradeId) return;

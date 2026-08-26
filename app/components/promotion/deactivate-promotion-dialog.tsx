@@ -2,12 +2,12 @@ import React from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 interface DeactivatePromotionDialogProps {
   isOpen: boolean;

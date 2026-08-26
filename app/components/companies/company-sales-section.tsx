@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  useReactTable,
-  getCoreRowModel,
   createColumnHelper,
   flexRender,
+  getCoreRowModel,
   type Row,
+  useReactTable,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
-import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 
 interface Sale {

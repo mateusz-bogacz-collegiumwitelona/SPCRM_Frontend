@@ -1,18 +1,26 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
   createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
-import { ChevronLeft, ChevronRight, Loader2, Search, MessageSquare, Plus } from 'lucide-react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  MessageSquare,
+  Plus,
+  Search,
+} from 'lucide-react';
 
 import { useEditNote } from '~/hooks/use-edit-note';
 import { NoteEditDialog } from '~/components/note/note-edit-dialog';
-import { ContactNoteDialog, type ContactNote } from './contact-note-dialog';
+import { type ContactNote, ContactNoteDialog } from './contact-note-dialog';
 
 import { useAddNote } from '~/hooks/use-add-note';
 import { NoteAddDialog } from '~/components/note/note-add-dialog';
@@ -22,7 +30,6 @@ import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
-import { AlertCircle } from 'lucide-react';
 
 const columnHelper = createColumnHelper<ContactNote>();
 

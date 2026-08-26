@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { Briefcase } from 'lucide-react';
+import { AlertCircle, Briefcase } from 'lucide-react';
 import { Link } from 'react-router';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
-import { AlertCircle } from 'lucide-react';
 
 interface TaskDealResponse {
   dealId: string;

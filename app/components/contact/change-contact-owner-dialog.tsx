@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { Loader2, AlertCircle, UserCog } from 'lucide-react';
+import { AlertCircle, Loader2, UserCog } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
 import { translateRole } from '~/utils/role-translator';

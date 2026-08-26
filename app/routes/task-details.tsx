@@ -6,6 +6,7 @@ import { TaskDeals } from '~/components/task/task-deals';
 import { TaskInfo } from '~/components/task/task-info';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+
 const TaskDetails: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
 

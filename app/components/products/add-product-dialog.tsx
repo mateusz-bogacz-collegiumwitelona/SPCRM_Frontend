@@ -4,9 +4,9 @@ import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle } from 'lucide-react';
