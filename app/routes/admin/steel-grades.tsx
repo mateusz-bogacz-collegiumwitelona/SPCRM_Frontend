@@ -1,0 +1,352 @@
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { api } from '~/api/api';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/apiError';
+import {
+  AlertCircle,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '~/components/ui/button';
+import { MainLayout } from '~/components/layout/main-layout';
+import { RoleGuard } from '~/lib/role-guard';
+import { AuthGuard } from '~/lib/auth-guard';
+
+interface SteelGradeListResponse {
+  id: string;
+  name: string;
+  standard?: string | null;
+  density: number;
+}
+
+const columnHelper = createColumnHelper<SteelGradeListResponse>();
+
+const columns = [
+  columnHelper.accessor('name', {
+    header: 'Gatunek stali',
+    cell: (info) => <span className="font-medium text-gray-900">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor('standard', {
+    header: 'Norma',
+    cell: (info) => {
+      const val = info.getValue();
+      return val ? (
+        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+          {val}
+        </span>
+      ) : (
+        <span className="text-gray-400 italic">Brak</span>
+      );
+    },
+  }),
+  columnHelper.accessor('density', {
+    header: 'Gęstość',
+    cell: (info) => (
+      <span className="text-gray-700 font-medium">
+        {info.getValue()} <span className="text-gray-500 font-normal text-xs">g/cm³</span>
+      </span>
+    ),
+  }),
+];
+
+export default function SteelGradesList() {
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortDescending, setSortDescending] = useState<boolean>(false);
+
+  const [accumulatedMobileItems, setAccumulatedMobileItems] = useState<SteelGradeListResponse[]>(
+    [],
+  );
+  const isMobileAppend = useRef(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    isMobileAppend.current = false;
+    setPageNumber(1);
+  }, [debouncedSearch, sortBy, sortDescending, pageSize]);
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    error: queryError,
+  } = useQuery({
+    queryKey: [
+      'steel-grades-list',
+      {
+        pageNumber,
+        pageSize,
+        debouncedSearch,
+        sortBy,
+        sortDescending,
+      },
+    ],
+    queryFn: async () => {
+      const params = {
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+        SearchTerm: debouncedSearch || undefined,
+        SortBy: sortBy,
+        SortDescending: sortDescending,
+      };
+
+      const response = await api.get('/steel-grade', { params });
+      return response.data?.value || response.data?.data || response.data;
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const desktopItems = useMemo(() => data?.items || [], [data]);
+  const totalPages = data?.totalPages || 1;
+  const totalItems = data?.totalItems || data?.totalCount || desktopItems.length;
+
+  useEffect(() => {
+    if (!data?.items) return;
+
+    setAccumulatedMobileItems((prev) => {
+      if (pageNumber === 1) return data.items;
+
+      if (isMobileAppend.current) {
+        const newItems = data.items.filter(
+          (newItem: SteelGradeListResponse) => !prev.some((p) => p.id === newItem.id),
+        );
+        return [...prev, ...newItems];
+      }
+
+      return data.items;
+    });
+  }, [data, pageNumber]);
+
+  const handleMobileLoadMore = () => {
+    isMobileAppend.current = true;
+    setPageNumber((prev) => prev + 1);
+  };
+
+  const handleDesktopPageChange = (newPage: number) => {
+    isMobileAppend.current = false;
+    setPageNumber(newPage);
+  };
+
+  const table = useReactTable({
+    data: desktopItems,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const errorMessage = isError
+    ? getErrorMessage(
+        (queryError as ApiError)?.response?.data?.errorCode,
+        'Nie udało się pobrać listy gatunków stali.',
+      )
+    : null;
+
+  return (
+    <AuthGuard>
+      <RoleGuard allowedRoles={['Admin']}>
+        <MainLayout>
+          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
+            <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">
+              Gatunki stali
+            </h1>
+          </div>
+
+          <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="w-full md:w-80 shrink-0">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Szukaj gatunku, normy..."
+                className="w-full border border-gray-300 rounded-md bg-white px-4 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-900"
+              />
+            </div>
+
+            <div className="flex flex-wrap w-full md:w-auto items-center gap-3">
+              <span className="text-sm text-gray-500 hidden sm:block">Sortuj po:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+              >
+                <option value="name">Nazwa</option>
+                <option value="standard">Norma</option>
+                <option value="density">Gęstość</option>
+              </select>
+
+              <Button
+                variant="outline"
+                onClick={() => setSortDescending(!sortDescending)}
+                className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3"
+              >
+                {sortDescending ? (
+                  <ArrowDownWideNarrow className="w-4 h-4" />
+                ) : (
+                  <ArrowUpNarrowWide className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {errorMessage && (
+            <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <p className="text-sm font-medium">{errorMessage}</p>
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
+              <p className="text-gray-500 font-medium">Ładowanie gatunków stali...</p>
+            </div>
+          ) : desktopItems.length === 0 && !isError ? (
+            <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <p className="text-gray-500 font-medium">Brak gatunków stali do wyświetlenia.</p>
+            </div>
+          ) : (
+            <>
+              <div className="block lg:hidden space-y-4">
+                {accumulatedMobileItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-sm font-bold text-blue-900">{item.name}</p>
+                      {item.standard && (
+                        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[11px] font-semibold">
+                          {item.standard}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2 text-gray-600">
+                      <span>Gęstość:</span>
+                      <span className="font-semibold text-gray-900">{item.density} g/cm³</span>
+                    </div>
+                  </div>
+                ))}
+
+                {pageNumber < totalPages && (
+                  <div className="mt-6 flex justify-center pt-2">
+                    <Button
+                      onClick={handleMobileLoadMore}
+                      disabled={isFetching}
+                      className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
+                    >
+                      {isFetching ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie danych...
+                        </>
+                      ) : (
+                        'Pokaż więcej wyników'
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="hidden lg:block space-y-4">
+                <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
+                    </thead>
+                    <tbody>
+                      {table.getRowModel().rows.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Pozycji na stronie:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
+                    >
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+
+                  <div className="text-sm text-gray-500">
+                    Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
+                    {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
+                      disabled={pageNumber === 1 || isFetching}
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium text-gray-700 px-2">
+                      Strona {pageNumber} z {totalPages}
+                    </span>
+                    <Button
+                      onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
+                      disabled={pageNumber === totalPages || isFetching}
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </MainLayout>
+      </RoleGuard>
+    </AuthGuard>
+  );
+}

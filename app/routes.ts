@@ -20,4 +20,5 @@ export default [
   route('mailing', 'routes/mailing-creator.tsx'),
   route('promotions', 'routes/promotions.tsx'),
   route('promotion/:promotionId', 'routes/promotion-detail.tsx'),
+  route('steel-grades', 'routes/admin/steel-grades.tsx'),
 ] satisfies RouteConfig;
