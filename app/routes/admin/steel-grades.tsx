@@ -15,6 +15,7 @@ import {
   ArrowUpNarrowWide,
   ChevronLeft,
   ChevronRight,
+  Edit2,
   Loader2,
   MoreHorizontal,
   Trash2,
@@ -30,6 +31,10 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { DeleteSteelGradeDialog } from '~/components/steel-grade/delete-steel-grade-dialog';
+import {
+  EditSteelGradeDialog,
+  type EditSteelGradePayload,
+} from '~/components/steel-grade/edit-steel-grade-dialog';
 
 interface SteelGradeListResponse {
   id: string;
@@ -49,6 +54,8 @@ export default function SteelGradesList() {
   const [sortDescending, setSortDescending] = useState<boolean>(false);
 
   const [deletingGrade, setDeletingGrade] = useState<{ id: string; name: string } | null>(null);
+
+  const [editingGrade, setEditingGrade] = useState<SteelGradeListResponse | null>(null);
 
   const queryClient = useQueryClient();
   const [accumulatedMobileItems, setAccumulatedMobileItems] = useState<SteelGradeListResponse[]>(
@@ -73,6 +80,17 @@ export default function SteelGradesList() {
       queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
       queryClient.invalidateQueries({ queryKey: ['products-list'] });
       setDeletingGrade(null);
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: async (payload: EditSteelGradePayload) => {
+      await api.patch('/steel-grade', payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
+      queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
+      setEditingGrade(null);
     },
   });
 
@@ -123,6 +141,14 @@ export default function SteelGradesList() {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" className="w-40 bg-white">
+                  <DropdownMenuItem
+                    onClick={() => setEditingGrade(grade)}
+                    className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    <span>Edytuj</span>
+                  </DropdownMenuItem>
+
                   <DropdownMenuItem
                     onClick={() => setDeletingGrade({ id: grade.id, name: grade.name })}
                     className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
@@ -437,6 +463,16 @@ export default function SteelGradesList() {
               }
             }}
             isLoading={deleteMutation.isPending}
+          />
+
+          <EditSteelGradeDialog
+            isOpen={!!editingGrade}
+            initialData={editingGrade}
+            onClose={() => setEditingGrade(null)}
+            onSave={async (data) => {
+              await editMutation.mutateAsync(data);
+            }}
+            isLoading={editMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
