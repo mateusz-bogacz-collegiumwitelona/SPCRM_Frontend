@@ -18,6 +18,7 @@ import {
   Edit2,
   Loader2,
   MoreHorizontal,
+  Plus,
   Trash2,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
@@ -35,6 +36,10 @@ import {
   EditSteelGradeDialog,
   type EditSteelGradePayload,
 } from '~/components/steel-grade/edit-steel-grade-dialog';
+import {
+  AddSteelGradeDialog,
+  type AddSteelGradePayload,
+} from '~/components/steel-grade/add-steel-grade-dialog';
 
 interface SteelGradeListResponse {
   id: string;
@@ -56,6 +61,8 @@ export default function SteelGradesList() {
   const [deletingGrade, setDeletingGrade] = useState<{ id: string; name: string } | null>(null);
 
   const [editingGrade, setEditingGrade] = useState<SteelGradeListResponse | null>(null);
+
+  const [addingGrade, setAddingGrade] = useState(false);
 
   const queryClient = useQueryClient();
   const [accumulatedMobileItems, setAccumulatedMobileItems] = useState<SteelGradeListResponse[]>(
@@ -91,6 +98,17 @@ export default function SteelGradesList() {
       queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
       queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
       setEditingGrade(null);
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (payload: AddSteelGradePayload) => {
+      await api.post('/steel-grade', payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
+      queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
+      setAddingGrade(false);
     },
   });
 
@@ -256,10 +274,17 @@ export default function SteelGradesList() {
     <AuthGuard>
       <RoleGuard allowedRoles={['Admin']}>
         <MainLayout>
-          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
+          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex items-center justify-between gap-4">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">
               Gatunki stali
             </h1>
+            <Button
+              onClick={() => setAddingGrade(true)}
+              className="bg-white text-blue-900 hover:bg-gray-100 flex items-center gap-2 font-medium shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              Dodaj gatunek stali
+            </Button>
           </div>
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -473,6 +498,15 @@ export default function SteelGradesList() {
               await editMutation.mutateAsync(data);
             }}
             isLoading={editMutation.isPending}
+          />
+
+          <AddSteelGradeDialog
+            isOpen={addingGrade}
+            onClose={() => setAddingGrade(false)}
+            onSave={async (data) => {
+              await addMutation.mutateAsync(data);
+            }}
+            isLoading={addMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>

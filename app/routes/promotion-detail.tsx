@@ -364,10 +364,7 @@ const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = (
             Cena po rabacie (za 1 {promotion.unitSymbol})
           </p>
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-red-600">
-              {/* Tutaj funkcja sama doklei symbol waluty, lub możesz zostawić samą kwotę */}
-              {finalPriceFormatted}
-            </span>
+            <span className="text-3xl font-bold text-red-600">{finalPriceFormatted}</span>
             <span className="text-sm text-gray-400 line-through">{basePriceFormatted}</span>
           </div>
           {savingsFormatted && (
