@@ -27,16 +27,16 @@ export const ErrorMapper: Record<string, string> = {
   VAL_017: 'Opis kontaktu jest wymagany',
   VAL_018: 'Nieprawidłowa długość opisu kontaktu',
   VAL_019: 'Numer telefonu jest wymagany',
-  VAL_020: 'Nieprawidłowa format numeru telefonu',
-  VAL_021: 'Nieprawidłowa format linku',
-  VAL_022: 'Link jest wymagany',
+  VAL_020: 'Nieprawidłowy format numeru telefonu',
+  VAL_021: 'Nieprawidłowy format profilu LinkedIn',
+  VAL_022: 'Link do profilu LinkedIn jest wymagany',
 
   // Domain / Auth
   AUTH_001: 'Nie znaleziono użytkownika',
   AUTH_002: 'Email nie został potwierdzony',
   AUTH_003: 'Nieprawidłowe dane logowania',
   AUTH_004: 'Nie przydzielono roli użytkownika',
-  AUTH_005: 'Nie autoryzowany dostęp',
+  AUTH_005: 'Nieautoryzowany dostęp',
 
   // Company
   COM_001: 'Nie znaleziono firmy',
@@ -48,19 +48,41 @@ export const ErrorMapper: Record<string, string> = {
 
   // Product
   PROD_001: 'Nie znaleziono produktu',
+  PROD_002: 'Produkt o podanych parametrach już istnieje',
+  PROD_003: 'Nieprawidłowa kategoria produktu',
+  PROD_004: 'Nieprawidłowa nazwa produktu',
+  PROD_005: 'Nieprawidłowy gatunek stali produktu',
+  PROD_006: 'Nieprawidłowy wymiar produktu (musi być większy od zera)',
+  PROD_007: 'Nieprawidłowa waga produktu (musi być większa od zera)',
+  PROD_008: 'Nieprawidłowa cena jednostkowa produktu',
+  PROD_009: 'Nieprawidłowa ilość produktu na stanie',
+  PROD_010: 'Średnica jest wymagana dla kategorii rur oraz drutów',
 
   // Note
   NOTE_001: 'Nie znaleziono notatki',
   NOTE_003: 'Tytuł notatki musi mieć od 1 do 50 znaków',
   NOTE_004: 'Zawartość notatki musi mieć od 1 do 500 znaków',
-  NOTE_005: 'Nie znaleziono obiektu do którego ma być przypisana notatka',
+  NOTE_005: 'Nie znaleziono obiektu, do którego ma być przypisana notatka',
 
   // Mailing
-  MAIL_001: 'Nie znaleziono klienta do którego ma być wysłany mailing',
+  MAIL_001: 'Nie znaleziono klienta, do którego ma być wysłany mailing',
 
   // Promotion
   PROMO_001: 'Nieprawidłowa wartość przeceny',
   PROMO_002: 'Nieprawidłowa cena promocyjna',
+  PROMO_003: 'Nie znaleziono promocji',
+  PROMO_004: 'Aktywna promocja na ten produkt już istnieje',
+  PROM_005: 'Nieprawidłowa nazwa promocji',
+  PROM_006: 'Nieprawidłowa minimalna ilość promocyjna',
+  PROM_007: 'Nieprawidłowa minimalna waga promocyjna',
+  PROM_008: 'Nie można jednocześnie wybrać rabatu procentowego oraz stałej ceny promocyjnej',
+
+  // Currency
+  CUR_001: 'Nie znaleziono wybranej waluty',
+
+  // Steel Grade
+  ST_001: 'Nie można usunąć gatunku stali, ponieważ jest przypisany do istniejących produktów',
+  ST_002: 'Zduplikowany produkt do zmiany gatunku stali. Coś jest nie tak.',
 };
 
 export const getErrorMessage = (code?: string, fallbackMessage?: string): string => {

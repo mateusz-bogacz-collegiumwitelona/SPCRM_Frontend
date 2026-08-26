@@ -5,7 +5,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/apiError';
@@ -16,11 +16,20 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  MoreHorizontal,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
+import { DeleteSteelGradeDialog } from '~/components/steel-grade/delete-steel-grade-dialog';
 
 interface SteelGradeListResponse {
   id: string;
@@ -31,34 +40,6 @@ interface SteelGradeListResponse {
 
 const columnHelper = createColumnHelper<SteelGradeListResponse>();
 
-const columns = [
-  columnHelper.accessor('name', {
-    header: 'Gatunek stali',
-    cell: (info) => <span className="font-medium text-gray-900">{info.getValue()}</span>,
-  }),
-  columnHelper.accessor('standard', {
-    header: 'Norma',
-    cell: (info) => {
-      const val = info.getValue();
-      return val ? (
-        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-          {val}
-        </span>
-      ) : (
-        <span className="text-gray-400 italic">Brak</span>
-      );
-    },
-  }),
-  columnHelper.accessor('density', {
-    header: 'Gęstość',
-    cell: (info) => (
-      <span className="text-gray-700 font-medium">
-        {info.getValue()} <span className="text-gray-500 font-normal text-xs">g/cm³</span>
-      </span>
-    ),
-  }),
-];
-
 export default function SteelGradesList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -67,10 +48,97 @@ export default function SteelGradesList() {
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
 
+  const [deletingGrade, setDeletingGrade] = useState<{ id: string; name: string } | null>(null);
+
+  const queryClient = useQueryClient();
   const [accumulatedMobileItems, setAccumulatedMobileItems] = useState<SteelGradeListResponse[]>(
     [],
   );
   const isMobileAppend = useRef(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: async ({
+      id,
+      reassignments,
+    }: {
+      id: string;
+      reassignments: { productId: string; newSteelGradeId: string }[];
+    }) => {
+      await api.delete(`/steel-grade/${id}`, {
+        data: { reassignments },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
+      queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
+      queryClient.invalidateQueries({ queryKey: ['products-list'] });
+      setDeletingGrade(null);
+    },
+  });
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('name', {
+        header: 'Gatunek stali',
+        cell: (info) => <span className="font-medium text-gray-900">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('standard', {
+        header: 'Norma',
+        cell: (info) => {
+          const val = info.getValue();
+          return val ? (
+            <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+              {val}
+            </span>
+          ) : (
+            <span className="text-gray-400 italic">Brak</span>
+          );
+        },
+      }),
+      columnHelper.accessor('density', {
+        header: 'Gęstość',
+        cell: (info) => (
+          <span className="text-gray-700 font-medium">
+            {info.getValue()} <span className="text-gray-500 font-normal text-xs">g/cm³</span>
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Akcje',
+        cell: (info) => {
+          const grade = info.row.original;
+          return (
+            <div className="flex items-center justify-start gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
+                  >
+                    <span className="sr-only">Otwórz menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="w-40 bg-white">
+                  <DropdownMenuItem
+                    onClick={() => setDeletingGrade({ id: grade.id, name: grade.name })}
+                    className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Usuń</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      }),
+    ],
+    [],
+  );
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -241,6 +309,15 @@ export default function SteelGradesList() {
                       <span>Gęstość:</span>
                       <span className="font-semibold text-gray-900">{item.density} g/cm³</span>
                     </div>
+                    <div className="flex justify-end pt-2 mt-2 border-t border-gray-50">
+                      <button
+                        type="button"
+                        onClick={() => setDeletingGrade({ id: item.id, name: item.name })}
+                        className="text-xs font-medium text-red-600 hover:text-red-800 flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Usuń
+                      </button>
+                    </div>
                   </div>
                 ))}
 
@@ -345,6 +422,22 @@ export default function SteelGradesList() {
               </div>
             </>
           )}
+
+          <DeleteSteelGradeDialog
+            isOpen={!!deletingGrade}
+            steelGradeId={deletingGrade?.id}
+            steelGradeName={deletingGrade?.name}
+            onClose={() => setDeletingGrade(null)}
+            onConfirm={async (reassignments) => {
+              if (deletingGrade) {
+                await deleteMutation.mutateAsync({
+                  id: deletingGrade.id,
+                  reassignments,
+                });
+              }
+            }}
+            isLoading={deleteMutation.isPending}
+          />
         </MainLayout>
       </RoleGuard>
     </AuthGuard>
