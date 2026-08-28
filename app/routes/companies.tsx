@@ -413,7 +413,7 @@ export default function Companies() {
             </div>
           ) : (
             <>
-              <div className="block xl:hidden space-y-4">
+              <div className="block lg:hidden space-y-4">
                 {accumulatedMobileCompanies.map((item) => (
                   <div
                     key={item.id}
