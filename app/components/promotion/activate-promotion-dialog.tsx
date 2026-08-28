@@ -44,7 +44,7 @@ export const ActivatePromotionDialog: React.FC<ActivatePromotionDialogProps> = (
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedDate) {
       setError('Wybierz nową datę zakończenia promocji.');
@@ -87,7 +87,9 @@ export const ActivatePromotionDialog: React.FC<ActivatePromotionDialogProps> = (
           )}
 
           <div className="space-y-1.5 pt-2">
-            <label className="text-xs font-semibold text-gray-700">Nowa data zakończenia *</label>
+            <label htmlFor="promotion-end-date" className="text-xs font-semibold text-gray-700">
+              Nowa data zakończenia *
+            </label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button

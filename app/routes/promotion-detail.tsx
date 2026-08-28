@@ -35,7 +35,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 interface PromotionDetailResponse {
   id: string;
@@ -65,11 +65,21 @@ interface PromotionDetailResponse {
   updateAt?: string | null;
 }
 
+const getDiscountTypeLabel = (promotion: PromotionDetailResponse): string => {
+  if (typeof promotion.discountPercentage === 'number') {
+    return `Procentowy (-${promotion.discountPercentage}%)`;
+  }
+  if (typeof promotion.promotionalPrice === 'number') {
+    return 'Sztywna cena jednostkowa';
+  }
+  return 'Brak danych';
+};
+
 const PromotionHeader: React.FC<{
-  promotion?: PromotionDetailResponse;
-  isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
+  readonly promotion?: PromotionDetailResponse;
+  readonly isLoading: boolean;
+  readonly isError: boolean;
+  readonly errorMessage?: string;
 }> = ({ promotion, isLoading, isError, errorMessage }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -86,9 +96,9 @@ const PromotionHeader: React.FC<{
       if (!promotion) return;
       return await api.patch(`/promotion/${promotion.id}/deactivate`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
-      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
+      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       setIsDeactivateOpen(false);
     },
     onError: (error: unknown) => {
@@ -110,9 +120,9 @@ const PromotionHeader: React.FC<{
         endDate: endDate.toISOString(),
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
-      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
+      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       setIsActivateOpen(false);
     },
     onError: (error: unknown) => {
@@ -131,8 +141,8 @@ const PromotionHeader: React.FC<{
       if (!promotion) return;
       return await api.delete(`/promotion/${promotion.id}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       navigate('/promotions');
     },
     onError: (error: unknown) => {
@@ -151,9 +161,9 @@ const PromotionHeader: React.FC<{
     mutationFn: async (payload: EditPromotionRequestPayload) => {
       return await api.patch('/promotion/edit', payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
-      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion?.id] });
+      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       setIsEditOpen(false);
     },
     onError: (error: unknown) => {
@@ -187,7 +197,29 @@ const PromotionHeader: React.FC<{
     );
   }
 
-  const isExpired = promotion.endDate && new Date(promotion.endDate) < new Date();
+  const isExpired = Boolean(promotion.endDate && new Date(promotion.endDate) < new Date());
+
+  const renderStatusBadge = () => {
+    if (promotion.isActive && !isExpired) {
+      return (
+        <span className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+          Aktywna
+        </span>
+      );
+    }
+    if (isExpired) {
+      return (
+        <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+          Wygasła
+        </span>
+      );
+    }
+    return (
+      <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+        Zakończona
+      </span>
+    );
+  };
 
   return (
     <>
@@ -207,6 +239,7 @@ const PromotionHeader: React.FC<{
               {canManage && (
                 <div className="flex items-center gap-1">
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
                     className="text-blue-900 hover:bg-blue-50 h-8 w-8"
@@ -216,28 +249,21 @@ const PromotionHeader: React.FC<{
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
                     className="text-red-500 hover:bg-red-50 hover:text-red-700 h-8 w-8"
                     onClick={() => setIsDeleteOpen(true)}
                     title="Usuń promocję"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               )}
 
-              {promotion.isActive && !isExpired ? (
-                <span className="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  Aktywna
-                </span>
-              ) : (
-                <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  {isExpired ? 'Wygasła' : 'Zakończona'}
-                </span>
-              )}
+              {renderStatusBadge()}
 
-              {promotion.discountPercentage != null && (
+              {typeof promotion.discountPercentage === 'number' && (
                 <span className="bg-red-50 text-red-700 border border-red-200 text-xs font-bold px-2.5 py-0.5 rounded-full">
                   -{promotion.discountPercentage}%
                 </span>
@@ -265,6 +291,7 @@ const PromotionHeader: React.FC<{
             <div>
               {promotion.isActive ? (
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsDeactivateOpen(true)}
                   className="text-amber-700 border-amber-300 hover:bg-amber-50 hover:text-amber-800 flex items-center gap-2"
@@ -274,6 +301,7 @@ const PromotionHeader: React.FC<{
                 </Button>
               ) : (
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsActivateOpen(true)}
                   className="text-green-700 border-green-300 hover:bg-green-50 hover:text-green-800 flex items-center gap-2"
@@ -330,7 +358,9 @@ const PromotionHeader: React.FC<{
   );
 };
 
-const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = ({ promotion }) => {
+const PromotionPricingCard: React.FC<{ readonly promotion: PromotionDetailResponse }> = ({
+  promotion,
+}) => {
   const currencyCode = promotion.currencyCode || 'PLN';
   const decimals = promotion.currencyDecimalPlaces ?? 2;
 
@@ -338,13 +368,13 @@ const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = (
   let finalPriceFormatted = basePriceFormatted;
   let savingsFormatted: string | null = null;
 
-  if (promotion.promotionalPrice != null) {
+  if (typeof promotion.promotionalPrice === 'number') {
     finalPriceFormatted = formatCurrency(promotion.promotionalPrice, currencyCode, decimals);
     const savings = promotion.productPricePerUnit - promotion.promotionalPrice;
     if (savings > 0) {
       savingsFormatted = formatCurrency(savings, currencyCode, decimals);
     }
-  } else if (promotion.discountPercentage != null) {
+  } else if (typeof promotion.discountPercentage === 'number') {
     const discountedPrice =
       promotion.productPricePerUnit * (1 - promotion.discountPercentage / 100);
     finalPriceFormatted = formatCurrency(discountedPrice, currencyCode, decimals);
@@ -377,13 +407,7 @@ const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
           <div>
             <p className="text-xs text-gray-500 mb-1">Typ rabatu</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {promotion.discountPercentage != null
-                ? `Procentowy (-${promotion.discountPercentage}%)`
-                : promotion.promotionalPrice != null
-                  ? 'Sztywna cena jednostkowa'
-                  : 'Brak danych'}
-            </p>
+            <p className="text-sm font-semibold text-gray-900">{getDiscountTypeLabel(promotion)}</p>
           </div>
           <div>
             <p className="text-xs text-gray-500 mb-1">Cena katalogowa</p>
@@ -395,7 +419,9 @@ const PromotionPricingCard: React.FC<{ promotion: PromotionDetailResponse }> = (
   );
 };
 
-const PromotionTermsCard: React.FC<{ promotion: PromotionDetailResponse }> = ({ promotion }) => {
+const PromotionTermsCard: React.FC<{ readonly promotion: PromotionDetailResponse }> = ({
+  promotion,
+}) => {
   const startDateFormatted = promotion.startDate
     ? format(new Date(promotion.startDate), 'dd MMMM yyyy', { locale: pl })
     : 'Od momentu utworzenia';
@@ -429,7 +455,7 @@ const PromotionTermsCard: React.FC<{ promotion: PromotionDetailResponse }> = ({ 
             <div>
               <p className="text-xs text-gray-500">Minimalny wolumen</p>
               <p className="text-sm font-semibold text-gray-900">
-                {promotion.minQuantity != null
+                {typeof promotion.minQuantity === 'number'
                   ? `${promotion.minQuantity} ${promotion.unitSymbol}`
                   : 'Brak limitu ilościowego'}
               </p>
@@ -441,7 +467,7 @@ const PromotionTermsCard: React.FC<{ promotion: PromotionDetailResponse }> = ({ 
             <div>
               <p className="text-xs text-gray-500">Minimalna waga</p>
               <p className="text-sm font-semibold text-gray-900">
-                {promotion.minWeight != null
+                {typeof promotion.minWeight === 'number'
                   ? `${(promotion.minWeight / 1000).toLocaleString('pl-PL')} kg`
                   : 'Brak limitu wagowego'}
               </p>
@@ -454,7 +480,7 @@ const PromotionTermsCard: React.FC<{ promotion: PromotionDetailResponse }> = ({ 
 };
 
 const PromotionProductSidebar: React.FC<{
-  promotion: PromotionDetailResponse;
+  readonly promotion: PromotionDetailResponse;
 }> = ({ promotion }) => {
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
@@ -549,7 +575,7 @@ export default function PromotionDetails() {
       const response = await api.get(`/promotion/${promotionId}`);
       return response.data?.data || response.data?.value || response.data;
     },
-    enabled: !!promotionId,
+    enabled: Boolean(promotionId),
   });
 
   const errorMessage = isError

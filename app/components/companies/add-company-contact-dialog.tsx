@@ -11,7 +11,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 export interface AddContactRequest {
   companyId: string;
@@ -19,6 +19,10 @@ export interface AddContactRequest {
   lastName: string;
   jobTitle?: string;
   details: AddContactDetailRequest[];
+}
+
+interface FormContactDetail extends AddContactDetailRequest {
+  id: string;
 }
 
 export interface AddContactDetailRequest {
@@ -47,9 +51,15 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [details, setDetails] = useState<AddContactDetailRequest[]>([
-    { label: '', value: '', type: '', isPrimary: true },
-  ]);
+  const generateDefaultDetail = (isPrimary = false): FormContactDetail => ({
+    id: crypto.randomUUID(),
+    label: '',
+    value: '',
+    type: '',
+    isPrimary,
+  });
+
+  const [details, setDetails] = useState<FormContactDetail[]>([generateDefaultDetail(true)]);
 
   const { data: contactTypes = [], isLoading: isTypesLoading } = useQuery({
     queryKey: ['contact-types'],
@@ -61,46 +71,47 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
   });
 
   const handleAddDetail = () => {
-    setDetails([...details, { label: '', value: '', type: '', isPrimary: false }]);
+    setDetails((prev) => [...prev, generateDefaultDetail(false)]);
   };
 
-  const handleRemoveDetail = (indexToRemove: number) => {
-    const newDetails = details.filter((_, index) => index !== indexToRemove);
-
-    if (newDetails.length > 0 && !newDetails.some((d) => d.isPrimary)) {
-      newDetails[0].isPrimary = true;
-    }
-
-    setDetails(newDetails);
+  const handleRemoveDetail = (idToRemove: string) => {
+    setDetails((prev) => {
+      const updated = prev.filter((d) => d.id !== idToRemove);
+      if (updated.length > 0 && !updated.some((d) => d.isPrimary)) {
+        updated[0].isPrimary = true;
+      }
+      return updated;
+    });
   };
 
   const handleDetailChange = (
-    index: number,
+    id: string,
     field: keyof AddContactDetailRequest,
     newValue: string,
   ) => {
-    const newDetails = [...details];
-    newDetails[index] = { ...newDetails[index], [field]: newValue };
-    setDetails(newDetails);
+    setDetails((prev) =>
+      prev.map((detail) => (detail.id === id ? { ...detail, [field]: newValue } : detail)),
+    );
   };
 
-  const handleSetPrimary = (indexToSet: number) => {
-    const newDetails = details.map((detail, index) => ({
-      ...detail,
-      isPrimary: index === indexToSet,
-    }));
-    setDetails(newDetails);
+  const handleSetPrimary = (idToSet: string) => {
+    setDetails((prev) =>
+      prev.map((detail) => ({
+        ...detail,
+        isPrimary: detail.id === idToSet,
+      })),
+    );
   };
 
   const resetForm = () => {
     setFirstName('');
     setLastName('');
     setJobTitle('');
-    setDetails([{ label: '', value: '', type: '', isPrimary: true }]);
+    setDetails([generateDefaultDetail(true)]);
     setErrorMessage(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const isAnyDetailInvalid = details.some(
@@ -158,7 +169,9 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
             <h3 className="text-sm font-semibold text-gray-800 border-b pb-1">Dane osobowe</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Imię *</label>
+                <label htmlFor="contact-first-name" className="text-sm font-medium text-gray-700">
+                  Imię *
+                </label>
                 <input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
@@ -167,7 +180,9 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Nazwisko *</label>
+                <label htmlFor="contact-first-last" className="text-sm font-medium text-gray-700">
+                  Nazwisko *
+                </label>
                 <input
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
@@ -177,7 +192,9 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Stanowisko</label>
+              <label htmlFor="contact-title" className="text-sm font-medium text-gray-700">
+                Stanowisko
+              </label>
               <input
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
@@ -200,29 +217,41 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
               </Button>
             </div>
 
-            {details.map((detail, index) => (
+            {details.map((detail) => (
               <div
-                key={index}
+                key={detail.id}
                 className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg relative"
               >
                 <div className="flex flex-col items-center justify-start pt-2 px-1">
                   <input
                     type="radio"
+                    id={`primary-${detail.id}`}
                     name="primaryContact"
                     checked={detail.isPrimary}
-                    onChange={() => handleSetPrimary(index)}
+                    onChange={() => handleSetPrimary(detail.id)}
                     className="w-4 h-4 text-[#004a8f] focus:ring-[#004a8f] cursor-pointer"
                     title="Ustaw jako główny kontakt"
                   />
-                  <span className="text-[10px] text-gray-500 mt-1">Główny</span>
+                  <label
+                    htmlFor={`primary-${detail.id}`}
+                    className="text-[10px] text-gray-500 mt-1 cursor-pointer"
+                  >
+                    Główny
+                  </label>
                 </div>
 
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">Typ *</label>
+                    <label
+                      htmlFor={`type-${detail.id}`}
+                      className="text-xs font-medium text-gray-700"
+                    >
+                      Typ *
+                    </label>
                     <select
+                      id={`type-${detail.id}`}
                       value={detail.type}
-                      onChange={(e) => handleDetailChange(index, 'type', e.target.value)}
+                      onChange={(e) => handleDetailChange(detail.id, 'type', e.target.value)}
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
                       required
                       disabled={isTypesLoading}
@@ -239,10 +268,16 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">Etykieta *</label>
+                    <label
+                      htmlFor={`label-${detail.id}`}
+                      className="text-xs font-medium text-gray-700"
+                    >
+                      Etykieta *
+                    </label>
                     <input
+                      id={`label-${detail.id}`}
                       value={detail.label}
-                      onChange={(e) => handleDetailChange(index, 'label', e.target.value)}
+                      onChange={(e) => handleDetailChange(detail.id, 'label', e.target.value)}
                       placeholder="np. Służbowy"
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
                       required
@@ -250,10 +285,16 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-gray-700">Wartość *</label>
+                    <label
+                      htmlFor={`value-${detail.id}`}
+                      className="text-xs font-medium text-gray-700"
+                    >
+                      Wartość *
+                    </label>
                     <input
+                      id={`value-${detail.id}`}
                       value={detail.value}
-                      onChange={(e) => handleDetailChange(index, 'value', e.target.value)}
+                      onChange={(e) => handleDetailChange(detail.id, 'value', e.target.value)}
                       placeholder="Email / Telefon"
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
                       required
@@ -266,7 +307,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemoveDetail(index)}
+                    onClick={() => handleRemoveDetail(detail.id)}
                     className="mt-5 text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 shrink-0"
                     title="Usuń szczegół"
                   >

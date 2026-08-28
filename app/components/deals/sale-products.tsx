@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -121,6 +121,47 @@ const columns = [
   }),
 ];
 
+const mergeProducts = (
+  existing: DealProductResponse[],
+  incoming: DealProductResponse[],
+): DealProductResponse[] => {
+  const existingIds = new Set(existing.map((item) => item.productId));
+  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.productId));
+  return [...existing, ...uniqueIncoming];
+};
+
+const ProductMobileCard = ({ product }: { product: DealProductResponse }) => {
+  const hasDiscount = product.baseUnitPrice > product.unitPrice;
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="mb-2">
+        <p className="text-sm font-bold text-[#004a8f]">{product.name}</p>
+        <p className="text-xs text-gray-500 mt-1">Wymiary: {product.dimensions}</p>
+      </div>
+      <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
+        <div className="text-gray-600">
+          Ilość:{' '}
+          <span className="font-semibold text-gray-900">
+            {product.quantity} {product.unitSymbol}
+          </span>
+        </div>
+        <div className="text-right">
+          {hasDiscount && (
+            <p className="text-[10px] text-gray-400 line-through">
+              {formatCurrency(product.baseUnitPrice, product.currencyCode, product.decimalPlaces)}
+            </p>
+          )}
+          <p className="font-bold text-gray-900">
+            {formatCurrency(product.unitPrice, product.currencyCode, product.decimalPlaces)}{' '}
+            {product.currencyCode}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -190,20 +231,15 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const totalItems = data?.totalItems || data?.totalCount || desktopProducts.length;
 
   useEffect(() => {
-    if (!data?.items) return;
+    const items: DealProductResponse[] = data?.items;
+    if (!items || items.length === 0) return;
 
-    setAccumulatedMobileProducts((prev) => {
-      if (pageNumber === 1) return data.items;
+    if (pageNumber === 1 || !isMobileAppend.current) {
+      setAccumulatedMobileProducts(items);
+      return;
+    }
 
-      if (isMobileAppend.current) {
-        const newItems = data.items.filter(
-          (newItem: DealProductResponse) => !prev.some((p) => p.productId === newItem.productId),
-        );
-        return [...prev, ...newItems];
-      }
-
-      return data.items;
-    });
+    setAccumulatedMobileProducts((prev) => mergeProducts(prev, items));
   }, [data, pageNumber]);
 
   const handleMobileLoadMore = () => {
@@ -228,6 +264,126 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
         'Nie udało się pobrać listy produktów w zamówieniu.',
       )
     : null;
+
+  const renderProductsContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-10 w-10 animate-spin text-[#004a8f] mb-4" />
+          <p className="text-gray-500 font-medium">Ładowanie produktów...</p>
+        </div>
+      );
+    }
+
+    if (desktopProducts.length === 0 && !isError) {
+      return (
+        <div className="text-center py-12 bg-gray-50/50 rounded-lg border border-dashed border-gray-300">
+          <p className="text-gray-500 font-medium">Brak produktów do wyświetlenia.</p>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="block lg:hidden space-y-4">
+          {accumulatedMobileProducts.map((product) => (
+            <ProductMobileCard key={product.productId} product={product} />
+          ))}
+
+          {pageNumber < totalPages && (
+            <Button
+              onClick={handleMobileLoadMore}
+              disabled={isFetching}
+              className="w-full bg-[#004a8f] text-white hover:bg-blue-800 flex items-center justify-center gap-2"
+            >
+              {isFetching ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Ładowanie...
+                </>
+              ) : (
+                'Pokaż więcej'
+              )}
+            </Button>
+          )}
+        </div>
+
+        <div className="hidden lg:block">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 border-b border-gray-200 text-gray-900 font-semibold">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th key={header.id} className="px-6 py-4">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4 align-middle">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Pozycji:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-[#004a8f]"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="text-sm text-gray-500">
+              Widok {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} -{' '}
+              {Math.min(pageNumber * pageSize, totalItems)} z {totalItems}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
+                disabled={pageNumber === 1 || isFetching}
+                className="h-8 w-8 text-[#004a8f]"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium px-2">
+                Strona {pageNumber} z {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
+                disabled={pageNumber === totalPages || isFetching}
+                className="h-8 w-8 text-[#004a8f]"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
@@ -291,8 +447,14 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                   <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
                   <div className="space-y-4">
                     <div className="flex flex-col">
-                      <label className="text-xs font-medium text-gray-700 mb-1">Kategoria</label>
+                      <label
+                        htmlFor="sale-product-category"
+                        className="text-xs font-medium text-gray-700 mb-1"
+                      >
+                        Kategoria
+                      </label>
                       <input
+                        id="sale-product-category"
                         type="text"
                         value={productFilter}
                         onChange={(e) => setProductFilter(e.target.value)}
@@ -301,10 +463,14 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                       />
                     </div>
                     <div className="flex flex-col">
-                      <label className="text-xs font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="sale-product-steel-grade"
+                        className="text-xs font-medium text-gray-700 mb-1"
+                      >
                         Gatunek stali
                       </label>
                       <input
+                        id="sale-product-steel-grade"
                         type="text"
                         value={steelGradeFilter}
                         onChange={(e) => setSteelGradeFilter(e.target.value)}
@@ -347,153 +513,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
           </div>
         )}
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-10 w-10 animate-spin text-[#004a8f] mb-4" />
-            <p className="text-gray-500 font-medium">Ładowanie produktów...</p>
-          </div>
-        ) : desktopProducts.length === 0 && !isError ? (
-          <div className="text-center py-12 bg-gray-50/50 rounded-lg border border-dashed border-gray-300">
-            <p className="text-gray-500 font-medium">Brak produktów do wyświetlenia.</p>
-          </div>
-        ) : (
-          <>
-            <div className="block lg:hidden space-y-4">
-              {accumulatedMobileProducts.map((product) => {
-                const hasDiscount = product.baseUnitPrice > product.unitPrice;
-                return (
-                  <div
-                    key={product.productId}
-                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="mb-2">
-                      <p className="text-sm font-bold text-[#004a8f]">{product.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">Wymiary: {product.dimensions}</p>
-                    </div>
-                    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
-                      <div className="text-gray-600">
-                        Ilość:{' '}
-                        <span className="font-semibold text-gray-900">
-                          {product.quantity} {product.unitSymbol}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        {hasDiscount && (
-                          <p className="text-[10px] text-gray-400 line-through">
-                            {formatCurrency(
-                              product.baseUnitPrice,
-                              product.currencyCode,
-                              product.decimalPlaces,
-                            )}
-                          </p>
-                        )}
-                        <p className="font-bold text-gray-900">
-                          {formatCurrency(
-                            product.unitPrice,
-                            product.currencyCode,
-                            product.decimalPlaces,
-                          )}{' '}
-                          {product.currencyCode}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {pageNumber < totalPages && (
-                <Button
-                  onClick={handleMobileLoadMore}
-                  disabled={isFetching}
-                  className="w-full bg-[#004a8f] text-white hover:bg-blue-800 flex items-center justify-center gap-2"
-                >
-                  {isFetching ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Ładowanie...
-                    </>
-                  ) : (
-                    'Pokaż więcej'
-                  )}
-                </Button>
-              )}
-            </div>
-
-            <div className="hidden lg:block">
-              <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-                <table className="w-full text-left text-sm text-gray-600">
-                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-900 font-semibold">
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <tr key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <th key={header.id} className="px-6 py-4">
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(header.column.columnDef.header, header.getContext())}
-                          </th>
-                        ))}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {table.getRowModel().rows.map((row) => (
-                      <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                        {row.getVisibleCells().map((cell) => (
-                          <td key={cell.id} className="px-6 py-4 align-middle">
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Pozycji:</span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-[#004a8f]"
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                  </select>
-                </div>
-
-                <div className="text-sm text-gray-500">
-                  Widok {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} -{' '}
-                  {Math.min(pageNumber * pageSize, totalItems)} z {totalItems}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
-                    disabled={pageNumber === 1 || isFetching}
-                    className="h-8 w-8 text-[#004a8f]"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-medium px-2">
-                    Strona {pageNumber} z {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
-                    disabled={pageNumber === totalPages || isFetching}
-                    className="h-8 w-8 text-[#004a8f]"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        {renderProductsContent()}
       </div>
     </div>
   );

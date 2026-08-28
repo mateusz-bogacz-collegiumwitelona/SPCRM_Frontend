@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -41,7 +41,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 
-interface ProductResonse {
+interface ProductResponse {
   id: string;
   name: string;
   steelGrade: string;
@@ -57,7 +57,159 @@ interface SteelGradeResponse {
   name: string;
 }
 
-const columnHelper = createColumnHelper<ProductResonse>();
+interface ProductTableMeta {
+  onEdit: (id: string) => void;
+  onDelete: (product: { id: string; name: string }) => void;
+}
+
+const columnHelper = createColumnHelper<ProductResponse>();
+
+const columns = [
+  columnHelper.display({
+    id: 'productName',
+    header: 'Nazwa produktu',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-gray-900">{row.name}</span>
+          {row.isActivePromotion && (
+            <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+              Promocja
+            </span>
+          )}
+        </div>
+      );
+    },
+  }),
+  columnHelper.accessor('category', {
+    header: 'Kategoria',
+    cell: (info) => (
+      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+        {info.getValue()}
+      </span>
+    ),
+  }),
+  columnHelper.accessor('steelGrade', {
+    header: 'Gatunek',
+    cell: (info) => (
+      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+        {info.getValue()}
+      </span>
+    ),
+  }),
+  columnHelper.accessor('dimensions', {
+    header: 'Wymiary',
+    cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
+  }),
+  columnHelper.display({
+    id: 'quantity',
+    header: 'Ilość na stanie',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="font-medium text-gray-900">
+          {row.stockQuantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: (info) => {
+      const product = info.row.original;
+      const meta = info.table.options.meta as ProductTableMeta;
+
+      return (
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/products/${product.id}`}
+            className="font-medium text-blue-900 hover:underline"
+          >
+            Szczegóły
+          </Link>
+          <RoleGuard allowedRoles={['Manager', 'Admin']}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
+                >
+                  <span className="sr-only">Otwórz menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-40 bg-white">
+                <DropdownMenuItem
+                  onClick={() => meta.onEdit(product.id)}
+                  className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+                >
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  <span>Edytuj</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => meta.onDelete({ id: product.id, name: product.name })}
+                  className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Usuń</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </RoleGuard>
+        </div>
+      );
+    },
+  }),
+];
+
+const mergeProducts = (
+  existing: ProductResponse[],
+  incoming: ProductResponse[],
+): ProductResponse[] => {
+  const existingIds = new Set(existing.map((item) => item.id));
+  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
+  return [...existing, ...uniqueIncoming];
+};
+
+interface ProductMobileCardProps {
+  readonly product: ProductResponse;
+  readonly onEdit: (id: string) => void;
+}
+
+const ProductMobileCard = ({ product, onEdit }: ProductMobileCardProps) => (
+  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="mb-2">
+      <p className="text-sm font-bold text-blue-900">{product.name}</p>
+      <p className="text-xs text-gray-500 mt-1">Wymiary: {product.dimensions}</p>
+    </div>
+    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
+      <div className="text-gray-600">
+        Ilość: {product.stockQuantity} {product.unitSymbol}
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onEdit(product.id)}
+          className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1"
+        >
+          <Pencil className="w-3 h-3" /> Edytuj
+        </button>
+        <Link
+          to={`/products/${product.id}`}
+          className="text-xs font-medium text-blue-900 hover:underline"
+        >
+          Detale
+        </Link>
+      </div>
+    </div>
+  </div>
+);
 
 export default function ProductsList() {
   const [pageNumber, setPageNumber] = useState(1);
@@ -70,13 +222,13 @@ export default function ProductsList() {
   const [productFilter, setProductFilter] = useState<string>('');
   const [steelGradeFilter, setSteelGradeFilter] = useState<string>('');
 
-  const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<ProductResonse[]>([]);
+  const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<ProductResponse[]>([]);
   const isMobileAppend = useRef(false);
 
   const [hasActivePromotion, setHasActivePromotion] = useState<boolean>(false);
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<{ id: string; name: string } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -84,8 +236,8 @@ export default function ProductsList() {
     mutationFn: async (newProduct: AddProductRequest) => {
       await api.post('/products', newProduct);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products-list'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
       setIsAddModalOpen(false);
     },
   });
@@ -94,130 +246,23 @@ export default function ProductsList() {
     mutationFn: async (updatedProduct: EditProductRequest) => {
       await api.put(`/products/${updatedProduct.productId}`, updatedProduct);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products-list'] });
-      queryClient.invalidateQueries({ queryKey: ['product-details'] });
-      queryClient.invalidateQueries({ queryKey: ['product-for-edit'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['product-details'] });
+      await queryClient.invalidateQueries({ queryKey: ['product-for-edit'] });
       setEditingProductId(null);
     },
   });
-
-  const [deletingProduct, setDeletingProduct] = useState<{ id: string; name: string } | null>(null);
 
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
       await api.delete(`/products/${productId}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products-list'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
       setDeletingProduct(null);
     },
   });
-
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: 'productName',
-        header: 'Nazwa produktu',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">{row.name}</span>
-              {row.isActivePromotion && (
-                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                  Promocja
-                </span>
-              )}
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('category', {
-        header: 'Kategoria',
-        cell: (info) => (
-          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-            {info.getValue()}
-          </span>
-        ),
-      }),
-      columnHelper.accessor('steelGrade', {
-        header: 'Gatunek',
-        cell: (info) => (
-          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-            {info.getValue()}
-          </span>
-        ),
-      }),
-      columnHelper.accessor('dimensions', {
-        header: 'Wymiary',
-        cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
-      }),
-      (columnHelper.display({
-        id: 'quantity',
-        header: 'Ilość na stanie',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="font-medium text-gray-900">
-              {row.stockQuantity}{' '}
-              <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Akcje',
-        cell: (info) => {
-          const product = info.row.original;
-          return (
-            <div className="flex items-center gap-3">
-              <Link
-                to={`/products/${product.id}`}
-                className="font-medium text-blue-900 hover:underline"
-              >
-                Szczegóły
-              </Link>
-              <RoleGuard allowedRoles={['Manager', 'Admin']}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
-                    >
-                      <span className="sr-only">Otwórz menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent align="end" className="w-40 bg-white">
-                    <DropdownMenuItem
-                      onClick={() => setEditingProductId(product.id)}
-                      className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
-                    >
-                      <Edit2 className="mr-2 h-4 w-4" />
-                      <span>Edytuj</span>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem
-                      onClick={() => setDeletingProduct({ id: product.id, name: product.name })}
-                      className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Usuń</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </RoleGuard>
-            </div>
-          );
-        },
-      })),
-    ],
-    [],
-  );
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -292,20 +337,15 @@ export default function ProductsList() {
   const totalItems = data?.totalItems || data?.totalCount || desktopProducts.length;
 
   useEffect(() => {
-    if (!data?.items) return;
+    const items: ProductResponse[] = data?.items;
+    if (!items || items.length === 0) return;
 
-    setAccumulatedMobileProducts((prev) => {
-      if (pageNumber === 1) return data.items;
+    if (pageNumber === 1 || !isMobileAppend.current) {
+      setAccumulatedMobileProducts(items);
+      return;
+    }
 
-      if (isMobileAppend.current) {
-        const newItems = data.items.filter(
-          (newItem: ProductResonse) => !prev.some((p) => p.id === newItem.id),
-        );
-        return [...prev, ...newItems];
-      }
-
-      return data.items;
-    });
+    setAccumulatedMobileProducts((prev) => mergeProducts(prev, items));
   }, [data, pageNumber]);
 
   const handleMobileLoadMore = () => {
@@ -322,14 +362,149 @@ export default function ProductsList() {
     data: desktopProducts,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      onEdit: (id) => setEditingProductId(id),
+      onDelete: (product) => setDeletingProduct(product),
+    } satisfies ProductTableMeta,
   });
 
   const errorMessage = isError
     ? getErrorMessage(
         (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać listy produktów w zamówieniu.',
+        'Nie udało się pobrać listy produktów.',
       )
     : null;
+
+  const renderProductsContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
+          <p className="text-gray-500 font-medium">Ładowanie produktów...</p>
+        </div>
+      );
+    }
+
+    if (desktopProducts.length === 0 && !isError) {
+      return (
+        <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-gray-500 font-medium">Brak produktów do wyświetlenia.</p>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="block lg:hidden space-y-4">
+          {accumulatedMobileProducts.map((product) => (
+            <ProductMobileCard key={product.id} product={product} onEdit={setEditingProductId} />
+          ))}
+
+          {pageNumber < totalPages && (
+            <div className="mt-6 flex justify-center pt-2">
+              <Button
+                type="button"
+                onClick={handleMobileLoadMore}
+                disabled={isFetching}
+                className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
+              >
+                {isFetching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie danych...
+                  </>
+                ) : (
+                  'Pokaż więcej wyników'
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="hidden lg:block space-y-4">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Pozycji na stronie:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="text-sm text-gray-500">
+              Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
+              {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
+                disabled={pageNumber === 1 || isFetching}
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium text-gray-700 px-2">
+                Strona {pageNumber} z {totalPages}
+              </span>
+              <Button
+                type="button"
+                onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
+                disabled={pageNumber === totalPages || isFetching}
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
 
   return (
     <AuthGuard>
@@ -339,6 +514,7 @@ export default function ProductsList() {
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Produkty</h1>
             <RoleGuard allowedRoles={['Admin']}>
               <Button
+                type="button"
                 onClick={() => setIsAddModalOpen(true)}
                 className="bg-white text-blue-900 hover:bg-gray-100 font-medium text-xs sm:text-sm flex items-center gap-2"
               >
@@ -372,6 +548,7 @@ export default function ProductsList() {
                 </select>
 
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setSortDescending(!sortDescending)}
                   className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3"
@@ -385,6 +562,7 @@ export default function ProductsList() {
 
                 <div className="relative">
                   <Button
+                    type="button"
                     variant="outline"
                     onClick={() => setShowFilters(!showFilters)}
                     className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -393,8 +571,8 @@ export default function ProductsList() {
                     <span>Filtry</span>
                     {(productFilter || steelGradeFilter || hasActivePromotion) && (
                       <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
                       </span>
                     )}
                   </Button>
@@ -404,10 +582,14 @@ export default function ProductsList() {
                       <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
                       <div className="space-y-4">
                         <div className="flex flex-col">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="product-category-filter"
+                            className="block text-xs font-medium text-gray-700 mb-1"
+                          >
                             Kategoria
                           </label>
                           <select
+                            id="product-category-filter"
                             value={productFilter}
                             onChange={(e) => setProductFilter(e.target.value)}
                             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
@@ -422,10 +604,14 @@ export default function ProductsList() {
                         </div>
 
                         <div className="flex flex-col">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="product-steel-grade-filter"
+                            className="block text-xs font-medium text-gray-700 mb-1"
+                          >
                             Gatunek stali
                           </label>
                           <select
+                            id="product-steel-grade-filter"
                             value={steelGradeFilter}
                             onChange={(e) => setSteelGradeFilter(e.target.value)}
                             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
@@ -468,6 +654,7 @@ export default function ProductsList() {
                             Wyczyść
                           </button>
                           <Button
+                            type="button"
                             size="sm"
                             onClick={() => setShowFilters(false)}
                             className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
@@ -490,178 +677,36 @@ export default function ProductsList() {
             </div>
           )}
 
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
-              <p className="text-gray-500 font-medium">Ładowanie produktów...</p>
-            </div>
-          ) : desktopProducts.length === 0 && !isError ? (
-            <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-gray-500 font-medium">Brak produktów do wyświetlenia.</p>
-            </div>
-          ) : (
-            <>
-              <div className="block lg:hidden space-y-4">
-                {accumulatedMobileProducts.map((product) => {
-                  return (
-                    <div
-                      key={product.id}
-                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-                    >
-                      <div className="mb-2">
-                        <p className="text-sm font-bold text-blue-900">{product.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">Wymiary: {product.dimensions}</p>
-                      </div>
-                      <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
-                        <div className="text-gray-600">
-                          Ilość: {product.stockQuantity} {product.unitSymbol}
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setEditingProductId(product.id)}
-                            className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1"
-                          >
-                            <Pencil className="w-3 h-3" /> Edytuj
-                          </button>
-                          <Link
-                            to={`/products/${product.id}`}
-                            className="text-xs font-medium text-blue-900 hover:underline"
-                          >
-                            Detale
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {pageNumber < totalPages && (
-                  <div className="mt-6 flex justify-center pt-2">
-                    <Button
-                      onClick={handleMobileLoadMore}
-                      disabled={isFetching}
-                      className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
-                    >
-                      {isFetching ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie danych...
-                        </>
-                      ) : (
-                        'Pokaż więcej wyników'
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="hidden lg:block space-y-4">
-                <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <th
-                              key={header.id}
-                              className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </th>
-                          ))}
-                        </tr>
-                      ))}
-                    </thead>
-                    <tbody>
-                      {table.getRowModel().rows.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Pozycji na stronie:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-
-                  <div className="text-sm text-gray-500">
-                    Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
-                    {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
-                      disabled={pageNumber === 1 || isFetching}
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm font-medium text-gray-700 px-2">
-                      Strona {pageNumber} z {totalPages}
-                    </span>
-                    <Button
-                      onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
-                      disabled={pageNumber === totalPages || isFetching}
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+          {renderProductsContent()}
 
           <AddProductDialog
             isOpen={isAddModalOpen}
             onClose={() => setIsAddModalOpen(false)}
-            onSave={async (data) => {
-              await addProductMutation.mutateAsync(data);
+            onSave={async (newProductData) => {
+              await addProductMutation.mutateAsync(newProductData);
             }}
             isLoading={addProductMutation.isPending}
           />
 
           <EditProductDialog
             productId={editingProductId}
-            isOpen={!!editingProductId}
+            isOpen={Boolean(editingProductId)}
             onClose={() => setEditingProductId(null)}
-            onSave={async (data) => {
-              await editProductMutation.mutateAsync(data);
+            onSave={async (updatedProductData) => {
+              await editProductMutation.mutateAsync(updatedProductData);
             }}
             isLoading={editProductMutation.isPending}
           />
 
           <DeleteProductDialog
-            isOpen={!!deletingProduct}
+            isOpen={Boolean(deletingProduct)}
             productName={deletingProduct?.name}
             onClose={() => setDeletingProduct(null)}
-            onConfirm={() => deletingProduct && deleteProductMutation.mutate(deletingProduct.id)}
+            onConfirm={async () => {
+              if (deletingProduct) {
+                await deleteProductMutation.mutateAsync(deletingProduct.id);
+              }
+            }}
             isLoading={deleteProductMutation.isPending}
           />
         </MainLayout>

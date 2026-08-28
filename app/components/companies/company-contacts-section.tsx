@@ -18,7 +18,7 @@ import {
 } from '~/components/contact/edit-contact-dialog';
 import { SetCompanyPrimaryContactDialog } from '~/components/companies/set-company-primary-contact-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 interface Contact {
   id: string;
@@ -163,8 +163,8 @@ export const CompanyContactsSection: React.FC<{
     mutationFn: async (newContact: AddContactRequest) => {
       return await api.post('/contacts', newContact);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
       setIsAddModalOpen(false);
     },
     onError: (error: unknown) => {
@@ -179,8 +179,8 @@ export const CompanyContactsSection: React.FC<{
     mutationFn: async (updatedContact: EditContactRequest) => {
       return await api.patch('/contacts/edit', updatedContact);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
       setEditingContactId(null);
     },
     onError: (error: unknown) => {
@@ -195,8 +195,8 @@ export const CompanyContactsSection: React.FC<{
     mutationFn: async (contactId: string) => {
       return await api.patch(`/contacts/${contactId}/set-primary`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
       setSettingPrimaryId(null);
     },
     onError: (error: unknown) => {
@@ -225,14 +225,21 @@ export const CompanyContactsSection: React.FC<{
     setMobileContacts([]);
   }, [pageSize]);
 
+  const mergeContacts = (existing: Contact[], incoming: Contact[]): Contact[] => {
+    const existingIds = new Set(existing.map((item) => item.id));
+    const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
+    return [...existing, ...uniqueIncoming];
+  };
+
   useEffect(() => {
-    if (items.length > 0) {
-      setMobileContacts((prev) => {
-        if (page === 1) return items;
-        const newItems = items.filter((item) => !prev.some((p) => p.id === item.id));
-        return [...prev, ...newItems];
-      });
+    if (items.length === 0) return;
+
+    if (page === 1) {
+      setMobileContacts(items);
+      return;
     }
+
+    setMobileContacts((prev) => mergeContacts(prev, items));
   }, [items, page]);
 
   const table = useReactTable({

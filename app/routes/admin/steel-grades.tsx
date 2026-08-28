@@ -1,14 +1,11 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
-import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -21,6 +18,10 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react';
+
+import { api } from '~/api/api';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/api-error';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
@@ -48,9 +49,127 @@ interface SteelGradeListResponse {
   density: number;
 }
 
+interface SteelGradeTableMeta {
+  onEdit: (grade: SteelGradeListResponse) => void;
+  onDelete: (grade: { id: string; name: string }) => void;
+}
+
 const columnHelper = createColumnHelper<SteelGradeListResponse>();
 
+const columns = [
+  columnHelper.accessor('name', {
+    header: 'Gatunek stali',
+    cell: (info) => <span className="font-medium text-gray-900">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor('standard', {
+    header: 'Norma',
+    cell: (info) => {
+      const val = info.getValue();
+      return val ? (
+        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+          {val}
+        </span>
+      ) : (
+        <span className="text-gray-400 italic">Brak</span>
+      );
+    },
+  }),
+  columnHelper.accessor('density', {
+    header: 'Gęstość',
+    cell: (info) => (
+      <span className="text-gray-700 font-medium">
+        {info.getValue()} <span className="text-gray-500 font-normal text-xs">g/cm³</span>
+      </span>
+    ),
+  }),
+  columnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: (info) => {
+      const grade = info.row.original;
+      const meta = info.table.options.meta as SteelGradeTableMeta;
+
+      return (
+        <div className="flex items-center justify-start gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
+              >
+                <span className="sr-only">Otwórz menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-40 bg-white">
+              <DropdownMenuItem
+                onClick={() => meta.onEdit(grade)}
+                className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+              >
+                <Edit2 className="mr-2 h-4 w-4" />
+                <span>Edytuj</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => meta.onDelete({ id: grade.id, name: grade.name })}
+                className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                <span>Usuń</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+    },
+  }),
+];
+
+const mergeSteelGrades = (
+  existing: SteelGradeListResponse[],
+  incoming: SteelGradeListResponse[],
+): SteelGradeListResponse[] => {
+  const existingIds = new Set(existing.map((item) => item.id));
+  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
+  return [...existing, ...uniqueIncoming];
+};
+
+interface SteelGradeMobileCardProps {
+  readonly item: SteelGradeListResponse;
+  readonly onDelete: (grade: { id: string; name: string }) => void;
+}
+
+const SteelGradeMobileCard = ({ item, onDelete }: SteelGradeMobileCardProps) => (
+  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="flex justify-between items-start mb-2">
+      <p className="text-sm font-bold text-blue-900">{item.name}</p>
+      {item.standard && (
+        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[11px] font-semibold">
+          {item.standard}
+        </span>
+      )}
+    </div>
+    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2 text-gray-600">
+      <span>Gęstość:</span>
+      <span className="font-semibold text-gray-900">{item.density} g/cm³</span>
+    </div>
+    <div className="flex justify-end pt-2 mt-2 border-t border-gray-50">
+      <button
+        type="button"
+        onClick={() => onDelete({ id: item.id, name: item.name })}
+        className="text-xs font-medium text-red-600 hover:text-red-800 flex items-center gap-1"
+      >
+        <Trash2 className="w-3.5 h-3.5" /> Usuń
+      </button>
+    </div>
+  </div>
+);
+
 export default function SteelGradesList() {
+  const queryClient = useQueryClient();
+
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,12 +178,9 @@ export default function SteelGradesList() {
   const [sortDescending, setSortDescending] = useState<boolean>(false);
 
   const [deletingGrade, setDeletingGrade] = useState<{ id: string; name: string } | null>(null);
-
   const [editingGrade, setEditingGrade] = useState<SteelGradeListResponse | null>(null);
-
   const [addingGrade, setAddingGrade] = useState(false);
 
-  const queryClient = useQueryClient();
   const [accumulatedMobileItems, setAccumulatedMobileItems] = useState<SteelGradeListResponse[]>(
     [],
   );
@@ -82,10 +198,10 @@ export default function SteelGradesList() {
         data: { reassignments },
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
-      queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
-      queryClient.invalidateQueries({ queryKey: ['products-list'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
+      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
       setDeletingGrade(null);
     },
   });
@@ -94,9 +210,9 @@ export default function SteelGradesList() {
     mutationFn: async (payload: EditSteelGradePayload) => {
       await api.patch('/steel-grade', payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
-      queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
       setEditingGrade(null);
     },
   });
@@ -105,84 +221,12 @@ export default function SteelGradesList() {
     mutationFn: async (payload: AddSteelGradePayload) => {
       await api.post('/steel-grade', payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
-      queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
       setAddingGrade(false);
     },
   });
-
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('name', {
-        header: 'Gatunek stali',
-        cell: (info) => <span className="font-medium text-gray-900">{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('standard', {
-        header: 'Norma',
-        cell: (info) => {
-          const val = info.getValue();
-          return val ? (
-            <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-              {val}
-            </span>
-          ) : (
-            <span className="text-gray-400 italic">Brak</span>
-          );
-        },
-      }),
-      columnHelper.accessor('density', {
-        header: 'Gęstość',
-        cell: (info) => (
-          <span className="text-gray-700 font-medium">
-            {info.getValue()} <span className="text-gray-500 font-normal text-xs">g/cm³</span>
-          </span>
-        ),
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Akcje',
-        cell: (info) => {
-          const grade = info.row.original;
-          return (
-            <div className="flex items-center justify-start gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
-                  >
-                    <span className="sr-only">Otwórz menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" className="w-40 bg-white">
-                  <DropdownMenuItem
-                    onClick={() => setEditingGrade(grade)}
-                    className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
-                  >
-                    <Edit2 className="mr-2 h-4 w-4" />
-                    <span>Edytuj</span>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    onClick={() => setDeletingGrade({ id: grade.id, name: grade.name })}
-                    className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Usuń</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          );
-        },
-      }),
-    ],
-    [],
-  );
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -231,20 +275,15 @@ export default function SteelGradesList() {
   const totalItems = data?.totalItems || data?.totalCount || desktopItems.length;
 
   useEffect(() => {
-    if (!data?.items) return;
+    const items: SteelGradeListResponse[] = data?.items;
+    if (!items || items.length === 0) return;
 
-    setAccumulatedMobileItems((prev) => {
-      if (pageNumber === 1) return data.items;
+    if (pageNumber === 1 || !isMobileAppend.current) {
+      setAccumulatedMobileItems(items);
+      return;
+    }
 
-      if (isMobileAppend.current) {
-        const newItems = data.items.filter(
-          (newItem: SteelGradeListResponse) => !prev.some((p) => p.id === newItem.id),
-        );
-        return [...prev, ...newItems];
-      }
-
-      return data.items;
-    });
+    setAccumulatedMobileItems((prev) => mergeSteelGrades(prev, items));
   }, [data, pageNumber]);
 
   const handleMobileLoadMore = () => {
@@ -261,6 +300,10 @@ export default function SteelGradesList() {
     data: desktopItems,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      onEdit: (grade) => setEditingGrade(grade),
+      onDelete: (grade) => setDeletingGrade(grade),
+    } satisfies SteelGradeTableMeta,
   });
 
   const errorMessage = isError
@@ -269,6 +312,134 @@ export default function SteelGradesList() {
         'Nie udało się pobrać listy gatunków stali.',
       )
     : null;
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
+          <p className="text-gray-500 font-medium">Ładowanie gatunków stali...</p>
+        </div>
+      );
+    }
+
+    if (desktopItems.length === 0 && !isError) {
+      return (
+        <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-gray-500 font-medium">Brak gatunków stali do wyświetlenia.</p>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="block lg:hidden space-y-4">
+          {accumulatedMobileItems.map((item) => (
+            <SteelGradeMobileCard key={item.id} item={item} onDelete={setDeletingGrade} />
+          ))}
+
+          {pageNumber < totalPages && (
+            <div className="mt-6 flex justify-center pt-2">
+              <Button
+                onClick={handleMobileLoadMore}
+                disabled={isFetching}
+                className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
+              >
+                {isFetching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie danych...
+                  </>
+                ) : (
+                  'Pokaż więcej wyników'
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="hidden lg:block space-y-4">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Pozycji na stronie:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="text-sm text-gray-500">
+              Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
+              {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
+                disabled={pageNumber === 1 || isFetching}
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium text-gray-700 px-2">
+                Strona {pageNumber} z {totalPages}
+              </span>
+              <Button
+                onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
+                disabled={pageNumber === totalPages || isFetching}
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
 
   return (
     <AuthGuard>
@@ -331,151 +502,10 @@ export default function SteelGradesList() {
             </div>
           )}
 
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
-              <p className="text-gray-500 font-medium">Ładowanie gatunków stali...</p>
-            </div>
-          ) : desktopItems.length === 0 && !isError ? (
-            <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-gray-500 font-medium">Brak gatunków stali do wyświetlenia.</p>
-            </div>
-          ) : (
-            <>
-              <div className="block lg:hidden space-y-4">
-                {accumulatedMobileItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-sm font-bold text-blue-900">{item.name}</p>
-                      {item.standard && (
-                        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[11px] font-semibold">
-                          {item.standard}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2 text-gray-600">
-                      <span>Gęstość:</span>
-                      <span className="font-semibold text-gray-900">{item.density} g/cm³</span>
-                    </div>
-                    <div className="flex justify-end pt-2 mt-2 border-t border-gray-50">
-                      <button
-                        type="button"
-                        onClick={() => setDeletingGrade({ id: item.id, name: item.name })}
-                        className="text-xs font-medium text-red-600 hover:text-red-800 flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Usuń
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                {pageNumber < totalPages && (
-                  <div className="mt-6 flex justify-center pt-2">
-                    <Button
-                      onClick={handleMobileLoadMore}
-                      disabled={isFetching}
-                      className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
-                    >
-                      {isFetching ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie danych...
-                        </>
-                      ) : (
-                        'Pokaż więcej wyników'
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="hidden lg:block space-y-4">
-                <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <th
-                              key={header.id}
-                              className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </th>
-                          ))}
-                        </tr>
-                      ))}
-                    </thead>
-                    <tbody>
-                      {table.getRowModel().rows.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Pozycji na stronie:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-
-                  <div className="text-sm text-gray-500">
-                    Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
-                    {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
-                      disabled={pageNumber === 1 || isFetching}
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm font-medium text-gray-700 px-2">
-                      Strona {pageNumber} z {totalPages}
-                    </span>
-                    <Button
-                      onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
-                      disabled={pageNumber === totalPages || isFetching}
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+          {renderContent()}
 
           <DeleteSteelGradeDialog
-            isOpen={!!deletingGrade}
+            isOpen={Boolean(deletingGrade)}
             steelGradeId={deletingGrade?.id}
             steelGradeName={deletingGrade?.name}
             onClose={() => setDeletingGrade(null)}
@@ -491,7 +521,7 @@ export default function SteelGradesList() {
           />
 
           <EditSteelGradeDialog
-            isOpen={!!editingGrade}
+            isOpen={Boolean(editingGrade)}
             initialData={editingGrade}
             onClose={() => setEditingGrade(null)}
             onSave={async (data) => {

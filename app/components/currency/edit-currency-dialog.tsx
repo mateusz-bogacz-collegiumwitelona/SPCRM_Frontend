@@ -17,16 +17,16 @@ export interface EditCurrencyRequestPayload {
 }
 
 interface EditCurrencyDialogProps {
-  currency: {
+  readonly currency: {
     id: string;
     name: string;
     code: string;
     decimalPlace: number;
   } | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (payload: EditCurrencyRequestPayload) => Promise<void>;
-  isLoading: boolean;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: (payload: EditCurrencyRequestPayload) => Promise<void>;
+  readonly isLoading: boolean;
 }
 
 export function EditCurrencyDialog({
@@ -50,7 +50,7 @@ export function EditCurrencyDialog({
     }
   }, [currency]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!currency) return;
 
@@ -80,7 +80,7 @@ export function EditCurrencyDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] bg-white">
+      <DialogContent className="sm:max-w-106.25 bg-white">
         <DialogHeader>
           <DialogTitle className="text-blue-900 text-lg font-semibold">Edytuj walutę</DialogTitle>
         </DialogHeader>
@@ -93,7 +93,9 @@ export function EditCurrencyDialog({
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Kod waluty *</label>
+            <label htmlFor="currency-code" className="block text-xs font-medium text-gray-700 mb-1">
+              Kod waluty *
+            </label>
             <input
               type="text"
               maxLength={3}
@@ -105,7 +107,9 @@ export function EditCurrencyDialog({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Nazwa waluty *</label>
+            <label htmlFor="currency-name" className="block text-xs font-medium text-gray-700 mb-1">
+              Nazwa waluty *
+            </label>
             <input
               type="text"
               value={name}
@@ -116,7 +120,10 @@ export function EditCurrencyDialog({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="currency-decimal-place"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
               Miejsca po przecinku
             </label>
             <input

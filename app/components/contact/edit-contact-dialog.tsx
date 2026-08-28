@@ -11,7 +11,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 export interface EditContactDetailRequest {
   contactDetailId: string | null;
@@ -138,7 +138,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
     setDetails(newDetails);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage(null);
 

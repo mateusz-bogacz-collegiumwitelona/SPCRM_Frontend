@@ -11,7 +11,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, UserCog } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { translateRole } from '~/utils/role-translator';
 
 interface OwnerResponse {
@@ -77,6 +77,81 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
     }
   };
 
+  const renderContent = () => {
+    if (isOwnersLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-4" />
+          <p className="text-gray-500 text-sm">Pobieranie listy pracowników...</p>
+        </div>
+      );
+    }
+
+    if (isOwnersError) {
+      return (
+        <div className="py-8 text-center text-red-500 text-sm font-medium">
+          Nie udało się pobrać listy opiekunów. Spróbuj ponownie później.
+        </div>
+      );
+    }
+
+    return (
+      <form onSubmit={handleSubmit} className="space-y-6 pt-4 pb-2">
+        {errorMessage && (
+          <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <p>{errorMessage}</p>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <label htmlFor="new-contact-owner" className="text-sm font-medium text-gray-700">
+            Wybierz nowego opiekuna *
+          </label>
+          <select
+            id="new-contact-owner"
+            value={selectedOwnerId}
+            onChange={(e) => setSelectedOwnerId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+            required
+          >
+            <option value="" disabled>
+              -- Wybierz pracownika --
+            </option>
+            {owners.map((owner) => (
+              <option key={owner.id} value={owner.id}>
+                {owner.firstName} {owner.lastName} ({translateRole(owner.role)})
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Nowy opiekun uzyska pełny dostęp do zarządzania tym kontaktem.
+          </p>
+        </div>
+
+        <DialogFooter className="border-t border-gray-100 pt-4 mt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+            className="text-gray-700 border-gray-300"
+          >
+            Anuluj
+          </Button>
+          <Button
+            type="submit"
+            disabled={isLoading || !selectedOwnerId}
+            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+          >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Zapisz zmiany
+          </Button>
+        </DialogFooter>
+      </form>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && onClose()}>
       <DialogContent className="sm:max-w-112.5">
@@ -89,67 +164,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
           </DialogTitle>
         </DialogHeader>
 
-        {isOwnersLoading ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-4" />
-            <p className="text-gray-500 text-sm">Pobieranie listy pracowników...</p>
-          </div>
-        ) : isOwnersError ? (
-          <div className="py-8 text-center text-red-500 text-sm font-medium">
-            Nie udało się pobrać listy opiekunów. Spróbuj ponownie później.
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6 pt-4 pb-2">
-            {errorMessage && (
-              <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <p>{errorMessage}</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Wybierz nowego opiekuna *</label>
-              <select
-                value={selectedOwnerId}
-                onChange={(e) => setSelectedOwnerId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
-                required
-              >
-                <option value="" disabled>
-                  -- Wybierz pracownika --
-                </option>
-                {owners.map((owner) => (
-                  <option key={owner.id} value={owner.id}>
-                    {owner.firstName} {owner.lastName} ({translateRole(owner.role)})
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Nowy opiekun uzyska pełny dostęp do zarządzania tym kontaktem.
-              </p>
-            </div>
-
-            <DialogFooter className="border-t border-gray-100 pt-4 mt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isLoading}
-                className="text-gray-700 border-gray-300"
-              >
-                Anuluj
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading || !selectedOwnerId}
-                className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
-              >
-                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Zapisz zmiany
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+        {renderContent()}
       </DialogContent>
     </Dialog>
   );

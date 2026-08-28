@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -50,6 +50,49 @@ interface PromotionResponse {
   isActive: boolean;
 }
 
+const parseIsActiveFilter = (filterValue: string): boolean | undefined => {
+  if (filterValue === 'true') return true;
+  if (filterValue === 'false') return false;
+  return undefined;
+};
+
+const formatDateRangeLabel = (dateRange?: DateRange) => {
+  if (!dateRange?.from) {
+    return <span>Wybierz zakres dat</span>;
+  }
+  if (dateRange.to) {
+    return (
+      <span className="truncate">
+        {format(dateRange.from, 'dd.MM.yyyy')} - {format(dateRange.to, 'dd.MM.yyyy')}
+      </span>
+    );
+  }
+  return <span>{format(dateRange.from, 'dd.MM.yyyy')}</span>;
+};
+
+const formatDiscountOrPrice = (promo: PromotionResponse): React.ReactNode => {
+  if (typeof promo.discountPercentage === 'number') {
+    return <span className="text-red-600">-{promo.discountPercentage}%</span>;
+  }
+  if (typeof promo.promotionalPrice === 'number') {
+    return formatCurrency(
+      promo.promotionalPrice,
+      promo.promotionalPriceCode || 'PLN',
+      promo.promotionalPriceDecimalPlace ?? 2,
+    );
+  }
+  return '-';
+};
+
+const mergePromotions = (
+  existing: PromotionResponse[],
+  incoming: PromotionResponse[],
+): PromotionResponse[] => {
+  const existingIds = new Set(existing.map((item) => item.id));
+  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
+  return [...existing, ...uniqueIncoming];
+};
+
 const columnHelper = createColumnHelper<PromotionResponse>();
 
 const columns = [
@@ -63,16 +106,17 @@ const columns = [
     cell: (info) => {
       const row = info.row.original;
 
-      if (row.discountPercentage != null) {
+      if (typeof row.discountPercentage === 'number') {
         return (
           <span className="bg-red-50 text-red-700 px-2 py-1 rounded text-xs font-semibold">
             -{row.discountPercentage}%
           </span>
         );
-      } else if (row.promotionalPrice != null) {
+      }
+
+      if (typeof row.promotionalPrice === 'number') {
         const currencyCode = row.promotionalPriceCode || 'PLN';
         const decimals = row.promotionalPriceDecimalPlace ?? 2;
-
         const formattedPrice = formatCurrency(row.promotionalPrice, currencyCode, decimals);
 
         return <span className="font-medium text-green-700">{formattedPrice}</span>;
@@ -86,7 +130,7 @@ const columns = [
     header: 'Okres trwania',
     cell: (info) => {
       const { startDate, endDate } = info.row.original;
-      const isExpired = endDate && new Date(endDate) < new Date();
+      const isExpired = Boolean(endDate && new Date(endDate) < new Date());
 
       const start = startDate
         ? format(new Date(startDate), 'dd.MM.yyyy', { locale: pl })
@@ -120,16 +164,47 @@ const columns = [
   columnHelper.display({
     id: 'actions',
     header: 'Akcje',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <Link to={`/promotion/${row.id}`} className="font-medium text-blue-900 hover:underline">
-          Szczegóły
-        </Link>
-      );
-    },
+    cell: (info) => (
+      <Link
+        to={`/promotion/${info.row.original.id}`}
+        className="font-medium text-blue-900 hover:underline"
+      >
+        Szczegóły
+      </Link>
+    ),
   }),
 ];
+
+interface PromotionMobileCardProps {
+  readonly promo: PromotionResponse;
+}
+
+const PromotionMobileCard = ({ promo }: PromotionMobileCardProps) => (
+  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="mb-2 flex justify-between items-start">
+      <div>
+        <p className="text-sm font-bold text-blue-900">{promo.name}</p>
+      </div>
+      {promo.isActive ? (
+        <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0">
+          Aktywna
+        </span>
+      ) : (
+        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0">
+          Zakończona
+        </span>
+      )}
+    </div>
+    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
+      <div className="text-gray-700 font-medium">{formatDiscountOrPrice(promo)}</div>
+      <div className="text-xs text-gray-500">
+        {promo.startDate ? format(new Date(promo.startDate), 'dd.MM.yyyy') : 'Od zawsze'}
+        {' - '}
+        {promo.endDate ? format(new Date(promo.endDate), 'dd.MM.yyyy') : 'Bezterminowo'}
+      </div>
+    </div>
+  </div>
+);
 
 export default function PromotionsList() {
   const { user } = useAuth();
@@ -143,7 +218,7 @@ export default function PromotionsList() {
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortBy, setSortBy] = useState<string>('enddate');
+  const [sortBy, setSortBy] = useState<string>('endDate');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
 
   const [showFilters, setShowFilters] = useState(false);
@@ -178,9 +253,7 @@ export default function PromotionsList() {
   const isMobileAppend = useRef(false);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -222,18 +295,17 @@ export default function PromotionsList() {
         SearchTerm: debouncedSearch || undefined,
         SortBy: sortBy,
         SortDescending: sortDescending,
-        IsActive: isActiveFilter === 'true' ? true : isActiveFilter === 'false' ? false : undefined,
-
+        IsActive: parseIsActiveFilter(isActiveFilter),
         FromDate: debouncedFilters.date?.from
           ? format(debouncedFilters.date.from, 'yyyy-MM-dd')
           : undefined,
         ToDate: debouncedFilters.date?.to
           ? format(debouncedFilters.date.to, 'yyyy-MM-dd')
           : undefined,
-        DiscountPrecentageFrom: debouncedFilters.discountFrom
+        DiscountPercentageFrom: debouncedFilters.discountFrom
           ? Number(debouncedFilters.discountFrom)
           : undefined,
-        DiscountPrecentageTo: debouncedFilters.discountTo
+        DiscountPercentageTo: debouncedFilters.discountTo
           ? Number(debouncedFilters.discountTo)
           : undefined,
         PromotionPriceFrom: debouncedFilters.priceFrom
@@ -255,8 +327,8 @@ export default function PromotionsList() {
       const res = await api.post('/promotion', payload);
       return res.data?.data;
     },
-    onSuccess: (newPromotionId) => {
-      queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+    onSuccess: async (newPromotionId) => {
+      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       setIsAddOpen(false);
       if (newPromotionId) {
         navigate(`/promotion/${newPromotionId}`);
@@ -278,20 +350,15 @@ export default function PromotionsList() {
   const totalItems = data?.totalItems || data?.totalCount || desktopPromotions.length;
 
   useEffect(() => {
-    if (!data?.items) return;
+    const items: PromotionResponse[] = data?.items;
+    if (!items || items.length === 0) return;
 
-    setAccumulatedMobilePromotions((prev) => {
-      if (pageNumber === 1) return data.items;
+    if (pageNumber === 1 || !isMobileAppend.current) {
+      setAccumulatedMobilePromotions(items);
+      return;
+    }
 
-      if (isMobileAppend.current) {
-        const newItems = data.items.filter(
-          (newItem: PromotionResponse) => !prev.some((p) => p.id === newItem.id),
-        );
-        return [...prev, ...newItems];
-      }
-
-      return data.items;
-    });
+    setAccumulatedMobilePromotions((prev) => mergePromotions(prev, items));
   }, [data, pageNumber]);
 
   const handleMobileLoadMore = () => {
@@ -318,13 +385,145 @@ export default function PromotionsList() {
     : null;
 
   const isAnyFilterActive =
-    isActiveFilter !== 'true' ||
-    !!date?.from ||
-    !!date?.to ||
-    !!discountFrom ||
-    !!discountTo ||
-    !!priceFrom ||
-    !!priceTo;
+    isActiveFilter === 'false' ||
+    isActiveFilter === '' ||
+    Boolean(date?.from) ||
+    Boolean(date?.to) ||
+    Boolean(discountFrom) ||
+    Boolean(discountTo) ||
+    Boolean(priceFrom) ||
+    Boolean(priceTo);
+
+  const renderPromotionsContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
+          <p className="text-gray-500 font-medium">Ładowanie promocji...</p>
+        </div>
+      );
+    }
+
+    if (!desktopPromotions || (desktopPromotions.length === 0 && !isError)) {
+      return (
+        <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <p className="text-gray-500 font-medium">Brak promocji do wyświetlenia.</p>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="block lg:hidden space-y-4">
+          {accumulatedMobilePromotions.map((promo) => (
+            <PromotionMobileCard key={promo.id} promo={promo} />
+          ))}
+
+          {pageNumber < totalPages && (
+            <div className="mt-6 flex justify-center pt-2">
+              <Button
+                type="button"
+                onClick={handleMobileLoadMore}
+                disabled={isFetching}
+                className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
+              >
+                {isFetching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie danych...
+                  </>
+                ) : (
+                  'Pokaż więcej wyników'
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="hidden lg:block space-y-4">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Pozycji na stronie:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="text-sm text-gray-500">
+              Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
+              {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
+                disabled={pageNumber === 1 || isFetching}
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium text-gray-700 px-2">
+                Strona {pageNumber} z {totalPages}
+              </span>
+              <Button
+                type="button"
+                onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
+                disabled={pageNumber === totalPages || isFetching}
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
 
   return (
     <AuthGuard>
@@ -334,6 +533,7 @@ export default function PromotionsList() {
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Promocje</h1>
             {canManage && (
               <Button
+                type="button"
                 onClick={() => setIsAddOpen(true)}
                 className="bg-white text-blue-900 hover:bg-gray-100 flex items-center gap-2 font-medium"
               >
@@ -362,12 +562,13 @@ export default function PromotionsList() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
-                  <option value="enddate">Zakończenia</option>
+                  <option value="endDate">Zakończenia</option>
                   <option value="name">Nazwa</option>
                   <option value="discountpercentage">Wysokość rabatu</option>
                 </select>
 
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setSortDescending(!sortDescending)}
                   className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3"
@@ -381,6 +582,7 @@ export default function PromotionsList() {
 
                 <div className="relative">
                   <Button
+                    type="button"
                     variant="outline"
                     onClick={() => setShowFilters(!showFilters)}
                     className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -389,8 +591,8 @@ export default function PromotionsList() {
                     <span>Filtry</span>
                     {isAnyFilterActive && (
                       <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
                       </span>
                     )}
                   </Button>
@@ -401,10 +603,14 @@ export default function PromotionsList() {
 
                       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
                         <div className="flex flex-col">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="promo-status-filter"
+                            className="block text-xs font-medium text-gray-700 mb-1"
+                          >
                             Status promocji
                           </label>
                           <select
+                            id="promo-status-filter"
                             value={isActiveFilter}
                             onChange={(e) => setIsActiveFilter(e.target.value)}
                             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
@@ -416,13 +622,17 @@ export default function PromotionsList() {
                         </div>
 
                         <div className="flex flex-col">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="promo-date-filter"
+                            className="block text-xs font-medium text-gray-700 mb-1"
+                          >
                             Okres trwania promocji
                           </label>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
-                                id="date"
+                                id="promo-date-filter"
+                                type="button"
                                 variant="outline"
                                 className={cn(
                                   'w-full justify-start text-left font-normal border-gray-300 text-sm py-2 h-auto',
@@ -430,18 +640,7 @@ export default function PromotionsList() {
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                                {date?.from ? (
-                                  date.to ? (
-                                    <span className="truncate">
-                                      {format(date.from, 'dd.MM.yyyy')} -{' '}
-                                      {format(date.to, 'dd.MM.yyyy')}
-                                    </span>
-                                  ) : (
-                                    <span>{format(date.from, 'dd.MM.yyyy')}</span>
-                                  )
-                                ) : (
-                                  <span>Wybierz zakres dat</span>
-                                )}
+                                {formatDateRangeLabel(date)}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent
@@ -461,11 +660,15 @@ export default function PromotionsList() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-2">
+                          <label
+                            htmlFor="discount-from"
+                            className="block text-xs font-medium text-gray-700 mb-2"
+                          >
                             Zniżka procentowa (%)
                           </label>
                           <div className="flex items-center gap-2">
                             <input
+                              id="discount-from"
                               type="number"
                               min="0"
                               max="100"
@@ -476,6 +679,7 @@ export default function PromotionsList() {
                             />
                             <span className="text-gray-400">-</span>
                             <input
+                              id="discount-to"
                               type="number"
                               min="0"
                               max="100"
@@ -488,11 +692,15 @@ export default function PromotionsList() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-2">
+                          <label
+                            htmlFor="price-from"
+                            className="block text-xs font-medium text-gray-700 mb-2"
+                          >
                             Cena promocyjna
                           </label>
                           <div className="flex items-center gap-2">
                             <input
+                              id="price-from"
                               type="number"
                               min="0"
                               placeholder="Od"
@@ -502,6 +710,7 @@ export default function PromotionsList() {
                             />
                             <span className="text-gray-400">-</span>
                             <input
+                              id="price-to"
                               type="number"
                               min="0"
                               placeholder="Do"
@@ -529,6 +738,7 @@ export default function PromotionsList() {
                           Zresetuj
                         </button>
                         <Button
+                          type="button"
                           size="sm"
                           onClick={() => setShowFilters(false)}
                           className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
@@ -550,167 +760,7 @@ export default function PromotionsList() {
             </div>
           )}
 
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
-              <p className="text-gray-500 font-medium">Ładowanie promocji...</p>
-            </div>
-          ) : desktopPromotions.length === 0 && !isError ? (
-            <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-gray-500 font-medium">Brak promocji do wyświetlenia.</p>
-            </div>
-          ) : (
-            <>
-              <div className="block lg:hidden space-y-4">
-                {accumulatedMobilePromotions.map((promo) => {
-                  return (
-                    <div
-                      key={promo.id}
-                      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-                    >
-                      <div className="mb-2 flex justify-between items-start">
-                        <div>
-                          <p className="text-sm font-bold text-blue-900">{promo.name}</p>
-                        </div>
-                        {promo.isActive ? (
-                          <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0">
-                            Aktywna
-                          </span>
-                        ) : (
-                          <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0">
-                            Zakończona
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
-                        <div className="text-gray-700 font-medium">
-                          {promo.discountPercentage != null ? (
-                            <span className="text-red-600">-{promo.discountPercentage}%</span>
-                          ) : promo.promotionalPrice != null ? (
-                            formatCurrency(
-                              promo.promotionalPrice,
-                              promo.promotionalPriceCode || 'PLN',
-                              promo.promotionalPriceDecimalPlace ?? 2,
-                            )
-                          ) : (
-                            '-'
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {promo.startDate
-                            ? format(new Date(promo.startDate), 'dd.MM.yyyy')
-                            : 'Od zawsze'}
-                          {' - '}
-                          {promo.endDate
-                            ? format(new Date(promo.endDate), 'dd.MM.yyyy')
-                            : 'Bezterminowo'}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {pageNumber < totalPages && (
-                  <div className="mt-6 flex justify-center pt-2">
-                    <Button
-                      onClick={handleMobileLoadMore}
-                      disabled={isFetching}
-                      className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
-                    >
-                      {isFetching ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie danych...
-                        </>
-                      ) : (
-                        'Pokaż więcej wyników'
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div className="hidden lg:block space-y-4">
-                <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
-                  <table className="w-full">
-                    <thead className="bg-gray-50">
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <th
-                              key={header.id}
-                              className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </th>
-                          ))}
-                        </tr>
-                      ))}
-                    </thead>
-                    <tbody>
-                      {table.getRowModel().rows.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Pozycji na stronie:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-
-                  <div className="text-sm text-gray-500">
-                    Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
-                    {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
-                      disabled={pageNumber === 1 || isFetching}
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm font-medium text-gray-700 px-2">
-                      Strona {pageNumber} z {totalPages}
-                    </span>
-                    <Button
-                      onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
-                      disabled={pageNumber === totalPages || isFetching}
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+          {renderPromotionsContent()}
 
           <AddPromotionDialog
             isOpen={isAddOpen}

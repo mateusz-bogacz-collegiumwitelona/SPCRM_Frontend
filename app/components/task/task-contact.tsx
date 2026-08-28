@@ -5,7 +5,7 @@ import { api } from '~/api/api';
 import { AlertCircle, Building2, User } from 'lucide-react';
 import { Link } from 'react-router';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 interface TaskContactResponse {
   contactId: string;
@@ -16,7 +16,7 @@ interface TaskContactResponse {
   contactWays: ContactWay[];
 }
 
-export const TaskContactDetails = ({ taskId }: { taskId: string }) => {
+export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => {
   const {
     data: contact,
     isLoading,
@@ -47,7 +47,7 @@ export const TaskContactDetails = ({ taskId }: { taskId: string }) => {
     );
   }
 
-  if (isLoading) return <div className="h-48 bg-gray-100 animate-pulse rounded-lg"></div>;
+  if (isLoading) return <div className="h-48 bg-gray-100 animate-pulse rounded-lg" />;
 
   if (!contact) {
     return (
@@ -79,8 +79,8 @@ export const TaskContactDetails = ({ taskId }: { taskId: string }) => {
       </div>
 
       <div className="space-y-2 border-t border-gray-100 pt-3">
-        {contact.contactWays?.map((way: ContactWay, idx: number) => (
-          <div key={idx} className="flex items-center text-sm">
+        {contact.contactWays?.map((way: ContactWay) => (
+          <div key={`${way.type}-${way.value}`} className="flex items-center text-sm">
             {getIcon(way.type)}
 
             <span className="font-medium text-gray-800">

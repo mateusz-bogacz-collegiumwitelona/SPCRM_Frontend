@@ -14,7 +14,7 @@ const TaskDetails: React.FC = () => {
     return (
       <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
         <p className="font-bold">Coś poszło nie tak</p>
-        <p>Nie można wyświetlić danytch notatki</p>
+        <p>Nie można wyświetlić danych notatki</p>
       </div>
     );
   }

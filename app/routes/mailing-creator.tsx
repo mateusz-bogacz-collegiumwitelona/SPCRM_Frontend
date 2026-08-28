@@ -7,7 +7,7 @@ import { Input } from '~/components/ui/input';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 

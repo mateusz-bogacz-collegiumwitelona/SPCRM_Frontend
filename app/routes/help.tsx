@@ -1,50 +1,42 @@
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { Navbar } from '~/components/layout/unloged-navbar';
 import { api } from '~/api/api';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 
+interface SupportFormData {
+  email: string;
+  title: string;
+  message: string;
+}
+
 export default function Help() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SupportFormData>({
     email: '',
     title: '',
     message: '',
   });
 
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMessage('');
-    setIsLoading(true);
-
-    try {
-      const request = await api.post('mailing/support', {
-        email: formData.email,
-        title: formData.title,
-        message: formData.message,
-      });
-
-      const response = request.data;
-
-      if (response.success) {
-        setSuccessMessage('Wiadomość została wysłana pomyślnie. Skontaktujemy się z Tobą wkrótce.');
-        setFormData({ email: '', title: '', message: '' });
-      }
-    } catch (error_: unknown) {
-      const err = error_ as ApiError;
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (payload: SupportFormData) => {
+      const response = await api.post('mailing/support', payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      setSuccessMessage('Wiadomość została wysłana pomyślnie. Skontaktujemy się z Tobą wkrótce.');
+      setErrorMessage(null);
+      setFormData({ email: '', title: '', message: '' });
+    },
+    onError: (error: unknown) => {
+      setSuccessMessage(null);
+      const err = error as ApiError;
       const errorData = err.response?.data;
 
       if (
@@ -53,15 +45,23 @@ export default function Help() {
         errorData.errors.length > 0
       ) {
         const validationMessage = errorData.errors.map((code) => getErrorMessage(code)).join(' ');
-        setError(validationMessage);
+        setErrorMessage(validationMessage);
       } else if (errorData?.errorCode) {
-        setError(getErrorMessage(errorData.errorCode, errorData.message));
+        setErrorMessage(getErrorMessage(errorData.errorCode, errorData.message));
       } else {
-        setError(err.message || 'Wystąpił nieznany błąd.');
+        setErrorMessage(err.message || 'Wystąpił nieznany błąd.');
       }
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    mutate(formData);
   };
 
   const characterCount = formData.message.length;
@@ -90,13 +90,13 @@ export default function Help() {
                   Email
                 </label>
                 <Input
+                  id="email-input"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="example@example.com"
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
-                  sm:h-10 sm:text-[14px] lg:h-11"
+                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                   required
                 />
               </div>
@@ -109,13 +109,13 @@ export default function Help() {
                   Tytuł
                 </label>
                 <Input
+                  id="title-input"
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="Przykładowy tytuł"
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
-                  sm:h-10 sm:text-[14px] lg:h-11"
+                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                   required
                 />
               </div>
@@ -129,12 +129,12 @@ export default function Help() {
                 </label>
                 <div className="relative">
                   <Textarea
+                    id="message-input"
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Przykładowa treść"
-                    className="w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
-                    min-h-50 sm:text-[14px]"
+                    className="w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 min-h-50 sm:text-[14px]"
                     maxLength={maxCharacters}
                     required
                   />
@@ -144,9 +144,9 @@ export default function Help() {
                 </div>
               </div>
 
-              {error && (
+              {errorMessage && (
                 <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700 sm:text-[13px]">
-                  {error}
+                  {errorMessage}
                 </p>
               )}
 
@@ -158,10 +158,10 @@ export default function Help() {
 
               <Button
                 type="submit"
-                className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white
-                hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11"
+                disabled={isPending}
+                className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11"
               >
-                Wyślij
+                {isPending ? 'Wysyłanie...' : 'Wyślij'}
               </Button>
             </form>
           </div>

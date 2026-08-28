@@ -9,7 +9,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 
@@ -125,14 +125,22 @@ export const CompanyDebtsSection: React.FC<{
     setPage(1);
   }, [pageSize]);
 
+  const mergeDebts = (existing: Debt[], incoming: Debt[]): Debt[] => {
+    const existingIds = new Set(existing.map((debt) => debt.id));
+    const uniqueIncoming = incoming.filter((debt) => !existingIds.has(debt.id));
+    return [...existing, ...uniqueIncoming];
+  };
+
   useEffect(() => {
-    if (!debtsRes?.items) return;
-    setMobileDebts((prev) => {
-      if (page === 1) return debtsRes.items;
-      return isMobileAppend.current
-        ? [...prev, ...debtsRes.items.filter((n: Debt) => !prev.some((p) => p.id === n.id))]
-        : debtsRes.items;
-    });
+    const newItems: Debt[] = debtsRes?.items;
+    if (!newItems) return;
+
+    if (page === 1 || !isMobileAppend.current) {
+      setMobileDebts(newItems);
+      return;
+    }
+
+    setMobileDebts((prev) => mergeDebts(prev, newItems));
   }, [debtsRes, page]);
 
   const table = useReactTable({ data: items, columns, getCoreRowModel: getCoreRowModel() });
@@ -147,6 +155,38 @@ export const CompanyDebtsSection: React.FC<{
       )
     : null;
 
+  const renderSummaryContent = () => {
+    if (isSummaryLoading) {
+      return <div className="h-24 bg-gray-100 rounded-lg animate-pulse" />;
+    }
+
+    if (summary.length === 0) {
+      return (
+        <div className="p-4 text-green-700 bg-green-50 border border-green-200 rounded-lg text-sm font-medium">
+          Brak zaległych płatności. Wszystkie faktury tej firmy są opłacone.
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {summary.map((item: DebtSummary) => (
+          <div
+            key={item.currencyCode}
+            className="bg-white p-4 border border-red-200 rounded-lg shadow-sm border-l-4 border-l-red-500"
+          >
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+              Suma zadłużenia ({item.currencyCode})
+            </p>
+            <p className="text-2xl font-bold text-red-600">
+              {formatCurrency(item.totalAmount, item.currencyCode, item.decimalPlace)}
+            </p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="mb-10 flex flex-col gap-6">
       <div className="border-b pb-3">
@@ -160,30 +200,7 @@ export const CompanyDebtsSection: React.FC<{
         </div>
       )}
 
-      {isSummaryLoading ? (
-        <div className="h-24 bg-gray-100 rounded-lg animate-pulse" />
-      ) : summary.length === 0 ? (
-        <div className="p-4 text-green-700 bg-green-50 border border-green-200 rounded-lg text-sm font-medium">
-          Brak zaległych płatności. Wszystkie faktury tej firmy są opłacone.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {' '}
-          {summary.map((item: DebtSummary) => (
-            <div
-              key={item.currencyCode}
-              className="bg-white p-4 border border-red-200 rounded-lg shadow-sm border-l-4 border-l-red-500"
-            >
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Suma zadłużenia ({item.currencyCode})
-              </p>
-              <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(item.totalAmount, item.currencyCode, item.decimalPlace)}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      {renderSummaryContent()}
 
       {items.length > 0 && (
         <>
@@ -231,7 +248,6 @@ export const CompanyDebtsSection: React.FC<{
           </div>
 
           <div className="hidden xl:flex bg-white border border-gray-200 rounded-lg shadow-sm flex-col">
-            {' '}
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-gray-50">

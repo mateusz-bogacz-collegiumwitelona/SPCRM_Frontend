@@ -91,9 +91,8 @@ export function NavigationBar({
         })}
       </nav>
 
-      <aside
+      <nav
         className={`hidden md:flex fixed left-0 top-0 bottom-0 ${desktopWidthClassName} bg-[#004a8f] flex-col items-center justify-start pt-6 px-2.5 gap-2 z-40 ${desktopClassName}`}
-        role="navigation"
         aria-label="Desktop navigation"
       >
         {defaultNavItems.map((item) => {
@@ -125,7 +124,7 @@ export function NavigationBar({
             </Link>
           );
         })}
-      </aside>
+      </nav>
 
       <div className={`hidden md:block ${spacerWidthClassName} shrink-0 ${spacerClassName}`} />
     </>

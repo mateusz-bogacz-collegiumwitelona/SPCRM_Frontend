@@ -11,7 +11,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 
 interface Sale {
@@ -186,14 +186,21 @@ export const CompanySalesSection: React.FC<{
     setMobileSales([]);
   }, [pageSize]);
 
+  const mergeSales = (existing: Sale[], incoming: Sale[]): Sale[] => {
+    const existingIds = new Set(existing.map((s) => s.id));
+    const uniqueIncoming = incoming.filter((s) => !existingIds.has(s.id));
+    return [...existing, ...uniqueIncoming];
+  };
+
   useEffect(() => {
-    if (items.length > 0) {
-      setMobileSales((prev) => {
-        if (page === 1) return items;
-        const newItems = items.filter((item) => !prev.some((p) => p.id === item.id));
-        return [...prev, ...newItems];
-      });
+    if (items.length === 0) return;
+
+    if (page === 1) {
+      setMobileSales(items);
+      return;
     }
+
+    setMobileSales((prev) => mergeSales(prev, items));
   }, [items, page]);
 
   const table = useReactTable({

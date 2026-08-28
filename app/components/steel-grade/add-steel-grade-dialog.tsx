@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import {
   Dialog,
@@ -42,7 +42,7 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
     setErrorMessage(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -99,7 +99,9 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
           )}
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Nazwa gatunku *</label>
+            <label htmlFor="steel-grade-name" className="text-sm font-medium text-gray-700">
+              Nazwa gatunku *
+            </label>
             <input
               type="text"
               value={name}
@@ -111,7 +113,9 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Norma</label>
+            <label htmlFor="steel-grade-standard" className="text-sm font-medium text-gray-700">
+              Norma
+            </label>
             <input
               type="text"
               value={standard}
@@ -122,7 +126,9 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Gęstość (g/cm³)</label>
+            <label htmlFor="steel-grade-density" className="text-sm font-medium text-gray-700">
+              Gęstość (g/cm³)
+            </label>
             <input
               type="number"
               step="0.01"

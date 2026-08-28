@@ -24,7 +24,7 @@ export const NoteAddDialog: React.FC<NodeAddDialogProps> = ({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
 

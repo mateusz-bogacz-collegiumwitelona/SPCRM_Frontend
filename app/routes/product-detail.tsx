@@ -7,7 +7,7 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AlertCircle, ArrowLeft, Banknote, Box, Loader2, Scale } from 'lucide-react';
 import { AuthGuard } from '~/lib/auth-guard';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { formatCurrency, formatWeight } from '~/utils/data-formatters';
 
 interface ActivePromotionResponse {

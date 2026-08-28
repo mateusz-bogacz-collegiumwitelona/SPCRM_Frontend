@@ -11,7 +11,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 export interface EditProductRequest {
   productId: string;
@@ -103,7 +103,7 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
       setThickness(productData.thickness ?? 0);
       setWidth(productData.width ?? 0);
       setLength(productData.length ?? 0);
-      setDiameter(productData.diameter != null ? productData.diameter : '');
+      setDiameter(productData.diameter ?? '');
       setWeight(productData.weight ?? 0);
       setUnitId(productData.unitId ?? '');
       setCurrencyId(productData.currencyId ?? '');
@@ -164,7 +164,7 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
   const isDiameterRequired = category === 'Pipe' || category === 'Wire';
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!productId) return;
@@ -229,7 +229,9 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Nazwa produktu *</label>
+                <label htmlFor="product-name" className="text-sm font-medium text-gray-700">
+                  Nazwa produktu *
+                </label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -239,7 +241,9 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Gatunek stali *</label>
+                <label htmlFor="product-steel-grade" className="text-sm font-medium text-gray-700">
+                  Gatunek stali *
+                </label>
                 <select
                   value={steelGradeId}
                   onChange={(e) => setSteelGradeId(e.target.value)}
@@ -258,7 +262,9 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Kategoria *</label>
+                <label htmlFor="product-category" className="text-sm font-medium text-gray-700">
+                  Kategoria *
+                </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -277,7 +283,12 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Jednostka miary *</label>
+                <label
+                  htmlFor="product-unit-of-mesure"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Jednostka miary *
+                </label>
                 <select
                   value={unitId}
                   onChange={(e) => setUnitId(e.target.value)}
@@ -296,7 +307,9 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Grubość (mm)</label>
+                <label htmlFor="product-thikness" className="text-sm font-medium text-gray-700">
+                  Grubość (mm)
+                </label>
                 <input
                   type="number"
                   step="any"
@@ -307,7 +320,9 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Szerokość (mm)</label>
+                <label htmlFor="product-width" className="text-sm font-medium text-gray-700">
+                  Szerokość (mm)
+                </label>
                 <input
                   type="number"
                   step="any"
@@ -318,7 +333,9 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Długość (mm)</label>
+                <label htmlFor="product-lenght" className="text-sm font-medium text-gray-700">
+                  Długość (mm)
+                </label>
                 <input
                   type="number"
                   step="any"
@@ -348,7 +365,9 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Waga (kg)</label>
+                <label htmlFor="product-weight" className="text-sm font-medium text-gray-700">
+                  Waga (kg)
+                </label>
                 <input
                   type="number"
                   step="any"
@@ -359,7 +378,12 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Cena i Waluta *</label>
+                <label
+                  htmlFor="product-price-per-unit"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Cena i Waluta *
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="number"
@@ -388,7 +412,12 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Ilość na stanie</label>
+                <label
+                  htmlFor="product-stock-quantity"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Ilość na stanie
+                </label>
                 <input
                   type="number"
                   value={stockQuantity}

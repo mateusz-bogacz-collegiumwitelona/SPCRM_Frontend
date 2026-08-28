@@ -11,7 +11,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 export interface AddProductRequest {
   name: string;
@@ -132,7 +132,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
     setErrorMessage(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!name.trim() || !steelGradeId || !category || !unitId || !currencyId) {
@@ -194,7 +194,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Nazwa produktu *</label>
+              <label htmlFor="product-name" className="text-sm font-medium text-gray-700">
+                Nazwa produktu *
+              </label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -204,7 +206,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Gatunek stali *</label>
+              <label htmlFor="product-steel-grade" className="text-sm font-medium text-gray-700">
+                Gatunek stali *
+              </label>
               <select
                 value={steelGradeId}
                 onChange={(e) => setSteelGradeId(e.target.value)}
@@ -223,7 +227,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Kategoria *</label>
+              <label htmlFor="product-category" className="text-sm font-medium text-gray-700">
+                Kategoria *
+              </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -242,7 +248,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Jednostka miary *</label>
+              <label htmlFor="product-unit-of-mesure" className="text-sm font-medium text-gray-700">
+                Jednostka miary *
+              </label>
               <select
                 value={unitId}
                 onChange={(e) => setUnitId(e.target.value)}
@@ -261,7 +269,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Grubość (mm)</label>
+              <label htmlFor="product-thikness" className="text-sm font-medium text-gray-700">
+                Grubość (mm)
+              </label>
               <input
                 type="number"
                 step="any"
@@ -272,7 +282,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Szerokość (mm)</label>
+              <label htmlFor="product-width" className="text-sm font-medium text-gray-700">
+                Szerokość (mm)
+              </label>
               <input
                 type="number"
                 step="any"
@@ -283,7 +295,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Długość (mm)</label>
+              <label htmlFor="product-lenght" className="text-sm font-medium text-gray-700">
+                Długość (mm)
+              </label>
               <input
                 type="number"
                 step="any"
@@ -294,7 +308,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">
+              <label htmlFor="product-diameter" className="text-sm font-medium text-gray-700">
                 Średnica (mm) - opcjonalnie
               </label>
               <input
@@ -307,7 +321,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Waga (kg)</label>
+              <label htmlFor="product-weight" className="text-sm font-medium text-gray-700">
+                Waga (kg)
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -318,7 +334,12 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Cena i Waluta *</label>
+              <label
+                htmlFor="product-price-and-currency"
+                className="text-sm font-medium text-gray-700"
+              >
+                Cena i Waluta *
+              </label>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -348,7 +369,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
-              <label className="text-sm font-medium text-gray-700">Ilość na stanie</label>
+              <label htmlFor="product-stage-quantity" className="text-sm font-medium text-gray-700">
+                Ilość na stanie
+              </label>
               <input
                 type="number"
                 step="any"

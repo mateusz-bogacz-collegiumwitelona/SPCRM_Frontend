@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,

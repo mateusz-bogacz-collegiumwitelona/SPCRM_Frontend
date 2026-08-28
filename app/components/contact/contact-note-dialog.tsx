@@ -23,7 +23,7 @@ export const ContactNoteDialog: React.FC<ContactNoteDialogProps> = ({ note, isOp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-[85vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-100 pb-3">
           <DialogTitle className="text-xl font-normal text-blue-900 leading-tight">
             {note.title}

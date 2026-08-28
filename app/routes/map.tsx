@@ -4,7 +4,7 @@ import { MapPinned, Search } from 'lucide-react';
 
 import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { RoleGuard } from '~/lib/role-guard';
 import { MainLayout } from '~/components/layout/main-layout';

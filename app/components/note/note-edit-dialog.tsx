@@ -44,7 +44,7 @@ export const NoteEditDialog: React.FC<NoteEditDialogProps> = ({
   const isContentValid = content.trim().length > 0 && content.trim().length <= 500;
   const isFormValid = isTitleValid && isContentValid && !isSubmitting;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isFormValid) return;
 

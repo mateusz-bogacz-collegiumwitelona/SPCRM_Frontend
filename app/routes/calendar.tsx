@@ -5,7 +5,7 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
 import { AlertCircle, Filter, Loader2 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -43,8 +43,8 @@ export default function CalendarPage() {
   } = useQuery({
     queryKey: [
       'calendar-tasks',
-      dateRange ? format(dateRange.start, 'yyyy-MM-dd') : null,
-      dateRange ? format(dateRange.end, 'yyyy-MM-dd') : null,
+      dateRange?.start ? format(dateRange.start, 'yyyy-MM-dd') : null,
+      dateRange?.end ? format(dateRange.end, 'yyyy-MM-dd') : null,
       statusFilter,
       priorityFilter,
     ],
@@ -81,7 +81,7 @@ export default function CalendarPage() {
     staleTime: Infinity,
   });
 
-  const calendarEvents = (tasks || []).map((task) => {
+  const calendarEvents = (tasks ?? []).map((task) => {
     let bgColor = '#3b82f6';
 
     if (task.status === 'Complete' || task.status === 'Zakończona') {
@@ -121,11 +121,16 @@ export default function CalendarPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500 w-16 sm:w-auto">Status:</label>
+                <label
+                  htmlFor="calendar-status-filter"
+                  className="text-xs text-gray-500 w-16 sm:w-auto"
+                >
+                  Status:
+                </label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
                   <option value="">Wszystkie</option>
                   {dictionaries?.statuses?.map((s: { value: string; label: string }) => (
@@ -137,11 +142,16 @@ export default function CalendarPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-500 w-16 sm:w-auto">Priorytet:</label>
+                <label
+                  htmlFor="calendat-piority-filter"
+                  className="text-xs text-gray-500 w-16 sm:w-auto"
+                >
+                  Priorytet:
+                </label>
                 <select
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
-                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700"
+                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
                   <option value="">Wszystkie</option>
                   {dictionaries?.priorities?.map((p: { value: string; label: string }) => (
@@ -183,9 +193,8 @@ export default function CalendarPage() {
                 datesSet={(dateInfo) => {
                   setDateRange((prev) => {
                     if (
-                      prev &&
-                      prev.start.getTime() === dateInfo.start.getTime() &&
-                      prev.end.getTime() === dateInfo.end.getTime()
+                      prev?.start.getTime() === dateInfo.start.getTime() &&
+                      prev?.end.getTime() === dateInfo.end.getTime()
                     ) {
                       return prev;
                     }

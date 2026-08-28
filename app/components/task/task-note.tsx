@@ -10,7 +10,7 @@ import { NoteAddDialog } from '~/components/note/note-add-dialog';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
 import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 export const TaskNote = ({ taskId }: { taskId: string }) => {
   const queryClient = useQueryClient();
@@ -33,8 +33,8 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
   });
 
   const { mutateAsync: editNoteAsync } = useEditNote({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
       setEditingNote(null);
     },
     onError: (error: unknown) => {
@@ -46,8 +46,8 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
   });
 
   const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
       setIsAddModalOpen(false);
     },
     onError: (error: unknown) => {
@@ -59,8 +59,8 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
   });
 
   const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
       setDeletingNoteId(null);
     },
     onError: (error: unknown) => {

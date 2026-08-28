@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
 import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 export const SaleNote = ({ dealId }: { dealId: string }) => {
   const queryClient = useQueryClient();
@@ -30,8 +30,8 @@ export const SaleNote = ({ dealId }: { dealId: string }) => {
   });
 
   const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
       setIsAddModalOpen(false);
     },
     onError: (error: unknown) => {
@@ -43,8 +43,8 @@ export const SaleNote = ({ dealId }: { dealId: string }) => {
   });
 
   const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
       setDeletingNoteId(null);
     },
     onError: (error: unknown) => {

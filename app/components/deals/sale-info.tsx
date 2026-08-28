@@ -13,7 +13,7 @@ import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
 
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 interface SaleDetailResponse {
   id: string;

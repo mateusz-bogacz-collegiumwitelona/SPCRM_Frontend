@@ -73,8 +73,7 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
     }));
   };
 
-  const allAssigned =
-    associatedProducts.length === 0 || associatedProducts.every((p) => !!reassignments[p.id]);
+  const allAssigned = associatedProducts.every((p) => Boolean(reassignments[p.id]));
 
   const handleConfirm = async () => {
     const payload = Object.entries(reassignments).map(([productId, newSteelGradeId]) => ({
@@ -144,9 +143,9 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
                         value={reassignments[product.id] || ''}
                         onChange={(e) => handleProductGradeChange(product.id, e.target.value)}
                         className={`border rounded px-2 py-1 text-xs bg-white shrink-0 w-48 ${
-                          !reassignments[product.id]
-                            ? 'border-red-300 bg-red-50/20'
-                            : 'border-gray-300'
+                          reassignments[product.id]
+                            ? 'border-gray-300'
+                            : 'border-red-300 bg-red-50/20'
                         }`}
                         required
                       >

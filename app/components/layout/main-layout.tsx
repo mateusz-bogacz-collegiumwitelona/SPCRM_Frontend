@@ -3,11 +3,11 @@ import { Navbar } from '~/components/layout/logged-navbar';
 import { NavigationBar } from '~/components/layout/navigation-bar';
 
 interface MainLayoutProps {
-  children: ReactNode;
-  wrapperClassName?: string;
-  contentClassName?: string;
-  navDesktopWidthClass?: string;
-  navDesktopClassName?: string;
+  readonly children: ReactNode;
+  readonly wrapperClassName?: string;
+  readonly contentClassName?: string;
+  readonly navDesktopWidthClass?: string;
+  readonly navDesktopClassName?: string;
 }
 
 export function MainLayout({

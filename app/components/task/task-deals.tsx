@@ -4,14 +4,14 @@ import { AlertCircle, Briefcase } from 'lucide-react';
 import { Link } from 'react-router';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 
 interface TaskDealResponse {
   dealId: string;
   name: string;
   value: number;
   status: string;
-  colseDate: string;
+  closeDate: string;
   currencyCode: string;
   decimalPlaces: number;
 }

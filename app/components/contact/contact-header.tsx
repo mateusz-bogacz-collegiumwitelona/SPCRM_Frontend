@@ -6,7 +6,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
 import { DeleteContactDialog } from './delete-contact-dialog';
 import { Button } from '~/components/ui/button';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 
 interface ContactBasicInfo {
@@ -44,9 +44,9 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
     mutationFn: async () => {
       return await api.delete(`/contacts/${contactId}`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      await queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
       navigate('/contacts');
     },
     onError: (error: unknown) => {

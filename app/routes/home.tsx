@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { useAuth } from '~/context/auth-context';
 import { Navbar } from '~/components/layout/unloged-navbar';
 import { api } from '~/api/api';
-import type ApiError from '~/interfaces/apiError';
+import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 
 export default function Home() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, user, isLoading } = useAuth();
@@ -31,32 +31,33 @@ export default function Home() {
     }
   }, [isLoading, user, navigate]);
 
-  const handleLogin = async (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-
-    try {
+  const loginMutation = useMutation({
+    mutationFn: async () => {
       const response = await api.post('auth/login', {
         name,
         password,
       });
-
-      if (response.status >= 200 && response.status < 300) {
-        await login();
-      }
-    } catch (error_: unknown) {
-      const err = error_ as ApiError;
-      const errorData = err.response?.data;
+      return response.data;
+    },
+    onSuccess: async () => {
+      setError(null);
+      await login();
+    },
+    onError: (err: unknown) => {
+      const apiError = err as ApiError;
+      const errorData = apiError.response?.data;
 
       if (errorData?.errorCode) {
         setError(getErrorMessage(errorData.errorCode, errorData.message));
       } else {
-        setError(err.message || 'Wystąpił nieznany błąd.');
+        setError(apiError.message || 'Wystąpił nieznany błąd.');
       }
-    } finally {
-      setIsSubmitting(false);
-    }
+    },
+  });
+
+  const handleLogin = (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    loginMutation.mutate();
   };
 
   if (isLoading) {
@@ -72,7 +73,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
-      <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14 ">
+      <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
         <Card className="mx-auto w-full max-w-170 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-20">
           <CardContent className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
             <h1 className="text-center text-[24px] leading-none text-[#004a8f] sm:text-[30px] lg:text-[36px]">
@@ -98,9 +99,7 @@ export default function Home() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   required
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f]
-                  placeholder:text-[#d0d2d6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30
-                  sm:h-10 sm:text-[14px] lg:h-11"
+                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                 />
               </div>
 
@@ -118,15 +117,12 @@ export default function Home() {
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     required
-                    className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 pr-10
-                    text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2
-                    focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
+                    className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 pr-10 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((previous) => !previous)}
-                    className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1
-                    text-[#7f8490] hover:text-[#5c6270] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30"
+                    className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1 text-[#7f8490] hover:text-[#5c6270] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30"
                     aria-label={showPassword ? 'Ukryj haslo' : 'Pokaz haslo'}
                   >
                     {showPassword ? (
@@ -139,16 +135,20 @@ export default function Home() {
               </div>
 
               <div className="flex items-center justify-between gap-4 pt-1 text-[12px] text-[#004a8f] sm:text-[14px]">
-                <label className="inline-flex items-center gap-2">
+                <label className="inline-flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     className="size-5 rounded-[1px] border border-[#d9dce1] accent-[#004a8f]"
                   />
-                  Zapamietaj mnie
+                  <span>Zapamietaj mnie</span>
                 </label>
-                <a href="#" className="hover:underline">
+                <button
+                  type="button"
+                  onClick={() => alert('Skontaktuj się z administratorem, aby zresetować hasło.')}
+                  className="hover:underline bg-transparent border-none p-0 text-[#004a8f] cursor-pointer"
+                >
                   Przypomnij haslo
-                </a>
+                </button>
               </div>
 
               {error && (
@@ -159,11 +159,16 @@ export default function Home() {
 
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white
-                hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11"
+                disabled={loginMutation.isPending}
+                className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11 flex items-center justify-center gap-2"
               >
-                {isSubmitting ? 'Logowanie...' : 'Zaloguj sie'}
+                {loginMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Logowanie...
+                  </>
+                ) : (
+                  'Zaloguj sie'
+                )}
               </Button>
             </form>
           </CardContent>

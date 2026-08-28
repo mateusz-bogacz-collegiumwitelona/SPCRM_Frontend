@@ -22,7 +22,7 @@ export function Navbar() {
 
         {isOpen && (
           <>
-            <div className="fixed inset-0 z-40" onClick={closeMenu} />
+            <button className="fixed inset-0 z-40" onClick={closeMenu} />
 
             <div className="absolute right-0 top-full mt-2 w-56 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 z-50">
               <Link

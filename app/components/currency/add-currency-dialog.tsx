@@ -16,10 +16,10 @@ export interface AddCurrencyRequestPayload {
 }
 
 interface AddCurrencyDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (payload: AddCurrencyRequestPayload) => Promise<void>;
-  isLoading: boolean;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: (payload: AddCurrencyRequestPayload) => Promise<void>;
+  readonly isLoading: boolean;
 }
 
 export function AddCurrencyDialog({ isOpen, onClose, onSave, isLoading }: AddCurrencyDialogProps) {
@@ -36,7 +36,7 @@ export function AddCurrencyDialog({ isOpen, onClose, onSave, isLoading }: AddCur
     onClose();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!name.trim() || !code.trim()) {
@@ -64,7 +64,7 @@ export function AddCurrencyDialog({ isOpen, onClose, onSave, isLoading }: AddCur
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] bg-white">
+      <DialogContent className="sm:max-w-106.25 bg-white">
         <DialogHeader>
           <DialogTitle className="text-blue-900 text-lg font-semibold">
             Dodaj nową walutę
@@ -79,7 +79,7 @@ export function AddCurrencyDialog({ isOpen, onClose, onSave, isLoading }: AddCur
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label htmlFor="currency-code" className="block text-xs font-medium text-gray-700 mb-1">
               Kod waluty (ISO 4217, np. PLN, EUR) *
             </label>
             <input
@@ -94,7 +94,7 @@ export function AddCurrencyDialog({ isOpen, onClose, onSave, isLoading }: AddCur
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label htmlFor="currency-name" className="block text-xs font-medium text-gray-700 mb-1">
               Pełna nazwa waluty *
             </label>
             <input
@@ -108,7 +108,10 @@ export function AddCurrencyDialog({ isOpen, onClose, onSave, isLoading }: AddCur
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="currency-decimal-place"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
               Miejsca po przecinku (0 - 4)
             </label>
             <input
