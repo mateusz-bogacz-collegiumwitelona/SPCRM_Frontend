@@ -12,6 +12,11 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
+import {
+  type ProductFormData,
+  ProductFormFields,
+  useProductFormDictionaries,
+} from '~/components/products/product-form-fields';
 
 export interface EditProductRequest {
   productId: string;
@@ -46,24 +51,27 @@ interface EditProductDetailResponse {
 }
 
 interface EditProductDialogProps {
-  productId: string | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (productData: EditProductRequest) => Promise<void>;
-  isLoading?: boolean;
+  readonly productId: string | null;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: (productData: EditProductRequest) => Promise<void>;
+  readonly isLoading?: boolean;
 }
 
-interface SteelGradeResponse {
-  id: string;
-  name: string;
-}
-
-interface CurrencyResponse {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
+const defaultFormData: ProductFormData = {
+  name: '',
+  steelGradeId: '',
+  thickness: 0,
+  width: 0,
+  length: 0,
+  diameter: '',
+  weight: 0,
+  unitId: '',
+  currencyId: '',
+  pricePerUnit: 0,
+  stockQuantity: 0,
+  category: '',
+};
 
 export const EditProductDialog: React.FC<EditProductDialogProps> = ({
   productId,
@@ -72,19 +80,7 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
   onSave,
   isLoading = false,
 }) => {
-  const [name, setName] = useState('');
-  const [steelGradeId, setSteelGradeId] = useState('');
-  const [thickness, setThickness] = useState<number>(0);
-  const [width, setWidth] = useState<number>(0);
-  const [length, setLength] = useState<number>(0);
-  const [diameter, setDiameter] = useState<number | ''>('');
-  const [weight, setWeight] = useState<number>(0);
-  const [unitId, setUnitId] = useState('');
-  const [currencyId, setCurrencyId] = useState('');
-  const [pricePerUnit, setPricePerUnit] = useState<number>(0);
-  const [stockQuantity, setStockQuantity] = useState<number>(0);
-  const [category, setCategory] = useState('');
-
+  const [formData, setFormData] = useState<ProductFormData>(defaultFormData);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data: productData, isLoading: isFetchingProduct } = useQuery<EditProductDetailResponse>({
@@ -93,106 +89,74 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
       const res = await api.get(`/products/edit/${productId}`);
       return (res.data?.value || res.data?.data || res.data) as EditProductDetailResponse;
     },
-    enabled: isOpen && !!productId,
+    enabled: isOpen && Boolean(productId),
   });
+
+  const { categories, steelGrades, units, currencies } = useProductFormDictionaries(isOpen);
 
   useEffect(() => {
-    if (productData) {
-      setName(productData.name ?? '');
-      setSteelGradeId(productData.steelGradeId ?? '');
-      setThickness(productData.thickness ?? 0);
-      setWidth(productData.width ?? 0);
-      setLength(productData.length ?? 0);
-      setDiameter(productData.diameter ?? '');
-      setWeight(productData.weight ?? 0);
-      setUnitId(productData.unitId ?? '');
-      setCurrencyId(productData.currencyId ?? '');
-      setPricePerUnit(productData.pricePerUnit ?? 0);
-      setStockQuantity(productData.stockQuantity ?? 0);
-      setCategory(productData.category ?? '');
-      setErrorMessage(null);
-    }
+    if (!productData) return;
+
+    setFormData({
+      name: productData.name ?? '',
+      steelGradeId: productData.steelGradeId ?? '',
+      thickness: productData.thickness ?? 0,
+      width: productData.width ?? 0,
+      length: productData.length ?? 0,
+      diameter: productData.diameter ?? '',
+      weight: productData.weight ?? 0,
+      unitId: productData.unitId ?? '',
+      currencyId: productData.currencyId ?? '',
+      pricePerUnit: productData.pricePerUnit ?? 0,
+      stockQuantity: productData.stockQuantity ?? 0,
+      category: productData.category ?? '',
+    });
+    setErrorMessage(null);
   }, [productData]);
 
-  const { data: categories = [] } = useQuery({
-    queryKey: ['product-categories'],
-    queryFn: async () => {
-      const res = await api.get('/products/categories');
-      return (res.data?.value || res.data?.data || res.data || []) as string[];
-    },
-    enabled: isOpen,
-  });
+  const handleFieldChange = <K extends keyof ProductFormData>(
+    field: K,
+    value: ProductFormData[K],
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
-  const { data: steelGrades = [] } = useQuery<SteelGradeResponse[]>({
-    queryKey: ['product-steel-grades'],
-    queryFn: async () => {
-      const res = await api.get('/products/steel-grades');
-      return (res.data?.value || res.data?.data || res.data || []) as SteelGradeResponse[];
-    },
-    enabled: isOpen,
-  });
-
-  const { data: units = [] } = useQuery({
-    queryKey: ['units-of-measure-simple'],
-    queryFn: async () => {
-      try {
-        const res = await api.get('/unit/simple');
-        return (res.data?.value || res.data?.data || res.data || []) as Array<{
-          id: string;
-          name: string;
-          symbol: string;
-        }>;
-      } catch {
-        return [];
-      }
-    },
-    enabled: isOpen,
-  });
-
-  const { data: currencies = [] } = useQuery<CurrencyResponse[]>({
-    queryKey: ['currencies-simple'],
-    queryFn: async () => {
-      try {
-        const res = await api.get('/currency/simple');
-        return (res.data?.value || res.data?.data || res.data || []) as CurrencyResponse[];
-      } catch {
-        return [];
-      }
-    },
-    enabled: isOpen,
-  });
-
-  const isDiameterRequired = category === 'Pipe' || category === 'Wire';
+  const isDiameterRequired = formData.category === 'Pipe' || formData.category === 'Wire';
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!productId) return;
 
-    if (!name.trim() || !steelGradeId || !category || !unitId || !currencyId) {
+    if (
+      !formData.name.trim() ||
+      !formData.steelGradeId ||
+      !formData.category ||
+      !formData.unitId ||
+      !formData.currencyId
+    ) {
       setErrorMessage('Proszę wypełnić wszystkie wymagane pola.');
       return;
     }
 
-    if (isDiameterRequired && (diameter === '' || Number(diameter) <= 0)) {
+    if (isDiameterRequired && (formData.diameter === '' || Number(formData.diameter) <= 0)) {
       setErrorMessage('Średnica jest wymagana dla kategorii Pipe oraz Wire.');
       return;
     }
 
     const payload: EditProductRequest = {
       productId,
-      name: name.trim(),
-      steelGradeId,
-      thickness: Number(thickness),
-      width: Number(width),
-      length: Number(length),
-      diameter: diameter === '' ? null : Number(diameter),
-      weight: Number(weight),
-      unitId,
-      currencyId,
-      pricePerUnit: Number(pricePerUnit),
-      stockQuantity: Number(stockQuantity),
-      category,
+      name: formData.name.trim(),
+      steelGradeId: formData.steelGradeId,
+      thickness: Number(formData.thickness),
+      width: Number(formData.width),
+      length: Number(formData.length),
+      diameter: formData.diameter === '' ? null : Number(formData.diameter),
+      weight: Number(formData.weight),
+      unitId: formData.unitId,
+      currencyId: formData.currencyId,
+      pricePerUnit: Number(formData.pricePerUnit),
+      stockQuantity: Number(formData.stockQuantity),
+      category: formData.category,
     };
 
     try {
@@ -227,205 +191,15 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label htmlFor="product-name" className="text-sm font-medium text-gray-700">
-                  Nazwa produktu *
-                </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="product-steel-grade" className="text-sm font-medium text-gray-700">
-                  Gatunek stali *
-                </label>
-                <select
-                  value={steelGradeId}
-                  onChange={(e) => setSteelGradeId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
-                >
-                  <option value="" disabled>
-                    Wybierz gatunek...
-                  </option>
-                  {steelGrades.map((grade) => (
-                    <option key={grade.id} value={grade.id}>
-                      {grade.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="product-category" className="text-sm font-medium text-gray-700">
-                  Kategoria *
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
-                >
-                  <option value="" disabled>
-                    Wybierz kategorię...
-                  </option>
-                  {categories.map((cat: string) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="product-unit-of-mesure"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Jednostka miary *
-                </label>
-                <select
-                  value={unitId}
-                  onChange={(e) => setUnitId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
-                >
-                  <option value="" disabled>
-                    Wybierz jednostkę...
-                  </option>
-                  {units.map((u: { id: string; symbol: string }) => (
-                    <option key={u.id} value={u.id}>
-                      {u.symbol}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="product-thikness" className="text-sm font-medium text-gray-700">
-                  Grubość (mm)
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={thickness}
-                  onChange={(e) => setThickness(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="product-width" className="text-sm font-medium text-gray-700">
-                  Szerokość (mm)
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={width}
-                  onChange={(e) => setWidth(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="product-lenght" className="text-sm font-medium text-gray-700">
-                  Długość (mm)
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={length}
-                  onChange={(e) => setLength(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">
-                  Średnica (mm) {isDiameterRequired && <span className="text-red-500">*</span>}
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={diameter}
-                  onChange={(e) => setDiameter(e.target.value === '' ? '' : Number(e.target.value))}
-                  required={isDiameterRequired}
-                  placeholder={isDiameterRequired ? 'Wymagane dla tej kategorii' : 'Opcjonalnie'}
-                  className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] ${
-                    isDiameterRequired && diameter === ''
-                      ? 'border-amber-400 bg-amber-50/20'
-                      : 'border-gray-300'
-                  }`}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="product-weight" className="text-sm font-medium text-gray-700">
-                  Waga (kg)
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={weight}
-                  onChange={(e) => setWeight(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="product-price-per-unit"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Cena i Waluta *
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    step="any"
-                    value={pricePerUnit}
-                    onChange={(e) => setPricePerUnit(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                    required
-                  />
-                  <select
-                    value={currencyId}
-                    onChange={(e) => setCurrencyId(e.target.value)}
-                    className="w-28 shrink-0 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                    required
-                  >
-                    <option value="" disabled>
-                      Waluta
-                    </option>
-                    {currencies.map((c) => (
-                      <option key={c.currencyId} value={c.currencyId}>
-                        {c.code}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 md:col-span-2">
-                <label
-                  htmlFor="product-stock-quantity"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Ilość na stanie
-                </label>
-                <input
-                  type="number"
-                  value={stockQuantity}
-                  onChange={(e) => setStockQuantity(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                />
-              </div>
-            </div>
+            <ProductFormFields
+              formData={formData}
+              onChange={handleFieldChange}
+              categories={categories}
+              steelGrades={steelGrades}
+              units={units}
+              currencies={currencies}
+              isDiameterRequired={isDiameterRequired}
+            />
 
             <DialogFooter className="pt-4 border-t mt-4">
               <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>

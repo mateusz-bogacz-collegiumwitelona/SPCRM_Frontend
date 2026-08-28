@@ -10,6 +10,10 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
+import {
+  type SteelGradeFormData,
+  SteelGradeFormFields,
+} from '~/components/steel-grade/steel-grade-form-fields';
 
 export interface EditSteelGradePayload {
   id: string;
@@ -19,17 +23,23 @@ export interface EditSteelGradePayload {
 }
 
 interface EditSteelGradeDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (data: EditSteelGradePayload) => Promise<void>;
-  initialData: {
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: (data: EditSteelGradePayload) => Promise<void>;
+  readonly initialData: {
     id: string;
     name: string;
     standard?: string | null;
     density: number;
   } | null;
-  isLoading?: boolean;
+  readonly isLoading?: boolean;
 }
+
+const defaultFormState: SteelGradeFormData = {
+  name: '',
+  standard: '',
+  density: '',
+};
 
 export const EditSteelGradeDialog: React.FC<EditSteelGradeDialogProps> = ({
   isOpen,
@@ -38,24 +48,31 @@ export const EditSteelGradeDialog: React.FC<EditSteelGradeDialogProps> = ({
   initialData,
   isLoading = false,
 }) => {
-  const [name, setName] = useState('');
-  const [standard, setStandard] = useState('');
-  const [density, setDensity] = useState<number | ''>('');
+  const [formData, setFormData] = useState<SteelGradeFormData>(defaultFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialData && isOpen) {
-      setName(initialData.name || '');
-      setStandard(initialData.standard || '');
-      setDensity(initialData.density ?? '');
-      setErrorMessage(null);
-    }
+    if (!initialData || !isOpen) return;
+
+    setFormData({
+      name: initialData.name || '',
+      standard: initialData.standard || '',
+      density: initialData.density ?? '',
+    });
+    setErrorMessage(null);
   }, [initialData, isOpen]);
+
+  const handleFieldChange = <K extends keyof SteelGradeFormData>(
+    field: K,
+    value: SteelGradeFormData[K],
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!name.trim()) {
+    if (!formData.name.trim()) {
       setErrorMessage('Nazwa jest wymagana');
       return;
     }
@@ -64,9 +81,9 @@ export const EditSteelGradeDialog: React.FC<EditSteelGradeDialogProps> = ({
 
     const payload: EditSteelGradePayload = {
       id: initialData.id,
-      name: name.trim(),
-      standard: standard.trim() === '' ? null : standard.trim(),
-      density: density === '' ? null : Number(density),
+      name: formData.name.trim(),
+      standard: formData.standard.trim() === '' ? null : formData.standard.trim(),
+      density: formData.density === '' ? null : Number(formData.density),
     };
 
     try {
@@ -104,47 +121,11 @@ export const EditSteelGradeDialog: React.FC<EditSteelGradeDialogProps> = ({
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label htmlFor="steel-grade-name" className="text-sm font-medium text-gray-700">
-              Nazwa gatunku *
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="np. S355J2, 1.4301"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-              required
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="steel-grade-standard" className="text-sm font-medium text-gray-700">
-              Norma
-            </label>
-            <input
-              type="text"
-              value={standard}
-              onChange={(e) => setStandard(e.target.value)}
-              placeholder="np. EN 10025-2, DIN 17100"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="steel-grade-density" className="text-sm font-medium text-gray-700">
-              Gęstość (g/cm³)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={density}
-              onChange={(e) => setDensity(e.target.value === '' ? '' : Number(e.target.value))}
-              placeholder="np. 7.85"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-            />
-          </div>
+          <SteelGradeFormFields
+            formData={formData}
+            onChange={handleFieldChange}
+            idPrefix="edit-steel-grade"
+          />
 
           <DialogFooter className="pt-4 border-t mt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>

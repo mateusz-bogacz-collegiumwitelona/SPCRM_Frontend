@@ -10,6 +10,10 @@ import {
 } from '~/components/ui/dialog';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import {
+  type SteelGradeFormData,
+  SteelGradeFormFields,
+} from '~/components/steel-grade/steel-grade-form-fields';
 
 export interface AddSteelGradePayload {
   name: string;
@@ -18,11 +22,17 @@ export interface AddSteelGradePayload {
 }
 
 interface AddSteelGradeDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (data: AddSteelGradePayload) => Promise<void>;
-  isLoading?: boolean;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: (data: AddSteelGradePayload) => Promise<void>;
+  readonly isLoading?: boolean;
 }
+
+const initialFormState: SteelGradeFormData = {
+  name: '',
+  standard: '',
+  density: '',
+};
 
 export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
   isOpen,
@@ -30,35 +40,38 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
   onSave,
   isLoading = false,
 }) => {
-  const [name, setName] = useState('');
-  const [standard, setStandard] = useState('');
-  const [density, setDensity] = useState<number | ''>('');
+  const [formData, setFormData] = useState<SteelGradeFormData>(initialFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const resetForm = () => {
-    setName('');
-    setStandard('');
-    setDensity('');
+    setFormData(initialFormState);
     setErrorMessage(null);
+  };
+
+  const handleFieldChange = <K extends keyof SteelGradeFormData>(
+    field: K,
+    value: SteelGradeFormData[K],
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!name.trim()) {
+    if (!formData.name.trim()) {
       setErrorMessage('Nazwa jest wymagana');
       return;
     }
 
-    if (density === '') {
+    if (formData.density === '') {
       setErrorMessage('Gęstość jest wymagana');
       return;
     }
 
     const payload: AddSteelGradePayload = {
-      name: name.trim(),
-      standard: standard.trim() === '' ? null : standard.trim(),
-      density: Number(density),
+      name: formData.name.trim(),
+      standard: formData.standard.trim() === '' ? null : formData.standard.trim(),
+      density: Number(formData.density),
     };
 
     try {
@@ -98,47 +111,11 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label htmlFor="steel-grade-name" className="text-sm font-medium text-gray-700">
-              Nazwa gatunku *
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="np. S355J2, 1.4301"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-              required
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="steel-grade-standard" className="text-sm font-medium text-gray-700">
-              Norma
-            </label>
-            <input
-              type="text"
-              value={standard}
-              onChange={(e) => setStandard(e.target.value)}
-              placeholder="np. EN 10025-2, DIN 17100"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="steel-grade-density" className="text-sm font-medium text-gray-700">
-              Gęstość (g/cm³)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={density}
-              onChange={(e) => setDensity(e.target.value === '' ? '' : Number(e.target.value))}
-              placeholder="np. 7.85"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-            />
-          </div>
+          <SteelGradeFormFields
+            formData={formData}
+            onChange={handleFieldChange}
+            idPrefix="add-steel-grade"
+          />
 
           <DialogFooter className="pt-4 border-t mt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
@@ -150,7 +127,7 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
               className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? 'Zapisywanie...' : 'Zapisz zmiany'}
+              {isLoading ? 'Zapisywanie...' : 'Dodaj gatunek'}
             </Button>
           </DialogFooter>
         </form>

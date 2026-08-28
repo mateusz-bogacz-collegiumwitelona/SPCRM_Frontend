@@ -5,21 +5,13 @@ import {
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
   CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
   Filter,
-  Loader2,
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -30,6 +22,8 @@ import type { DateRange } from 'react-day-picker';
 import { Link } from 'react-router';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { DataTable } from '~/components/common/data-table';
+import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 
 interface GetCompanyResponse {
   id: string;
@@ -57,21 +51,6 @@ const parseIsYourFilter = (filterValue: string): boolean | undefined => {
   if (filterValue === 'true') return true;
   if (filterValue === 'false') return false;
   return undefined;
-};
-
-const formatDateRangeLabel = (dateRange?: DateRange) => {
-  if (!dateRange?.from) {
-    return <span>Wybierz zakres dat</span>;
-  }
-  if (dateRange.to) {
-    return (
-      <>
-        {format(dateRange.from, 'd MMM yyyy', { locale: pl })} -{' '}
-        {format(dateRange.to, 'd MMM yyyy', { locale: pl })}
-      </>
-    );
-  }
-  return <>{format(dateRange.from, 'd MMM yyyy', { locale: pl })}</>;
 };
 
 const columnHelper = createColumnHelper<GetCompanyResponse>();
@@ -145,15 +124,6 @@ const columns = [
     ),
   }),
 ];
-
-const mergeCompanies = (
-  existing: GetCompanyResponse[],
-  incoming: GetCompanyResponse[],
-): GetCompanyResponse[] => {
-  const existingIds = new Set(existing.map((item) => item.id));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
-  return [...existing, ...uniqueIncoming];
-};
 
 const CompanyMobileCard = ({ item }: { readonly item: GetCompanyResponse }) => (
   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -269,7 +239,7 @@ export default function Companies() {
       return;
     }
 
-    setAccumulatedMobileCompanies((prev) => mergeCompanies(prev, items));
+    setAccumulatedMobileCompanies((prev) => mergeById(prev, items));
   }, [data, pageNumber]);
 
   const handleMobileLoadMore = () => {
@@ -294,137 +264,6 @@ export default function Companies() {
         'Nie udało się pobrać listy firm.',
       )
     : null;
-
-  const renderCompaniesContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-900 mb-4" />
-          <p className="text-gray-500 font-medium">Wczytywanie firm...</p>
-        </div>
-      );
-    }
-
-    if (!desktopCompanies || (desktopCompanies.length === 0 && !isError)) {
-      return (
-        <div className="text-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">
-          <p className="text-gray-500 font-medium">Brak wyników do wyświetlenia.</p>
-        </div>
-      );
-    }
-
-    return (
-      <>
-        <div className="block lg:hidden space-y-4">
-          {accumulatedMobileCompanies.map((item) => (
-            <CompanyMobileCard key={item.id} item={item} />
-          ))}
-
-          {pageNumber < totalPages && (
-            <div className="mt-6 flex justify-center pt-2">
-              <Button
-                type="button"
-                onClick={handleMobileLoadMore}
-                disabled={isFetching}
-                className="w-full bg-blue-900 text-white hover:bg-blue-800 transition-all flex items-center justify-center gap-2 h-11"
-              >
-                {isFetching ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Wczytywanie...
-                  </>
-                ) : (
-                  'Pokaż więcej wyników'
-                )}
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <div className="hidden lg:block space-y-4">
-          <div className="overflow-x-auto border border-gray-200 rounded-lg bg-white shadow-sm">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className="border-b border-gray-200 px-6 py-4 text-left text-sm font-semibold text-gray-900"
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-6 py-4 text-sm text-gray-700">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Pozycji na stronie:</span>
-              <select
-                value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="border rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700 shadow-sm"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-500">
-              Wyświetlanie {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} do{' '}
-              {Math.min(pageNumber * pageSize, totalItems)} z {totalItems} wyników
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
-                disabled={pageNumber === 1 || isFetching}
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <span className="text-sm font-medium text-gray-700 px-2">
-                Strona {pageNumber} z {totalPages}
-              </span>
-
-              <Button
-                type="button"
-                onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
-                disabled={pageNumber === totalPages || isFetching}
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 text-blue-900 border-gray-300 hover:bg-gray-50 disabled:opacity-40"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  };
 
   return (
     <AuthGuard>
@@ -484,8 +323,8 @@ export default function Companies() {
                     <span>Filtry</span>
                     {(date?.from || date?.to || isYourFilter) && (
                       <span className="-top-1 -right-1 flex h-3 w-3 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
                       </span>
                     )}
                   </Button>
@@ -586,7 +425,29 @@ export default function Companies() {
             </div>
           )}
 
-          {renderCompaniesContent()}
+          <DataTable
+            table={table}
+            isLoading={isLoading}
+            isError={isError}
+            data={accumulatedMobileCompanies}
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            isFetching={isFetching}
+            onMobileLoadMore={handleMobileLoadMore}
+            mobileCardKeyExtractor={(item) => item.id}
+            renderMobileCard={(item) => <CompanyMobileCard item={item} />}
+            emptyMessage="Brak wyników do wyświetlenia."
+            loadingMessage="Wczytywanie firm..."
+            paginationProps={{
+              pageNumber,
+              pageSize,
+              totalPages,
+              totalItems,
+              isFetching,
+              onPageSizeChange: setPageSize,
+              onPageChange: handleDesktopPageChange,
+            }}
+          />
         </MainLayout>
       </RoleGuard>
     </AuthGuard>

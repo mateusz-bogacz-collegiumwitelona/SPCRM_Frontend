@@ -108,7 +108,7 @@ export default function Home() {
                   htmlFor="password"
                   className="block text-[14px] text-[#004a8f] sm:text-[16px]"
                 >
-                  Haslo
+                  Hasło
                 </label>
                 <div className="relative">
                   <input
