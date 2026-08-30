@@ -22,4 +22,5 @@ export default [
   route('promotion/:promotionId', 'routes/promotion-detail.tsx'),
   route('steel-grades', 'routes/admin/steel-grades.tsx'),
   route('currencies', 'routes/admin/currencies.tsx'),
+  route('units', 'routes/admin/units-of-mesure.tsx'),
 ] satisfies RouteConfig;

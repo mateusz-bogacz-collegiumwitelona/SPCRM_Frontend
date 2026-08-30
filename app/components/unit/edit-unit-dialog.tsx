@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Button } from '~/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,65 +6,55 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
+import { Button } from '~/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
-export interface EditCurrencyRequestPayload {
-  currencyId: string;
+export interface EditUnitRequestPayload {
+  unitId: string;
   name?: string;
-  code?: string;
-  decimalPlaces?: number;
+  symbol?: string;
+  baseMultiplier?: number;
 }
 
-interface EditCurrencyDialogProps {
-  readonly currency: {
+interface EditUnitDialogProps {
+  readonly unit: {
     id: string;
     name: string;
-    code: string;
-    decimalPlace: number;
+    symbol: string;
+    baseMultiplier: number;
   } | null;
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly onSave: (payload: EditCurrencyRequestPayload) => Promise<void>;
+  readonly onSave: (payload: EditUnitRequestPayload) => Promise<void>;
   readonly isLoading: boolean;
 }
 
-export function EditCurrencyDialog({
-  currency,
-  isOpen,
-  onClose,
-  onSave,
-  isLoading,
-}: EditCurrencyDialogProps) {
+export function EditUnitDialog({ unit, isOpen, onClose, onSave, isLoading }: EditUnitDialogProps) {
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [decimalPlaces, setDecimalPlaces] = useState(2);
+  const [symbol, setSymbol] = useState('');
+  const [baseMultiplier, setBaseMultiplier] = useState(1);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (currency) {
-      setName(currency.name);
-      setCode(currency.code);
-      setDecimalPlaces(currency.decimalPlace);
+    if (unit) {
+      setName(unit.name);
+      setSymbol(unit.symbol);
+      setBaseMultiplier(unit.baseMultiplier);
       setError(null);
     }
-  }, [currency]);
+  }, [unit]);
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!currency) return;
-
-    if (code.trim().length !== 3) {
-      setError('Kod waluty musi składać się dokładnie z 3 liter.');
-      return;
-    }
+    if (!unit) return;
 
     try {
       setError(null);
       await onSave({
-        currencyId: currency.id,
+        unitId: unit.id,
         name: name.trim(),
-        code: code.trim().toUpperCase(),
-        decimalPlaces: Number(decimalPlaces),
+        symbol: symbol.trim(),
+        baseMultiplier: Number(baseMultiplier),
       });
       onClose();
     } catch {
@@ -88,27 +77,28 @@ export function EditCurrencyDialog({
           )}
 
           <div>
-            <label htmlFor="currency-code" className="block text-xs font-medium text-gray-700 mb-1">
-              Kod waluty *
+            <label htmlFor="unit-symbol" className="block text-xs font-medium text-gray-700 mb-1">
+              Symbol (np. Kg, M3, dkg) *
             </label>
             <input
               type="text"
               maxLength={3}
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 uppercase"
             />
           </div>
 
           <div>
             <label htmlFor="currency-name" className="block text-xs font-medium text-gray-700 mb-1">
-              Nazwa waluty *
+              Pełna nazwa jednostki *
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+              required
             />
           </div>
 
@@ -117,14 +107,14 @@ export function EditCurrencyDialog({
               htmlFor="currency-decimal-place"
               className="block text-xs font-medium text-gray-700 mb-1"
             >
-              Miejsca po przecinku
+              Mnożnik
             </label>
             <input
               type="number"
               min={0}
               max={4}
-              value={decimalPlaces}
-              onChange={(e) => setDecimalPlaces(Number(e.target.value))}
+              value={baseMultiplier}
+              onChange={(e) => setBaseMultiplier(Number(e.target.value))}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
             />
           </div>
