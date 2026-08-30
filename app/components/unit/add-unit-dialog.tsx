@@ -25,7 +25,7 @@ interface AddUnitDialogProps {
 export function AddUnitDialog({ isOpen, onClose, onSave, isLoading }: AddUnitDialogProps) {
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
-  const [baseMultiplier, setBaseMultiplier] = useState(1);
+  const [baseMultiplier, setBaseMultiplier] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const handleClose = () => {

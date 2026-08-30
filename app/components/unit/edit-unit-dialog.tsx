@@ -32,7 +32,7 @@ interface EditUnitDialogProps {
 export function EditUnitDialog({ unit, isOpen, onClose, onSave, isLoading }: EditUnitDialogProps) {
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
-  const [baseMultiplier, setBaseMultiplier] = useState(1);
+  const [baseMultiplier, setBaseMultiplier] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,7 +66,9 @@ export function EditUnitDialog({ unit, isOpen, onClose, onSave, isLoading }: Edi
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-106.25 bg-white">
         <DialogHeader>
-          <DialogTitle className="text-blue-900 text-lg font-semibold">Edytuj walutę</DialogTitle>
+          <DialogTitle className="text-blue-900 text-lg font-semibold">
+            Edytuj jednostkę miary
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
