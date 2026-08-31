@@ -23,4 +23,5 @@ export default [
   route('steel-grades', 'routes/admin/steel-grades.tsx'),
   route('currencies', 'routes/admin/currencies.tsx'),
   route('units', 'routes/admin/units-of-mesure.tsx'),
+  route('offers', 'routes/offers.tsx'),
 ] satisfies RouteConfig;
