@@ -24,4 +24,5 @@ export default [
   route('currencies', 'routes/admin/currencies.tsx'),
   route('units', 'routes/admin/units-of-mesure.tsx'),
   route('offers', 'routes/offers.tsx'),
+  route('offer/:offerId', 'routes/offer-detail.tsx'),
 ] satisfies RouteConfig;
