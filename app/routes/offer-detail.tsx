@@ -5,6 +5,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import React from 'react';
 import { OfferDetailHeader } from '~/components/offer/offer-detail-header';
+import { OfferClientDetail } from '~/components/offer/offer-contact-detail';
 
 const OfferDetail: React.FC = () => {
   const { offerId } = useParams<{ offerId: string }>();
@@ -29,6 +30,7 @@ const OfferDetail: React.FC = () => {
               isError={isError}
               basicInfo={basicInfo}
             />
+            {offerId && <OfferClientDetail offerId={offerId} />}{' '}
           </div>
         </div>
       </MainLayout>
