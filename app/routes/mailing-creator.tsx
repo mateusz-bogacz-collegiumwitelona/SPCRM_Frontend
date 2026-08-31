@@ -34,7 +34,7 @@ interface SelectedProduct {
   dimmension: string;
   price: number;
   quantity: number;
-  stockPrice: number; // Dodane, aby pamiętać bazową cenę produktu
+  stockPrice: number;
 }
 
 interface Currency {
@@ -69,9 +69,6 @@ export default function MailingCreator() {
       return response.data?.data || response.data || [];
     },
   });
-
-  const selectedCurrency = currencies.find((c) => c.code === currencyCode);
-  const currentDecimalPlaces = selectedCurrency ? selectedCurrency.decimalPlace : 2;
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedContactSearch(contactSearch), 300);
@@ -125,6 +122,7 @@ export default function MailingCreator() {
         dimmension: product.dimmension,
         price: initialPrice,
         quantity: 1,
+        stockPrice: product.stockPrice,
       },
     ]);
     setIsProductModalOpen(false);
@@ -284,7 +282,6 @@ export default function MailingCreator() {
                         <h3 className="pr-8 text-sm font-bold text-gray-900">{p.name}</h3>
                         <p className="mb-2 text-xs text-gray-500">{p.dimmension}</p>
 
-                        {/* Wyświetlanie ceny bazowej systemu */}
                         <p className="mb-4 text-xs text-gray-600 font-medium">
                           Cena bazowa w systemie:{' '}
                           <span className="text-gray-900">
@@ -320,7 +317,6 @@ export default function MailingCreator() {
                               }
                               className="h-8 w-24 bg-white px-2 py-1 text-sm font-medium"
                             />
-                            {/* Wyświetlanie dynamicznej wybranej waluty oferty */}
                             <span className="text-sm font-bold text-[#004a8f]">{currencyCode}</span>
                           </div>
                         </div>
@@ -435,18 +431,10 @@ export default function MailingCreator() {
                             {product.promotionalPrice ? (
                               <div className="flex items-center gap-2">
                                 <span className="font-medium text-gray-400 line-through">
-                                  {formatCurrency(
-                                    product.stockPrice,
-                                    currencyCode,
-                                    currentDecimalPlaces,
-                                  )}
+                                  {formatCurrency(product.stockPrice, 'PLN', 2)}
                                 </span>
                                 <span className="font-bold text-red-600">
-                                  {formatCurrency(
-                                    product.promotionalPrice,
-                                    currencyCode,
-                                    currentDecimalPlaces,
-                                  )}
+                                  {formatCurrency(product.promotionalPrice, 'PLN', 2)}
                                 </span>
                                 <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                                   Promocja
@@ -454,12 +442,7 @@ export default function MailingCreator() {
                               </div>
                             ) : (
                               <span className="font-medium text-[#004a8f]">
-                                Cena bazowa:{' '}
-                                {formatCurrency(
-                                  product.stockPrice,
-                                  currencyCode,
-                                  currentDecimalPlaces,
-                                )}
+                                Cena bazowa: {formatCurrency(product.stockPrice, 'PLN', 2)}
                               </span>
                             )}
                           </div>
