@@ -6,13 +6,20 @@ import { MainLayout } from '~/components/layout/main-layout';
 import React, { useState } from 'react';
 import { OfferDetailHeader } from '~/components/offer/offer-detail-header';
 import { OfferClientDetail } from '~/components/offer/offer-contact-detail';
-import { OfferProductsTable } from '~/components/offer/offer-product-table';
 import { ExtendOfferValidityDialog } from '~/components/offer/extend-offer-validity-dialog';
 import { ChangeOfferStatusDialog } from '~/components/offer/change-offer-status-dialog';
 import { Button } from '~/components/ui/button';
 import { CalendarClock, CheckCircle, XCircle } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
+import {
+  type EditableProductItem,
+  EditOfferProductsDialog,
+} from '~/components/offer/edit-offer-products-dialog';
+import {
+  OfferProductsTable,
+  type OfferProductResponse,
+} from '~/components/offer/offer-product-table';
 
 interface OfferAllowedActionsResponse {
   canEdit: boolean;
@@ -34,6 +41,46 @@ const OfferDetail: React.FC = () => {
     isOpen: false,
     targetStatus: null,
   });
+
+  const updateProductsMutation = useMutation({
+    mutationFn: async (items: { productId: string; quantity: number; quotedPrice: number }[]) => {
+      await api.put('/offer/products', {
+        offerId,
+        items,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['offer-products'] });
+      await queryClient.invalidateQueries({ queryKey: ['offer-detail', offerId] });
+      await queryClient.invalidateQueries({ queryKey: ['offer-allowed-actions', offerId] });
+      setIsEditProductsOpen(false);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas aktualizacji produktów oferty.',
+        ),
+      );
+    },
+  });
+
+  const handleOpenEditProducts = (currentProducts: OfferProductResponse[]) => {
+    setProductsToEdit(
+      currentProducts.map((p) => ({
+        productId: p.productId,
+        productName: p.productName,
+        steelGrade: p.steelGrade,
+        quantity: p.quantity,
+        quotedPrice: p.quotedPrice,
+      })),
+    );
+    setIsEditProductsOpen(true);
+  };
+
+  const [isEditProductsOpen, setIsEditProductsOpen] = useState(false);
+  const [productsToEdit, setProductsToEdit] = useState<EditableProductItem[]>([]);
 
   const {
     data: basicInfo,
@@ -156,7 +203,15 @@ const OfferDetail: React.FC = () => {
             </div>
 
             {offerId && <OfferClientDetail offerId={offerId} />}
-            {offerId && <OfferProductsTable offerId={offerId} />}
+
+            {/* Jedyna tabela produktów z przekazanymi akcjami edycji */}
+            {offerId && (
+              <OfferProductsTable
+                offerId={offerId}
+                canEdit={allowedActions?.canEdit}
+                onEditProducts={handleOpenEditProducts}
+              />
+            )}
           </div>
         </div>
 
@@ -180,6 +235,16 @@ const OfferDetail: React.FC = () => {
           }}
           isLoading={changeStatusMutation.isPending}
           offerName={basicInfo?.offerName}
+        />
+
+        <EditOfferProductsDialog
+          isOpen={isEditProductsOpen}
+          onClose={() => setIsEditProductsOpen(false)}
+          onConfirm={async (items) => {
+            await updateProductsMutation.mutateAsync(items);
+          }}
+          isLoading={updateProductsMutation.isPending}
+          initialProducts={productsToEdit}
         />
       </MainLayout>
     </AuthGuard>

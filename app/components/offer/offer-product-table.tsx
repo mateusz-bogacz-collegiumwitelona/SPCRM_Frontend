@@ -8,12 +8,20 @@ import {
 } from '@tanstack/react-table';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, ChevronLeft, ChevronRight, Loader2, Package, Search } from 'lucide-react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  Loader2,
+  Package,
+  Search,
+} from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
 
-interface OfferProductResponse {
+export interface OfferProductResponse {
   productId: string;
   productName: string;
   steelGrade: string;
@@ -21,6 +29,12 @@ interface OfferProductResponse {
   quotedPrice: number;
   currencyCode: string;
   decimalPlaces: number;
+}
+
+export interface OfferProductsTableProps {
+  offerId: string;
+  canEdit?: boolean;
+  onEditProducts?: (currentProducts: OfferProductResponse[]) => void;
 }
 
 const columnHelper = createColumnHelper<OfferProductResponse>();
@@ -69,7 +83,11 @@ const columns = [
   }),
 ];
 
-export const OfferProductsTable: React.FC<{ offerId: string }> = ({ offerId }) => {
+export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
+  offerId,
+  canEdit,
+  onEditProducts,
+}) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
@@ -269,6 +287,18 @@ export const OfferProductsTable: React.FC<{ offerId: string }> = ({ offerId }) =
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
                 />
               </div>
+              {canEdit && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEditProducts?.(desktopProducts)}
+                  className="text-[#004a8f] border-blue-200 bg-blue-50 hover:bg-blue-100 flex items-center gap-1.5 text-xs font-semibold"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Edytuj pozycje
+                </Button>
+              )}
             </div>
           </div>
 
