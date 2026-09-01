@@ -1,4 +1,4 @@
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { AuthGuard } from '~/lib/auth-guard';
@@ -9,7 +9,7 @@ import { OfferClientDetail } from '~/components/offer/offer-contact-detail';
 import { ExtendOfferValidityDialog } from '~/components/offer/extend-offer-validity-dialog';
 import { ChangeOfferStatusDialog } from '~/components/offer/change-offer-status-dialog';
 import { Button } from '~/components/ui/button';
-import { CalendarClock, CheckCircle, Mail, XCircle } from 'lucide-react';
+import { CalendarClock, CheckCircle, Mail, Trash2, XCircle } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
 import {
@@ -21,6 +21,7 @@ import {
   type OfferProductResponse,
 } from '~/components/offer/offer-product-table';
 import { ResendOfferEmailDialog } from '~/components/offer/resend-offer-email-dialog';
+import { DeleteOfferDialog } from '~/components/offer/delete-offer-dialog';
 
 interface OfferAllowedActionsResponse {
   canEdit: boolean;
@@ -44,6 +45,9 @@ const OfferDetail: React.FC = () => {
   });
 
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const updateProductsMutation = useMutation({
     mutationFn: async (items: { productId: string; quantity: number; quotedPrice: number }[]) => {
@@ -179,6 +183,27 @@ const OfferDetail: React.FC = () => {
 
   const canResendEmail = allowedActions?.canResendEmail;
 
+  const deleteOfferMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/offer/${offerId}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
+      navigate('/offers');
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas usuwania oferty.',
+        ),
+      );
+    },
+  });
+
+  const canDelete = allowedActions?.canDelete;
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -237,6 +262,17 @@ const OfferDetail: React.FC = () => {
                     Przedłuż ważność
                   </Button>
                 )}
+                {canDelete && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-1.5 text-xs sm:text-sm"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Usuń ofertę
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -293,6 +329,13 @@ const OfferDetail: React.FC = () => {
           offerName={basicInfo?.offerName}
           recipientEmail={basicInfo?.contactEmail}
           recipientName={`${basicInfo?.contactFirstName ?? ''} ${basicInfo?.contactLastName ?? ''}`.trim()}
+        />
+        <DeleteOfferDialog
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={() => deleteOfferMutation.mutate()}
+          isLoading={deleteOfferMutation.isPending}
+          offerName={basicInfo?.offerName}
         />
       </MainLayout>
     </AuthGuard>
