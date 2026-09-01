@@ -25,7 +25,7 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
-import { getStatusBadge } from '~/utils/offer-status-helper';
+import { formatOfferStatusLabel, getStatusBadge } from '~/utils/offer-status-helper';
 
 interface OfferListResponse {
   offerId: string;
@@ -143,6 +143,16 @@ export default function OffersList() {
   const [isMobile, setIsMobile] = useState(false);
   const [accumulatedMobileOffers, setAccumulatedMobileOffers] = useState<OfferListResponse[]>([]);
   const isMobileAppend = useRef(false);
+
+  const { data: statusDictionary } = useQuery<string[]>({
+    queryKey: ['offer-statuses-dictionary'],
+    queryFn: async () => {
+      const res = await api.get('/offer/statuses');
+      return res.data?.data || res.data?.value || res.data || [];
+    },
+  });
+
+  const statuses = statusDictionary || ['Sent', 'Accepted', 'Rejected', 'Expired'];
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -380,10 +390,11 @@ export default function OffersList() {
                             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
                           >
                             <option value="">Wszystkie statusy</option>
-                            <option value="Sent">Wysłana</option>
-                            <option value="Accepted">Zaakceptowana</option>
-                            <option value="Rejected">Odrzucona</option>
-                            <option value="Expired">Wygasła</option>
+                            {statuses.map((status) => (
+                              <option key={status} value={status}>
+                                {formatOfferStatusLabel(status)}
+                              </option>
+                            ))}
                           </select>
                         </div>
 
