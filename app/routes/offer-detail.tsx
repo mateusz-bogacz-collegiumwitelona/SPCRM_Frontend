@@ -9,7 +9,7 @@ import { OfferClientDetail } from '~/components/offer/offer-contact-detail';
 import { ExtendOfferValidityDialog } from '~/components/offer/extend-offer-validity-dialog';
 import { ChangeOfferStatusDialog } from '~/components/offer/change-offer-status-dialog';
 import { Button } from '~/components/ui/button';
-import { CalendarClock, CheckCircle, XCircle } from 'lucide-react';
+import { CalendarClock, CheckCircle, Mail, XCircle } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
 import {
@@ -20,6 +20,7 @@ import {
   OfferProductsTable,
   type OfferProductResponse,
 } from '~/components/offer/offer-product-table';
+import { ResendOfferEmailDialog } from '~/components/offer/resend-offer-email-dialog';
 
 interface OfferAllowedActionsResponse {
   canEdit: boolean;
@@ -41,6 +42,8 @@ const OfferDetail: React.FC = () => {
     isOpen: false,
     targetStatus: null,
   });
+
+  const [isResendModalOpen, setIsResendModalOpen] = useState(false);
 
   const updateProductsMutation = useMutation({
     mutationFn: async (items: { productId: string; quantity: number; quotedPrice: number }[]) => {
@@ -153,6 +156,29 @@ const OfferDetail: React.FC = () => {
   const canReject = allowedActions?.allowedStatusTransitions?.includes('Rejected');
   const canExtend = allowedActions?.canExtendValidity;
 
+  const resendEmailMutation = useMutation({
+    mutationFn: async (language: string) => {
+      await api.post('/offer/resend-email', {
+        offerId,
+        language,
+      });
+    },
+    onSuccess: () => {
+      setIsResendModalOpen(false);
+    },
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
+      alert(
+        getErrorMessage(
+          apiError.response?.data?.errorCode,
+          'Wystąpił błąd podczas ponownego wysyłania oferty.',
+        ),
+      );
+    },
+  });
+
+  const canResendEmail = allowedActions?.canResendEmail;
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -166,6 +192,18 @@ const OfferDetail: React.FC = () => {
               />
 
               <div className="flex flex-wrap items-center justify-end gap-2.5">
+                {canResendEmail && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsResendModalOpen(true)}
+                    className="text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100 flex items-center gap-1.5 text-xs sm:text-sm"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Wyślij e-mail ponownie
+                  </Button>
+                )}
+
                 {canReject && (
                   <Button
                     type="button"
@@ -204,7 +242,6 @@ const OfferDetail: React.FC = () => {
 
             {offerId && <OfferClientDetail offerId={offerId} />}
 
-            {/* Jedyna tabela produktów z przekazanymi akcjami edycji */}
             {offerId && (
               <OfferProductsTable
                 offerId={offerId}
@@ -245,6 +282,17 @@ const OfferDetail: React.FC = () => {
           }}
           isLoading={updateProductsMutation.isPending}
           initialProducts={productsToEdit}
+        />
+        <ResendOfferEmailDialog
+          isOpen={isResendModalOpen}
+          onClose={() => setIsResendModalOpen(false)}
+          onConfirm={async (language) => {
+            await resendEmailMutation.mutateAsync(language);
+          }}
+          isLoading={resendEmailMutation.isPending}
+          offerName={basicInfo?.offerName}
+          recipientEmail={basicInfo?.contactEmail}
+          recipientName={`${basicInfo?.contactFirstName ?? ''} ${basicInfo?.contactLastName ?? ''}`.trim()}
         />
       </MainLayout>
     </AuthGuard>
