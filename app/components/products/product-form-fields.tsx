@@ -57,12 +57,8 @@ export function useProductFormDictionaries(enabled: boolean) {
   const { data: units = [] } = useQuery<UnitOption[]>({
     queryKey: ['units-of-measure-simple'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/unit/simple');
-        return (res.data?.value || res.data?.data || res.data || []) as UnitOption[];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/unit/simple');
+      return (res.data?.value || res.data?.data || res.data || []) as UnitOption[];
     },
     enabled,
   });
@@ -70,12 +66,8 @@ export function useProductFormDictionaries(enabled: boolean) {
   const { data: currencies = [] } = useQuery<CurrencyOption[]>({
     queryKey: ['currencies-simple'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/currency/simple');
-        return (res.data?.value || res.data?.data || res.data || []) as CurrencyOption[];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/currency/simple');
+      return (res.data?.value || res.data?.data || res.data || []) as CurrencyOption[];
     },
     enabled,
   });
@@ -113,7 +105,6 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           value={formData.name}
           onChange={(e) => onChange('name', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-          required
         />
       </div>
 
@@ -126,7 +117,6 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           value={formData.steelGradeId}
           onChange={(e) => onChange('steelGradeId', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-          required
         >
           <option value="" disabled>
             Wybierz gatunek...
@@ -148,7 +138,6 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           value={formData.category}
           onChange={(e) => onChange('category', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-          required
         >
           <option value="" disabled>
             Wybierz kategorię...
@@ -170,7 +159,6 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           value={formData.unitId}
           onChange={(e) => onChange('unitId', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-          required
         >
           <option value="" disabled>
             Wybierz jednostkę...
@@ -274,14 +262,12 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
             onChange={(e) => onChange('pricePerUnit', Number(e.target.value))}
             placeholder="0.00"
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-            required
           />
           <select
             id="product-currency"
             value={formData.currencyId}
             onChange={(e) => onChange('currencyId', e.target.value)}
             className="w-28 shrink-0 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-            required
           >
             <option value="" disabled>
               Waluta

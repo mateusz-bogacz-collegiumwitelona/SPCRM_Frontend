@@ -6,8 +6,6 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
 import { DeleteContactDialog } from './delete-contact-dialog';
 import { Button } from '~/components/ui/button';
-import type ApiError from '~/interfaces/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
 
 interface ContactBasicInfo {
   id: string;
@@ -48,13 +46,6 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
       await queryClient.invalidateQueries({ queryKey: ['contacts'] });
       await queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
       navigate('/contacts');
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = 'Wystąpił błąd podczas usuwania kontaktu.';
-      alert(getErrorMessage(code, fallback));
-      setIsDeleteDialogOpen(false);
     },
   });
 
@@ -130,6 +121,7 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={async () => {
           await deleteMutation.mutateAsync();
+          setIsDeleteDialogOpen(false);
         }}
         isLoading={deleteMutation.isPending}
       />

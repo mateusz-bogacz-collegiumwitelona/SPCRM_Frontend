@@ -12,7 +12,7 @@ interface ClientHeaderProps {
   };
   onEditClick?: () => void;
   onDeleteClick?: () => void;
-  onChangeOwnerClick?: () => void; // <-- nowy prop
+  onChangeOwnerClick?: () => void;
 }
 
 export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({

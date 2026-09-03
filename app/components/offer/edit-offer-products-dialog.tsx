@@ -9,7 +9,9 @@ import {
 import { Button } from '~/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { AlertCircle, Edit3, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import { AlertCircle, Edit3, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 export interface EditableProductItem {
   productId: string;
@@ -51,17 +53,20 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Debounce zapytania (300 ms)
+  const handleClose = () => {
+    setFormError(null);
+    onClose();
+  };
+
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedQuery(searchTerm.trim()), 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  // Pobieranie pasujących produktów z poprawnego endpointu /products/search
   const { data: searchResults, isFetching: isSearching } = useQuery<ProductSearchResult[]>({
     queryKey: ['products-async-search', debouncedQuery],
     queryFn: async () => {
@@ -74,7 +79,6 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
     enabled: isOpen && debouncedQuery.length >= 2,
   });
 
-  // Zamykanie listy po kliknięciu poza nią
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -88,7 +92,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
   useEffect(() => {
     if (isOpen) {
       setItems(initialProducts.map((p) => ({ ...p })));
-      setError(null);
+      setFormError(null);
       setSearchTerm('');
       setIsDropdownOpen(false);
     }
@@ -96,7 +100,10 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
 
   const handleSelectProduct = (prod: ProductSearchResult) => {
     if (items.some((item) => item.productId === prod.id)) {
-      setError('Ten produkt znajduje się już na liście.');
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: ['Ten produkt znajduje się już na liście.'],
+      });
       return;
     }
 
@@ -113,7 +120,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
 
     setSearchTerm('');
     setIsDropdownOpen(false);
-    setError(null);
+    setFormError(null);
   };
 
   const handleQuantityChange = (index: number, quantity: number) => {
@@ -135,25 +142,32 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    const validationErrors: string[] = [];
 
     if (items.length === 0) {
-      setError('Oferta musi zawierać co najmniej jeden produkt.');
-      return;
+      validationErrors.push('Oferta musi zawierać co najmniej jeden produkt.');
     }
 
     for (const item of items) {
       if (item.quantity <= 0) {
-        setError(`Ilość dla ${item.productName} musi być większa od zera.`);
-        return;
+        validationErrors.push(`Ilość dla "${item.productName}" musi być większa od zera.`);
       }
       if (item.quotedPrice <= 0) {
-        setError(`Cena dla ${item.productName} musi być większa od zera.`);
-        return;
+        validationErrors.push(`Cena dla "${item.productName}" musi być większa od zera.`);
       }
     }
 
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
+      return;
+    }
+
     try {
-      setError(null);
       await onConfirm(
         items.map((i) => ({
           productId: i.productId,
@@ -161,16 +175,29 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
           quotedPrice: i.quotedPrice,
         })),
       );
-      onClose();
+      handleClose();
     } catch (err: unknown) {
-      setError('Wystąpił błąd podczas zapisywania pozycji.');
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message ||
+        apiError.message ||
+        'Wystąpił błąd podczas zapisywania pozycji oferty.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
   const multiplier = Math.pow(10, decimalPlaces + 2);
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && handleClose()}>
       <DialogContent className="sm:max-w-175 max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-4 border-b border-gray-100 flex flex-row items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0">
@@ -186,15 +213,31 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{error}</p>
+        <form onSubmit={handleSubmit} noValidate className="flex-1 overflow-y-auto p-6 space-y-4">
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
-          {/* Wyszukiwarka produktów */}
           <div ref={dropdownRef} className="relative">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -214,7 +257,6 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
               )}
             </div>
 
-            {/* Lista wyników */}
             {isDropdownOpen && debouncedQuery.length >= 2 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto divide-y">
                 {searchResults && searchResults.length > 0 ? (
@@ -245,7 +287,6 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
             )}
           </div>
 
-          {/* Tabela pozycji */}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead className="bg-gray-50 border-b border-gray-200 text-gray-700">
@@ -318,7 +359,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
           <Button
             type="button"
             variant="outline"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isLoading}
             className="text-gray-700 border-gray-300"
           >

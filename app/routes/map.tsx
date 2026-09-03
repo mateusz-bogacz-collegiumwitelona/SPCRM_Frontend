@@ -1,10 +1,10 @@
 import { type ComponentType, type SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { MapPinned, Search } from 'lucide-react';
+import { AlertCircle, MapPinned, Search, X } from 'lucide-react';
 
 import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { RoleGuard } from '~/lib/role-guard';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -43,7 +43,7 @@ export default function MapPage() {
 
   const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
   const [companies, setCompanies] = useState<CompanyMapData[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const searchTerm = searchParams.get('searchTerm') || '';
@@ -51,7 +51,7 @@ export default function MapPage() {
   useEffect(() => {
     const fetchCompanies = async () => {
       setIsLoading(true);
-      setErrorMessage(null);
+      setFormError(null);
 
       try {
         const endpoint = searchTerm
@@ -64,19 +64,31 @@ export default function MapPage() {
           setCompanies(response.data.data);
         } else {
           setCompanies([]);
-          setErrorMessage(response.data.message || 'Nie udało się załadować danych');
+          setFormError({
+            title: getErrorMessage(
+              response.data.errorCode,
+              response.data.message || 'Nie udało się załadować danych',
+            ),
+            details:
+              response.data.errors && response.data.errors.length > 0
+                ? response.data.errors
+                : undefined,
+          });
         }
       } catch (error_: unknown) {
         const err = error_ as ApiError;
         const errorData = err.response?.data;
 
-        let errMsg = err.message || 'Wystąpił nieznany błąd.';
+        const code = errorData?.errorCode;
+        const fallback = errorData?.message || err.message || 'Wystąpił nieznany błąd.';
 
-        if (errorData?.errorCode) {
-          errMsg = getErrorMessage(errorData.errorCode, errorData.message);
-        }
-
-        setErrorMessage(errMsg);
+        setFormError({
+          title: getErrorMessage(code, fallback),
+          details:
+            errorData?.errors && errorData.errors.length > 0
+              ? errorData.errors.map((item) => getErrorMessage(item, item))
+              : undefined,
+        });
         setCompanies([]);
       } finally {
         setIsLoading(false);
@@ -176,9 +188,27 @@ export default function MapPage() {
               </form>
             </div>
 
-            {errorMessage && (
-              <div className="absolute top-20 right-4 z-400 md:right-6 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded shadow-md text-sm">
-                {errorMessage}
+            {formError && (
+              <div className="absolute top-20 right-4 z-400 md:right-6 w-72 md:w-96 flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-lg transition-all text-left">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div className="flex-1 pr-3">
+                  <p className="font-medium leading-tight">{formError.title}</p>
+                  {formError.details && formError.details.length > 0 && (
+                    <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-[11px] text-red-700">
+                      {formError.details.map((detailErr, idx) => (
+                        <li key={idx}>{detailErr}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormError(null)}
+                  className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                  title="Zamknij"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 

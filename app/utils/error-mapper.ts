@@ -6,6 +6,7 @@ export const ErrorMapper: Record<string, string> = {
   NOT_FOUND: 'Nie znaleziono żądanego zasobu.',
   INVALID_DATE: 'Nieprawidłowa data',
   INVALID_SORT_COLUMN: 'Nieprawidłowa kolumna sortowania',
+  INVALID_OPERATION: 'Nieprawidłowa operacja',
 
   // Validation
   VAL_001: 'Email jest wymagany',
@@ -40,11 +41,30 @@ export const ErrorMapper: Record<string, string> = {
 
   // Company
   COM_001: 'Nie znaleziono firmy',
+  COM_002: 'Firma już istnieje',
+
+  // Company Address
+  CAD_001: 'Adres już istnieje',
+  CAD_002: 'Nieprawidłowy numer NIP',
+  CAD_003: 'Nieprawidłowy kod pocztowy',
+  CAD_004: 'Adres siedziby głównej jest wymagany',
+  CAD_005: 'Adres jest wymagany',
+  CAD_006: 'Ulica jest wymagana',
+  CAD_007: 'Nieprawidłowa długość nazwy ulicy',
+  CAD_008: 'Miasto jest wymagane',
+  CAD_009: 'Nieprawidłowa długość nazwy miasta',
+  CAD_010: 'Typ adresu jest wymagany',
+  CAD_011: 'Numer NIP jest wymagany',
+  CAD_012: 'Kod pocztowy jest wymagany',
+  CAD_013: 'Nie znaleziono adresu',
 
   // Contact
   CON_001: 'Nieprawidłowy typ drogi kontaktowej',
   CON_002: 'Główna droga kontaktowa jest wymagana',
   CON_003: 'Nie znaleziono kontaktu',
+  CON_004: 'Nieprawidłowa szerokość geograficzna',
+  CON_005: 'Nieprawidłowa długość geograficzna',
+  CON_006: 'Nieprawidłowy typ adresu',
 
   // Product
   PROD_001: 'Nie znaleziono produktu',
@@ -78,11 +98,31 @@ export const ErrorMapper: Record<string, string> = {
   PROM_008: 'Nie można jednocześnie wybrać rabatu procentowego oraz stałej ceny promocyjnej',
 
   // Currency
-  CUR_001: 'Nie znaleziono wybranej waluty',
+  CUR_001: 'Nie znaleziono wybranej waluty lub waluta już istnieje',
+  CUR_002: 'Nieprawidłowa liczba miejsc po przecinku',
+  CUR_003: 'Nieprawidłowa długość kodu waluty',
+  CUR_004: 'Nieprawidłowy format kodu waluty',
+  CUR_005: 'Kod waluty jest wymagany',
+  CUR_006: 'Waluta o podanej nazwie już istnieje',
+  CUR_007: 'Waluta o podanym kodzie już istnieje',
 
   // Steel Grade
   ST_001: 'Nie można usunąć gatunku stali, ponieważ jest przypisany do istniejących produktów',
   ST_002: 'Zduplikowany produkt do zmiany gatunku stali. Coś jest nie tak.',
+  ST_003: 'Gatunek stali już istnieje',
+  ST_004: 'Nieprawidłowa nazwa gatunku stali',
+  ST_005: 'Nieprawidłowa gęstość gatunku stali',
+  ST_006: 'Nieprawidłowa norma gatunku stali',
+
+  // Unit of Measure
+  UOM_001: 'Jednostka miary już istnieje',
+  UOM_002: 'Nieprawidłowa nazwa jednostki miary',
+  UOM_003: 'Nieprawidłowy symbol jednostki miary',
+  UOM_004: 'Nieprawidłowy przelicznik jednostki bazowej',
+  UOM_005: 'Nie znaleziono jednostki miary',
+
+  // Offer
+  OFF_001: 'Nie znaleziono oferty',
 };
 
 export const getErrorMessage = (code?: string, fallbackMessage?: string): string => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '~/components/ui/button';
@@ -7,13 +7,13 @@ import { Card, CardContent } from '~/components/ui/card';
 import { useAuth } from '~/context/auth-context';
 import { Navbar } from '~/components/layout/unloged-navbar';
 import { api } from '~/api/api';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 
 export default function Home() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, user, isLoading } = useAuth();
@@ -34,29 +34,60 @@ export default function Home() {
   const loginMutation = useMutation({
     mutationFn: async () => {
       const response = await api.post('auth/login', {
-        name,
+        name: name.trim(),
         password,
       });
       return response.data;
     },
     onSuccess: async () => {
-      setError(null);
+      setFormError(null);
       await login();
     },
     onError: (err: unknown) => {
       const apiError = err as ApiError;
+      const status = apiError.response?.status;
       const errorData = apiError.response?.data;
 
-      if (errorData?.errorCode) {
-        setError(getErrorMessage(errorData.errorCode, errorData.message));
-      } else {
-        setError(apiError.message || 'Wystąpił nieznany błąd.');
+      if (status === 401) {
+        setFormError({
+          title: 'Niepoprawny login lub hasło.',
+          details: [
+            'Upewnij się, że wpisane dane są prawidłowe oraz czy konto ma potwierdzony adres e-mail.',
+          ],
+        });
+        return;
       }
+
+      if (errorData?.errorCode) {
+        setFormError({
+          title: getErrorMessage(errorData.errorCode, errorData.message),
+          details: errorData.errors && errorData.errors.length > 0 ? errorData.errors : undefined,
+        });
+        return;
+      }
+
+      setFormError({
+        title: apiError.message || 'Wystąpił błąd podczas logowania.',
+      });
     },
   });
 
   const handleLogin = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
+
+    const validationErrors: string[] = [];
+    if (!name.trim()) validationErrors.push('Nazwa użytkownika lub e-mail jest wymagany.');
+    if (!password) validationErrors.push('Hasło jest wymagane.');
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
+      return;
+    }
+
     loginMutation.mutate();
   };
 
@@ -86,6 +117,7 @@ export default function Home() {
             <form
               className="mt-8 space-y-5 lg:mt-10 lg:space-y-6"
               aria-label="Formularz logowania"
+              noValidate
               onSubmit={handleLogin}
             >
               <div className="space-y-2">
@@ -98,7 +130,6 @@ export default function Home() {
                   placeholder="Twoja nazwa uzytkownika"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  required
                   className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                 />
               </div>
@@ -116,7 +147,6 @@ export default function Home() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    required
                     className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 pr-10 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
                   />
                   <button
@@ -144,17 +174,42 @@ export default function Home() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => alert('Skontaktuj się z administratorem, aby zresetować hasło.')}
+                  onClick={() =>
+                    setFormError({
+                      title: 'Resetowanie hasła',
+                      details: [
+                        'Skontaktuj się z administratorem systemu w celu zresetowania lub odzyskania hasła.',
+                      ],
+                    })
+                  }
                   className="hover:underline bg-transparent border-none p-0 text-[#004a8f] cursor-pointer"
                 >
                   Przypomnij haslo
                 </button>
               </div>
 
-              {error && (
-                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700 sm:text-[13px]">
-                  {error}
-                </p>
+              {formError && (
+                <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-xs transition-all text-left">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 pr-3">
+                    <p className="font-medium leading-tight">{formError.title}</p>
+                    {formError.details && formError.details.length > 0 && (
+                      <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-[11px] text-red-700">
+                        {formError.details.map((detailErr, idx) => (
+                          <li key={idx}>{detailErr}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormError(null)}
+                    className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                    title="Zamknij"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               )}
 
               <Button

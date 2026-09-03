@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Loader2, X } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 interface ProductItem {
   id: string;
@@ -35,6 +37,20 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
 }) => {
   const [reassignments, setReassignments] = useState<Record<string, string>>({});
   const [bulkGradeId, setBulkGradeId] = useState<string>('');
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormError(null);
+      setReassignments({});
+      setBulkGradeId('');
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    setFormError(null);
+    onClose();
+  };
 
   const { data: associatedProducts = [], isLoading: isLoadingProducts } = useQuery<ProductItem[]>({
     queryKey: ['steel-grade-products', steelGradeId],
@@ -76,15 +92,42 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
   const allAssigned = associatedProducts.every((p) => Boolean(reassignments[p.id]));
 
   const handleConfirm = async () => {
+    setFormError(null);
+
+    if (!allAssigned) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: ['Wszystkie powiązane produkty muszą mieć przypisany nowy gatunek stali.'],
+      });
+      return;
+    }
+
     const payload = Object.entries(reassignments).map(([productId, newSteelGradeId]) => ({
       productId,
       newSteelGradeId,
     }));
-    await onConfirm(payload);
+
+    try {
+      await onConfirm(payload);
+      handleClose();
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się usunąć gatunku stali.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && handleClose()}>
       <DialogContent className="sm:max-w-160 max-h-[85vh] flex flex-col">
         <DialogHeader className="border-b border-gray-100 pb-3 flex flex-col items-center gap-2">
           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
@@ -94,6 +137,30 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
             Usuwanie gatunku stali: {steelGradeName}
           </DialogTitle>
         </DialogHeader>
+
+        {formError && (
+          <div className="mt-3 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-xs transition-all text-left">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <div className="flex-1 pr-4">
+              <p className="font-medium leading-tight">{formError.title}</p>
+              {formError.details && formError.details.length > 0 && (
+                <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                  {formError.details.map((detailErr, idx) => (
+                    <li key={idx}>{detailErr}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setFormError(null)}
+              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+              title="Zamknij"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {isLoadingProducts ? (
           <div className="py-12 flex flex-col items-center justify-center text-gray-500 gap-2">
@@ -147,7 +214,6 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
                             ? 'border-gray-300'
                             : 'border-red-300 bg-red-50/20'
                         }`}
-                        required
                       >
                         <option value="" disabled>
                           Wybierz nowy gatunek...
@@ -167,7 +233,13 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
         )}
 
         <div className="flex justify-end gap-3 border-t border-gray-100 pt-3 mt-auto">
-          <Button variant="outline" onClick={onClose} disabled={isLoading} className="text-xs">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            disabled={isLoading}
+            className="text-xs"
+          >
             Anuluj
           </Button>
           <Button

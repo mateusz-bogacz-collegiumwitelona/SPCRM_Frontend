@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus } from 'lucide-react';
+import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus, X } from 'lucide-react';
 
 import { api } from '~/api/api';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -188,6 +188,8 @@ export default function CurrenciesList() {
     placeholderData: keepPreviousData,
   });
 
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
   const addMutation = useMutation({
     mutationFn: async (payload: AddCurrencyRequestPayload) => {
       await api.post('/currency', payload);
@@ -196,15 +198,6 @@ export default function CurrenciesList() {
       await queryClient.invalidateQueries({ queryKey: ['currencies-list'] });
       await queryClient.invalidateQueries({ queryKey: ['currencies-simple'] });
       setIsAddOpen(false);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas dodawania waluty.',
-        ),
-      );
     },
   });
 
@@ -216,12 +209,6 @@ export default function CurrenciesList() {
       await queryClient.invalidateQueries({ queryKey: ['currencies-list'] });
       await queryClient.invalidateQueries({ queryKey: ['currencies-simple'] });
       setEditingCurrency(null);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(apiError.response?.data?.errorCode, 'Wystąpił błąd podczas edycji waluty.'),
-      );
     },
   });
 
@@ -260,12 +247,28 @@ export default function CurrenciesList() {
     } satisfies CurrencyTableMeta,
   });
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać listy walut.',
-      )
-    : null;
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const listError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message || activeError?.message || 'Nie udało się pobrać listy walut.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   return (
     <AuthGuard>
@@ -321,10 +324,27 @@ export default function CurrenciesList() {
             </div>
           </div>
 
-          {errorMessage && (
-            <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <p className="text-sm font-medium">{errorMessage}</p>
+          {listError && (
+            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{listError.title}</p>
+                {listError.details && listError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {listError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsErrorDismissed(true)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
 

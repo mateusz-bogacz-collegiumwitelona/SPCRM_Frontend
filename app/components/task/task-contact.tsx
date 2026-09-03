@@ -1,11 +1,12 @@
+import { useEffect, useState } from 'react';
 import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
 import { type ContactWay } from '~/interfaces/contact-way';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { AlertCircle, Building2, User } from 'lucide-react';
+import { AlertCircle, Building2, User, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 interface TaskContactResponse {
   contactId: string;
@@ -17,6 +18,8 @@ interface TaskContactResponse {
 }
 
 export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => {
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
   const {
     data: contact,
     isLoading,
@@ -26,23 +29,58 @@ export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => 
     queryKey: ['task-contact', taskId],
     queryFn: async () => {
       const response = await api.get(`/tasks/${taskId}/contact`);
-      return response.data.data;
+      return response.data?.data || response.data?.value || response.data;
     },
     retry: false,
   });
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać powiązanego kontaktu.',
-      )
-    : null;
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
 
-  if (errorMessage) {
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const formError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się pobrać powiązanego kontaktu.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
+
+  if (formError) {
     return (
-      <div className="flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-        <AlertCircle className="w-5 h-5 shrink-0" />
-        <p className="font-medium">{errorMessage}</p>
+      <div className="relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <div className="flex-1 pr-4">
+          <p className="font-medium leading-tight">{formError.title}</p>
+          {formError.details && formError.details.length > 0 && (
+            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+              {formError.details.map((detailErr, idx) => (
+                <li key={idx}>{detailErr}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsErrorDismissed(true)}
+          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+          title="Zamknij"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     );
   }

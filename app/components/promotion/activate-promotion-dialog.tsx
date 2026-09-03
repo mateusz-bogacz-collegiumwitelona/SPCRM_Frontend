@@ -9,10 +9,12 @@ import {
 import { Button } from '~/components/ui/button';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { AlertCircle, CalendarIcon, Loader2, Play } from 'lucide-react';
+import { AlertCircle, CalendarIcon, Loader2, Play, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 interface ActivatePromotionDialogProps {
   isOpen: boolean;
@@ -30,11 +32,11 @@ export const ActivatePromotionDialog: React.FC<ActivatePromotionDialogProps> = (
   promotionName,
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const resetState = () => {
     setSelectedDate(undefined);
-    setError(null);
+    setFormError(null);
   };
 
   const handleClose = () => {
@@ -46,19 +48,41 @@ export const ActivatePromotionDialog: React.FC<ActivatePromotionDialogProps> = (
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
+
+    const validationErrors: string[] = [];
     if (!selectedDate) {
-      setError('Wybierz nową datę zakończenia promocji.');
+      validationErrors.push('Wybierz nową datę zakończenia promocji.');
+    } else if (selectedDate <= new Date()) {
+      validationErrors.push('Data zakończenia promocji musi być w przyszłości.');
+    }
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
-    if (selectedDate <= new Date()) {
-      setError('Data zakończenia promocji musi być w przyszłości.');
-      return;
-    }
+    try {
+      await onConfirm(selectedDate!);
+      resetState();
+      onClose();
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
 
-    setError(null);
-    await onConfirm(selectedDate);
-    resetState();
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Wystąpił błąd podczas aktywacji promocji.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   return (
@@ -73,16 +97,33 @@ export const ActivatePromotionDialog: React.FC<ActivatePromotionDialogProps> = (
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="py-4 space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="py-4 space-y-4">
           <p className="text-sm text-gray-600 text-center leading-relaxed">
             Wznawiasz promocję {promotionName ? <strong>„{promotionName}”</strong> : 'tę promocję'}.
             Wybierz nową datę zakończenia jej obowiązywania:
           </p>
 
-          {error && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{error}</p>
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -131,7 +172,7 @@ export const ActivatePromotionDialog: React.FC<ActivatePromotionDialogProps> = (
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !selectedDate}
+              disabled={isLoading}
               className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}

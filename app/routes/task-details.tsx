@@ -1,4 +1,5 @@
 import { useParams } from 'react-router';
+import { AlertCircle } from 'lucide-react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { TaskContactDetails } from '~/components/task/task-contact';
 import { TaskNote } from '~/components/task/task-note';
@@ -12,9 +13,14 @@ const TaskDetails: React.FC = () => {
 
   if (!taskId) {
     return (
-      <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
-        <p className="font-bold">Coś poszło nie tak</p>
-        <p>Nie można wyświetlić danych notatki</p>
+      <div className="m-6 flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs">
+        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium leading-tight">Nie znaleziono zadania</p>
+          <p className="mt-1 text-xs text-red-700">
+            Nieprawidłowy identyfikator zadania w adresie URL.
+          </p>
+        </div>
       </div>
     );
   }

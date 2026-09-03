@@ -7,9 +7,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2, MapPin, MapPinned, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, MapPin, MapPinned, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
 
@@ -70,7 +70,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
   const [activeAddressId, setActiveAddressId] = useState<string>(addresses[0].id);
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -84,6 +84,9 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     }
     return () => {
       isMounted = false;
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
   }, [isOpen]);
 
@@ -213,33 +216,42 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     const defaultAddr = createEmptyAddress('Headquarters');
     setAddresses([defaultAddr]);
     setActiveAddressId(defaultAddr.id);
-    setErrorMessage(null);
+    setFormError(null);
   };
 
   const handleClose = () => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     resetForm();
     onClose();
   };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
 
-    if (!name.trim() || !nip.trim()) {
-      setErrorMessage('Wprowadź nazwę i NIP firmy.');
-      return;
-    }
+    const validationErrors: string[] = [];
+    if (!name.trim()) validationErrors.push('Nazwa firmy jest wymagana.');
+    if (!nip.trim()) validationErrors.push('Numer NIP jest wymagany.');
 
     const hqCount = addresses.filter((a) => a.type === 'Headquarters').length;
     if (hqCount !== 1) {
-      setErrorMessage('Firma musi posiadać dokładnie jedną siedzibę główną (Headquarters).');
-      return;
+      validationErrors.push('Firma musi posiadać dokładnie jedną siedzibę główną (Headquarters).');
     }
 
     const hasInvalid = addresses.some(
       (a) => !a.street.trim() || !a.city.trim() || !a.zipCode.trim(),
     );
     if (hasInvalid) {
-      setErrorMessage('Uzupełnij wszystkie dane adresowe dla każdej z dodanych lokalizacji.');
+      validationErrors.push(
+        'Uzupełnij wszystkie dane adresowe (ulica, miasto, kod pocztowy) dla każdej z lokalizacji.',
+      );
+    }
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
@@ -261,9 +273,16 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
       handleClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się dodać firmy.';
-      setErrorMessage(getErrorMessage(code, fallback));
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback = responseData?.message || apiError.message || 'Nie udało się dodać firmy.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
@@ -285,36 +304,58 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-2">
-          {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{errorMessage}</p>
+        <form onSubmit={handleSubmit} noValidate className="space-y-6 py-2">
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
+
           <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
             <h3 className="text-sm font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-3">
               Dane podmiotu
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-gray-700">Nazwa firmy *</label>
+                <label htmlFor="company-name" className="text-xs font-medium text-gray-700">
+                  Nazwa firmy *
+                </label>
                 <input
+                  id="company-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="np. Pol-Stal Sp. z o.o."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
-                  required
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-gray-700">NIP *</label>
+                <label htmlFor="company-nip" className="text-xs font-medium text-gray-700">
+                  NIP *
+                </label>
                 <input
+                  id="company-nip"
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
                   placeholder="10 cyfr"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
-                  required
                 />
               </div>
             </div>
@@ -399,23 +440,30 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="space-y-1 sm:col-span-2">
-                          <label className="text-[11px] font-medium text-gray-600">
+                          <label
+                            htmlFor={`street-${addr.id}`}
+                            className="text-[11px] font-medium text-gray-600"
+                          >
                             Ulica i numer *
                           </label>
                           <input
+                            id={`street-${addr.id}`}
                             value={addr.street}
                             onChange={(e) => handleAddressChange(addr.id, 'street', e.target.value)}
                             placeholder="np. Kolejowa 5"
                             className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
-                            required
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[11px] font-medium text-gray-600">
+                          <label
+                            htmlFor={`type-${addr.id}`}
+                            className="text-[11px] font-medium text-gray-600"
+                          >
                             Typ adresu
                           </label>
                           <select
+                            id={`type-${addr.id}`}
                             value={addr.type}
                             onChange={(e) => handleAddressChange(addr.id, 'type', e.target.value)}
                             disabled={isTypesLoading}
@@ -430,30 +478,36 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[11px] font-medium text-gray-600">
+                          <label
+                            htmlFor={`zip-${addr.id}`}
+                            className="text-[11px] font-medium text-gray-600"
+                          >
                             Kod pocztowy *
                           </label>
                           <input
+                            id={`zip-${addr.id}`}
                             value={addr.zipCode}
                             onChange={(e) =>
                               handleAddressChange(addr.id, 'zipCode', e.target.value)
                             }
                             placeholder="00-000"
                             className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
-                            required
                           />
                         </div>
 
                         <div className="space-y-1 sm:col-span-2">
-                          <label className="text-[11px] font-medium text-gray-600">
+                          <label
+                            htmlFor={`city-${addr.id}`}
+                            className="text-[11px] font-medium text-gray-600"
+                          >
                             Miejscowość *
                           </label>
                           <input
+                            id={`city-${addr.id}`}
                             value={addr.city}
                             onChange={(e) => handleAddressChange(addr.id, 'city', e.target.value)}
                             placeholder="np. Warszawa"
                             className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
-                            required
                           />
                         </div>
                       </div>

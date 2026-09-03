@@ -9,9 +9,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 export interface EditContactDetailRequest {
   contactDetailId: string | null;
@@ -56,7 +56,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
   const [lastName, setLastName] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [details, setDetails] = useState<EditContactDetailRequest[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const { data: contactData, isLoading: isFetchingContact } = useQuery({
     queryKey: ['contact-edit-detail', contactId],
@@ -103,7 +103,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
     setLastName('');
     setJobTitle('');
     setDetails([]);
-    setErrorMessage(null);
+    setFormError(null);
   };
 
   const handleAddDetail = () => {
@@ -140,24 +140,40 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage(null);
+    setFormError(null);
 
     if (!contactId) return;
 
-    const isAnyDetailInvalid = details.some(
-      (d) => !d.label.trim() || !d.value.trim() || !d.type.trim(),
-    );
+    const validationErrors: string[] = [];
+    if (!firstName.trim()) validationErrors.push('Imię jest wymagane.');
+    if (!lastName.trim()) validationErrors.push('Nazwisko jest wymagane.');
 
-    if (!firstName.trim() || !lastName.trim() || isAnyDetailInvalid || details.length === 0) {
-      setErrorMessage('Proszę poprawnie wypełnić wszystkie wymagane pola we wszystkich detalach.');
+    if (details.length === 0) {
+      validationErrors.push('Musisz zachować co najmniej jeden detal kontaktowy.');
+    } else {
+      const isAnyDetailInvalid = details.some(
+        (d) => !d.label.trim() || !d.value.trim() || !d.type.trim(),
+      );
+      if (isAnyDetailInvalid) {
+        validationErrors.push(
+          'Uzupełnij typ, etykietę i wartość we wszystkich detalach kontaktowych.',
+        );
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
     const payload: EditContactRequest = {
       contactId,
-      firstName,
-      lastName,
-      jobTitle,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      jobTitle: jobTitle.trim() || undefined,
       details,
     };
 
@@ -167,9 +183,16 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
       onClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się zapisać zmian.';
-      setErrorMessage(getErrorMessage(code, fallback));
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback = responseData?.message || apiError.message || 'Nie udało się zapisać zmian.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
@@ -196,11 +219,28 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
             <p className="text-gray-500 text-sm">Pobieranie danych kontaktu...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6 py-4">
-            {errorMessage && (
-              <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <p>{errorMessage}</p>
+          <form onSubmit={handleSubmit} noValidate className="space-y-6 py-4">
+            {formError && (
+              <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div className="flex-1 pr-4">
+                  <p className="font-medium leading-tight">{formError.title}</p>
+                  {formError.details && formError.details.length > 0 && (
+                    <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                      {formError.details.map((detailErr, idx) => (
+                        <li key={idx}>{detailErr}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormError(null)}
+                  className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                  title="Zamknij"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 
@@ -208,26 +248,30 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
               <h3 className="text-sm font-semibold text-gray-800 border-b pb-1">Dane osobowe</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Imię *</label>
+                  <label htmlFor="contact-first-name" className="text-sm font-medium text-gray-700">
+                    Imię *
+                  </label>
                   <input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                    required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-gray-700">Nazwisko *</label>
+                  <label htmlFor="contact-last-name" className="text-sm font-medium text-gray-700">
+                    Nazwisko *
+                  </label>
                   <input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                    required
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-700">Stanowisko</label>
+                <label htmlFor="contact-job-title" className="text-sm font-medium text-gray-700">
+                  Stanowisko
+                </label>
                 <input
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
@@ -269,12 +313,13 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
 
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-700">Typ *</label>
+                      <label htmlFor="contact-type" className="text-xs font-medium text-gray-700">
+                        Typ *
+                      </label>
                       <select
                         value={detail.type}
                         onChange={(e) => handleDetailChange(index, 'type', e.target.value)}
                         className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
-                        required
                       >
                         <option value="" disabled>
                           Wybierz...
@@ -288,24 +333,26 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-700">Etykieta *</label>
+                      <label htmlFor="contatct-label" className="text-xs font-medium text-gray-700">
+                        Etykieta *
+                      </label>
                       <input
                         value={detail.label}
                         onChange={(e) => handleDetailChange(index, 'label', e.target.value)}
                         placeholder="np. Służbowy"
                         className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                        required
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-gray-700">Wartość *</label>
+                      <label htmlFor="contact-value" className="text-xs font-medium text-gray-700">
+                        Wartość *
+                      </label>
                       <input
                         value={detail.value}
                         onChange={(e) => handleDetailChange(index, 'value', e.target.value)}
                         placeholder="Email / Telefon"
                         className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                        required
                       />
                     </div>
                   </div>

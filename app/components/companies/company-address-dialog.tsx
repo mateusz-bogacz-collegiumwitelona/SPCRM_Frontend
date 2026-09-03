@@ -7,14 +7,14 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2, MapPinned } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import { AlertCircle, Loader2, MapPinned, X } from 'lucide-react';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 export interface CompanyAddressFormData {
   addressId?: string;
@@ -62,7 +62,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
   const [coords, setCoords] = useState<[number, number]>(DEFAULT_COORDS);
 
   const [isGeocoding, setIsGeocoding] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,8 +75,12 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
         if (isMounted) setMapComponent(() => module.default as ComponentType<OSMMapClientProps>);
       });
     }
+
     return () => {
       isMounted = false;
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
   }, [isOpen]);
 
@@ -111,7 +115,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
       setType('Branch');
       setCoords(DEFAULT_COORDS);
     }
-    setErrorMessage(null);
+    setFormError(null);
   }, [address, isOpen]);
 
   const handleFieldChange = (field: 'street' | 'city' | 'zipCode', value: string) => {
@@ -162,9 +166,18 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
 
-    if (!street.trim() || !city.trim() || !zipCode.trim()) {
-      setErrorMessage('Wszystkie pola adresowe są wymagane.');
+    const validationErrors: string[] = [];
+    if (!street.trim()) validationErrors.push('Ulica i numer są wymagane.');
+    if (!zipCode.trim()) validationErrors.push('Kod pocztowy jest wymagany.');
+    if (!city.trim()) validationErrors.push('Miejscowość jest wymagana.');
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
@@ -183,9 +196,17 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
       onClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Wystąpił błąd podczas zapisywania adresu.';
-      setErrorMessage(getErrorMessage(code, fallback));
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Wystąpił błąd podczas zapisywania adresu.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
@@ -199,10 +220,27 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{errorMessage}</p>
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -229,7 +267,6 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                   onChange={(e) => setType(e.target.value)}
                   disabled={isTypesLoading}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
                 >
                   {isTypesLoading && <option value="">Ładowanie typów...</option>}
                   {!isTypesLoading && addressTypes.length === 0 && (
@@ -260,7 +297,6 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                   onChange={(e) => handleFieldChange('street', e.target.value)}
                   placeholder="np. Złota 44"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
                 />
               </div>
 
@@ -275,7 +311,6 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                     onChange={(e) => handleFieldChange('zipCode', e.target.value)}
                     placeholder="00-000"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                    required
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -288,7 +323,6 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                     onChange={(e) => handleFieldChange('city', e.target.value)}
                     placeholder="np. Warszawa"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                    required
                   />
                 </div>
               </div>

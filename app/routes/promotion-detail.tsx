@@ -30,12 +30,13 @@ import {
   Tag,
   Trash2,
   User,
+  X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 interface PromotionDetailResponse {
   id: string;
@@ -78,9 +79,9 @@ const getDiscountTypeLabel = (promotion: PromotionDetailResponse): string => {
 const PromotionHeader: React.FC<{
   readonly promotion?: PromotionDetailResponse;
   readonly isLoading: boolean;
-  readonly isError: boolean;
-  readonly errorMessage?: string;
-}> = ({ promotion, isLoading, isError, errorMessage }) => {
+  readonly errorState: FormErrorState | null;
+  readonly onDismissError: () => void;
+}> = ({ promotion, isLoading, errorState, onDismissError }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -101,15 +102,6 @@ const PromotionHeader: React.FC<{
       await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       setIsDeactivateOpen(false);
     },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas dezaktywacji promocji.',
-        ),
-      );
-    },
   });
 
   const activateMutation = useMutation({
@@ -125,15 +117,6 @@ const PromotionHeader: React.FC<{
       await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       setIsActivateOpen(false);
     },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas aktywacji promocji.',
-        ),
-      );
-    },
   });
 
   const deleteMutation = useMutation({
@@ -144,16 +127,6 @@ const PromotionHeader: React.FC<{
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       navigate('/promotions');
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas usuwania promocji.',
-        ),
-      );
-      setIsDeleteOpen(false);
     },
   });
 
@@ -166,15 +139,6 @@ const PromotionHeader: React.FC<{
       await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
       setIsEditOpen(false);
     },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas edycji promocji.',
-        ),
-      );
-    },
   });
 
   if (isLoading) {
@@ -186,13 +150,37 @@ const PromotionHeader: React.FC<{
     );
   }
 
-  if (isError || !promotion) {
+  if (errorState) {
     return (
-      <div className="bg-red-50 p-6 rounded-lg border border-red-200 mb-6 flex items-center gap-2 text-red-700">
-        <AlertCircle className="w-6 h-6 shrink-0" />
-        <span className="font-medium">
-          {errorMessage || 'Nie udało się załadować danych promocji.'}
-        </span>
+      <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <div className="flex-1 pr-4">
+          <p className="font-medium leading-tight">{errorState.title}</p>
+          {errorState.details && errorState.details.length > 0 && (
+            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+              {errorState.details.map((detailErr, idx) => (
+                <li key={idx}>{detailErr}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onDismissError}
+          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+          title="Zamknij"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
+  if (!promotion) {
+    return (
+      <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm font-medium">
+        <AlertCircle className="w-5 h-5 shrink-0" />
+        <span>Nie udało się załadować danych promocji.</span>
       </div>
     );
   }
@@ -563,6 +551,7 @@ const PromotionProductSidebar: React.FC<{
 
 export default function PromotionDetails() {
   const { promotionId } = useParams<{ promotionId: string }>();
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   const {
     data: promotion,
@@ -578,12 +567,30 @@ export default function PromotionDetails() {
     enabled: Boolean(promotionId),
   });
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać szczegółów promocji.',
-      )
-    : undefined;
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  React.useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const promotionError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się pobrać szczegółów promocji.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   if (!promotionId) return null;
 
@@ -595,8 +602,8 @@ export default function PromotionDetails() {
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
               <PromotionHeader
                 isLoading={isLoading}
-                isError={isError}
-                errorMessage={errorMessage}
+                errorState={promotionError}
+                onDismissError={() => setIsErrorDismissed(true)}
                 promotion={promotion}
               />
 

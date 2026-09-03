@@ -1,12 +1,15 @@
 import type { NoteResponse } from '~/interfaces/note-response';
-import { Edit2, MessageSquare, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Edit2, MessageSquare, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { ActionGuard } from '~/lib/action-guard';
+import type { FormErrorState } from '~/interfaces/api-error';
 
 interface NotesSectionProps {
   readonly notes?: NoteResponse[];
   readonly isLoading: boolean;
   readonly emptyMessage?: string;
+  readonly error?: FormErrorState | null;
+  readonly onErrorDismiss?: () => void;
   readonly onEditClick?: (note: NoteResponse) => void;
   readonly onAddClick?: () => void;
   readonly onDeleteClick?: (note: NoteResponse) => void;
@@ -16,6 +19,8 @@ export const NotesSection = ({
   notes,
   isLoading,
   emptyMessage = 'Brak notatek',
+  error,
+  onErrorDismiss,
   onEditClick,
   onAddClick,
   onDeleteClick,
@@ -71,8 +76,12 @@ export const NotesSection = ({
                 )}
               </span>
             </div>
-            <h4 className="font-semibold text-sm text-gray-800 mb-1">{note.title}</h4>
-            <p className="text-sm text-gray-700">{note.content}</p>
+            <h4 className="font-semibold text-sm text-gray-800 mb-1 wrap-break-word">
+              {note.title}
+            </h4>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap wrap-break-word">
+              {note.content}
+            </p>
           </div>
         ))}
       </div>
@@ -97,6 +106,32 @@ export const NotesSection = ({
           </Button>
         )}
       </div>
+
+      {error && (
+        <div className="mb-4 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+          <div className="flex-1 pr-4">
+            <p className="font-medium leading-tight">{error.title}</p>
+            {error.details && error.details.length > 0 && (
+              <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                {error.details.map((detailErr, idx) => (
+                  <li key={idx}>{detailErr}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {onErrorDismiss && (
+            <button
+              type="button"
+              onClick={onErrorDismiss}
+              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+              title="Zamknij"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
 
       {renderNotesList()}
     </div>

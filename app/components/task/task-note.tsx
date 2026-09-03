@@ -4,13 +4,14 @@ import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
 import { type NoteEditData, NoteEditDialog } from '~/components/note/note-edit-dialog';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { AlertCircle, X } from 'lucide-react';
 import { useAddNote } from '~/hooks/use-add-note';
 import { NoteAddDialog } from '~/components/note/note-add-dialog';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
 import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 export const TaskNote = ({ taskId }: { taskId: string }) => {
   const queryClient = useQueryClient();
@@ -32,16 +33,21 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
     },
   });
 
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
   const { mutateAsync: editNoteAsync } = useEditNote({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
       setEditingNote(null);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (error as Error)?.message || 'Nie udało się edytować notatki.';
-      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -50,24 +56,12 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
       await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
       setIsAddModalOpen(false);
     },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (error as Error)?.message || 'Nie udało się dodać notatki.';
-      alert(getErrorMessage(code, fallback));
-    },
   });
 
   const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
       setDeletingNoteId(null);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (error as Error)?.message || 'Nie udało się usunąć notatki.';
-      alert(getErrorMessage(code, fallback));
     },
   });
 
@@ -92,17 +86,43 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
     });
   };
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać listy notatek.',
-      )
-    : null;
+  const formError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message || activeError?.message || 'Nie udało się pobrać listy notatek.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
+
   return (
     <>
-      {errorMessage && (
-        <div className="mb-4 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm font-medium">
-          {errorMessage}
+      {formError && (
+        <div className="mb-4 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <div className="flex-1 pr-4">
+            <p className="font-medium leading-tight">{formError.title}</p>
+            {formError.details && formError.details.length > 0 && (
+              <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                {formError.details.map((detailErr, idx) => (
+                  <li key={idx}>{detailErr}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsErrorDismissed(true)}
+            className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+            title="Zamknij"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 

@@ -9,7 +9,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, X } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
   buildBasePromotionPayload,
   defaultPromotionSharedState,
@@ -57,7 +59,7 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
   const [sharedForm, setSharedForm] = useState<PromotionSharedFormData>(
     defaultPromotionSharedState,
   );
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const { currencies, contacts } = usePromotionDictionaries(isOpen);
 
@@ -70,12 +72,20 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
     enabled: isOpen,
   });
 
+  const handleClose = () => {
+    setName('');
+    setProductId('');
+    setSharedForm(defaultPromotionSharedState);
+    setFormError(null);
+    onClose();
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     setName('');
     setProductId('');
     setSharedForm(defaultPromotionSharedState);
-    setErrorMessage(null);
+    setFormError(null);
   }, [isOpen]);
 
   useEffect(() => {
@@ -93,24 +103,30 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage(null);
+    setFormError(null);
+
+    const validationErrors: string[] = [];
 
     if (!name.trim()) {
-      setErrorMessage('Nazwa promocji jest wymagana.');
-      return;
+      validationErrors.push('Nazwa promocji jest wymagana.');
     }
     if (!productId) {
-      setErrorMessage('Wybierz produkt objęty promocją.');
-      return;
+      validationErrors.push('Wybierz produkt objęty promocją.');
     }
     if (sharedForm.startDate && sharedForm.endDate && sharedForm.endDate < sharedForm.startDate) {
-      setErrorMessage('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.');
-      return;
+      validationErrors.push('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.');
     }
 
     const { pricing, error } = resolvePromotionPricingPayload(sharedForm);
     if (error || !pricing) {
-      setErrorMessage(error ?? 'Nieprawidłowe warunki cenowe.');
+      validationErrors.push(error ?? 'Nieprawidłowe warunki cenowe.');
+    }
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
@@ -118,14 +134,30 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
       name: name.trim(),
       productId,
       ...buildBasePromotionPayload(sharedForm),
-      ...pricing,
+      ...pricing!,
     };
 
-    await onSave(payload);
+    try {
+      await onSave(payload);
+      handleClose();
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się utworzyć promocji.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && handleClose()}>
       <DialogContent className="sm:max-w-175 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-100 pb-4">
           <DialogTitle className="text-xl font-normal text-blue-900">
@@ -133,11 +165,28 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 py-4">
-          {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{errorMessage}</p>
+        <form onSubmit={handleSubmit} noValidate className="space-y-5 py-4">
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -188,7 +237,7 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={isLoading}
               className="text-gray-700 border-gray-300"
             >

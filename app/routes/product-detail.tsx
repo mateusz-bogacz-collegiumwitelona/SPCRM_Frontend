@@ -4,10 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
-import { AlertCircle, ArrowLeft, Banknote, Box, Loader2, Scale } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Banknote, Box, Loader2, Scale, X } from 'lucide-react';
 import { AuthGuard } from '~/lib/auth-guard';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency, formatWeight } from '~/utils/data-formatters';
 
 interface ActivePromotionResponse {
@@ -36,13 +36,13 @@ interface ProductDetailResponse {
 
 const ProductHeader = ({
   isLoading,
-  isError,
-  errorMessage,
+  errorState,
+  onDismissError,
   product,
 }: {
   isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
+  errorState: FormErrorState | null;
+  onDismissError: () => void;
   product?: ProductDetailResponse;
 }) => {
   if (isLoading) {
@@ -54,20 +54,37 @@ const ProductHeader = ({
     );
   }
 
-  if (isError) {
+  if (errorState) {
     return (
-      <div className="bg-red-50 p-6 rounded-lg border border-red-200 mb-6 flex items-center gap-2 text-red-700">
-        <AlertCircle className="w-6 h-6 shrink-0" />
-        <span className="font-medium">{errorMessage}</span>
+      <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <div className="flex-1 pr-4">
+          <p className="font-medium leading-tight">{errorState.title}</p>
+          {errorState.details && errorState.details.length > 0 && (
+            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+              {errorState.details.map((detailErr, idx) => (
+                <li key={idx}>{detailErr}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onDismissError}
+          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+          title="Zamknij"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="bg-red-50 p-6 rounded-lg border border-red-200 mb-6 flex items-center gap-2 text-red-700">
-        <AlertCircle className="w-6 h-6" />
-        <span className="font-medium">Nie udało się załadować danych produktu.</span>
+      <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm font-medium">
+        <AlertCircle className="w-5 h-5 shrink-0" />
+        <span>Nie udało się załadować danych produktu.</span>
       </div>
     );
   }
@@ -232,6 +249,8 @@ const ProductPricingInfo = ({ product }: { product: ProductDetailResponse }) => 
 export default function ProductDetails() {
   const { productId } = useParams<{ productId: string }>();
 
+  const [isErrorDismissed, setIsErrorDismissed] = React.useState(false);
+
   const {
     data: product,
     isLoading,
@@ -246,12 +265,30 @@ export default function ProductDetails() {
     enabled: !!productId,
   });
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się załadować danych produktu.',
-      )
-    : undefined;
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  React.useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const productError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się załadować danych produktu.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   if (!productId) return null;
 
@@ -263,8 +300,8 @@ export default function ProductDetails() {
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
               <ProductHeader
                 isLoading={isLoading}
-                isError={isError}
-                errorMessage={errorMessage}
+                errorState={productError}
+                onDismissError={() => setIsErrorDismissed(true)}
                 product={product}
               />
               {product && (

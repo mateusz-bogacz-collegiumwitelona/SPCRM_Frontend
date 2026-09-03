@@ -9,9 +9,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2, UserCog } from 'lucide-react';
+import { AlertCircle, Loader2, UserCog, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { translateRole } from '~/utils/role-translator';
 
 interface OwnerResponse {
@@ -35,7 +35,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
   isLoading = false,
 }) => {
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const {
     data: owners = [],
@@ -53,16 +53,19 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
   useEffect(() => {
     if (!isOpen) {
       setSelectedOwnerId('');
-      setErrorMessage(null);
+      setFormError(null);
     }
   }, [isOpen]);
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage(null);
+    setFormError(null);
 
     if (!selectedOwnerId) {
-      setErrorMessage('Proszę wybrać nowego opiekuna z listy.');
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: ['Proszę wybrać nowego opiekuna z listy.'],
+      });
       return;
     }
 
@@ -71,9 +74,17 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
       onClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się zmienić opiekuna.';
-      setErrorMessage(getErrorMessage(code, fallback));
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się zmienić opiekuna.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
@@ -96,11 +107,28 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
     }
 
     return (
-      <form onSubmit={handleSubmit} className="space-y-6 pt-4 pb-2">
-        {errorMessage && (
-          <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <p>{errorMessage}</p>
+      <form onSubmit={handleSubmit} noValidate className="space-y-6 pt-4 pb-2">
+        {formError && (
+          <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <div className="flex-1 pr-4">
+              <p className="font-medium leading-tight">{formError.title}</p>
+              {formError.details && formError.details.length > 0 && (
+                <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                  {formError.details.map((detailErr, idx) => (
+                    <li key={idx}>{detailErr}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setFormError(null)}
+              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+              title="Zamknij"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 

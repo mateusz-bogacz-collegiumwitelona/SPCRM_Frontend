@@ -9,9 +9,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 export interface EditCompanyRequest {
   id: string;
@@ -42,7 +42,7 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [nip, setNip] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const { data: companyData, isLoading: isCompanyLoading } = useQuery<EditCompanyDetailResponse>({
     queryKey: ['company-edit-details', companyId],
@@ -57,14 +57,14 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
     if (companyData && isOpen) {
       setName(companyData.name || '');
       setNip(companyData.nip || '');
-      setErrorMessage(null);
+      setFormError(null);
     }
   }, [companyData, isOpen]);
 
   const resetForm = () => {
     setName('');
     setNip('');
-    setErrorMessage(null);
+    setFormError(null);
   };
 
   const handleClose = () => {
@@ -74,12 +74,19 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage(null);
+    setFormError(null);
 
     if (!companyId) return;
 
-    if (!name.trim() || !nip.trim()) {
-      setErrorMessage('Nazwa firmy oraz NIP są polami wymaganymi.');
+    const validationErrors: string[] = [];
+    if (!name.trim()) validationErrors.push('Nazwa firmy jest wymagana.');
+    if (!nip.trim()) validationErrors.push('Numer NIP jest wymagany.');
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
@@ -94,9 +101,17 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
       handleClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się zaktualizować danych firmy.';
-      setErrorMessage(getErrorMessage(code, fallback));
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się zaktualizować danych firmy.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
@@ -120,11 +135,28 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
             <p className="text-gray-500 text-sm">Pobieranie szczegółów firmy...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 py-2">
-            {errorMessage && (
-              <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <p>{errorMessage}</p>
+          <form onSubmit={handleSubmit} noValidate className="space-y-4 py-2">
+            {formError && (
+              <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div className="flex-1 pr-4">
+                  <p className="font-medium leading-tight">{formError.title}</p>
+                  {formError.details && formError.details.length > 0 && (
+                    <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                      {formError.details.map((detailErr, idx) => (
+                        <li key={idx}>{detailErr}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormError(null)}
+                  className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                  title="Zamknij"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 
@@ -140,7 +172,6 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
                 placeholder="Wprowadź nazwę firmy"
                 maxLength={100}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                required
               />
             </div>
 
@@ -156,7 +187,6 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
                 placeholder="10 cyfr bez spacji i kresek"
                 maxLength={13}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                required
               />
             </div>
 

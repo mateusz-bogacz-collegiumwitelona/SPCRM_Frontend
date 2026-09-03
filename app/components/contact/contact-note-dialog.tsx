@@ -1,5 +1,11 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 
 export interface ContactNote {
@@ -42,10 +48,16 @@ export const ContactNoteDialog: React.FC<ContactNoteDialogProps> = ({ note, isOp
             </div>
           </div>
 
-          <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+          <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap wrap-break-word">
             {note.content}
           </div>
         </div>
+
+        <DialogFooter className="mt-4 pt-3 border-t border-gray-100 flex justify-end">
+          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            Zamknij
+          </Button>
+        </DialogFooter>
 
         <div className="mt-4 flex justify-end">
           <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">

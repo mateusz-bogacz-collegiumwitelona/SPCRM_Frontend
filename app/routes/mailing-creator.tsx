@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { Loader2, Plus, Search, X } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, Search, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 
@@ -58,7 +58,7 @@ export default function MailingCreator() {
 
   const [isSending, setIsSending] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const [currencyCode, setCurrencyCode] = useState('PLN');
 
@@ -143,15 +143,31 @@ export default function MailingCreator() {
   };
 
   const handleSubmit = async () => {
-    setErrorMsg('');
+    setFormError(null);
     setSuccessMsg('');
 
+    const validationErrors: string[] = [];
     if (selectedContacts.length === 0) {
-      setErrorMsg('Wybierz przynajmniej jednego odbiorcę.');
-      return;
+      validationErrors.push('Wybierz przynajmniej jednego odbiorcę.');
     }
     if (selectedProducts.length === 0) {
-      setErrorMsg('Wybierz przynajmniej jeden produkt.');
+      validationErrors.push('Wybierz przynajmniej jeden produkt.');
+    }
+
+    selectedProducts.forEach((p) => {
+      if (p.quantity <= 0) {
+        validationErrors.push(`Ilość dla produktu "${p.name}" musi być większa od 0.`);
+      }
+      if (p.price < 0) {
+        validationErrors.push(`Cena promocyjna dla produktu "${p.name}" nie może być ujemna.`);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
@@ -178,18 +194,16 @@ export default function MailingCreator() {
       const err = error_ as ApiError;
       const errorData = err.response?.data;
 
-      if (
-        errorData?.errorCode === 'VALIDATION_ERROR' &&
-        Array.isArray(errorData.errors) &&
-        errorData.errors.length > 0
-      ) {
-        const validationMessage = errorData.errors.map((code) => getErrorMessage(code)).join(' ');
-        setErrorMsg(validationMessage);
-      } else if (errorData?.errorCode) {
-        setErrorMsg(getErrorMessage(errorData.errorCode, errorData.message));
-      } else {
-        setErrorMsg(err.message || 'Błąd podczas wysyłania mailingu.');
-      }
+      const code = errorData?.errorCode;
+      const fallback = errorData?.message || err.message || 'Błąd podczas wysyłania mailingu.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          errorData?.errors && errorData.errors.length > 0
+            ? errorData.errors.map((item) => getErrorMessage(item, item))
+            : undefined,
+      });
     } finally {
       setIsSending(false);
     }
@@ -202,9 +216,27 @@ export default function MailingCreator() {
           <div className="mx-auto max-w-2xl pb-16 pt-6">
             <h1 className="mb-6 text-2xl font-semibold text-[#004a8f]">Kreator Mailingu</h1>
 
-            {errorMsg && (
-              <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {errorMsg}
+            {formError && (
+              <div className="mb-4 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div className="flex-1 pr-4">
+                  <p className="font-medium leading-tight">{formError.title}</p>
+                  {formError.details && formError.details.length > 0 && (
+                    <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                      {formError.details.map((detailErr, idx) => (
+                        <li key={idx}>{detailErr}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormError(null)}
+                  className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                  title="Zamknij"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             )}
             {successMsg && (
@@ -239,6 +271,7 @@ export default function MailingCreator() {
                   ) : (
                     contactsData.map((client: MailingClientResponse) => (
                       <label
+                        htmlFor="contact-checkbox"
                         key={client.contactId}
                         className="flex cursor-pointer items-start gap-3 border-b border-gray-200 p-3 hover:bg-white last:border-0"
                       >
@@ -342,7 +375,9 @@ export default function MailingCreator() {
               </div>
               <div className="p-4 space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm text-gray-700">Wybierz język szablonu</label>
+                  <label htmlFor="mailing-lang" className="mb-2 block text-sm text-gray-700">
+                    Wybierz język szablonu
+                  </label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
@@ -354,7 +389,9 @@ export default function MailingCreator() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm text-gray-700">Waluta oferty</label>
+                  <label htmlFor="mailing-currency" className="mb-2 block text-sm text-gray-700">
+                    Waluta oferty
+                  </label>
                   <select
                     value={currencyCode}
                     onChange={(e) => setCurrencyCode(e.target.value)}

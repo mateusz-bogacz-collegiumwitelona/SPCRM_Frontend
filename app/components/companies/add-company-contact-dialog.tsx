@@ -9,9 +9,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 export interface AddContactRequest {
   companyId: string;
@@ -49,7 +49,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
   const [lastName, setLastName] = useState('');
   const [jobTitle, setJobTitle] = useState('');
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const generateDefaultDetail = (isPrimary = false): FormContactDetail => ({
     id: crypto.randomUUID(),
@@ -108,36 +108,65 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
     setLastName('');
     setJobTitle('');
     setDetails([generateDefaultDetail(true)]);
-    setErrorMessage(null);
+    setFormError(null);
   };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
 
-    const isAnyDetailInvalid = details.some(
-      (d) => !d.label.trim() || !d.value.trim() || !d.type.trim(),
-    );
+    // Walidacja lokalna
+    const validationErrors: string[] = [];
+    if (!firstName.trim()) validationErrors.push('Imię jest wymagane.');
+    if (!lastName.trim()) validationErrors.push('Nazwisko jest wymagane.');
 
-    if (!firstName.trim() || !lastName.trim() || isAnyDetailInvalid || details.length === 0) {
-      alert('Proszę poprawnie wypełnić wszystkie wymagane pola we wszystkich detalach.');
+    if (details.length === 0) {
+      validationErrors.push('Musisz dodać co najmniej jeden szczegół kontaktu.');
+    } else {
+      const isAnyDetailInvalid = details.some(
+        (d) => !d.label.trim() || !d.value.trim() || !d.type.trim(),
+      );
+      if (isAnyDetailInvalid) {
+        validationErrors.push(
+          'Uzupełnij typ, etykietę i wartość we wszystkich dodanych kontaktach.',
+        );
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
     const newContact = {
-      firstName,
-      lastName,
-      jobTitle,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      jobTitle: jobTitle.trim() || undefined,
       details,
     };
+
     try {
       await onSave(newContact);
       resetForm();
       onClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się dodać kontaktu.';
-      setErrorMessage(getErrorMessage(code, fallback));
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallbackMessage =
+        responseData?.message || apiError.message || 'Wystąpił nieoczekiwany błąd.';
+
+      const title = getErrorMessage(code, fallbackMessage);
+
+      setFormError({
+        title,
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
@@ -158,13 +187,32 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{errorMessage}</p>
+        {/* noValidate pozwala przejąć kontrolę walidacji przez React i formError */}
+        <form onSubmit={handleSubmit} noValidate className="space-y-6 py-4">
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
+
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-gray-800 border-b pb-1">Dane osobowe</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -173,10 +221,10 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                   Imię *
                 </label>
                 <input
+                  id="contact-first-name"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
                 />
               </div>
               <div className="space-y-1.5">
@@ -184,10 +232,10 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                   Nazwisko *
                 </label>
                 <input
+                  id="contact-first-last"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                  required
                 />
               </div>
             </div>
@@ -196,6 +244,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                 Stanowisko
               </label>
               <input
+                id="contact-title"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
@@ -253,7 +302,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                       value={detail.type}
                       onChange={(e) => handleDetailChange(detail.id, 'type', e.target.value)}
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
-                      required
                       disabled={isTypesLoading}
                     >
                       <option value="" disabled>
@@ -280,7 +328,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                       onChange={(e) => handleDetailChange(detail.id, 'label', e.target.value)}
                       placeholder="np. Służbowy"
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                      required
                     />
                   </div>
 
@@ -297,7 +344,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                       onChange={(e) => handleDetailChange(detail.id, 'value', e.target.value)}
                       placeholder="Email / Telefon"
                       className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-                      required
                     />
                   </div>
                 </div>

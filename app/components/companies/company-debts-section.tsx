@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
-import { AlertCircle } from 'lucide-react';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import { AlertCircle, X } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 
 interface Debt {
@@ -145,15 +145,33 @@ export const CompanyDebtsSection: React.FC<{
 
   const table = useReactTable({ data: items, columns, getCoreRowModel: getCoreRowModel() });
 
-  const hasError = isSummaryError || isDebtsError;
-  const activeError = summaryError || debtsError;
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  const errorMessage = hasError
-    ? getErrorMessage(
-        (activeError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać danych o zadłużeniu.',
-      )
-    : null;
+  const hasError = isSummaryError || isDebtsError;
+  const activeError = (summaryError || debtsError) as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (hasError) {
+      setIsErrorDismissed(false);
+    }
+  }, [hasError, activeError]);
+
+  const formError: FormErrorState | null =
+    hasError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się pobrać danych o zadłużeniu.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   const renderSummaryContent = () => {
     if (isSummaryLoading) {
@@ -193,10 +211,27 @@ export const CompanyDebtsSection: React.FC<{
         <h2 className="text-xl font-normal text-gray-800">Sytuacja finansowa i zadłużenie</h2>
       </div>
 
-      {errorMessage && (
-        <div className="flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <p className="font-medium">{errorMessage}</p>
+      {formError && (
+        <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+          <div className="flex-1 pr-4">
+            <p className="font-medium leading-tight">{formError.title}</p>
+            {formError.details && formError.details.length > 0 && (
+              <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                {formError.details.map((detailErr, idx) => (
+                  <li key={idx}>{detailErr}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsErrorDismissed(true)}
+            className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+            title="Zamknij"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

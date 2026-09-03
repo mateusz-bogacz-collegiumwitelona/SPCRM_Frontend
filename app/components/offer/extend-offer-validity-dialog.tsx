@@ -9,10 +9,12 @@ import {
 import { Button } from '~/components/ui/button';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { AlertCircle, CalendarIcon, Clock, Loader2 } from 'lucide-react';
+import { AlertCircle, CalendarIcon, Clock, Loader2, X } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 interface ExtendOfferValidityDialogProps {
   isOpen: boolean;
@@ -32,11 +34,11 @@ export const ExtendOfferValidityDialog: React.FC<ExtendOfferValidityDialogProps>
   currentValidUntil,
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const resetState = () => {
     setSelectedDate(undefined);
-    setError(null);
+    setFormError(null);
   };
 
   const handleClose = () => {
@@ -50,20 +52,40 @@ export const ExtendOfferValidityDialog: React.FC<ExtendOfferValidityDialogProps>
     const base = new Date();
     const newDate = addDays(base, days);
     setSelectedDate(newDate);
-    setError(null);
+    setFormError(null);
   };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
 
     if (selectedDate && selectedDate <= new Date()) {
-      setError('Nowa data ważności oferty musi być w przyszłości.');
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: ['Nowa data ważności oferty musi być w przyszłości.'],
+      });
       return;
     }
 
-    setError(null);
-    await onConfirm(selectedDate);
-    resetState();
+    try {
+      await onConfirm(selectedDate);
+      resetState();
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message ||
+        apiError.message ||
+        'Wystąpił błąd podczas przedłużania ważności oferty.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   return (
@@ -78,7 +100,7 @@ export const ExtendOfferValidityDialog: React.FC<ExtendOfferValidityDialogProps>
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="py-4 space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="py-4 space-y-4">
           <p className="text-sm text-gray-600 text-center leading-relaxed">
             Przedłużasz termin ważności oferty {offerName ? <strong>„{offerName}”</strong> : ''}.
             {currentValidUntil && (
@@ -88,10 +110,27 @@ export const ExtendOfferValidityDialog: React.FC<ExtendOfferValidityDialogProps>
             )}
           </p>
 
-          {error && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{error}</p>
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 

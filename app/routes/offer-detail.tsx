@@ -10,8 +10,6 @@ import { ExtendOfferValidityDialog } from '~/components/offer/extend-offer-valid
 import { ChangeOfferStatusDialog } from '~/components/offer/change-offer-status-dialog';
 import { Button } from '~/components/ui/button';
 import { CalendarClock, CheckCircle, Mail, Trash2, XCircle } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
 import {
   type EditableProductItem,
   EditOfferProductsDialog,
@@ -62,15 +60,6 @@ const OfferDetail: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ['offer-allowed-actions', offerId] });
       setIsEditProductsOpen(false);
     },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas aktualizacji produktów oferty.',
-        ),
-      );
-    },
   });
 
   const handleOpenEditProducts = (currentProducts: OfferProductResponse[]) => {
@@ -107,7 +96,6 @@ const OfferDetail: React.FC = () => {
     },
     enabled: Boolean(offerId),
   });
-
   const extendValidityMutation = useMutation({
     mutationFn: async (newDate?: Date) => {
       await api.patch('/offer/extend', {
@@ -120,15 +108,6 @@ const OfferDetail: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ['offer-allowed-actions', offerId] });
       await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
       setIsExtendModalOpen(false);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas przedłużania ważności oferty.',
-        ),
-      );
     },
   });
 
@@ -144,15 +123,6 @@ const OfferDetail: React.FC = () => {
       await queryClient.invalidateQueries({ queryKey: ['offer-allowed-actions', offerId] });
       await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
       setStatusDialogState({ isOpen: false, targetStatus: null });
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas zmiany statusu oferty.',
-        ),
-      );
     },
   });
 
@@ -170,15 +140,6 @@ const OfferDetail: React.FC = () => {
     onSuccess: () => {
       setIsResendModalOpen(false);
     },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas ponownego wysyłania oferty.',
-        ),
-      );
-    },
   });
 
   const canResendEmail = allowedActions?.canResendEmail;
@@ -190,15 +151,6 @@ const OfferDetail: React.FC = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
       navigate('/offers');
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas usuwania oferty.',
-        ),
-      );
     },
   });
 
@@ -333,7 +285,9 @@ const OfferDetail: React.FC = () => {
         <DeleteOfferDialog
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={() => deleteOfferMutation.mutate()}
+          onConfirm={async () => {
+            await deleteOfferMutation.mutateAsync();
+          }}
           isLoading={deleteOfferMutation.isPending}
           offerName={basicInfo?.offerName}
         />

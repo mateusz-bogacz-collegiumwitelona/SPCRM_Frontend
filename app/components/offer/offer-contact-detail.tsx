@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { Building2, Contact, ExternalLink } from 'lucide-react';
+import { AlertCircle, Building2, Contact, ExternalLink, X } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 interface OfferClientDetailResponse {
   contactId: string;
@@ -13,10 +15,13 @@ interface OfferClientDetailResponse {
 }
 
 export const OfferClientDetail: React.FC<{ offerId: string }> = ({ offerId }) => {
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
   const {
     data: info,
     isLoading,
     isError,
+    error: queryError,
   } = useQuery<OfferClientDetailResponse>({
     queryKey: ['offer-client-detail', offerId],
     queryFn: async () => {
@@ -25,6 +30,31 @@ export const OfferClientDetail: React.FC<{ offerId: string }> = ({ offerId }) =>
     },
     enabled: Boolean(offerId),
   });
+
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const formError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się pobrać danych osoby kontaktowej klienta.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   if (isLoading) {
     return (
@@ -41,7 +71,33 @@ export const OfferClientDetail: React.FC<{ offerId: string }> = ({ offerId }) =>
     );
   }
 
-  if (isError || !info) {
+  if (formError) {
+    return (
+      <div className="mb-6 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+        <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+        <div className="flex-1 pr-4">
+          <p className="font-medium leading-tight">{formError.title}</p>
+          {formError.details && formError.details.length > 0 && (
+            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+              {formError.details.map((detailErr, idx) => (
+                <li key={idx}>{detailErr}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsErrorDismissed(true)}
+          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+          title="Zamknij"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  if (!info) {
     return null;
   }
 

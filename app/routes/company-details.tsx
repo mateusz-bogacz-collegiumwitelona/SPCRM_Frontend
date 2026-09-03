@@ -23,11 +23,11 @@ import {
   CompanyAddressDialog,
   type CompanyAddressFormData,
 } from '~/components/companies/company-address-dialog';
-import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
 import { DeleteCompanyDialog } from '~/components/companies/delete-company-dialog';
 import { DeleteCompanyAddressDialog } from '~/components/companies/delete-company-address-dialog';
 import { ChangeCompanyOwnerDialog } from '~/components/companies/change-company-owner-dialog';
+import type ApiError from '~/interfaces/api-error';
+import { getErrorMessage } from '~/utils/error-mapper';
 
 interface CompanyAddress {
   id: string;
@@ -205,12 +205,6 @@ export default function CompanyDetails() {
       await queryClient.invalidateQueries({ queryKey: ['company-addresses', clientId] });
       await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
       setAddressToDelete(null);
-    },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się usunąć adresu.';
-      alert(getErrorMessage(code, fallback));
     },
   });
 

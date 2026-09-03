@@ -33,7 +33,6 @@ export const SteelGradeFormFields: React.FC<SteelGradeFormFieldsProps> = ({
           onChange={(e) => onChange('name', e.target.value)}
           placeholder="np. S355J2, 1.4301"
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-          required
         />
       </div>
 

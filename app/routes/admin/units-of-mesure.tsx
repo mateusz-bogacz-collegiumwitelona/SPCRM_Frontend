@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus } from 'lucide-react';
-
+import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus, X } from 'lucide-react';
 import { api } from '~/api/api';
 import { mergeById } from '~/utils/table-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AddUnitDialog, type AddUnitRequestPayload } from '~/components/unit/add-unit-dialog';
 import { EditUnitDialog, type EditUnitRequestPayload } from '~/components/unit/edit-unit-dialog';
 import { AuthGuard } from '~/lib/auth-guard';
@@ -161,6 +160,8 @@ export default function UnitList() {
     placeholderData: keepPreviousData,
   });
 
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
   const addMutation = useMutation({
     mutationFn: async (payload: AddUnitRequestPayload) => {
       await api.post('/unit', payload);
@@ -169,15 +170,6 @@ export default function UnitList() {
       await queryClient.invalidateQueries({ queryKey: ['units-of-measure'] });
       await queryClient.invalidateQueries({ queryKey: ['units-of-measure-simple'] });
       setIsAddOpen(false);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas dodawania jednostki miary.',
-        ),
-      );
     },
   });
 
@@ -189,15 +181,6 @@ export default function UnitList() {
       await queryClient.invalidateQueries({ queryKey: ['units-of-measure'] });
       await queryClient.invalidateQueries({ queryKey: ['units-of-measure-simple'] });
       setEditUnit(null);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      alert(
-        getErrorMessage(
-          apiError.response?.data?.errorCode,
-          'Wystąpił błąd podczas edycji jednostki miary.',
-        ),
-      );
     },
   });
 
@@ -236,12 +219,30 @@ export default function UnitList() {
     } satisfies UnitTableMeta,
   });
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać listy jednostek miary.',
-      )
-    : null;
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const listError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się pobrać listy jednostek miary.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   return (
     <AuthGuard>
@@ -297,13 +298,29 @@ export default function UnitList() {
             </div>
           </div>
 
-          {errorMessage && (
-            <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <p className="text-sm font-medium">{errorMessage}</p>
+          {listError && (
+            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{listError.title}</p>
+                {listError.details && listError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {listError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsErrorDismissed(true)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
-
           <DataTable
             table={table}
             isLoading={isLoading}

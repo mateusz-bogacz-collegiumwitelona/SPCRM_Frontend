@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -20,6 +20,7 @@ import {
   Filter,
   Loader2,
   PackageOpen,
+  X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 
@@ -258,12 +259,32 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać listy produktów w zamówieniu.',
-      )
-    : null;
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const formError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się pobrać listy produktów w zamówieniu.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   const renderProductsContent = () => {
     if (isLoading) {
@@ -506,10 +527,27 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
       </div>
 
       <div className="p-4 lg:p-6">
-        {errorMessage && (
-          <div className="mb-6 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <p className="text-sm font-medium">{errorMessage}</p>
+        {formError && (
+          <div className="mb-6 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <div className="flex-1 pr-4">
+              <p className="font-medium leading-tight">{formError.title}</p>
+              {formError.details && formError.details.length > 0 && (
+                <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                  {formError.details.map((detailErr, idx) => (
+                    <li key={idx}>{detailErr}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsErrorDismissed(true)}
+              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+              title="Zamknij"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 

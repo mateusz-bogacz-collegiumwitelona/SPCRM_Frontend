@@ -3,17 +3,15 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
-import { AlertCircle, Filter, Loader2 } from 'lucide-react';
+import { AlertCircle, Filter, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
-
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import plLocale from '@fullcalendar/core/locales/pl';
-
 import { type TaskCalendarResponse } from '~/interfaces/task-calendar-response';
 import { TaskDialog } from '~/components/calendar/task-dialog';
 import { RoleGuard } from '~/lib/role-guard';
@@ -65,12 +63,32 @@ export default function CalendarPage() {
     placeholderData: keepPreviousData,
   });
 
-  const errorMessage = isError
-    ? getErrorMessage(
-        (queryError as ApiError)?.response?.data?.errorCode,
-        'Nie udało się pobrać zadań do kalendarza.',
-      )
-    : null;
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const calendarError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message ||
+              activeError?.message ||
+              'Nie udało się pobrać zadań do kalendarza.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   const { data: dictionaries } = useQuery({
     queryKey: ['task-dictionaries'],
@@ -164,10 +182,27 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {errorMessage && (
-            <div className="mb-4 flex items-center gap-2 p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg shadow-sm">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <p className="text-sm font-medium">{errorMessage}</p>
+          {calendarError && (
+            <div className="mb-4 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{calendarError.title}</p>
+                {calendarError.details && calendarError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {calendarError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsErrorDismissed(true)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
 

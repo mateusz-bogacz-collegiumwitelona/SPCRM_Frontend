@@ -1,11 +1,14 @@
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { AlertCircle, AlignLeft, Calendar, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, AlignLeft, Calendar, CheckCircle2, X } from 'lucide-react';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 export const TaskInfo = ({ taskId }: { taskId: string }) => {
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
   const {
     data: task,
     isLoading,
@@ -15,11 +18,34 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
     queryKey: ['task-core-details', taskId],
     queryFn: async () => {
       const res = await api.get(`/tasks/${taskId}`);
-      return res.data.data;
+      return res.data?.data || res.data?.value || res.data;
     },
   });
 
   const { getStatusLabel, getPriorityLabel } = useTaskDictionaries();
+
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  useEffect(() => {
+    if (isError) {
+      setIsErrorDismissed(false);
+    }
+  }, [isError, queryError]);
+
+  const formError: FormErrorState | null =
+    (isError || (!isLoading && !task)) && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message || activeError?.message || 'Nie udało się pobrać danych zadania.',
+          ),
+          details:
+            responseData?.errors && responseData.errors.length > 0
+              ? responseData.errors
+              : undefined,
+        }
+      : null;
 
   if (isLoading) {
     return (
@@ -30,13 +56,33 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
     );
   }
 
-  if (isError || !task) {
-    const errorMessage = getErrorMessage(
-      (queryError as ApiError)?.response?.data?.errorCode,
-      'Nie udało się pobrać danych zadania.',
+  if (formError) {
+    return (
+      <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <div className="flex-1 pr-4">
+          <p className="font-medium leading-tight">{formError.title}</p>
+          {formError.details && formError.details.length > 0 && (
+            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+              {formError.details.map((detailErr, idx) => (
+                <li key={idx}>{detailErr}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsErrorDismissed(true)}
+          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+          title="Zamknij"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
     );
-    return <div className="text-red-500 mb-6 font-medium">{errorMessage}</div>;
   }
+
+  if (!task) return null;
 
   const isCompleted = task.status === 'Complete';
   const isOverdue = new Date(task.dueAt) < new Date() && !isCompleted;

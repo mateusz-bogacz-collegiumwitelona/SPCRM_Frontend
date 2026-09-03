@@ -5,8 +5,9 @@ import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { Navbar } from '~/components/layout/unloged-navbar';
 import { api } from '~/api/api';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
+import { AlertCircle, X } from 'lucide-react';
 
 interface SupportFormData {
   email: string;
@@ -21,7 +22,7 @@ export default function Help() {
     message: '',
   });
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const { mutate, isPending } = useMutation({
@@ -31,7 +32,7 @@ export default function Help() {
     },
     onSuccess: () => {
       setSuccessMessage('Wiadomość została wysłana pomyślnie. Skontaktujemy się z Tobą wkrótce.');
-      setErrorMessage(null);
+      setFormError(null);
       setFormData({ email: '', title: '', message: '' });
     },
     onError: (error: unknown) => {
@@ -39,18 +40,16 @@ export default function Help() {
       const err = error as ApiError;
       const errorData = err.response?.data;
 
-      if (
-        errorData?.errorCode === 'VALIDATION_ERROR' &&
-        errorData.errors &&
-        errorData.errors.length > 0
-      ) {
-        const validationMessage = errorData.errors.map((code) => getErrorMessage(code)).join(' ');
-        setErrorMessage(validationMessage);
-      } else if (errorData?.errorCode) {
-        setErrorMessage(getErrorMessage(errorData.errorCode, errorData.message));
-      } else {
-        setErrorMessage(err.message || 'Wystąpił nieznany błąd.');
-      }
+      const code = errorData?.errorCode;
+      const fallback = errorData?.message || err.message || 'Wystąpił nieznany błąd.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          errorData?.errors && errorData.errors.length > 0
+            ? errorData.errors.map((item) => getErrorMessage(item, item))
+            : undefined,
+      });
     },
   });
 
@@ -61,7 +60,41 @@ export default function Help() {
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    mutate(formData);
+    setFormError(null);
+    setSuccessMessage(null);
+
+    const validationErrors: string[] = [];
+    const trimmedEmail = formData.email.trim();
+    const trimmedTitle = formData.title.trim();
+    const trimmedMessage = formData.message.trim();
+
+    if (!trimmedEmail) {
+      validationErrors.push('Adres email jest wymagany.');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      validationErrors.push('Podaj poprawny adres email.');
+    }
+
+    if (!trimmedTitle) {
+      validationErrors.push('Tytuł zgłoszenia jest wymagany.');
+    }
+
+    if (!trimmedMessage) {
+      validationErrors.push('Treść wiadomości jest wymagana.');
+    }
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
+      return;
+    }
+
+    mutate({
+      email: trimmedEmail,
+      title: trimmedTitle,
+      message: trimmedMessage,
+    });
   };
 
   const characterCount = formData.message.length;
@@ -81,7 +114,11 @@ export default function Help() {
               Podaj dane, aby zgłosić problem
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5 lg:mt-10 lg:space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="mt-8 space-y-5 lg:mt-10 lg:space-y-6"
+            >
               <div className="space-y-2">
                 <label
                   htmlFor="email-input"
@@ -97,7 +134,6 @@ export default function Help() {
                   onChange={handleChange}
                   placeholder="example@example.com"
                   className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
-                  required
                 />
               </div>
 
@@ -116,7 +152,6 @@ export default function Help() {
                   onChange={handleChange}
                   placeholder="Przykładowy tytuł"
                   className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
-                  required
                 />
               </div>
 
@@ -136,7 +171,6 @@ export default function Help() {
                     placeholder="Przykładowa treść"
                     className="w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 min-h-50 sm:text-[14px]"
                     maxLength={maxCharacters}
-                    required
                   />
                   <span className="absolute bottom-2 right-2 text-xs text-[#7f8490]">
                     {characterCount}/{maxCharacters}
@@ -144,10 +178,28 @@ export default function Help() {
                 </div>
               </div>
 
-              {errorMessage && (
-                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700 sm:text-[13px]">
-                  {errorMessage}
-                </p>
+              {formError && (
+                <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-xs transition-all text-left">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 pr-4">
+                    <p className="font-medium leading-tight">{formError.title}</p>
+                    {formError.details && formError.details.length > 0 && (
+                      <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                        {formError.details.map((detailErr, idx) => (
+                          <li key={idx}>{detailErr}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormError(null)}
+                    className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                    title="Zamknij"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               )}
 
               {successMessage && (

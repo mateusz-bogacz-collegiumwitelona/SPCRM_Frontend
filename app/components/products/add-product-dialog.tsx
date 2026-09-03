@@ -7,9 +7,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
   type ProductFormData,
   ProductFormFields,
@@ -60,7 +60,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
   isLoading = false,
 }) => {
   const [formData, setFormData] = useState<ProductFormData>(initialFormState);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const { categories, steelGrades, units, currencies } = useProductFormDictionaries(isOpen);
 
@@ -73,21 +73,30 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
 
   const handleClose = () => {
     setFormData(initialFormState);
-    setErrorMessage(null);
+    setFormError(null);
     onClose();
   };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormError(null);
 
-    if (
-      !formData.name.trim() ||
-      !formData.steelGradeId ||
-      !formData.category ||
-      !formData.unitId ||
-      !formData.currencyId
-    ) {
-      setErrorMessage('Proszę wypełnić wszystkie wymagane pola.');
+    const validationErrors: string[] = [];
+    if (!formData.name.trim()) validationErrors.push('Nazwa produktu jest wymagana.');
+    if (!formData.category) validationErrors.push('Kategoria produktu jest wymagana.');
+    if (!formData.steelGradeId) validationErrors.push('Gatunek stali jest wymagany.');
+    if (!formData.unitId) validationErrors.push('Jednostka miary jest wymagana.');
+    if (!formData.currencyId) validationErrors.push('Waluta jest wymagana.');
+    if (Number(formData.pricePerUnit) < 0)
+      validationErrors.push('Cena jednostkowa nie może być ujemna.');
+    if (Number(formData.stockQuantity) < 0)
+      validationErrors.push('Stan magazynowy nie może być ujemny.');
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
       return;
     }
 
@@ -111,9 +120,16 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
       handleClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się dodać produktu.';
-      setErrorMessage(getErrorMessage(code, fallback));
+      const responseData = apiError.response?.data;
+
+      const code = responseData?.errorCode;
+      const fallback = responseData?.message || apiError.message || 'Nie udało się dodać produktu.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
     }
   };
 
@@ -126,11 +142,28 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {errorMessage && (
-            <div className="flex items-center gap-2 p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg text-sm">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <p>{errorMessage}</p>
+        <form onSubmit={handleSubmit} noValidate className="space-y-6 py-4">
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -150,8 +183,9 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-[#004a8f] text-white hover:bg-blue-800"
+              className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
             >
+              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Zapisywanie...' : 'Dodaj produkt'}
             </Button>
           </DialogFooter>
