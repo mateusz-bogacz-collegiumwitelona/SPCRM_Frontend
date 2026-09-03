@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Calendar, User, Building2, Clock, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Building2, Calendar, Clock, User } from 'lucide-react';
 import { getStatusBadge } from '~/utils/offer-status-helper';
 
 interface OfferDetailHeaderProps {

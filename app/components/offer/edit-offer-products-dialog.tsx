@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { AlertCircle, Loader2, Plus, Trash2, Edit3, Search } from 'lucide-react';
+import { AlertCircle, Edit3, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 
 export interface EditableProductItem {
   productId: string;

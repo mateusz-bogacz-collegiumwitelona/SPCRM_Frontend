@@ -3,7 +3,7 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { MapPinned } from 'lucide-react';
 import { api } from '~/api/api';
 import { useParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
 import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
@@ -12,6 +12,10 @@ import { CompanySalesSection } from '~/components/companies/company-sales-sectio
 import { CompanyDebtsSection } from '~/components/companies/company-debts-section';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { AuthGuard } from '~/lib/auth-guard';
+import {
+  EditCompanyDialog,
+  type EditCompanyRequest,
+} from '~/components/companies/edit-company-dialog';
 
 interface CompanyAddress {
   id: string;
@@ -66,8 +70,11 @@ const renderMapContent = (
   );
 };
 
-const CompanyDetails: React.FC = () => {
+export default function CompanyDetails() {
   const { clientId } = useParams<{ clientId: string }>();
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const {
     data: basicInfo,
@@ -125,6 +132,20 @@ const CompanyDetails: React.FC = () => {
       : [51.9194, 19.1451];
   }, [addresses]);
 
+  const editCompanyMutation = useMutation({
+    mutationFn: async (payload: EditCompanyRequest) => {
+      const res = await api.patch('/company', payload);
+      return res.data;
+    },
+    onSuccess: async () => {
+      // Unieważniamy cache szczegółów bieżącej firmy oraz tabeli głównej
+      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
+      await queryClient.invalidateQueries({ queryKey: ['company-edit-details', clientId] });
+      await queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setIsEditDialogOpen(false);
+    },
+  });
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -134,6 +155,7 @@ const CompanyDetails: React.FC = () => {
               isLoading={isBasicInfoLoading}
               isError={isError}
               basicInfo={basicInfo}
+              onEditClick={() => setIsEditDialogOpen(true)}
             />
 
             <div className="block lg:hidden space-y-6">
@@ -167,9 +189,17 @@ const CompanyDetails: React.FC = () => {
             </div>
           </div>
         </div>
+
+        <EditCompanyDialog
+          companyId={clientId ?? null}
+          isOpen={isEditDialogOpen}
+          onClose={() => setIsEditDialogOpen(false)}
+          onSave={async (data) => {
+            await editCompanyMutation.mutateAsync(data);
+          }}
+          isLoading={editCompanyMutation.isPending}
+        />
       </MainLayout>
     </AuthGuard>
   );
-};
-
-export default CompanyDetails;
+}

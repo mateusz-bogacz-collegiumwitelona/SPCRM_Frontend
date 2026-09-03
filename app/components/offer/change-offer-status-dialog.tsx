@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, XCircle } from 'lucide-react';
 
 interface ChangeOfferStatusDialogProps {
   isOpen: boolean;

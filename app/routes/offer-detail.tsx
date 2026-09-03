@@ -17,8 +17,8 @@ import {
   EditOfferProductsDialog,
 } from '~/components/offer/edit-offer-products-dialog';
 import {
-  OfferProductsTable,
   type OfferProductResponse,
+  OfferProductsTable,
 } from '~/components/offer/offer-product-table';
 import { ResendOfferEmailDialog } from '~/components/offer/resend-offer-email-dialog';
 import { DeleteOfferDialog } from '~/components/offer/delete-offer-dialog';
