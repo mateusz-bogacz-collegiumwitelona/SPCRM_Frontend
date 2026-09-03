@@ -16,8 +16,8 @@ import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-hel
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 
-export interface EditCompanyAddressRequest {
-  addressId: string;
+export interface CompanyAddressFormData {
+  addressId?: string;
   street: string;
   city: string;
   zipCode: string;
@@ -27,35 +27,39 @@ export interface EditCompanyAddressRequest {
 }
 
 export interface AddressItemToEdit {
-  id: string;
-  street: string;
-  city: string;
-  zipCode: string;
+  id?: string;
+  street?: string;
+  city?: string;
+  zipCode?: string;
   latitude?: number | null;
   longitude?: number | null;
-  type: string;
+  type?: string;
 }
 
 interface EditCompanyAddressDialogProps {
   readonly address: AddressItemToEdit | null;
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly onSave: (data: EditCompanyAddressRequest) => Promise<void>;
+  readonly onSave: (data: CompanyAddressFormData) => Promise<void>;
   readonly isLoading?: boolean;
 }
 
-export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
+const DEFAULT_COORDS: [number, number] = [52.0693, 19.4803];
+
+export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
   address,
   isOpen,
   onClose,
   onSave,
   isLoading = false,
 }) => {
+  const isEditing = Boolean(address?.id);
+
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [type, setType] = useState('Branch');
-  const [coords, setCoords] = useState<[number, number]>([52.0693, 19.4803]);
+  const [coords, setCoords] = useState<[number, number]>(DEFAULT_COORDS);
 
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -76,20 +80,38 @@ export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> =
     };
   }, [isOpen]);
 
+  const { data: addressTypes = [], isLoading: isTypesLoading } = useQuery<string[]>({
+    queryKey: ['company-address-types'],
+    queryFn: async () => {
+      const res = await api.get('/company/address/types');
+      const list = res.data?.data ?? res.data?.value ?? res.data;
+      return Array.isArray(list) ? list : [];
+    },
+    enabled: isOpen,
+    staleTime: 1000 * 60 * 10,
+  });
+
   useEffect(() => {
-    if (address && isOpen) {
+    if (!isOpen) return;
+
+    if (address?.id) {
       setStreet(address.street || '');
       setCity(address.city || '');
       setZipCode(address.zipCode || '');
       setType(address.type || 'Branch');
-
       if (address.latitude && address.longitude) {
         setCoords([address.latitude, address.longitude]);
       } else {
-        setCoords([52.0693, 19.4803]);
+        setCoords(DEFAULT_COORDS);
       }
-      setErrorMessage(null);
+    } else {
+      setStreet('');
+      setCity('');
+      setZipCode('');
+      setType('Branch');
+      setCoords(DEFAULT_COORDS);
     }
+    setErrorMessage(null);
   }, [address, isOpen]);
 
   const handleFieldChange = (field: 'street' | 'city' | 'zipCode', value: string) => {
@@ -140,15 +162,14 @@ export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> =
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!address) return;
 
     if (!street.trim() || !city.trim() || !zipCode.trim()) {
       setErrorMessage('Wszystkie pola adresowe są wymagane.');
       return;
     }
 
-    const payload: EditCompanyAddressRequest = {
-      addressId: address.id,
+    const payload: CompanyAddressFormData = {
+      addressId: address?.id,
       street: street.trim(),
       city: city.trim(),
       zipCode: zipCode.trim(),
@@ -163,28 +184,17 @@ export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> =
     } catch (err: unknown) {
       const apiError = err as ApiError;
       const code = apiError.response?.data?.errorCode;
-      const fallback = (err as Error)?.message || 'Nie udało się zaktualizować adresu.';
+      const fallback = (err as Error)?.message || 'Wystąpił błąd podczas zapisywania adresu.';
       setErrorMessage(getErrorMessage(code, fallback));
     }
   };
-
-  const { data: addressTypes = [], isLoading: isTypesLoading } = useQuery<string[]>({
-    queryKey: ['company-address-types'],
-    queryFn: async () => {
-      const res = await api.get('/company/address/types');
-      const list = res.data?.data ?? res.data?.value ?? res.data;
-      return Array.isArray(list) ? list : [];
-    },
-    enabled: isOpen,
-    staleTime: 1000 * 60 * 10,
-  });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-220 max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-normal text-[#004a8f]">
-            Edytuj adres firmy
+            {isEditing ? 'Edytuj adres firmy' : 'Dodaj nowy adres firmy'}
           </DialogTitle>
         </DialogHeader>
 
@@ -206,7 +216,7 @@ export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> =
                   >
                     Typ adresu *
                   </label>
-                  {address?.type === 'Headquarters' && (
+                  {isEditing && address?.type === 'Headquarters' && (
                     <span className="text-[10px] text-amber-600 font-medium">
                       Aktualna centrala
                     </span>
@@ -223,7 +233,7 @@ export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> =
                 >
                   {isTypesLoading && <option value="">Ładowanie typów...</option>}
                   {!isTypesLoading && addressTypes.length === 0 && (
-                    <option value="">Brak dostępnych typów</option>
+                    <option value="">Brak typów</option>
                   )}
                   {addressTypes.map((t) => (
                     <option key={t} value={t}>
@@ -232,7 +242,7 @@ export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> =
                   ))}
                 </select>
 
-                {type === 'Headquarters' && address?.type !== 'Headquarters' && (
+                {type === 'Headquarters' && (!isEditing || address?.type !== 'Headquarters') && (
                   <p className="text-[11px] text-blue-700">
                     Ustawienie tego adresu jako Siedziba główna automatycznie zmieni dotychczasową
                     centralę na Oddział.
@@ -331,7 +341,7 @@ export const EditCompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> =
               disabled={isLoading || isGeocoding}
               className="bg-[#004a8f] text-white hover:bg-blue-800"
             >
-              {isLoading ? 'Zapisywanie...' : 'Zapisz zmiany adresu'}
+              {isLoading ? 'Zapisywanie...' : isEditing ? 'Zapisz zmiany' : 'Dodaj adres'}
             </Button>
           </DialogFooter>
         </form>

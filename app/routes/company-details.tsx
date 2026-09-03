@@ -1,6 +1,6 @@
 import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
-import { MapPinned, Pencil } from 'lucide-react';
+import { MapPinned, Pencil, Plus } from 'lucide-react';
 import { api } from '~/api/api';
 import { useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,13 +15,14 @@ import {
   EditCompanyDialog,
   type EditCompanyRequest,
 } from '~/components/companies/edit-company-dialog';
-import {
-  type AddressItemToEdit,
-  EditCompanyAddressDialog,
-  type EditCompanyAddressRequest,
-} from '~/components/companies/edit-company-address-dialog';
+
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 import { Button } from '~/components/ui/button';
+import {
+  type AddressItemToEdit,
+  CompanyAddressDialog,
+  type CompanyAddressFormData,
+} from '~/components/companies/company-address-dialog';
 
 interface CompanyAddress {
   id: string;
@@ -84,7 +85,9 @@ export default function CompanyDetails() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const [editingAddress, setEditingAddress] = useState<AddressItemToEdit | null>(null);
+  const [selectedAddressForDialog, setSelectedAddressForDialog] =
+    useState<AddressItemToEdit | null>(null);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   const {
     data: basicInfo,
@@ -155,17 +158,40 @@ export default function CompanyDetails() {
     },
   });
 
-  const editAddressMutation = useMutation({
-    mutationFn: async (payload: EditCompanyAddressRequest) => {
-      const res = await api.patch('/company/address', payload);
+  const saveAddressMutation = useMutation({
+    mutationFn: async (formData: CompanyAddressFormData) => {
+      if (formData.addressId) {
+        const res = await api.patch('/company/address', formData);
+        return res.data;
+      }
+
+      const res = await api.post(`/company/address/${clientId}`, {
+        street: formData.street,
+        city: formData.city,
+        zipCode: formData.zipCode,
+        longitude: formData.longitude,
+        latitude: formData.latitude,
+        type: formData.type,
+      });
       return res.data;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['company-addresses', clientId] });
       await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
-      setEditingAddress(null);
+      setIsAddressModalOpen(false);
+      setSelectedAddressForDialog(null);
     },
   });
+
+  const handleOpenAddAddress = () => {
+    setSelectedAddressForDialog(null);
+    setIsAddressModalOpen(true);
+  };
+
+  const handleOpenEditAddress = (addr: CompanyAddress) => {
+    setSelectedAddressForDialog(addr);
+    setIsAddressModalOpen(true);
+  };
 
   return (
     <AuthGuard>
@@ -180,7 +206,7 @@ export default function CompanyDetails() {
             />
 
             <div className="block lg:hidden space-y-6">
-              <CompanyAddressesMobile addresses={addresses} onEditAddress={setEditingAddress} />
+              <CompanyAddressesMobile addresses={addresses} onEditAddress={handleOpenEditAddress} />
               <CompanyContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanySalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
@@ -197,9 +223,17 @@ export default function CompanyDetails() {
                 <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-normal text-gray-800">Lokalizacje adresów</h2>
-                    <span className="text-xs text-gray-500 font-medium">({addresses.length})</span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleOpenAddAddress}
+                      className="h-7 text-xs bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Dodaj adres
+                    </Button>
                   </div>
 
+                  {/* Mapa */}
                   <div className="border border-gray-300 rounded-lg overflow-hidden h-96 bg-gray-100 relative mb-4">
                     {renderMapContent(
                       isAddressesLoading,
@@ -209,13 +243,12 @@ export default function CompanyDetails() {
                       mapCompaniesData,
                       (addressId) => {
                         const target = addresses.find((a) => a.id.toString() === addressId);
-                        if (target) {
-                          setEditingAddress(target);
-                        }
+                        if (target) handleOpenEditAddress(target);
                       },
                     )}
                   </div>
 
+                  {/* Lista kafelków adresów */}
                   <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
                     {addresses.map((addr) => (
                       <div
@@ -239,7 +272,7 @@ export default function CompanyDetails() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setEditingAddress(addr)}
+                          onClick={() => handleOpenEditAddress(addr)}
                           className="h-7 text-xs text-[#004a8f] hover:text-blue-900 hover:bg-blue-50 px-2"
                         >
                           <Pencil className="w-3.5 h-3.5 mr-1" /> Edytuj
@@ -263,14 +296,17 @@ export default function CompanyDetails() {
           isLoading={editCompanyMutation.isPending}
         />
 
-        <EditCompanyAddressDialog
-          address={editingAddress}
-          isOpen={!!editingAddress}
-          onClose={() => setEditingAddress(null)}
-          onSave={async (data) => {
-            await editAddressMutation.mutateAsync(data);
+        <CompanyAddressDialog
+          address={selectedAddressForDialog}
+          isOpen={isAddressModalOpen}
+          onClose={() => {
+            setIsAddressModalOpen(false);
+            setSelectedAddressForDialog(null);
           }}
-          isLoading={editAddressMutation.isPending}
+          onSave={async (data) => {
+            await saveAddressMutation.mutateAsync(data);
+          }}
+          isLoading={saveAddressMutation.isPending}
         />
       </MainLayout>
     </AuthGuard>
