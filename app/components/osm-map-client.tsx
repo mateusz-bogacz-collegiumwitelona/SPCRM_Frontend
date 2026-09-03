@@ -4,6 +4,7 @@ import { ExternalLink } from 'lucide-react';
 import type { CompanyMapData } from '~/routes/map';
 import 'leaflet/dist/leaflet.css';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
+
 export type OSMMapClientProps = {
   center: [number, number];
   zoom: number;
@@ -13,6 +14,7 @@ export type OSMMapClientProps = {
   selectedCoords?: [number, number] | null;
   onLocationSelect?: (lat: number, lng: number) => void;
   onEditAddress?: (addressId: string) => void;
+  onDeleteAddress?: (addressId: string) => void;
 };
 
 function InvalidateSizeOnMount() {
@@ -74,6 +76,7 @@ export default function OSMMapClient({
   selectedCoords,
   onLocationSelect,
   onEditAddress,
+  onDeleteAddress,
 }: Readonly<OSMMapClientProps>) {
   const getGoogleMapsLink = (lat: number, lng: number) => {
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;

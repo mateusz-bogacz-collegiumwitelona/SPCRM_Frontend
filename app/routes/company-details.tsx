@@ -1,6 +1,6 @@
 import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
-import { MapPinned, Pencil, Plus } from 'lucide-react';
+import { MapPinned, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '~/api/api';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,6 +26,7 @@ import {
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
 import { DeleteCompanyDialog } from '~/components/companies/delete-company-dialog';
+import { DeleteCompanyAddressDialog } from '~/components/companies/delete-company-address-dialog';
 
 interface CompanyAddress {
   id: string;
@@ -49,6 +50,7 @@ const renderMapContent = (
   mapCenter: [number, number],
   mapCompaniesData: OSMMapClientProps['companies'],
   onEditAddress?: (addressId: string) => void,
+  onDeleteAddress?: (addressId: string) => void,
 ) => {
   if (isAddressesLoading) {
     return (
@@ -72,6 +74,7 @@ const renderMapContent = (
         className="h-full w-full"
         companies={mapCompaniesData}
         onEditAddress={onEditAddress}
+        onDeleteAddress={onDeleteAddress}
       />
     );
   }
@@ -91,6 +94,8 @@ export default function CompanyDetails() {
   const [selectedAddressForDialog, setSelectedAddressForDialog] =
     useState<AddressItemToEdit | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+
+  const [addressToDelete, setAddressToDelete] = useState<CompanyAddress | null>(null);
 
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -189,6 +194,24 @@ export default function CompanyDetails() {
     },
   });
 
+  const deleteAddressMutation = useMutation({
+    mutationFn: async (addressId: string) => {
+      const res = await api.delete(`/company/address/${addressId}`);
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['company-addresses', clientId] });
+      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
+      setAddressToDelete(null);
+    },
+    onError: (err: unknown) => {
+      const apiError = err as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (err as Error)?.message || 'Nie udało się usunąć adresu.';
+      alert(getErrorMessage(code, fallback));
+    },
+  });
+
   const handleOpenAddAddress = () => {
     setSelectedAddressForDialog(null);
     setIsAddressModalOpen(true);
@@ -231,7 +254,11 @@ export default function CompanyDetails() {
             />
 
             <div className="block lg:hidden space-y-6">
-              <CompanyAddressesMobile addresses={addresses} onEditAddress={handleOpenEditAddress} />
+              <CompanyAddressesMobile
+                addresses={addresses}
+                onEditAddress={handleOpenEditAddress}
+                onDeleteAddress={setAddressToDelete}
+              />
               <CompanyContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanySalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
@@ -257,8 +284,6 @@ export default function CompanyDetails() {
                       <Plus className="w-3.5 h-3.5" /> Dodaj adres
                     </Button>
                   </div>
-
-                  {/* Mapa */}
                   <div className="border border-gray-300 rounded-lg overflow-hidden h-96 bg-gray-100 relative mb-4">
                     {renderMapContent(
                       isAddressesLoading,
@@ -270,10 +295,14 @@ export default function CompanyDetails() {
                         const target = addresses.find((a) => a.id.toString() === addressId);
                         if (target) handleOpenEditAddress(target);
                       },
+                      (addressId) => {
+                        const target = addresses.find((a) => a.id.toString() === addressId);
+                        if (target) setAddressToDelete(target);
+                      },
                     )}
                   </div>
 
-                  {/* Lista kafelków adresów */}
+                  {/* Lista kafelków adresów z przyciskami Edytuj i Usuń */}
                   <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
                     {addresses.map((addr) => (
                       <div
@@ -293,15 +322,28 @@ export default function CompanyDetails() {
                             {addr.zipCode} {addr.city}
                           </p>
                         </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenEditAddress(addr)}
-                          className="h-7 text-xs text-[#004a8f] hover:text-blue-900 hover:bg-blue-50 px-2"
-                        >
-                          <Pencil className="w-3.5 h-3.5 mr-1" /> Edytuj
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenEditAddress(addr)}
+                            className="h-7 text-xs text-[#004a8f] hover:text-blue-900 hover:bg-blue-50 px-2"
+                            title="Edytuj adres"
+                          >
+                            <Pencil className="w-3.5 h-3.5 mr-1" /> Edytuj
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setAddressToDelete(addr)}
+                            className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            title="Usuń adres"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -342,6 +384,18 @@ export default function CompanyDetails() {
           }}
           companyName={basicInfo?.name}
           isLoading={deleteCompanyMutation.isPending}
+        />
+
+        <DeleteCompanyAddressDialog
+          address={addressToDelete}
+          isOpen={!!addressToDelete}
+          onClose={() => setAddressToDelete(null)}
+          onConfirm={async () => {
+            if (addressToDelete) {
+              await deleteAddressMutation.mutateAsync(addressToDelete.id);
+            }
+          }}
+          isLoading={deleteAddressMutation.isPending}
         />
       </MainLayout>
     </AuthGuard>

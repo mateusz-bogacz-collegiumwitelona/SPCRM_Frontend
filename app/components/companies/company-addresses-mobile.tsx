@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
-import { ExternalLink, Navigation, Pencil } from 'lucide-react';
+import { Navigation, Pencil, Trash2 } from 'lucide-react';
 
 interface Address {
   id: string;
@@ -15,19 +15,13 @@ interface Address {
 interface CompanyAddressesMobileProps {
   addresses: Address[];
   onEditAddress?: (addr: Address) => void;
+  onDeleteAddress?: (addr: Address) => void; // <-- dodany prop
 }
-
-const getGoogleMapsDirectionsUrl = (addr: Address) => {
-  if (addr.latitude && addr.longitude) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${addr.latitude},${addr.longitude}`;
-  }
-  const destinationQuery = `${addr.street}, ${addr.zipCode} ${addr.city}`.trim();
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destinationQuery)}`;
-};
 
 export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
   addresses,
   onEditAddress,
+  onDeleteAddress,
 }) => {
   const [limit, setLimit] = useState(3);
 
@@ -56,22 +50,40 @@ export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
               </span>
             </div>
 
-            <div className="border-t border-gray-100 pt-2 flex justify-between items-center text-xs">
-              {onEditAddress && (
-                <button
-                  type="button"
-                  onClick={() => onEditAddress(addr)}
-                  className="text-[#004a8f] font-medium hover:underline flex items-center gap-1"
-                >
-                  <Pencil className="w-3 h-3" />
-                  <span>Edytuj ten adres</span>
-                </button>
-              )}
+            <div className="border-t border-gray-100 pt-2 flex flex-wrap justify-between items-center gap-2 text-xs">
+              <div className="flex items-center gap-3">
+                {onEditAddress && (
+                  <button
+                    type="button"
+                    onClick={() => onEditAddress(addr)}
+                    className="text-[#004a8f] font-medium hover:underline flex items-center gap-1"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>Edytuj</span>
+                  </button>
+                )}
+
+                {onDeleteAddress && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteAddress(addr)}
+                    className="text-red-600 font-medium hover:underline flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Usuń</span>
+                  </button>
+                )}
+              </div>
+
               <a
-                href={getGoogleMapsDirectionsUrl(addr)}
+                href={
+                  addr.latitude && addr.longitude
+                    ? `https://www.google.com/maps/dir/?api=1&destination=${addr.latitude},${addr.longitude}`
+                    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${addr.street} ${addr.city}`)}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#004a8f] font-medium hover:underline flex items-center gap-1 ml-auto"
+                className="text-gray-600 hover:text-[#004a8f] font-medium flex items-center gap-1 ml-auto"
               >
                 <Navigation className="w-3 h-3 text-[#004a8f]" />
                 <span>Nawiguj</span>
