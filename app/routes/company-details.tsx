@@ -27,6 +27,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
 import { DeleteCompanyDialog } from '~/components/companies/delete-company-dialog';
 import { DeleteCompanyAddressDialog } from '~/components/companies/delete-company-address-dialog';
+import { ChangeCompanyOwnerDialog } from '~/components/companies/change-company-owner-dialog';
 
 interface CompanyAddress {
   id: string;
@@ -100,6 +101,7 @@ export default function CompanyDetails() {
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const [isChangeOwnerModalOpen, setIsChangeOwnerModalOpen] = useState(false);
   const {
     data: basicInfo,
     isLoading: isBasicInfoLoading,
@@ -240,6 +242,27 @@ export default function CompanyDetails() {
     },
   });
 
+  const changeOwnerMutation = useMutation({
+    mutationFn: async (newOwnerId: string) => {
+      const res = await api.patch('/company/change-owner', {
+        companyId: clientId,
+        userId: newOwnerId,
+      });
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
+      await queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setIsChangeOwnerModalOpen(false);
+    },
+    onError: (err: unknown) => {
+      const apiError = err as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (err as Error)?.message || 'Nie udało się zmienić opiekuna firmy.';
+      alert(getErrorMessage(code, fallback));
+    },
+  });
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -251,6 +274,7 @@ export default function CompanyDetails() {
               basicInfo={basicInfo}
               onEditClick={() => setIsEditDialogOpen(true)}
               onDeleteClick={() => setIsDeleteDialogOpen(true)}
+              onChangeOwnerClick={() => setIsChangeOwnerModalOpen(true)}
             />
 
             <div className="block lg:hidden space-y-6">
@@ -396,6 +420,15 @@ export default function CompanyDetails() {
             }
           }}
           isLoading={deleteAddressMutation.isPending}
+        />
+
+        <ChangeCompanyOwnerDialog
+          isOpen={isChangeOwnerModalOpen}
+          onClose={() => setIsChangeOwnerModalOpen(false)}
+          onSave={async (newOwnerId) => {
+            await changeOwnerMutation.mutateAsync(newOwnerId);
+          }}
+          isLoading={changeOwnerMutation.isPending}
         />
       </MainLayout>
     </AuthGuard>

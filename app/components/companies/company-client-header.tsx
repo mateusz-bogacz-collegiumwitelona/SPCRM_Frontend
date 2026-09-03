@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 
 interface ClientHeaderProps {
@@ -12,6 +12,7 @@ interface ClientHeaderProps {
   };
   onEditClick?: () => void;
   onDeleteClick?: () => void;
+  onChangeOwnerClick?: () => void; // <-- nowy prop
 }
 
 export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({
@@ -20,6 +21,7 @@ export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({
   basicInfo,
   onEditClick,
   onDeleteClick,
+  onChangeOwnerClick,
 }) => {
   if (isLoading) {
     return (
@@ -56,7 +58,20 @@ export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 self-start sm:self-auto">
+      <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+        {onChangeOwnerClick && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onChangeOwnerClick}
+            className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-blue-900"
+            title="Zmień opiekuna firmy"
+          >
+            <UserCheck className="w-4 h-4 text-[#004a8f]" />
+            <span>Zmień opiekuna</span>
+          </Button>
+        )}
+
         {onEditClick && (
           <Button
             type="button"
