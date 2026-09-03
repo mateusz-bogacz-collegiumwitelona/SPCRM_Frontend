@@ -2,7 +2,7 @@ import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { MapPinned, Pencil, Plus } from 'lucide-react';
 import { api } from '~/api/api';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
 import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
@@ -23,6 +23,9 @@ import {
   CompanyAddressDialog,
   type CompanyAddressFormData,
 } from '~/components/companies/company-address-dialog';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type ApiError from '~/interfaces/api-error';
+import { DeleteCompanyDialog } from '~/components/companies/delete-company-dialog';
 
 interface CompanyAddress {
   id: string;
@@ -88,6 +91,9 @@ export default function CompanyDetails() {
   const [selectedAddressForDialog, setSelectedAddressForDialog] =
     useState<AddressItemToEdit | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const {
     data: basicInfo,
@@ -193,6 +199,24 @@ export default function CompanyDetails() {
     setIsAddressModalOpen(true);
   };
 
+  const deleteCompanyMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete(`/company/${clientId}`);
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setIsDeleteDialogOpen(false);
+      navigate('/companies');
+    },
+    onError: (err: unknown) => {
+      const apiError = err as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback = (err as Error)?.message || 'Nie udało się usunąć firmy.';
+      alert(getErrorMessage(code, fallback));
+    },
+  });
+
   return (
     <AuthGuard>
       <MainLayout>
@@ -203,6 +227,7 @@ export default function CompanyDetails() {
               isError={isError}
               basicInfo={basicInfo}
               onEditClick={() => setIsEditDialogOpen(true)}
+              onDeleteClick={() => setIsDeleteDialogOpen(true)}
             />
 
             <div className="block lg:hidden space-y-6">
@@ -307,6 +332,16 @@ export default function CompanyDetails() {
             await saveAddressMutation.mutateAsync(data);
           }}
           isLoading={saveAddressMutation.isPending}
+        />
+
+        <DeleteCompanyDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          onConfirm={async () => {
+            await deleteCompanyMutation.mutateAsync();
+          }}
+          companyName={basicInfo?.name}
+          isLoading={deleteCompanyMutation.isPending}
         />
       </MainLayout>
     </AuthGuard>

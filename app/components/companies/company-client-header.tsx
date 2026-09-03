@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 
 interface ClientHeaderProps {
@@ -11,6 +11,7 @@ interface ClientHeaderProps {
     isYour: boolean;
   };
   onEditClick?: () => void;
+  onDeleteClick?: () => void;
 }
 
 export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({
@@ -18,6 +19,7 @@ export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({
   isError,
   basicInfo,
   onEditClick,
+  onDeleteClick,
 }) => {
   if (isLoading) {
     return (
@@ -54,17 +56,31 @@ export const CompanyClientHeader: React.FC<ClientHeaderProps> = ({
         </div>
       </div>
 
-      {onEditClick && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onEditClick}
-          className="self-start sm:self-auto flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-blue-900"
-        >
-          <Pencil className="w-4 h-4" />
-          <span>Edytuj firmę</span>
-        </Button>
-      )}
+      <div className="flex items-center gap-2 self-start sm:self-auto">
+        {onEditClick && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onEditClick}
+            className="flex items-center gap-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-blue-900"
+          >
+            <Pencil className="w-4 h-4" />
+            <span>Edytuj firmę</span>
+          </Button>
+        )}
+
+        {onDeleteClick && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onDeleteClick}
+            className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Usuń</span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
