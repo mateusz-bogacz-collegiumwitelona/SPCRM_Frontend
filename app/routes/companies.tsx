@@ -6,11 +6,12 @@ import {
   ArrowUpNarrowWide,
   CalendarIcon,
   Filter,
+  Plus,
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type ApiError from '~/interfaces/api-error';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
@@ -24,6 +25,10 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/common/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
+import {
+  AddCompanyDialog,
+  type AddCompanyRequest,
+} from '~/components/companies/add-company-dialog';
 
 interface GetCompanyResponse {
   id: string;
@@ -173,6 +178,9 @@ export default function Companies() {
   const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
 
+  const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
@@ -265,12 +273,31 @@ export default function Companies() {
       )
     : null;
 
+  const addCompanyMutation = useMutation({
+    mutationFn: async (payload: AddCompanyRequest) => {
+      const response = await api.post('/company', payload);
+      return response.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setIsAddCompanyOpen(false);
+    },
+  });
+
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
-          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
+          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold">Baza firm</h1>
+            <Button
+              type="button"
+              onClick={() => setIsAddCompanyOpen(true)}
+              className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Dodaj firmę</span>
+            </Button>
           </div>
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -447,6 +474,15 @@ export default function Companies() {
               onPageSizeChange: setPageSize,
               onPageChange: handleDesktopPageChange,
             }}
+          />
+
+          <AddCompanyDialog
+            isOpen={isAddCompanyOpen}
+            onClose={() => setIsAddCompanyOpen(false)}
+            onSave={async (data) => {
+              await addCompanyMutation.mutateAsync(data);
+            }}
+            isLoading={addCompanyMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
