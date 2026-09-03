@@ -3,7 +3,7 @@ import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 're
 import { ExternalLink } from 'lucide-react';
 import type { CompanyMapData } from '~/routes/map';
 import 'leaflet/dist/leaflet.css';
-
+import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 export type OSMMapClientProps = {
   center: [number, number];
   zoom: number;
@@ -12,6 +12,7 @@ export type OSMMapClientProps = {
   isPicker?: boolean;
   selectedCoords?: [number, number] | null;
   onLocationSelect?: (lat: number, lng: number) => void;
+  onEditAddress?: (addressId: string) => void;
 };
 
 function InvalidateSizeOnMount() {
@@ -72,6 +73,7 @@ export default function OSMMapClient({
   isPicker = false,
   selectedCoords,
   onLocationSelect,
+  onEditAddress,
 }: Readonly<OSMMapClientProps>) {
   const getGoogleMapsLink = (lat: number, lng: number) => {
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
@@ -102,33 +104,43 @@ export default function OSMMapClient({
           return (
             <Marker key={company.id} position={[company.latitude, company.longitude]}>
               <Popup>
-                <div className="font-sans min-w-50">
-                  <h3 className="mb-1 text-base font-bold text-[#004a8f]">{company.name}</h3>
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <p>
-                      <span className="font-semibold text-gray-800">NIP:</span> {company.nip}
-                    </p>
-                    <p>
-                      <span className="font-semibold text-gray-800">Typ:</span>{' '}
-                      <span className="rounded bg-[#004a8f]/10 px-1.5 py-0.5 font-medium text-[#004a8f]">
-                        {company.type}
-                      </span>
-                    </p>
-                    <p className="mt-2 border-t border-gray-100 pt-1">
-                      {company.street} <br />
+                <div className="font-sans min-w-48 p-1">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span
+                      className={`px-2 py-0.5 rounded text-[11px] font-medium border ${getAddressTypeBadgeClass(
+                        company.type,
+                      )}`}
+                    >
+                      {formatAddressType(company.type)}
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-gray-700 leading-snug mb-3">
+                    <p className="font-semibold text-gray-900">{company.street}</p>
+                    <p className="text-gray-500">
                       {company.zipCode} {company.city}
                     </p>
+                  </div>
 
-                    <div className="mt-3 pt-2 border-t border-gray-200">
-                      <a
-                        href={getGoogleMapsLink(company.latitude, company.longitude)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#004a8f] text-sm font-medium flex items-center gap-1.5 hover:underline"
+                  <div className="border-t border-gray-100 pt-2 flex items-center justify-between gap-3 text-xs">
+                    {onEditAddress && (
+                      <button
+                        type="button"
+                        onClick={() => onEditAddress(company.id)}
+                        className="text-[#004a8f] font-medium hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        Pokaż na mapie <ExternalLink size={14} />
-                      </a>
-                    </div>
+                        Edytuj adres
+                      </button>
+                    )}
+
+                    <a
+                      href={getGoogleMapsLink(company.latitude, company.longitude)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-[#004a8f] font-medium flex items-center gap-1 ml-auto hover:underline"
+                    >
+                      Nawiguj <ExternalLink size={12} />
+                    </a>
                   </div>
                 </div>
               </Popup>

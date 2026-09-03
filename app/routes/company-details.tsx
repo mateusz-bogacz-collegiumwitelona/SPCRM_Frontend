@@ -1,10 +1,9 @@
 import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
-import { MapPinned } from 'lucide-react';
+import { MapPinned, Pencil } from 'lucide-react';
 import { api } from '~/api/api';
 import { useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
 import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
 import { CompanyContactsSection } from '~/components/companies/company-contacts-section';
@@ -16,6 +15,13 @@ import {
   EditCompanyDialog,
   type EditCompanyRequest,
 } from '~/components/companies/edit-company-dialog';
+import {
+  type AddressItemToEdit,
+  EditCompanyAddressDialog,
+  type EditCompanyAddressRequest,
+} from '~/components/companies/edit-company-address-dialog';
+import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
+import { Button } from '~/components/ui/button';
 
 interface CompanyAddress {
   id: string;
@@ -38,6 +44,7 @@ const renderMapContent = (
   MapComponent: ComponentType<OSMMapClientProps> | null,
   mapCenter: [number, number],
   mapCompaniesData: OSMMapClientProps['companies'],
+  onEditAddress?: (addressId: string) => void,
 ) => {
   if (isAddressesLoading) {
     return (
@@ -60,6 +67,7 @@ const renderMapContent = (
         zoom={6}
         className="h-full w-full"
         companies={mapCompaniesData}
+        onEditAddress={onEditAddress}
       />
     );
   }
@@ -75,6 +83,8 @@ export default function CompanyDetails() {
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  const [editingAddress, setEditingAddress] = useState<AddressItemToEdit | null>(null);
 
   const {
     data: basicInfo,
@@ -114,8 +124,8 @@ export default function CompanyDetails() {
   const mapCompaniesData = useMemo<OSMMapClientProps['companies']>(() => {
     return addresses.map((addr) => ({
       id: addr.id.toString(),
-      name: 'Adres firmy',
-      nip: 'Brak',
+      name: addr.street,
+      nip: '',
       street: addr.street,
       city: addr.city,
       zipCode: addr.zipCode,
@@ -138,11 +148,22 @@ export default function CompanyDetails() {
       return res.data;
     },
     onSuccess: async () => {
-      // Unieważniamy cache szczegółów bieżącej firmy oraz tabeli głównej
       await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
       await queryClient.invalidateQueries({ queryKey: ['company-edit-details', clientId] });
       await queryClient.invalidateQueries({ queryKey: ['companies'] });
       setIsEditDialogOpen(false);
+    },
+  });
+
+  const editAddressMutation = useMutation({
+    mutationFn: async (payload: EditCompanyAddressRequest) => {
+      const res = await api.patch('/company/address', payload);
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['company-addresses', clientId] });
+      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
+      setEditingAddress(null);
     },
   });
 
@@ -159,7 +180,7 @@ export default function CompanyDetails() {
             />
 
             <div className="block lg:hidden space-y-6">
-              <CompanyAddressesMobile addresses={addresses} />
+              <CompanyAddressesMobile addresses={addresses} onEditAddress={setEditingAddress} />
               <CompanyContactsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanySalesSection clientId={clientId} getDisplayRange={getDisplayRange} />
               <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
@@ -172,17 +193,59 @@ export default function CompanyDetails() {
                 <CompanyDebtsSection clientId={clientId} getDisplayRange={getDisplayRange} />
               </div>
 
-              <div className="w-100 xl:w-112.5 shrink-0 sticky top-24">
+              <div className="w-100 xl:w-112.5 shrink-0 sticky top-24 space-y-4">
                 <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                  <h2 className="text-xl font-normal text-gray-800 mb-4">Lokalizacje adresów</h2>
-                  <div className="border border-gray-300 rounded-lg overflow-hidden h-125 bg-gray-100 relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-normal text-gray-800">Lokalizacje adresów</h2>
+                    <span className="text-xs text-gray-500 font-medium">({addresses.length})</span>
+                  </div>
+
+                  <div className="border border-gray-300 rounded-lg overflow-hidden h-96 bg-gray-100 relative mb-4">
                     {renderMapContent(
                       isAddressesLoading,
                       addresses,
                       MapComponent,
                       mapCenter,
                       mapCompaniesData,
+                      (addressId) => {
+                        const target = addresses.find((a) => a.id.toString() === addressId);
+                        if (target) {
+                          setEditingAddress(target);
+                        }
+                      },
                     )}
+                  </div>
+
+                  <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                    {addresses.map((addr) => (
+                      <div
+                        key={addr.id}
+                        className="p-3 border border-gray-200 rounded-md bg-gray-50/50 flex justify-between items-start text-xs"
+                      >
+                        <div className="space-y-0.5">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium border mb-1 ${getAddressTypeBadgeClass(
+                              addr.type,
+                            )}`}
+                          >
+                            {formatAddressType(addr.type)}
+                          </span>
+                          <p className="font-semibold text-gray-800">{addr.street}</p>
+                          <p className="text-gray-500">
+                            {addr.zipCode} {addr.city}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingAddress(addr)}
+                          className="h-7 text-xs text-[#004a8f] hover:text-blue-900 hover:bg-blue-50 px-2"
+                        >
+                          <Pencil className="w-3.5 h-3.5 mr-1" /> Edytuj
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -198,6 +261,16 @@ export default function CompanyDetails() {
             await editCompanyMutation.mutateAsync(data);
           }}
           isLoading={editCompanyMutation.isPending}
+        />
+
+        <EditCompanyAddressDialog
+          address={editingAddress}
+          isOpen={!!editingAddress}
+          onClose={() => setEditingAddress(null)}
+          onSave={async (data) => {
+            await editAddressMutation.mutateAsync(data);
+          }}
+          isLoading={editAddressMutation.isPending}
         />
       </MainLayout>
     </AuthGuard>
