@@ -45,6 +45,11 @@ import {
   type ChangeUserEmailPayload,
   type UserToChangeEmail,
 } from '~/components/user/change-user-email-dialog';
+import {
+  ChangeUserRoleDialog,
+  type ChangeUserRolePayload,
+  type UserToChangeRole,
+} from '~/components/user/change-user-role-dialog';
 
 interface UserListResponse {
   id: string;
@@ -60,6 +65,7 @@ interface UserTableMeta {
   onDelete: (user: UserToDelete) => void;
   onEdit: (user: UserToEdit) => void;
   onChangeEmail: (user: UserToChangeEmail) => void;
+  onChangeRole: (user: UserToChangeRole) => void;
 }
 
 const parseIsBlockedFilter = (value: string): boolean | undefined => {
@@ -200,6 +206,22 @@ const columns = [
               Usuń
             </button>
           )}
+
+          {!isAdmin && (
+            <button
+              type="button"
+              onClick={() =>
+                meta.onChangeRole({
+                  id: user.id,
+                  fullName,
+                  currentRole: user.role,
+                })
+              }
+              className="text-xs font-medium text-indigo-700 hover:text-indigo-900 hover:underline cursor-pointer"
+            >
+              Zmień rolę
+            </button>
+          )}
         </div>
       );
     },
@@ -213,6 +235,7 @@ const UserMobileCard = ({
   onDelete,
   onEdit,
   onChangeEmail,
+  onChangeRole,
 }: {
   readonly user: UserListResponse;
   readonly onLockout: (user: UserToLockout) => void;
@@ -220,6 +243,7 @@ const UserMobileCard = ({
   readonly onDelete: (user: UserToDelete) => void;
   readonly onEdit: (user: UserToEdit) => void;
   readonly onChangeEmail: (user: UserToChangeEmail) => void;
+  readonly onChangeRole: (user: UserToChangeRole) => void;
 }) => {
   const roleConfig = getRoleConfig(user.role);
   const isAdmin = user.role?.toLowerCase() === 'admin';
@@ -322,6 +346,22 @@ const UserMobileCard = ({
           Zmień E-mail
         </button>
 
+        {!isAdmin && (
+          <button
+            type="button"
+            onClick={() =>
+              onChangeRole({
+                id: user.id,
+                fullName,
+                currentRole: user.role,
+              })
+            }
+            className="text-indigo-700 font-medium hover:underline cursor-pointer"
+          >
+            Zmień rolę
+          </button>
+        )}
+
         <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
           Szczegóły
         </Link>
@@ -350,6 +390,7 @@ export default function UserList() {
   const [userToDelete, setUserToDelete] = useState<UserToDelete | null>(null);
   const [userToEdit, setUserToEdit] = useState<UserToEdit | null>(null);
   const [userToChangeEmail, setUserToChangeEmail] = useState<UserToChangeEmail | null>(null);
+  const [userToChangeRole, setUserToChangeRole] = useState<UserToChangeRole | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -483,6 +524,16 @@ export default function UserList() {
     },
   });
 
+  const changeRoleMutation = useMutation({
+    mutationFn: async (payload: ChangeUserRolePayload) => {
+      return await api.patch('/user/role', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setUserToChangeRole(null);
+    },
+  });
+
   const table = useReactTable({
     data: desktopUsers,
     columns,
@@ -493,6 +544,7 @@ export default function UserList() {
       onDelete: (u: UserToDelete) => setUserToDelete(u),
       onEdit: (u: UserToEdit) => setUserToEdit(u),
       onChangeEmail: (u: UserToChangeEmail) => setUserToChangeEmail(u),
+      onChangeRole: (u: UserToChangeRole) => setUserToChangeRole(u),
     },
   });
 
@@ -725,6 +777,7 @@ export default function UserList() {
                 onDelete={(u) => setUserToDelete(u)}
                 onEdit={(u) => setUserToEdit(u)}
                 onChangeEmail={(u) => setUserToChangeEmail(u)}
+                onChangeRole={(u) => setUserToChangeRole(u)}
               />
             )}
             emptyMessage="Brak użytkowników spełniających kryteria."
@@ -796,6 +849,16 @@ export default function UserList() {
               await changeEmailMutation.mutateAsync(payload);
             }}
             isLoading={changeEmailMutation.isPending}
+          />
+
+          <ChangeUserRoleDialog
+            user={userToChangeRole}
+            isOpen={Boolean(userToChangeRole)}
+            onClose={() => setUserToChangeRole(null)}
+            onSave={async (payload) => {
+              await changeRoleMutation.mutateAsync(payload);
+            }}
+            isLoading={changeRoleMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>

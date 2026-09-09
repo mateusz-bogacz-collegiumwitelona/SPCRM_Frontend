@@ -124,7 +124,7 @@ export const UserProfileCard: React.FC<{ readonly userId: string }> = ({ userId 
             <Briefcase className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Szanse</p>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Sprzedaże</p>
             <p className="text-xl font-bold text-gray-900 mt-0.5">{user.activeDealCount ?? 0}</p>
           </div>
         </div>
