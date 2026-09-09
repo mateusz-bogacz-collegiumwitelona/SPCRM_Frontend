@@ -35,6 +35,11 @@ import {
   type DeleteUserPayload,
   type UserToDelete,
 } from '~/components/user/delete-user-dialog';
+import {
+  EditUserDialog,
+  type EditUserRequestPayload,
+  type UserToEdit,
+} from '~/components/user/edit-user-dialog';
 
 interface UserListResponse {
   id: string;
@@ -48,6 +53,7 @@ interface UserTableMeta {
   onLockout: (user: UserToLockout) => void;
   onUnlock: (user: UserToUnlock) => void;
   onDelete: (user: UserToDelete) => void;
+  onEdit: (user: UserToEdit) => void;
 }
 
 const parseIsBlockedFilter = (value: string): boolean | undefined => {
@@ -120,6 +126,20 @@ const columns = [
             Profil
           </Link>
 
+          <button
+            type="button"
+            onClick={() =>
+              meta.onEdit({
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+              })
+            }
+            className="text-xs font-medium text-blue-800 hover:text-blue-950 hover:underline cursor-pointer"
+          >
+            Edytuj
+          </button>
+
           {user.isBlocked ? (
             <button
               type="button"
@@ -172,11 +192,13 @@ const UserMobileCard = ({
   onLockout,
   onUnlock,
   onDelete,
+  onEdit,
 }: {
   readonly user: UserListResponse;
   readonly onLockout: (user: UserToLockout) => void;
   readonly onUnlock: (user: UserToUnlock) => void;
   readonly onDelete: (user: UserToDelete) => void;
+  readonly onEdit: (user: UserToEdit) => void;
 }) => {
   const roleConfig = getRoleConfig(user.role);
   const isAdmin = user.role?.toLowerCase() === 'admin';
@@ -251,8 +273,23 @@ const UserMobileCard = ({
             </button>
           )}
         </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            onEdit({
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+            })
+          }
+          className="text-blue-800 font-medium hover:underline cursor-pointer"
+        >
+          Edytuj
+        </button>
+
         <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
-          Szczegóły →
+          Szczegóły
         </Link>
       </div>
     </div>
@@ -277,6 +314,7 @@ export default function UserList() {
   const isMobileAppend = useRef(false);
   const [userToUnlock, setUserToUnlock] = useState<UserToUnlock | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserToDelete | null>(null);
+  const [userToEdit, setUserToEdit] = useState<UserToEdit | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -390,6 +428,16 @@ export default function UserList() {
     },
   });
 
+  const editUserMutation = useMutation({
+    mutationFn: async (payload: EditUserRequestPayload) => {
+      return await api.patch('/user', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setUserToEdit(null);
+    },
+  });
+
   const table = useReactTable({
     data: desktopUsers,
     columns,
@@ -398,6 +446,7 @@ export default function UserList() {
       onLockout: (u: UserToLockout) => setUserToLockout(u),
       onUnlock: (u: UserToUnlock) => setUserToUnlock(u),
       onDelete: (u: UserToDelete) => setUserToDelete(u),
+      onEdit: (u: UserToEdit) => setUserToEdit(u),
     },
   });
 
@@ -628,6 +677,7 @@ export default function UserList() {
                 onLockout={(u) => setUserToLockout(u)}
                 onUnlock={(u) => setUserToUnlock(u)}
                 onDelete={(u) => setUserToDelete(u)}
+                onEdit={(u) => setUserToEdit(u)}
               />
             )}
             emptyMessage="Brak użytkowników spełniających kryteria."
@@ -679,6 +729,16 @@ export default function UserList() {
               await deleteUserMutation.mutateAsync(payload);
             }}
             isLoading={deleteUserMutation.isPending}
+          />
+
+          <EditUserDialog
+            user={userToEdit}
+            isOpen={Boolean(userToEdit)}
+            onClose={() => setUserToEdit(null)}
+            onSave={async (payload) => {
+              await editUserMutation.mutateAsync(payload);
+            }}
+            isLoading={editUserMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
