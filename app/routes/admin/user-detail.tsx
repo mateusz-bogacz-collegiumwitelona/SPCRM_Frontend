@@ -8,6 +8,7 @@ import { UserProfileCard } from '~/components/user/user-profile-card';
 import { UserCompaniesTable } from '~/components/user/user-companies-table';
 import { UserContactsTable } from '~/components/user/user-contacts-table';
 import { UserSalesTable } from '~/components/user/user-sales-table';
+import { UserTasksTable } from '~/components/user/user-tasks-table';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -42,6 +43,8 @@ export default function UserDetailPage() {
             <UserContactsTable userId={userId} />
 
             <UserSalesTable userId={userId} />
+
+            <UserTasksTable userId={userId} />
           </div>
         </MainLayout>
       </RoleGuard>
