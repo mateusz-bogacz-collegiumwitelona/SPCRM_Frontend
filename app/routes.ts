@@ -27,4 +27,5 @@ export default [
   route('offer/:offerId', 'routes/offer-detail.tsx'),
   route('users', 'routes/admin/users.tsx'),
   route('user/:userId', 'routes/admin/user-detail.tsx'),
+  route('auth/confirm-registration', 'routes/auth/confirm-registration.tsx'),
 ] satisfies RouteConfig;
