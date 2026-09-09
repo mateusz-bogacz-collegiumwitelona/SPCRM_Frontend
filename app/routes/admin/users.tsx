@@ -24,6 +24,11 @@ import { DataTable } from '~/components/common/data-table';
 import { mergeById } from '~/utils/table-helpers';
 import { getRoleConfig } from '~/utils/role-translator';
 import { AddUserDialog, type AddUserRequestPayload } from '~/components/user/add-user-dialog';
+import {
+  LockoutUserDialog,
+  type SetLockoutPayload,
+  type UserToLockout,
+} from '~/components/user/lockout-user-dialog';
 
 interface UserListResponse {
   id: string;
@@ -31,6 +36,10 @@ interface UserListResponse {
   lastName: string;
   role: string;
   isBlocked: boolean;
+}
+
+interface UserTableMeta {
+  onLockout: (user: UserToLockout) => void;
 }
 
 const parseIsBlockedFilter = (value: string): boolean | undefined => {
@@ -85,23 +94,53 @@ const columns = [
       );
     },
   }),
-
   columnHelper.display({
     id: 'actions',
     header: 'Akcje',
-    cell: (info) => (
-      <Link
-        to={`/user/${info.row.original.id}`}
-        className="font-medium text-blue-900 hover:underline"
-      >
-        Profil i detale
-      </Link>
-    ),
+    cell: (info) => {
+      const user = info.row.original;
+      const meta = info.table.options.meta as UserTableMeta;
+      const isAdmin = user.role?.toLowerCase() === 'admin';
+
+      return (
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/user/${user.id}`}
+            className="font-medium text-blue-900 hover:underline text-xs"
+          >
+            Profil i detale
+          </Link>
+
+          {!user.isBlocked && !isAdmin && (
+            <button
+              type="button"
+              onClick={() =>
+                meta.onLockout({
+                  id: user.id,
+                  fullName: `${user.firstName} ${user.lastName}`,
+                  role: user.role,
+                })
+              }
+              className="text-xs font-medium text-red-600 hover:text-red-800 hover:underline"
+            >
+              Zablokuj
+            </button>
+          )}
+        </div>
+      );
+    },
   }),
 ];
 
-const UserMobileCard = ({ user }: { readonly user: UserListResponse }) => {
+const UserMobileCard = ({
+  user,
+  onLockout,
+}: {
+  readonly user: UserListResponse;
+  readonly onLockout: (user: UserToLockout) => void;
+}) => {
   const roleConfig = getRoleConfig(user.role);
+  const isAdmin = user.role?.toLowerCase() === 'admin';
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -129,9 +168,26 @@ const UserMobileCard = ({ user }: { readonly user: UserListResponse }) => {
           </span>
         )}
       </div>
-      <div className="border-t border-gray-100 pt-3 flex justify-end">
-        <Link to={`/user/${user.id}`} className="text-xs font-medium text-blue-900 hover:underline">
-          Szczegóły profilu
+      <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-xs">
+        <div>
+          {!user.isBlocked && !isAdmin && (
+            <button
+              type="button"
+              onClick={() =>
+                onLockout({
+                  id: user.id,
+                  fullName: `${user.firstName} ${user.lastName}`,
+                  role: user.role,
+                })
+              }
+              className="text-red-600 font-medium hover:underline"
+            >
+              Zablokuj
+            </button>
+          )}
+        </div>
+        <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
+          Szczegóły profilu →
         </Link>
       </div>
     </div>
@@ -139,22 +195,21 @@ const UserMobileCard = ({ user }: { readonly user: UserListResponse }) => {
 };
 
 export default function UserList() {
+  const queryClient = useQueryClient();
+
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('lastname');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
-
   const [roleFilter, setRoleFilter] = useState<string>('');
   const [isBlockedFilter, setIsBlockedFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
-
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [userToLockout, setUserToLockout] = useState<UserToLockout | null>(null);
   const [accumulatedMobileUsers, setAccumulatedMobileUsers] = useState<UserListResponse[]>([]);
   const isMobileAppend = useRef(false);
-  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -227,10 +282,33 @@ export default function UserList() {
     setPageNumber(newPage);
   };
 
+  const addUserMutation = useMutation({
+    mutationFn: async (payload: AddUserRequestPayload) => {
+      return await api.post('/user/create', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setIsAddUserOpen(false);
+    },
+  });
+
+  const lockoutMutation = useMutation({
+    mutationFn: async (payload: SetLockoutPayload) => {
+      return await api.post('/user/lockout', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setUserToLockout(null);
+    },
+  });
+
   const table = useReactTable({
     data: desktopUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      onLockout: (u: UserToLockout) => setUserToLockout(u),
+    },
   });
 
   const [isErrorDimmissed, setIsErrorDismissed] = useState(false);
@@ -271,16 +349,6 @@ export default function UserList() {
 
   const roles = rolesData || [];
 
-  const addUserMutation = useMutation({
-    mutationFn: async (payload: AddUserRequestPayload) => {
-      return await api.post('/user/create', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      setIsAddUserOpen(false);
-    },
-  });
-
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={['Admin']}>
@@ -290,7 +358,7 @@ export default function UserList() {
             <Button
               type="button"
               onClick={() => setIsAddUserOpen(true)}
-              className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-2"
+              className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-2 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               <span>Dodaj użytkownika</span>
@@ -464,7 +532,9 @@ export default function UserList() {
             isFetching={isFetching}
             onMobileLoadMore={handleMobileLoadMore}
             mobileCardKeyExtractor={(user) => user.id}
-            renderMobileCard={(user) => <UserMobileCard user={user} />}
+            renderMobileCard={(user) => (
+              <UserMobileCard user={user} onLockout={(u) => setUserToLockout(u)} />
+            )}
             emptyMessage="Brak użytkowników spełniających kryteria."
             loadingMessage="Wczytywanie listy użytkowników..."
             paginationProps={{
@@ -481,10 +551,20 @@ export default function UserList() {
           <AddUserDialog
             isOpen={isAddUserOpen}
             onClose={() => setIsAddUserOpen(false)}
-            onSave={async (userData) => {
-              await addUserMutation.mutateAsync(userData);
+            onSave={async (payload) => {
+              await addUserMutation.mutateAsync(payload);
             }}
             isLoading={addUserMutation.isPending}
+          />
+
+          <LockoutUserDialog
+            user={userToLockout}
+            isOpen={Boolean(userToLockout)}
+            onClose={() => setUserToLockout(null)}
+            onLockout={async (payload) => {
+              await lockoutMutation.mutateAsync(payload);
+            }}
+            isLoading={lockoutMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
