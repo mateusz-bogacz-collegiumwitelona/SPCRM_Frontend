@@ -30,6 +30,11 @@ import {
   type UserToLockout,
 } from '~/components/user/lockout-user-dialog';
 import { UnlockUserDialog, type UserToUnlock } from '~/components/user/unlock-user-dialog';
+import {
+  DeleteUserDialog,
+  type DeleteUserPayload,
+  type UserToDelete,
+} from '~/components/user/delete-user-dialog';
 
 interface UserListResponse {
   id: string;
@@ -42,6 +47,7 @@ interface UserListResponse {
 interface UserTableMeta {
   onLockout: (user: UserToLockout) => void;
   onUnlock: (user: UserToUnlock) => void;
+  onDelete: (user: UserToDelete) => void;
 }
 
 const parseIsBlockedFilter = (value: string): boolean | undefined => {
@@ -111,14 +117,14 @@ const columns = [
             to={`/user/${user.id}`}
             className="font-medium text-blue-900 hover:underline text-xs"
           >
-            Profil i detale
+            Profil
           </Link>
 
           {user.isBlocked ? (
             <button
               type="button"
               onClick={() => meta.onUnlock({ id: user.id, fullName })}
-              className="text-xs font-medium text-green-700 hover:text-green-800 hover:underline"
+              className="text-xs font-medium text-green-700 hover:text-green-800 hover:underline cursor-pointer"
             >
               Odblokuj
             </button>
@@ -133,11 +139,27 @@ const columns = [
                     role: user.role,
                   })
                 }
-                className="text-xs font-medium text-red-600 hover:text-red-800 hover:underline"
+                className="text-xs font-medium text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
               >
                 Zablokuj
               </button>
             )
+          )}
+
+          {!isAdmin && (
+            <button
+              type="button"
+              onClick={() =>
+                meta.onDelete({
+                  id: user.id,
+                  fullName,
+                  role: user.role,
+                })
+              }
+              className="text-xs font-medium text-red-600 hover:text-red-800 hover:underline cursor-pointer"
+            >
+              Usuń
+            </button>
           )}
         </div>
       );
@@ -149,10 +171,12 @@ const UserMobileCard = ({
   user,
   onLockout,
   onUnlock,
+  onDelete,
 }: {
   readonly user: UserListResponse;
   readonly onLockout: (user: UserToLockout) => void;
   readonly onUnlock: (user: UserToUnlock) => void;
+  readonly onDelete: (user: UserToDelete) => void;
 }) => {
   const roleConfig = getRoleConfig(user.role);
   const isAdmin = user.role?.toLowerCase() === 'admin';
@@ -162,9 +186,7 @@ const UserMobileCard = ({
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
       <div className="mb-2 flex justify-between items-start">
         <div>
-          <p className="text-sm font-bold text-blue-900">
-            {user.firstName} {user.lastName}
-          </p>
+          <p className="text-sm font-bold text-blue-900">{fullName}</p>
           <div className="mt-1">
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${roleConfig.bgColor} ${roleConfig.textColor}`}
@@ -186,7 +208,7 @@ const UserMobileCard = ({
       </div>
 
       <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-xs">
-        <div>
+        <div className="flex items-center gap-2">
           {user.isBlocked ? (
             <button
               type="button"
@@ -206,15 +228,31 @@ const UserMobileCard = ({
                     role: user.role,
                   })
                 }
-                className="text-red-600 font-medium hover:underline cursor-pointer"
+                className="text-amber-700 font-medium hover:underline cursor-pointer"
               >
                 Zablokuj
               </button>
             )
           )}
+
+          {!isAdmin && (
+            <button
+              type="button"
+              onClick={() =>
+                onDelete({
+                  id: user.id,
+                  fullName,
+                  role: user.role,
+                })
+              }
+              className="text-red-600 font-medium hover:underline cursor-pointer"
+            >
+              Usuń
+            </button>
+          )}
         </div>
         <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
-          Szczegóły profilu →
+          Szczegóły →
         </Link>
       </div>
     </div>
@@ -238,6 +276,7 @@ export default function UserList() {
   const [accumulatedMobileUsers, setAccumulatedMobileUsers] = useState<UserListResponse[]>([]);
   const isMobileAppend = useRef(false);
   const [userToUnlock, setUserToUnlock] = useState<UserToUnlock | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UserToDelete | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -340,6 +379,17 @@ export default function UserList() {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (payload: DeleteUserPayload) => {
+      return await api.delete('/user', { data: payload });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['users-simple-list'] });
+      setUserToDelete(null);
+    },
+  });
+
   const table = useReactTable({
     data: desktopUsers,
     columns,
@@ -347,6 +397,7 @@ export default function UserList() {
     meta: {
       onLockout: (u: UserToLockout) => setUserToLockout(u),
       onUnlock: (u: UserToUnlock) => setUserToUnlock(u),
+      onDelete: (u: UserToDelete) => setUserToDelete(u),
     },
   });
 
@@ -576,6 +627,7 @@ export default function UserList() {
                 user={user}
                 onLockout={(u) => setUserToLockout(u)}
                 onUnlock={(u) => setUserToUnlock(u)}
+                onDelete={(u) => setUserToDelete(u)}
               />
             )}
             emptyMessage="Brak użytkowników spełniających kryteria."
@@ -618,6 +670,15 @@ export default function UserList() {
               await unlockMutation.mutateAsync(userId);
             }}
             isLoading={unlockMutation.isPending}
+          />
+          <DeleteUserDialog
+            user={userToDelete}
+            isOpen={Boolean(userToDelete)}
+            onClose={() => setUserToDelete(null)}
+            onDelete={async (payload) => {
+              await deleteUserMutation.mutateAsync(payload);
+            }}
+            isLoading={deleteUserMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
