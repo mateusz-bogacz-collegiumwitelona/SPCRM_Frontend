@@ -12,9 +12,9 @@ export const getRoleConfig = (rawRole?: string | null): RoleConfig => {
     case 'admin':
       return {
         label: 'Administrator',
-        bgColor: 'bg-purple-100',
-        textColor: 'text-purple-800',
-        iconColor: 'text-purple-700',
+        bgColor: 'bg-fuchsia-100',
+        textColor: 'text-fuchsia-800',
+        iconColor: 'text-fuchsia-700',
       };
 
     case 'manager':
@@ -28,9 +28,9 @@ export const getRoleConfig = (rawRole?: string | null): RoleConfig => {
     case 'user':
       return {
         label: 'Pracownik',
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-800',
-        iconColor: 'text-blue-700',
+        bgColor: 'bg-olive-50',
+        textColor: 'text-olive-800',
+        iconColor: 'text-olive-700',
       };
 
     default:
@@ -42,9 +42,3 @@ export const getRoleConfig = (rawRole?: string | null): RoleConfig => {
       };
   }
 };
-
-export const ROLE_FILTER_OPTIONS = [
-  { value: 'Admin', label: getRoleConfig('Admin').label },
-  { value: 'Manager', label: getRoleConfig('Manager').label },
-  { value: 'User', label: getRoleConfig('User').label },
-];

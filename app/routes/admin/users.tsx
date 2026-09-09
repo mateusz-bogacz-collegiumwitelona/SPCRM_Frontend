@@ -90,7 +90,7 @@ const columns = [
     header: 'Akcje',
     cell: (info) => (
       <Link
-        to={`/users/${info.row.original.id}`}
+        to={`/user/${info.row.original.id}`}
         className="font-medium text-blue-900 hover:underline"
       >
         Profil i detale
@@ -129,11 +129,8 @@ const UserMobileCard = ({ user }: { readonly user: UserListResponse }) => {
         )}
       </div>
       <div className="border-t border-gray-100 pt-3 flex justify-end">
-        <Link
-          to={`/users/${user.id}`}
-          className="text-xs font-medium text-blue-900 hover:underline"
-        >
-          Szczegóły profilu →
+        <Link to={`/user/${user.id}`} className="text-xs font-medium text-blue-900 hover:underline">
+          Szczegóły profilu
         </Link>
       </div>
     </div>

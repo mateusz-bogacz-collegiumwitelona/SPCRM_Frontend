@@ -26,4 +26,5 @@ export default [
   route('offers', 'routes/offers.tsx'),
   route('offer/:offerId', 'routes/offer-detail.tsx'),
   route('users', 'routes/admin/users.tsx'),
+  route('user/:userId', 'routes/admin/user-detail.tsx'),
 ] satisfies RouteConfig;
