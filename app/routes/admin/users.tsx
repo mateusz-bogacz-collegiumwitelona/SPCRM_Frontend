@@ -4,12 +4,12 @@ import {
   AlertCircle,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
-  Filter,
-  UserPlus,
-  X,
-  ShieldCheck,
   Ban,
   CheckCircle2,
+  Filter,
+  ShieldCheck,
+  UserPlus,
+  X,
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -29,6 +29,7 @@ import {
   type SetLockoutPayload,
   type UserToLockout,
 } from '~/components/user/lockout-user-dialog';
+import { UnlockUserDialog, type UserToUnlock } from '~/components/user/unlock-user-dialog';
 
 interface UserListResponse {
   id: string;
@@ -40,6 +41,7 @@ interface UserListResponse {
 
 interface UserTableMeta {
   onLockout: (user: UserToLockout) => void;
+  onUnlock: (user: UserToUnlock) => void;
 }
 
 const parseIsBlockedFilter = (value: string): boolean | undefined => {
@@ -77,7 +79,7 @@ const columns = [
       );
     },
   }),
-  columnHelper.accessor('isBlocked', {
+  (columnHelper.accessor('isBlocked', {
     header: 'Status',
     cell: (info) => {
       const isBlocked = info.getValue();
@@ -101,6 +103,7 @@ const columns = [
       const user = info.row.original;
       const meta = info.table.options.meta as UserTableMeta;
       const isAdmin = user.role?.toLowerCase() === 'admin';
+      const fullName = `${user.firstName} ${user.lastName}`;
 
       return (
         <div className="flex items-center gap-3">
@@ -111,36 +114,49 @@ const columns = [
             Profil i detale
           </Link>
 
-          {!user.isBlocked && !isAdmin && (
+          {user.isBlocked ? (
             <button
               type="button"
-              onClick={() =>
-                meta.onLockout({
-                  id: user.id,
-                  fullName: `${user.firstName} ${user.lastName}`,
-                  role: user.role,
-                })
-              }
-              className="text-xs font-medium text-red-600 hover:text-red-800 hover:underline"
+              onClick={() => meta.onUnlock({ id: user.id, fullName })}
+              className="text-xs font-medium text-green-700 hover:text-green-800 hover:underline"
             >
-              Zablokuj
+              Odblokuj
             </button>
+          ) : (
+            !isAdmin && (
+              <button
+                type="button"
+                onClick={() =>
+                  meta.onLockout({
+                    id: user.id,
+                    fullName,
+                    role: user.role,
+                  })
+                }
+                className="text-xs font-medium text-red-600 hover:text-red-800 hover:underline"
+              >
+                Zablokuj
+              </button>
+            )
           )}
         </div>
       );
     },
-  }),
+  })),
 ];
 
 const UserMobileCard = ({
   user,
   onLockout,
+  onUnlock,
 }: {
   readonly user: UserListResponse;
   readonly onLockout: (user: UserToLockout) => void;
+  readonly onUnlock: (user: UserToUnlock) => void;
 }) => {
   const roleConfig = getRoleConfig(user.role);
   const isAdmin = user.role?.toLowerCase() === 'admin';
+  const fullName = `${user.firstName} ${user.lastName}`;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -153,7 +169,7 @@ const UserMobileCard = ({
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${roleConfig.bgColor} ${roleConfig.textColor}`}
             >
-              <ShieldCheck className="w-3 h-3" />
+              <ShieldCheck className={`w-3 h-3 ${roleConfig.iconColor}`} />
               {roleConfig.label}
             </span>
           </div>
@@ -168,22 +184,33 @@ const UserMobileCard = ({
           </span>
         )}
       </div>
+
       <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-xs">
         <div>
-          {!user.isBlocked && !isAdmin && (
+          {user.isBlocked ? (
             <button
               type="button"
-              onClick={() =>
-                onLockout({
-                  id: user.id,
-                  fullName: `${user.firstName} ${user.lastName}`,
-                  role: user.role,
-                })
-              }
-              className="text-red-600 font-medium hover:underline"
+              onClick={() => onUnlock({ id: user.id, fullName })}
+              className="text-green-700 font-medium hover:underline cursor-pointer"
             >
-              Zablokuj
+              Odblokuj
             </button>
+          ) : (
+            !isAdmin && (
+              <button
+                type="button"
+                onClick={() =>
+                  onLockout({
+                    id: user.id,
+                    fullName,
+                    role: user.role,
+                  })
+                }
+                className="text-red-600 font-medium hover:underline cursor-pointer"
+              >
+                Zablokuj
+              </button>
+            )
           )}
         </div>
         <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
@@ -210,6 +237,7 @@ export default function UserList() {
   const [userToLockout, setUserToLockout] = useState<UserToLockout | null>(null);
   const [accumulatedMobileUsers, setAccumulatedMobileUsers] = useState<UserListResponse[]>([]);
   const isMobileAppend = useRef(false);
+  const [userToUnlock, setUserToUnlock] = useState<UserToUnlock | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -302,12 +330,23 @@ export default function UserList() {
     },
   });
 
+  const unlockMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await api.post(`/user/${userId}/unlock`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setUserToUnlock(null);
+    },
+  });
+
   const table = useReactTable({
     data: desktopUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: {
       onLockout: (u: UserToLockout) => setUserToLockout(u),
+      onUnlock: (u: UserToUnlock) => setUserToUnlock(u),
     },
   });
 
@@ -533,7 +572,11 @@ export default function UserList() {
             onMobileLoadMore={handleMobileLoadMore}
             mobileCardKeyExtractor={(user) => user.id}
             renderMobileCard={(user) => (
-              <UserMobileCard user={user} onLockout={(u) => setUserToLockout(u)} />
+              <UserMobileCard
+                user={user}
+                onLockout={(u) => setUserToLockout(u)}
+                onUnlock={(u) => setUserToUnlock(u)}
+              />
             )}
             emptyMessage="Brak użytkowników spełniających kryteria."
             loadingMessage="Wczytywanie listy użytkowników..."
@@ -565,6 +608,16 @@ export default function UserList() {
               await lockoutMutation.mutateAsync(payload);
             }}
             isLoading={lockoutMutation.isPending}
+          />
+
+          <UnlockUserDialog
+            user={userToUnlock}
+            isOpen={Boolean(userToUnlock)}
+            onClose={() => setUserToUnlock(null)}
+            onUnlock={async (userId) => {
+              await unlockMutation.mutateAsync(userId);
+            }}
+            isLoading={unlockMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>

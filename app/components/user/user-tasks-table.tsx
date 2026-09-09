@@ -7,17 +7,17 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import {
+  AlertCircle,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  Calendar,
   CheckSquare,
   ChevronLeft,
   ChevronRight,
-  AlertCircle,
-  X,
-  Search,
-  Loader2,
-  ArrowDownWideNarrow,
-  ArrowUpNarrowWide,
   Filter,
-  Calendar,
+  Loader2,
+  Search,
+  X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';

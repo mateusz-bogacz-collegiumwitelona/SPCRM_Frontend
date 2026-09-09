@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useMutation } from '@tanstack/react-query';
-import { CheckCircle2, Eye, EyeOff, Loader2, AlertCircle, X, Lock } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, X } from 'lucide-react';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';

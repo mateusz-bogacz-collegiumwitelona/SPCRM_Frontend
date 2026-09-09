@@ -3,19 +3,19 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import {
-  Building2,
-  Users,
-  Briefcase,
-  CheckSquare,
-  Mail,
-  Calendar,
-  Clock,
-  Ban,
-  CheckCircle2,
   AlertTriangle,
+  Ban,
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  CheckSquare,
+  Clock,
+  Mail,
+  Users,
 } from 'lucide-react';
 import { api } from '~/api/api';
-import { TableLoadingState, TableEmptyState } from '~/components/common/table-state-views';
+import { TableEmptyState, TableLoadingState } from '~/components/common/table-state-views';
 
 export interface UserDetailResponse {
   id: string;

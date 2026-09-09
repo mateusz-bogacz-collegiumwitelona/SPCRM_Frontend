@@ -7,18 +7,18 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import {
-  Users,
-  ChevronLeft,
-  ChevronRight,
   AlertCircle,
-  X,
-  Search,
-  Loader2,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
-  Filter,
-  Star,
   Building2,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Loader2,
+  Search,
+  Star,
+  Users,
+  X,
 } from 'lucide-react';
 
 import { api } from '~/api/api';
