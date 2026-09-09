@@ -174,17 +174,10 @@ export default function Home() {
                 </label>
                 <button
                   type="button"
-                  onClick={() =>
-                    setFormError({
-                      title: 'Resetowanie hasła',
-                      details: [
-                        'Skontaktuj się z administratorem systemu w celu zresetowania lub odzyskania hasła.',
-                      ],
-                    })
-                  }
-                  className="hover:underline bg-transparent border-none p-0 text-[#004a8f] cursor-pointer"
+                  onClick={() => navigate('/auth/forgot-password')}
+                  className="hover:underline bg-transparent border-none p-0 text-[#004a8f] cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none"
                 >
-                  Przypomnij haslo
+                  Przypomnij hasło
                 </button>
               </div>
 

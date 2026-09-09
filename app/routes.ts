@@ -29,4 +29,6 @@ export default [
   route('user/:userId', 'routes/admin/user-detail.tsx'),
   route('auth/confirm-registration', 'routes/auth/confirm-registration.tsx'),
   route('auth/confirm-email-change', 'routes/auth/confirm-email-change.tsx'),
+  route('auth/forgot-password', 'routes/auth/forgot-password.tsx'),
+  route('auth/reset-password', 'routes/auth/reset-password.tsx'),
 ] satisfies RouteConfig;
