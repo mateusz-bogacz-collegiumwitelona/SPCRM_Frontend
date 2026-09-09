@@ -40,6 +40,11 @@ import {
   type EditUserRequestPayload,
   type UserToEdit,
 } from '~/components/user/edit-user-dialog';
+import {
+  ChangeUserEmailDialog,
+  type ChangeUserEmailPayload,
+  type UserToChangeEmail,
+} from '~/components/user/change-user-email-dialog';
 
 interface UserListResponse {
   id: string;
@@ -54,6 +59,7 @@ interface UserTableMeta {
   onUnlock: (user: UserToUnlock) => void;
   onDelete: (user: UserToDelete) => void;
   onEdit: (user: UserToEdit) => void;
+  onChangeEmail: (user: UserToChangeEmail) => void;
 }
 
 const parseIsBlockedFilter = (value: string): boolean | undefined => {
@@ -140,6 +146,19 @@ const columns = [
             Edytuj
           </button>
 
+          <button
+            type="button"
+            onClick={() =>
+              meta.onChangeEmail({
+                id: user.id,
+                fullName,
+              })
+            }
+            className="text-xs font-medium text-slate-700 hover:text-slate-900 hover:underline cursor-pointer"
+          >
+            Zmień e-mail
+          </button>
+
           {user.isBlocked ? (
             <button
               type="button"
@@ -193,12 +212,14 @@ const UserMobileCard = ({
   onUnlock,
   onDelete,
   onEdit,
+  onChangeEmail,
 }: {
   readonly user: UserListResponse;
   readonly onLockout: (user: UserToLockout) => void;
   readonly onUnlock: (user: UserToUnlock) => void;
   readonly onDelete: (user: UserToDelete) => void;
   readonly onEdit: (user: UserToEdit) => void;
+  readonly onChangeEmail: (user: UserToChangeEmail) => void;
 }) => {
   const roleConfig = getRoleConfig(user.role);
   const isAdmin = user.role?.toLowerCase() === 'admin';
@@ -288,6 +309,19 @@ const UserMobileCard = ({
           Edytuj
         </button>
 
+        <button
+          type="button"
+          onClick={() =>
+            onChangeEmail({
+              id: user.id,
+              fullName,
+            })
+          }
+          className="text-slate-700 font-medium hover:underline cursor-pointer"
+        >
+          Zmień E-mail
+        </button>
+
         <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
           Szczegóły
         </Link>
@@ -315,6 +349,7 @@ export default function UserList() {
   const [userToUnlock, setUserToUnlock] = useState<UserToUnlock | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserToDelete | null>(null);
   const [userToEdit, setUserToEdit] = useState<UserToEdit | null>(null);
+  const [userToChangeEmail, setUserToChangeEmail] = useState<UserToChangeEmail | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -438,6 +473,16 @@ export default function UserList() {
     },
   });
 
+  const changeEmailMutation = useMutation({
+    mutationFn: async (payload: ChangeUserEmailPayload) => {
+      return await api.post('/user/change-email', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setUserToChangeEmail(null);
+    },
+  });
+
   const table = useReactTable({
     data: desktopUsers,
     columns,
@@ -447,6 +492,7 @@ export default function UserList() {
       onUnlock: (u: UserToUnlock) => setUserToUnlock(u),
       onDelete: (u: UserToDelete) => setUserToDelete(u),
       onEdit: (u: UserToEdit) => setUserToEdit(u),
+      onChangeEmail: (u: UserToChangeEmail) => setUserToChangeEmail(u),
     },
   });
 
@@ -678,6 +724,7 @@ export default function UserList() {
                 onUnlock={(u) => setUserToUnlock(u)}
                 onDelete={(u) => setUserToDelete(u)}
                 onEdit={(u) => setUserToEdit(u)}
+                onChangeEmail={(u) => setUserToChangeEmail(u)}
               />
             )}
             emptyMessage="Brak użytkowników spełniających kryteria."
@@ -739,6 +786,16 @@ export default function UserList() {
               await editUserMutation.mutateAsync(payload);
             }}
             isLoading={editUserMutation.isPending}
+          />
+
+          <ChangeUserEmailDialog
+            user={userToChangeEmail}
+            isOpen={Boolean(userToChangeEmail)}
+            onClose={() => setUserToChangeEmail(null)}
+            onSave={async (payload) => {
+              await changeEmailMutation.mutateAsync(payload);
+            }}
+            isLoading={changeEmailMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
