@@ -14,7 +14,7 @@ import {
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
@@ -23,6 +23,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/common/data-table';
 import { mergeById } from '~/utils/table-helpers';
 import { getRoleConfig } from '~/utils/role-translator';
+import { AddUserDialog, type AddUserRequestPayload } from '~/components/user/add-user-dialog';
 
 interface UserListResponse {
   id: string;
@@ -151,6 +152,9 @@ export default function UserList() {
 
   const [accumulatedMobileUsers, setAccumulatedMobileUsers] = useState<UserListResponse[]>([]);
   const isMobileAppend = useRef(false);
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -267,6 +271,16 @@ export default function UserList() {
 
   const roles = rolesData || [];
 
+  const addUserMutation = useMutation({
+    mutationFn: async (payload: AddUserRequestPayload) => {
+      return await api.post('/user/create', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
+      setIsAddUserOpen(false);
+    },
+  });
+
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={['Admin']}>
@@ -275,6 +289,7 @@ export default function UserList() {
             <h1 className="text-lg lg:text-2xl font-semibold">Użytkownicy systemu</h1>
             <Button
               type="button"
+              onClick={() => setIsAddUserOpen(true)}
               className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-2"
             >
               <UserPlus className="w-4 h-4" />
@@ -461,6 +476,15 @@ export default function UserList() {
               onPageSizeChange: setPageSize,
               onPageChange: handleDesktopPageChange,
             }}
+          />
+
+          <AddUserDialog
+            isOpen={isAddUserOpen}
+            onClose={() => setIsAddUserOpen(false)}
+            onSave={async (userData) => {
+              await addUserMutation.mutateAsync(userData);
+            }}
+            isLoading={addUserMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
