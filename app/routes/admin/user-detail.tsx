@@ -6,6 +6,7 @@ import { RoleGuard } from '~/lib/role-guard';
 import { Button } from '~/components/ui/button';
 import { UserProfileCard } from '~/components/user/user-profile-card';
 import { UserCompaniesTable } from '~/components/user/user-companies-table';
+import { UserContactsTable } from '~/components/user/user-contacts-table';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -36,6 +37,8 @@ export default function UserDetailPage() {
             <UserProfileCard userId={userId} />
 
             <UserCompaniesTable userId={userId} />
+
+            <UserContactsTable userId={userId} />
           </div>
         </MainLayout>
       </RoleGuard>
