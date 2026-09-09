@@ -5,6 +5,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
 import { Button } from '~/components/ui/button';
 import { UserProfileCard } from '~/components/user/user-profile-card';
+import { UserCompaniesTable } from '~/components/user/user-companies-table';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -31,7 +32,11 @@ export default function UserDetailPage() {
             </Button>
           </div>
 
-          <UserProfileCard userId={userId} />
+          <div className="space-y-6">
+            <UserProfileCard userId={userId} />
+
+            <UserCompaniesTable userId={userId} />
+          </div>
         </MainLayout>
       </RoleGuard>
     </AuthGuard>

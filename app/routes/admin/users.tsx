@@ -282,8 +282,8 @@ export default function UserList() {
             </Button>
           </div>
 
-          <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div className="w-full md:w-80 shrink-0">
+          <div className="mb-6 flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="w-full lg:w-80 shrink-0">
               <input
                 type="text"
                 value={searchTerm}
@@ -293,9 +293,11 @@ export default function UserList() {
               />
             </div>
 
-            <div className="flex flex-wrap w-full md:w-auto items-center gap-3">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-sm text-gray-500 hidden sm:block">Sortuj po:</span>
+            <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                <span className="text-sm text-gray-500 hidden sm:inline-block shrink-0">
+                  Sortuj po:
+                </span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
@@ -311,6 +313,7 @@ export default function UserList() {
                   variant="outline"
                   onClick={() => setSortDescending(!sortDescending)}
                   className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3"
+                  title={sortDescending ? 'Malejąco' : 'Rosnąco'}
                 >
                   {sortDescending ? (
                     <ArrowDownWideNarrow className="w-4 h-4" />
@@ -318,96 +321,96 @@ export default function UserList() {
                     <ArrowUpNarrowWide className="w-4 h-4" />
                   )}
                 </Button>
+              </div>
 
-                <div className="relative">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  >
-                    <Filter className="w-4 h-4" />
-                    <span>Filtry</span>
-                    {isAnyFilterActive && (
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
-                      </span>
-                    )}
-                  </Button>
+              <div className="relative shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                >
+                  <Filter className="w-4 h-4" />
+                  <span>Filtry</span>
+                  {isAnyFilterActive && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
+                    </span>
+                  )}
+                </Button>
 
-                  {showFilters && (
-                    <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj listę</h3>
-                      <div className="space-y-4">
-                        <div className="flex flex-col">
-                          <label
-                            htmlFor="user-role-filter"
-                            className="block text-xs font-medium text-gray-700 mb-1"
-                          >
-                            Rola
-                          </label>
-                          <select
-                            id="user-role-filter"
-                            value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
-                          >
-                            <option value="">Wszystkie role</option>
-                            {roles.map((roleName) => {
-                              const config = getRoleConfig(roleName);
-                              return (
-                                <option key={roleName} value={roleName}>
-                                  {config.label}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </div>
+                {showFilters && (
+                  <div className="absolute right-0 top-full mt-2 w-[calc(100vw-3rem)] sm:w-72 max-w-xs bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj listę</h3>
+                    <div className="space-y-4">
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="user-role-filter"
+                          className="block text-xs font-medium text-gray-700 mb-1"
+                        >
+                          Rola
+                        </label>
+                        <select
+                          id="user-role-filter"
+                          value={roleFilter}
+                          onChange={(e) => setRoleFilter(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+                        >
+                          <option value="">Wszystkie role</option>
+                          {roles.map((roleName) => {
+                            const config = getRoleConfig(roleName);
+                            return (
+                              <option key={roleName} value={roleName}>
+                                {config.label}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
 
-                        <div className="flex flex-col">
-                          <label
-                            htmlFor="user-status-filter"
-                            className="block text-xs font-medium text-gray-700 mb-1"
-                          >
-                            Status blokady
-                          </label>
-                          <select
-                            id="user-status-filter"
-                            value={isBlockedFilter}
-                            onChange={(e) => setIsBlockedFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
-                          >
-                            <option value="">Wszystkie stany</option>
-                            <option value="false">Tylko aktywni</option>
-                            <option value="true">Zablokowani</option>
-                          </select>
-                        </div>
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="user-status-filter"
+                          className="block text-xs font-medium text-gray-700 mb-1"
+                        >
+                          Status blokady
+                        </label>
+                        <select
+                          id="user-status-filter"
+                          value={isBlockedFilter}
+                          onChange={(e) => setIsBlockedFilter(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+                        >
+                          <option value="">Wszystkie stany</option>
+                          <option value="false">Tylko aktywni</option>
+                          <option value="true">Zablokowani</option>
+                        </select>
+                      </div>
 
-                        <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setRoleFilter('');
-                              setIsBlockedFilter('');
-                            }}
-                            className="text-xs text-gray-500 hover:text-gray-900 underline"
-                          >
-                            Wyczyść
-                          </button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => setShowFilters(false)}
-                            className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
-                          >
-                            Zamknij
-                          </Button>
-                        </div>
+                      <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRoleFilter('');
+                            setIsBlockedFilter('');
+                          }}
+                          className="text-xs text-gray-500 hover:text-gray-900 underline"
+                        >
+                          Wyczyść
+                        </button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setShowFilters(false)}
+                          className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
+                        >
+                          Zamknij
+                        </Button>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
