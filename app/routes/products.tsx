@@ -1,32 +1,40 @@
-import {createColumnHelper, getCoreRowModel, useReactTable} from '@tanstack/react-table';
-import {Link} from 'react-router';
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {keepPreviousData, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {api} from '~/api/api';
-import {getErrorMessage} from '~/utils/error-mapper';
-import type ApiError, {FormErrorState} from '~/interfaces/api-error';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { Link } from 'react-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '~/api/api';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
-    AlertCircle,
-    ArrowDownWideNarrow,
-    ArrowUpNarrowWide,
-    Edit2,
-    Filter,
-    MoreHorizontal,
-    Pencil,
-    Plus,
-    Trash2,
-    X,
+  AlertCircle,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  Edit2,
+  Filter,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
 } from 'lucide-react';
-import {Button} from '~/components/ui/button';
-import {MainLayout} from '~/components/layout/main-layout';
-import {RoleGuard} from '~/lib/role-guard';
-import {AuthGuard} from '~/lib/auth-guard';
-import {DataTable} from '~/components/common/data-table';
-import {mergeById} from '~/utils/table-helpers';
-import {AddProductDialog, type AddProductRequest} from '~/components/products/add-product-dialog';
-import {EditProductDialog, type EditProductRequest,} from '~/components/products/edit-product-dialog';
-import {DeleteProductDialog} from '~/components/products/delete-product-dialog';
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,} from '~/components/ui/dropdown-menu';
+import { Button } from '~/components/ui/button';
+import { MainLayout } from '~/components/layout/main-layout';
+import { RoleGuard } from '~/lib/role-guard';
+import { AuthGuard } from '~/lib/auth-guard';
+import { DataTable } from '~/components/common/data-table';
+import { mergeById } from '~/utils/table-helpers';
+import { AddProductDialog, type AddProductRequest } from '~/components/products/add-product-dialog';
+import {
+  EditProductDialog,
+  type EditProductRequest,
+} from '~/components/products/edit-product-dialog';
+import { DeleteProductDialog } from '~/components/products/delete-product-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 
 interface ProductResponse {
   id: string;

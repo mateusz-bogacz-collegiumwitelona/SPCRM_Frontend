@@ -25,4 +25,5 @@ export default [
   route('units', 'routes/admin/units-of-mesure.tsx'),
   route('offers', 'routes/offers.tsx'),
   route('offer/:offerId', 'routes/offer-detail.tsx'),
+  route('users', 'routes/admin/users.tsx'),
 ] satisfies RouteConfig;
