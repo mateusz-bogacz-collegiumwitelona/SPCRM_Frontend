@@ -35,6 +35,8 @@ interface SaleDetailResponse {
 }
 
 export const SaleInfo = ({ dealId }: { dealId: string }) => {
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
   const {
     data: deal,
     isLoading,
@@ -48,17 +50,6 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="mb-6 animate-pulse">
-        <div className="h-10 bg-gray-200 rounded w-1/2 mb-4"></div>
-        <div className="h-32 bg-gray-100 rounded-lg"></div>
-      </div>
-    );
-  }
-
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
@@ -67,6 +58,16 @@ export const SaleInfo = ({ dealId }: { dealId: string }) => {
       setIsErrorDismissed(false);
     }
   }, [isError, queryError]);
+
+  // 2. Warunkowe powroty renderowania dopiero po zarejestrowaniu wszystkich hooków
+  if (isLoading) {
+    return (
+      <div className="mb-6 animate-pulse">
+        <div className="h-10 bg-gray-200 rounded w-1/2 mb-4"></div>
+        <div className="h-32 bg-gray-100 rounded-lg"></div>
+      </div>
+    );
+  }
 
   const formError: FormErrorState | null =
     (isError || (!isLoading && !deal)) && !isErrorDismissed

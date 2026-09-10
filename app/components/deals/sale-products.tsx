@@ -1,9 +1,4 @@
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -15,14 +10,12 @@ import {
   AlertCircle,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
-  ChevronLeft,
-  ChevronRight,
   Filter,
-  Loader2,
   PackageOpen,
   X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import { DataTable } from '~/components/common/data-table';
 
 interface DealProductResponse {
   productId: string;
@@ -44,10 +37,7 @@ const columns = [
   columnHelper.display({
     id: 'productName',
     header: 'Nazwa produktu',
-    cell: (info) => {
-      const row = info.row.original;
-      return <span className="font-medium text-gray-900">{row.name}</span>;
-    },
+    cell: (info) => <span className="font-medium text-gray-900">{info.row.original.name}</span>,
   }),
   columnHelper.accessor('steelGrade', {
     header: 'Gatunek',
@@ -99,14 +89,15 @@ const columns = [
   columnHelper.display({
     id: 'totalPrice',
     header: 'Wartość ostateczna',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <span className="font-bold text-gray-900">
-          {formatCurrency(row.totalPrice, row.currencyCode, row.decimalPlaces)}
-        </span>
-      );
-    },
+    cell: (info) => (
+      <span className="font-bold text-gray-900">
+        {formatCurrency(
+          info.row.original.totalPrice,
+          info.row.original.currencyCode,
+          info.row.original.decimalPlaces,
+        )}
+      </span>
+    ),
   }),
   columnHelper.display({
     id: 'actions',
@@ -286,126 +277,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
         }
       : null;
 
-  const renderProductsContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-10 w-10 animate-spin text-[#004a8f] mb-4" />
-          <p className="text-gray-500 font-medium">Ładowanie produktów...</p>
-        </div>
-      );
-    }
-
-    if (desktopProducts.length === 0 && !isError) {
-      return (
-        <div className="text-center py-12 bg-gray-50/50 rounded-lg border border-dashed border-gray-300">
-          <p className="text-gray-500 font-medium">Brak produktów do wyświetlenia.</p>
-        </div>
-      );
-    }
-
-    return (
-      <>
-        <div className="block lg:hidden space-y-4">
-          {accumulatedMobileProducts.map((product) => (
-            <ProductMobileCard key={product.productId} product={product} />
-          ))}
-
-          {pageNumber < totalPages && (
-            <Button
-              onClick={handleMobileLoadMore}
-              disabled={isFetching}
-              className="w-full bg-[#004a8f] text-white hover:bg-blue-800 flex items-center justify-center gap-2"
-            >
-              {isFetching ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Ładowanie...
-                </>
-              ) : (
-                'Pokaż więcej'
-              )}
-            </Button>
-          )}
-        </div>
-
-        <div className="hidden lg:block">
-          <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 border-b border-gray-200 text-gray-900 font-semibold">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th key={header.id} className="px-6 py-4">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-6 py-4 align-middle">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Pozycji:</span>
-              <select
-                value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-[#004a8f]"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-500">
-              Widok {Math.min((pageNumber - 1) * pageSize + 1, totalItems)} -{' '}
-              {Math.min(pageNumber * pageSize, totalItems)} z {totalItems}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleDesktopPageChange(Math.max(pageNumber - 1, 1))}
-                disabled={pageNumber === 1 || isFetching}
-                className="h-8 w-8 text-[#004a8f]"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium px-2">
-                Strona {pageNumber} z {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleDesktopPageChange(Math.min(pageNumber + 1, totalPages))}
-                disabled={pageNumber === totalPages || isFetching}
-                className="h-8 w-8 text-[#004a8f]"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  };
-
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -551,7 +422,30 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
           </div>
         )}
 
-        {renderProductsContent()}
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          isError={isError}
+          data={accumulatedMobileProducts}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          isFetching={isFetching}
+          onMobileLoadMore={handleMobileLoadMore}
+          mobileCardKeyExtractor={(item) => item.productId}
+          renderMobileCard={(item) => <ProductMobileCard product={item} />}
+          emptyMessage="Brak produktów do wyświetlenia."
+          loadingMessage="Ładowanie produktów..."
+          paginationProps={{
+            pageNumber,
+            pageSize,
+            totalPages,
+            totalItems,
+            isFetching,
+            onPageSizeChange: setPageSize,
+            onPageChange: handleDesktopPageChange,
+            pageSizeOptions: [10, 25, 50],
+          }}
+        />
       </div>
     </div>
   );

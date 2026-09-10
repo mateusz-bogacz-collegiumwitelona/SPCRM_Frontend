@@ -27,6 +27,8 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/common/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
+import { useAuth } from '~/context/auth-context';
+import { HasRole } from '~/lib/has-role';
 
 interface UserSalesResponse {
   id: string;
@@ -38,6 +40,16 @@ interface UserSalesResponse {
   decimalPlace: number;
   currency: string;
   companyName: string;
+  ownerId?: string;
+  ownerFirstName?: string;
+  ownerLastName?: string;
+}
+
+interface TeamUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
 }
 
 const formatDate = (isoDate: string) => {
@@ -50,65 +62,12 @@ const formatDate = (isoDate: string) => {
 
 const columnHelper = createColumnHelper<UserSalesResponse>();
 
-const columns = [
-  columnHelper.accessor('name', {
-    header: 'Nazwa',
-    cell: (info) => <span className="font-medium text-blue-900">{info.getValue()}</span>,
-  }),
-  columnHelper.accessor('companyName', {
-    header: 'Firma',
-  }),
-  columnHelper.accessor('nip', {
-    header: 'NIP',
-    cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
-  }),
-  columnHelper.accessor('value', {
-    header: 'Kwota',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <span className="font-medium text-gray-900">
-          {formatCurrency(row.value, row.currency, row.decimalPlace)}
-        </span>
-      );
-    },
-  }),
-  columnHelper.accessor('status', {
-    header: 'Status',
-    cell: (info) => {
-      const status = getStatusConfig(info.getValue());
-      return (
-        <span
-          className={`inline-flex items-center rounded-full ${status.bgColor} px-3 py-1 text-xs font-medium ${status.textColor}`}
-        >
-          {status.label}
-        </span>
-      );
-    },
-  }),
-  columnHelper.accessor('closeDate', {
-    header: 'Zakończenie',
-    cell: (info) => <span className="text-gray-500">{formatDate(info.getValue())}</span>,
-  }),
-  columnHelper.display({
-    id: 'actions',
-    header: 'Akcje',
-    cell: (info) => (
-      <Link
-        to={`/sale/${info.row.original.id}`}
-        className="font-medium text-blue-900 hover:underline"
-      >
-        Szczegóły
-      </Link>
-    ),
-  }),
-];
-
 interface SaleMobileCardProps {
   readonly item: UserSalesResponse;
+  readonly isManager: boolean;
 }
 
-const SaleMobileCard = ({ item }: SaleMobileCardProps) => {
+const SaleMobileCard = ({ item, isManager }: SaleMobileCardProps) => {
   const status = getStatusConfig(item.status);
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -116,6 +75,11 @@ const SaleMobileCard = ({ item }: SaleMobileCardProps) => {
         <div className="overflow-hidden">
           <p className="text-sm font-bold text-blue-900 truncate">{item.companyName}</p>
           <p className="text-xs text-gray-500 mb-1">NIP: {item.nip}</p>
+          {isManager && item.ownerFirstName && (
+            <p className="text-xs text-gray-600 mb-1 font-medium">
+              Opiekun: {item.ownerFirstName} {item.ownerLastName}
+            </p>
+          )}
           <p className="text-sm font-medium text-gray-700">
             {formatCurrency(item.value, item.currency, item.decimalPlace)}
           </p>
@@ -138,6 +102,9 @@ const SaleMobileCard = ({ item }: SaleMobileCardProps) => {
 };
 
 export default function UserSales() {
+  const { user } = useAuth();
+  const isManager = user?.roles?.includes('Manager') ?? false;
+
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,6 +114,7 @@ export default function UserSales() {
   const [date, setDate] = useState<DateRange | undefined>();
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [ownerFilter, setOwnerFilter] = useState<string>('');
 
   const [accumulatedMobileSales, setAccumulatedMobileSales] = useState<UserSalesResponse[]>([]);
 
@@ -168,7 +136,7 @@ export default function UserSales() {
   useEffect(() => {
     isMobileAppend.current = false;
     setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize, date, statusFilter]);
+  }, [debouncedSearch, sortBy, sortDescending, pageSize, date, statusFilter, ownerFilter]);
 
   const { data: statusesResponse } = useQuery({
     queryKey: ['sales-statuses'],
@@ -180,6 +148,17 @@ export default function UserSales() {
 
   const availableStatuses: string[] = Array.isArray(statusesResponse) ? statusesResponse : [];
 
+  const { data: usersResponse } = useQuery({
+    queryKey: ['sales-team-users'],
+    queryFn: async () => {
+      const response = await api.get('/users');
+      return response.data?.value || response.data?.data || response.data || [];
+    },
+    enabled: isManager,
+  });
+
+  const teamUsers: TeamUser[] = Array.isArray(usersResponse) ? usersResponse : [];
+
   const {
     data,
     isLoading,
@@ -189,7 +168,16 @@ export default function UserSales() {
   } = useQuery({
     queryKey: [
       'sales',
-      { pageNumber, pageSize, debouncedSearch, sortBy, sortDescending, date, statusFilter },
+      {
+        pageNumber,
+        pageSize,
+        debouncedSearch,
+        sortBy,
+        sortDescending,
+        date,
+        statusFilter,
+        ownerFilter,
+      },
     ],
     queryFn: async () => {
       const params = {
@@ -201,6 +189,7 @@ export default function UserSales() {
         DateFrom: date?.from ? format(date.from, 'yyyy-MM-dd') : undefined,
         DateTo: date?.to ? format(date.to, 'yyyy-MM-dd') : undefined,
         StatusType: statusFilter || undefined,
+        OwnerId: isManager && ownerFilter ? ownerFilter : undefined,
       };
       const response = await api.get('/sales', { params });
       return response.data?.value || response.data?.data || response.data;
@@ -233,6 +222,78 @@ export default function UserSales() {
     isMobileAppend.current = false;
     setPageNumber(newPage);
   };
+
+  const columns = useMemo(() => {
+    return [
+      columnHelper.accessor('name', {
+        header: 'Nazwa',
+        cell: (info) => <span className="font-medium text-blue-900">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor('companyName', {
+        header: 'Firma',
+      }),
+      columnHelper.accessor('nip', {
+        header: 'NIP',
+        cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
+      }),
+      ...(isManager
+        ? [
+            columnHelper.display({
+              id: 'owner',
+              header: 'Opiekun',
+              cell: (info) => {
+                const row = info.row.original;
+                return (
+                  <span className="text-sm font-medium text-gray-700">
+                    {row.ownerFirstName} {row.ownerLastName}
+                  </span>
+                );
+              },
+            }),
+          ]
+        : []),
+      columnHelper.accessor('value', {
+        header: 'Kwota',
+        cell: (info) => {
+          const row = info.row.original;
+          return (
+            <span className="font-medium text-gray-900">
+              {formatCurrency(row.value, row.currency, row.decimalPlace)}
+            </span>
+          );
+        },
+      }),
+      columnHelper.accessor('status', {
+        header: 'Status',
+        cell: (info) => {
+          const status = getStatusConfig(info.getValue());
+          return (
+            <span
+              className={`inline-flex items-center rounded-full ${status.bgColor} px-3 py-1 text-xs font-medium ${status.textColor}`}
+            >
+              {status.label}
+            </span>
+          );
+        },
+      }),
+      columnHelper.accessor('closeDate', {
+        header: 'Zakończenie',
+        cell: (info) => <span className="text-gray-500">{formatDate(info.getValue())}</span>,
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Akcje',
+        cell: (info) => (
+          <Link
+            to={`/sale/${info.row.original.id}`}
+            className="font-medium text-blue-900 hover:underline"
+          >
+            Szczegóły
+          </Link>
+        ),
+      }),
+    ];
+  }, [isManager]);
 
   const table = useReactTable({
     data: desktopSales,
@@ -272,7 +333,9 @@ export default function UserSales() {
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
-            <h1 className="text-lg lg:text-2xl font-semibold">Sprzedaż</h1>
+            <h1 className="text-lg lg:text-2xl font-semibold">
+              {isManager ? 'Sprzedaż — Panel Managera' : 'Moja Sprzedaż'}
+            </h1>
           </div>
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -298,6 +361,7 @@ export default function UserSales() {
                   <option value="company">Firma</option>
                   <option value="value">Kwota</option>
                   <option value="name">Nazwa</option>
+                  {isManager && <option value="owner">Opiekun</option>}
                 </select>
 
                 <Button
@@ -322,7 +386,7 @@ export default function UserSales() {
                   >
                     <Filter className="w-4 h-4" />
                     <span>Filtry</span>
-                    {(date?.from || date?.to || statusFilter) && (
+                    {(date?.from || date?.to || statusFilter || ownerFilter) && (
                       <span className="-top-1 -right-1 flex h-3 w-3 relative">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
@@ -397,12 +461,37 @@ export default function UserSales() {
                           </select>
                         </div>
 
+                        <HasRole allowedRoles={['Manager']}>
+                          <div className="flex flex-col">
+                            <label
+                              htmlFor="sales-owner-filter"
+                              className="block text-xs font-medium text-gray-700 mb-1"
+                            >
+                              Opiekun (Handlowiec)
+                            </label>
+                            <select
+                              id="sales-owner-filter"
+                              value={ownerFilter}
+                              onChange={(e) => setOwnerFilter(e.target.value)}
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+                            >
+                              <option value="">Wszyscy pracownicy</option>
+                              {teamUsers.map((teamUser) => (
+                                <option key={teamUser.id} value={teamUser.id}>
+                                  {teamUser.firstName} {teamUser.lastName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </HasRole>
+
                         <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
                           <button
                             type="button"
                             onClick={() => {
                               setDate(undefined);
                               setStatusFilter('');
+                              setOwnerFilter('');
                             }}
                             className="text-xs text-gray-500 hover:text-gray-900 underline"
                           >
@@ -460,7 +549,7 @@ export default function UserSales() {
             isFetching={isFetching}
             onMobileLoadMore={handleMobileLoadMore}
             mobileCardKeyExtractor={(item) => item.id}
-            renderMobileCard={(item) => <SaleMobileCard item={item} />}
+            renderMobileCard={(item) => <SaleMobileCard item={item} isManager={isManager} />}
             emptyMessage="Brak wyników do wyświetlenia."
             loadingMessage="Wczytywanie sprzedaży..."
             paginationProps={{

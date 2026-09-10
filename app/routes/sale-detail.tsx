@@ -6,6 +6,7 @@ import { SaleProductsTable } from '~/components/deals/sale-products';
 import { SaleNote } from '~/components/deals/sale-note';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { SaleTasks } from '~/components/deals/sale-tasks';
 
 export default function SaleDetail() {
   const { dealId } = useParams<{ dealId: string }>();
@@ -24,7 +25,8 @@ export default function SaleDetail() {
                 <SaleProductsTable dealId={dealId} />
               </div>
 
-              <div className="xl:col-span-1 w-full">
+              <div className="xl:col-span-1 w-full space-y-6">
+                <SaleTasks dealId={dealId} />
                 <SaleNote dealId={dealId} />
               </div>
             </div>
