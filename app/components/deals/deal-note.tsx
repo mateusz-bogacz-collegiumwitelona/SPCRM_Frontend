@@ -12,7 +12,7 @@ import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
-export const SaleNote = ({ dealId }: { dealId: string }) => {
+export const DealNote = ({ dealId }: { dealId: string }) => {
   const queryClient = useQueryClient();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

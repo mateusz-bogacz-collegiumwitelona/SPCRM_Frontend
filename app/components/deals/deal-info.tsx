@@ -34,7 +34,7 @@ interface SaleDetailResponse {
   paymentPercentage: number;
 }
 
-export const SaleInfo = ({ dealId }: { dealId: string }) => {
+export const DealInfo = ({ dealId }: { dealId: string }) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   const {

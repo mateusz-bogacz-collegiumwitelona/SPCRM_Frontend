@@ -50,7 +50,7 @@ const getTaskStatusBadge = (status: string) => {
   }
 };
 
-export const SaleTasks = ({ dealId }: { dealId: string }) => {
+export const DealTasks = ({ dealId }: { dealId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');

@@ -7,11 +7,12 @@ import {
   CalendarIcon,
   Filter,
   X,
+  Plus,
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
@@ -29,6 +30,7 @@ import { DataTable } from '~/components/common/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { useAuth } from '~/context/auth-context';
 import { HasRole } from '~/lib/has-role';
+import { AddDealDialog } from '~/components/deals/add-deal-dialog';
 
 interface UserSalesResponse {
   id: string;
@@ -115,11 +117,11 @@ export default function UserSales() {
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [ownerFilter, setOwnerFilter] = useState<string>('');
-
   const [accumulatedMobileSales, setAccumulatedMobileSales] = useState<UserSalesResponse[]>([]);
-
   const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
+  const [isAddDealOpen, setIsAddDealOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -156,6 +158,10 @@ export default function UserSales() {
     },
     enabled: isManager,
   });
+
+  const handleDealAdded = () => {
+    queryClient.invalidateQueries({ queryKey: ['sales'] });
+  };
 
   const teamUsers: TeamUser[] = Array.isArray(usersResponse) ? usersResponse : [];
 
@@ -336,6 +342,14 @@ export default function UserSales() {
             <h1 className="text-lg lg:text-2xl font-semibold">
               {isManager ? 'Sprzedaż — Panel Managera' : 'Moja Sprzedaż'}
             </h1>
+            <Button
+              type="button"
+              onClick={() => setIsAddDealOpen(true)}
+              className="bg-white text-blue-900 hover:bg-gray-100 font-medium text-xs sm:text-sm"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              Dodaj transakcję
+            </Button>
           </div>
 
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -561,6 +575,12 @@ export default function UserSales() {
               onPageSizeChange: setPageSize,
               onPageChange: handleDesktopPageChange,
             }}
+          />
+
+          <AddDealDialog
+            isOpen={isAddDealOpen}
+            onClose={() => setIsAddDealOpen(false)}
+            onSuccess={handleDealAdded}
           />
         </MainLayout>
       </RoleGuard>

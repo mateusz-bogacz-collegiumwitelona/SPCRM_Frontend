@@ -1,14 +1,14 @@
 import { useParams } from 'react-router';
 import { MainLayout } from '~/components/layout/main-layout';
-import { SaleInfo } from '~/components/deals/sale-info';
+import { DealInfo } from '~/components/deals/deal-info';
 import React from 'react';
-import { SaleProductsTable } from '~/components/deals/sale-products';
-import { SaleNote } from '~/components/deals/sale-note';
+import { SaleProductsTable } from '~/components/deals/deal-products';
+import { DealNote } from '~/components/deals/deal-note';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
-import { SaleTasks } from '~/components/deals/sale-tasks';
+import { DealTasks } from '~/components/deals/deal-tasks';
 
-export default function SaleDetail() {
+export default function DealDetail() {
   const { dealId } = useParams<{ dealId: string }>();
 
   if (!dealId) return null;
@@ -18,7 +18,7 @@ export default function SaleDetail() {
       <RoleGuard allowedRoles={['User', 'Manager']}>
         <MainLayout>
           <div className="w-full mx-auto p-4 lg:p-6">
-            <SaleInfo dealId={dealId} />
+            <DealInfo dealId={dealId} />
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
               <div className="xl:col-span-2 w-full overflow-hidden">
@@ -26,8 +26,8 @@ export default function SaleDetail() {
               </div>
 
               <div className="xl:col-span-1 w-full space-y-6">
-                <SaleTasks dealId={dealId} />
-                <SaleNote dealId={dealId} />
+                <DealTasks dealId={dealId} />
+                <DealNote dealId={dealId} />
               </div>
             </div>
           </div>
