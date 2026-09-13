@@ -1,7 +1,6 @@
 import { useParams } from 'react-router';
 import { MainLayout } from '~/components/layout/main-layout';
 import { DealInfo } from '~/components/deals/deal-info';
-import React from 'react';
 import { SaleProductsTable } from '~/components/deals/deal-products';
 import { DealNote } from '~/components/deals/deal-note';
 import { RoleGuard } from '~/lib/role-guard';
