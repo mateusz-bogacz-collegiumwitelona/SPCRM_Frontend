@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import { AlertCircle, Calendar, Filter, ListTodo, Plus, User, X } from 'lucide-react';
+import { AlertCircle, Calendar, Filter, ListTodo, Plus, Trash2, User, X } from 'lucide-react';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -16,6 +16,7 @@ import {
   resolveTaskStatusLabel,
 } from '~/utils/task-helpers';
 import { AddDealTaskDialog, type AddDealTaskRequestPayload } from './add-deal-task-dialog';
+import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
 
 export interface SaleTaskResponse {
   id: string;
@@ -38,6 +39,8 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<SaleTaskResponse | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
@@ -104,6 +107,19 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
       await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteTaskConfirm = async () => {
+    if (!taskToDelete) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/tasks/${taskToDelete.id}`);
+      await queryClient.invalidateQueries({ queryKey: ['deal-tasks', dealId] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setTaskToDelete(null);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -295,7 +311,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <Link
                     to={`/task/${task.id}`}
-                    className="text-sm font-semibold text-gray-900 hover:text-[#004a8f] hover:underline line-clamp-1"
+                    className="text-sm font-semibold text-gray-900 hover:text-[#004a8f] hover:underline line-clamp-1 flex-1"
                   >
                     {task.title}
                   </Link>
@@ -312,6 +328,15 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
                     >
                       {resolveTaskStatusLabel(task.status, getStatusLabel)}
                     </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setTaskToDelete(task)}
+                      className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors"
+                      title="Usuń zadanie"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
@@ -358,6 +383,14 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveTask}
         isLoading={isSaving}
+      />
+
+      <DeleteTaskDialog
+        isOpen={Boolean(taskToDelete)}
+        onClose={() => setTaskToDelete(null)}
+        onConfirm={handleDeleteTaskConfirm}
+        isLoading={isDeleting}
+        taskTitle={taskToDelete?.title}
       />
     </div>
   );
