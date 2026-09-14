@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { AlertCircle, AlignLeft, Calendar, CheckCircle2, Pencil, Trash2, X } from 'lucide-react';
+import {
+  AlertCircle,
+  AlignLeft,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Pencil,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
@@ -9,6 +18,10 @@ import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/e
 import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
 import { Button } from '~/components/ui/button';
 import { useNavigate } from 'react-router';
+import {
+  ExtendTaskDueDateDialog,
+  type ExtendTaskDueDatePayload,
+} from '~/components/task/extend-task-due-date-dialog';
 
 interface TaskCoreDetails {
   id: string;
@@ -28,6 +41,8 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExtendOpen, setIsExtendOpen] = useState(false);
+  const [isExtending, setIsExtending] = useState(false);
 
   const {
     data: task,
@@ -75,6 +90,18 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
       navigate('/calendar');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleExtendDueDate = async (payload: ExtendTaskDueDatePayload) => {
+    setIsExtending(true);
+    try {
+      await api.put(`/tasks/${taskId}/extend-due-date`, payload);
+      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setIsExtendOpen(false);
+    } finally {
+      setIsExtending(false);
     }
   };
 
@@ -130,6 +157,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
   if (!task) return null;
 
   const isCompleted = task.status === 'Complete';
+  const isTerminated = task.status === 'Complete' || task.status === 'Break';
   const isOverdue = new Date(task.dueAt) < new Date() && !isCompleted;
 
   return (
@@ -168,27 +196,39 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
             {isOverdue && ' (Zaległe)'}
           </span>
 
-          <div className="flex items-center gap-2 ml-auto">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditOpen(true)}
-              className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
-            >
-              <Pencil className="w-4 h-4 text-[#004a8f]" />
-              Edytuj
-            </Button>
+          {!isTerminated && (
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditOpen(true)}
+                className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
+              >
+                <Pencil className="w-4 h-4 text-[#004a8f]" />
+                Edytuj
+              </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsDeleteOpen(true)}
-              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5 text-sm"
-            >
-              <Trash2 className="w-4 h-4" />
-              Usuń
-            </Button>
-          </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsExtendOpen(true)}
+                className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
+              >
+                <Clock className="w-4 h-4 text-[#004a8f]" />
+                Przedłuż termin
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDeleteOpen(true)}
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5 text-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+                Usuń
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -217,6 +257,15 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
         onConfirm={handleDeleteTaskConfirm}
         isLoading={isDeleting}
         taskTitle={task.title}
+      />
+
+      <ExtendTaskDueDateDialog
+        isOpen={isExtendOpen}
+        onClose={() => setIsExtendOpen(false)}
+        onConfirm={handleExtendDueDate}
+        isLoading={isExtending}
+        taskTitle={task.title}
+        currentDueAt={task.dueAt}
       />
     </div>
   );
