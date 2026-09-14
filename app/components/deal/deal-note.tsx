@@ -4,6 +4,7 @@ import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
 import { AddNoteDialog } from '~/components/note/add-note-dialog';
 import { DeleteNoteDialog } from '~/components/note/delete-note-dialog';
+import { EditNoteDialog, type NoteEditData } from '~/components/note/edit-note-dialog';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
 
 import { useEffect, useState } from 'react';
@@ -15,6 +16,7 @@ export const DealNote = ({ dealId }: { dealId: string }) => {
   const queryClient = useQueryClient();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<NoteEditData | null>(null);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const {
@@ -40,6 +42,20 @@ export const DealNote = ({ dealId }: { dealId: string }) => {
     },
   });
 
+  const editNoteMutation = useMutation({
+    mutationFn: async (data: NoteEditData) => {
+      return await api.patch('/note/edit', {
+        id: data.id,
+        title: data.title,
+        content: data.content,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
+      setEditingNote(null);
+    },
+  });
+
   const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
@@ -53,6 +69,10 @@ export const DealNote = ({ dealId }: { dealId: string }) => {
 
   const handleSaveNewNote = async (title: string, content: string) => {
     await addNoteMutation.mutateAsync({ title, content });
+  };
+
+  const handleSaveEditedNote = async (data: NoteEditData) => {
+    await editNoteMutation.mutateAsync(data);
   };
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
@@ -110,6 +130,13 @@ export const DealNote = ({ dealId }: { dealId: string }) => {
         isLoading={isLoading}
         emptyMessage="Brak notatek dla tej transakcji"
         onAddClick={() => setIsAddModalOpen(true)}
+        onEditClick={(note) =>
+          setEditingNote({
+            id: note.noteId,
+            title: note.title,
+            content: note.content,
+          })
+        }
         onDeleteClick={(note) => setDeletingNoteId(note.noteId)}
       />
 
@@ -118,6 +145,13 @@ export const DealNote = ({ dealId }: { dealId: string }) => {
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewNote}
         isLoading={addNoteMutation.isPending}
+      />
+
+      <EditNoteDialog
+        isOpen={Boolean(editingNote)}
+        onClose={() => setEditingNote(null)}
+        note={editingNote}
+        onSave={handleSaveEditedNote}
       />
 
       <DeleteNoteDialog
