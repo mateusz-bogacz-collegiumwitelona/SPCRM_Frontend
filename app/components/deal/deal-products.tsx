@@ -12,6 +12,7 @@ import {
   ArrowUpNarrowWide,
   Filter,
   PackageOpen,
+  Pencil,
   Plus,
   Trash2,
   X,
@@ -20,6 +21,7 @@ import { Button } from '~/components/ui/button';
 import { DataTable } from '~/components/common/data-table';
 import { AddDealProductDialog } from '~/components/deal/add-deal-product-dialog';
 import { DeleteDealProductDialog } from '~/components/deal/delete-deal-product-dialog';
+import { EditDealProductDialog } from '~/components/deal/edit-deal-product-dialog';
 
 interface DealProductResponse {
   dealProductId: string;
@@ -43,36 +45,48 @@ const mergeProducts = (
   incoming: DealProductResponse[],
 ): DealProductResponse[] => {
   const existingIds = new Set(existing.map((item) => item.dealProductId));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.productId));
+  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.dealProductId));
   return [...existing, ...uniqueIncoming];
 };
 
 const ProductMobileCard = ({
   product,
+  onEditClick,
   onDeleteClick,
 }: {
   product: DealProductResponse;
+  onEditClick: (product: DealProductResponse) => void;
   onDeleteClick: (product: DealProductResponse) => void;
 }) => {
   const hasDiscount = product.baseUnitPrice > product.unitPrice;
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm relative">
-      <div className="flex justify-between items-start mb-2 pr-8">
+      <div className="flex justify-between items-start mb-2 pr-16">
         <div>
           <p className="text-sm font-bold text-[#004a8f]">{product.name}</p>
           <p className="text-xs text-gray-500 mt-0.5">Wymiary: {product.dimensions}</p>
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onDeleteClick(product)}
-        className="absolute top-3 right-3 text-gray-400 hover:text-red-600 p-1 rounded"
-        title="Usuń pozycję"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+      <div className="absolute top-3 right-3 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onEditClick(product)}
+          className="text-gray-400 hover:text-[#004a8f] p-1 rounded"
+          title="Edytuj pozycję"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => onDeleteClick(product)}
+          className="text-gray-400 hover:text-red-600 p-1 rounded"
+          title="Usuń pozycję"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
 
       <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
         <div className="text-gray-600">
@@ -101,6 +115,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const queryClient = useQueryClient();
 
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<DealProductResponse | null>(null);
   const [productToDelete, setProductToDelete] = useState<DealProductResponse | null>(null);
 
   const [pageNumber, setPageNumber] = useState(1);
@@ -287,6 +302,14 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
             </Link>
             <button
               type="button"
+              onClick={() => setProductToEdit(info.row.original)}
+              className="text-gray-400 hover:text-[#004a8f] transition-colors"
+              title="Edytuj pozycję"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
               onClick={() => setProductToDelete(info.row.original)}
               className="text-gray-400 hover:text-red-600 transition-colors"
               title="Usuń pozycję"
@@ -307,7 +330,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   });
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
@@ -503,6 +525,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
             renderMobileCard={(item) => (
               <ProductMobileCard
                 product={item}
+                onEditClick={(prod) => setProductToEdit(prod)}
                 onDeleteClick={(prod) => setProductToDelete(prod)}
               />
             )}
@@ -526,6 +549,14 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
         isOpen={isAddProductOpen}
         onClose={() => setIsAddProductOpen(false)}
         dealId={dealId}
+        currencyCode={currentCurrency}
+      />
+
+      <EditDealProductDialog
+        isOpen={Boolean(productToEdit)}
+        onClose={() => setProductToEdit(null)}
+        dealId={dealId}
+        product={productToEdit}
         currencyCode={currentCurrency}
       />
 
