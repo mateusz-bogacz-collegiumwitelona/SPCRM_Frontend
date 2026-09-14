@@ -2,7 +2,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
@@ -13,13 +13,16 @@ import {
   Filter,
   PackageOpen,
   Plus,
+  Trash2,
   X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { DataTable } from '~/components/common/data-table';
 import { AddDealProductDialog } from '~/components/deal/add-deal-product-dialog';
+import { DeleteDealProductDialog } from '~/components/deal/delete-deal-product-dialog';
 
 interface DealProductResponse {
+  dealProductId: string;
   productId: string;
   name: string;
   steelGrade: string;
@@ -35,104 +38,42 @@ interface DealProductResponse {
 
 const columnHelper = createColumnHelper<DealProductResponse>();
 
-const columns = [
-  columnHelper.display({
-    id: 'productName',
-    header: 'Nazwa produktu',
-    cell: (info) => <span className="font-medium text-gray-900">{info.row.original.name}</span>,
-  }),
-  columnHelper.accessor('steelGrade', {
-    header: 'Gatunek',
-    cell: (info) => (
-      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-        {info.getValue()}
-      </span>
-    ),
-  }),
-  columnHelper.accessor('dimensions', {
-    header: 'Wymiary',
-    cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
-  }),
-  columnHelper.display({
-    id: 'quantity',
-    header: 'Ilość',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <span className="font-medium text-gray-900">
-          {row.quantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
-        </span>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'unitPrice',
-    header: 'Cena jedn. netto',
-    cell: (info) => {
-      const row = info.row.original;
-      const isHasDiscount = row.baseUnitPrice > row.unitPrice;
-
-      return (
-        <div className="flex flex-col items-start">
-          {isHasDiscount && (
-            <span className="text-xs text-gray-400 line-through mb-0.5">
-              {formatCurrency(row.baseUnitPrice, row.currencyCode, row.decimalPlaces)}
-            </span>
-          )}
-          <span
-            className={isHasDiscount ? 'text-green-600 font-bold' : 'text-gray-900 font-medium'}
-          >
-            {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
-          </span>
-        </div>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'totalPrice',
-    header: 'Wartość ostateczna',
-    cell: (info) => (
-      <span className="font-bold text-gray-900">
-        {formatCurrency(
-          info.row.original.totalPrice,
-          info.row.original.currencyCode,
-          info.row.original.decimalPlaces,
-        )}
-      </span>
-    ),
-  }),
-  columnHelper.display({
-    id: 'actions',
-    header: 'Akcje',
-    cell: (info) => (
-      <Link
-        to={`/products/${info.row.original.productId}`}
-        className="font-medium text-blue-900 hover:underline"
-      >
-        Detale
-      </Link>
-    ),
-  }),
-];
-
 const mergeProducts = (
   existing: DealProductResponse[],
   incoming: DealProductResponse[],
 ): DealProductResponse[] => {
-  const existingIds = new Set(existing.map((item) => item.productId));
+  const existingIds = new Set(existing.map((item) => item.dealProductId));
   const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.productId));
   return [...existing, ...uniqueIncoming];
 };
 
-const ProductMobileCard = ({ product }: { product: DealProductResponse }) => {
+const ProductMobileCard = ({
+  product,
+  onDeleteClick,
+}: {
+  product: DealProductResponse;
+  onDeleteClick: (product: DealProductResponse) => void;
+}) => {
   const hasDiscount = product.baseUnitPrice > product.unitPrice;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="mb-2">
-        <p className="text-sm font-bold text-[#004a8f]">{product.name}</p>
-        <p className="text-xs text-gray-500 mt-1">Wymiary: {product.dimensions}</p>
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm relative">
+      <div className="flex justify-between items-start mb-2 pr-8">
+        <div>
+          <p className="text-sm font-bold text-[#004a8f]">{product.name}</p>
+          <p className="text-xs text-gray-500 mt-0.5">Wymiary: {product.dimensions}</p>
+        </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() => onDeleteClick(product)}
+        className="absolute top-3 right-3 text-gray-400 hover:text-red-600 p-1 rounded"
+        title="Usuń pozycję"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+
       <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
         <div className="text-gray-600">
           Ilość:{' '}
@@ -157,7 +98,10 @@ const ProductMobileCard = ({ product }: { product: DealProductResponse }) => {
 };
 
 export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
+  const queryClient = useQueryClient();
+
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<DealProductResponse | null>(null);
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -222,11 +166,23 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
     placeholderData: keepPreviousData,
   });
 
+  const deleteProductMutation = useMutation({
+    mutationFn: async (dealProductId: string) => {
+      return await api.delete(`/sales/${dealId}/products/${dealProductId}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-products', dealId] });
+      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
+      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
+      setProductToDelete(null);
+    },
+  });
+
   const desktopProducts = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopProducts.length;
 
-  const dealCache = useQueryClient().getQueryData<{ currencyCode: string }>(['deal-info', dealId]);
+  const dealCache = queryClient.getQueryData<{ currencyCode: string }>(['deal-info', dealId]);
   const currentCurrency = dealCache?.currencyCode || desktopProducts[0]?.currencyCode || 'PLN';
 
   useEffect(() => {
@@ -250,6 +206,99 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
     isMobileAppend.current = false;
     setPageNumber(newPage);
   };
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: 'productName',
+        header: 'Nazwa produktu',
+        cell: (info) => <span className="font-medium text-gray-900">{info.row.original.name}</span>,
+      }),
+      columnHelper.accessor('steelGrade', {
+        header: 'Gatunek',
+        cell: (info) => (
+          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+            {info.getValue()}
+          </span>
+        ),
+      }),
+      columnHelper.accessor('dimensions', {
+        header: 'Wymiary',
+        cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
+      }),
+      columnHelper.display({
+        id: 'quantity',
+        header: 'Ilość',
+        cell: (info) => {
+          const row = info.row.original;
+          return (
+            <span className="font-medium text-gray-900">
+              {row.quantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
+            </span>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: 'unitPrice',
+        header: 'Cena jedn. netto',
+        cell: (info) => {
+          const row = info.row.original;
+          const isHasDiscount = row.baseUnitPrice > row.unitPrice;
+
+          return (
+            <div className="flex flex-col items-start">
+              {isHasDiscount && (
+                <span className="text-xs text-gray-400 line-through mb-0.5">
+                  {formatCurrency(row.baseUnitPrice, row.currencyCode, row.decimalPlaces)}
+                </span>
+              )}
+              <span
+                className={isHasDiscount ? 'text-green-600 font-bold' : 'text-gray-900 font-medium'}
+              >
+                {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
+              </span>
+            </div>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: 'totalPrice',
+        header: 'Wartość ostateczna',
+        cell: (info) => (
+          <span className="font-bold text-gray-900">
+            {formatCurrency(
+              info.row.original.totalPrice,
+              info.row.original.currencyCode,
+              info.row.original.decimalPlaces,
+            )}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Akcje',
+        cell: (info) => (
+          <div className="flex items-center gap-3">
+            <Link
+              to={`/products/${info.row.original.productId}`}
+              className="font-medium text-blue-900 hover:underline text-xs"
+            >
+              Detale
+            </Link>
+            <button
+              type="button"
+              onClick={() => setProductToDelete(info.row.original)}
+              className="text-gray-400 hover:text-red-600 transition-colors"
+              title="Usuń pozycję"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ),
+      }),
+    ],
+    [],
+  );
 
   const table = useReactTable({
     data: desktopProducts,
@@ -450,8 +499,13 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
             totalPages={totalPages}
             isFetching={isFetching}
             onMobileLoadMore={handleMobileLoadMore}
-            mobileCardKeyExtractor={(item) => item.productId}
-            renderMobileCard={(item) => <ProductMobileCard product={item} />}
+            mobileCardKeyExtractor={(item) => item.dealProductId}
+            renderMobileCard={(item) => (
+              <ProductMobileCard
+                product={item}
+                onDeleteClick={(prod) => setProductToDelete(prod)}
+              />
+            )}
             emptyMessage="Brak produktów do wyświetlenia."
             loadingMessage="Ładowanie produktów..."
             paginationProps={{
@@ -473,6 +527,17 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
         onClose={() => setIsAddProductOpen(false)}
         dealId={dealId}
         currencyCode={currentCurrency}
+      />
+
+      <DeleteDealProductDialog
+        isOpen={Boolean(productToDelete)}
+        onClose={() => setProductToDelete(null)}
+        onConfirm={async () => {
+          if (!productToDelete) return;
+          await deleteProductMutation.mutateAsync(productToDelete.dealProductId);
+        }}
+        isLoading={deleteProductMutation.isPending}
+        productName={productToDelete?.name}
       />
     </>
   );
