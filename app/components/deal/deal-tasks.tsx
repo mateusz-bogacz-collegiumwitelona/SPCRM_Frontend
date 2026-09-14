@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import { AlertCircle, Calendar, Filter, ListTodo, User, X } from 'lucide-react';
+import { AlertCircle, Calendar, Filter, ListTodo, Plus, User, X } from 'lucide-react';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { TablePagination } from '~/components/common/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/common/table-state-views';
+import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
+import {
+  getTaskPriorityBadgeClass,
+  getTaskStatusBadgeClass,
+  resolveTaskPriorityLabel,
+  resolveTaskStatusLabel,
+} from '~/utils/task-helpers';
+import { AddDealTaskDialog, type AddDealTaskRequestPayload } from './add-deal-task-dialog';
 
 export interface SaleTaskResponse {
   id: string;
@@ -23,34 +31,13 @@ export interface SaleTaskResponse {
   contactLastName?: string | null;
 }
 
-const getTaskPriorityBadge = (priority: string) => {
-  switch (priority?.toLowerCase()) {
-    case 'high':
-      return { label: 'Wysoki', bg: 'bg-red-50 text-red-700 border-red-200' };
-    case 'medium':
-      return { label: 'Średni', bg: 'bg-amber-50 text-amber-700 border-amber-200' };
-    case 'low':
-      return { label: 'Niski', bg: 'bg-blue-50 text-blue-700 border-blue-200' };
-    default:
-      return { label: priority, bg: 'bg-gray-50 text-gray-700 border-gray-200' };
-  }
-};
-
-const getTaskStatusBadge = (status: string) => {
-  switch (status?.toLowerCase()) {
-    case 'complete':
-      return { label: 'Zakończone', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    case 'inprogress':
-      return { label: 'W toku', bg: 'bg-blue-50 text-blue-700 border-blue-200' };
-    case 'break':
-      return { label: 'Wstrzymane', bg: 'bg-gray-100 text-gray-700 border-gray-200' };
-    case 'todo':
-    default:
-      return { label: 'Do zrobienia', bg: 'bg-amber-50 text-amber-700 border-amber-200' };
-  }
-};
-
 export const DealTasks = ({ dealId }: { dealId: string }) => {
+  const queryClient = useQueryClient();
+
+  const { dictionaries, getStatusLabel, getPriorityLabel } = useTaskDictionaries();
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,6 +96,17 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || tasks.length;
 
+  const handleSaveTask = async (payload: AddDealTaskRequestPayload) => {
+    setIsSaving(true);
+    try {
+      await api.post(`/sales/${dealId}/tasks`, payload);
+      await queryClient.invalidateQueries({ queryKey: ['deal-tasks', dealId] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const formError: FormErrorState | null =
     isError && !isErrorDismissed
       ? {
@@ -126,32 +124,46 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
       : null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
-      <div className="p-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <ListTodo className="w-5 h-5 text-gray-500" />
-          <h2 className="text-base font-semibold text-gray-900">Zadania</h2>
-          <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
-            {totalItems}
-          </span>
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
+      <div className="p-3.5 border-b border-gray-200 bg-gray-50/60 space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <ListTodo className="w-5 h-5 text-gray-500" />
+            <h2 className="text-base font-semibold text-gray-900">Zadania</h2>
+            <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
+              {totalItems}
+            </span>
+          </div>
+
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsAddModalOpen(true)}
+            className="h-8 flex items-center gap-1.5 bg-[#004a8f] text-white hover:bg-blue-800 text-xs shrink-0 shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Dodaj zadanie</span>
+          </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Szukaj zadania..."
-            className="w-full sm:w-44 border border-gray-300 rounded-md bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
-          />
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Szukaj zadania..."
+              className="w-full border border-gray-300 rounded-md bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+            />
+          </div>
 
-          <div className="relative">
+          <div className="relative shrink-0">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className="h-8 flex items-center gap-1.5 border-gray-300 text-xs text-gray-700"
+              className="h-7.5 flex items-center gap-1.5 border-gray-300 text-xs text-gray-700 bg-white"
             >
               <Filter className="w-3.5 h-3.5" />
               <span>Filtry</span>
@@ -173,13 +185,21 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
                     id="deal-tasks-status-filter"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+                    className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white"
                   >
                     <option value="">Wszystkie</option>
-                    <option value="ToDo">Do zrobienia</option>
-                    <option value="InProgress">W trakcie</option>
-                    <option value="Complete">Zakończone</option>
-                    <option value="Break">Wstrzymane</option>
+                    {dictionaries?.statuses?.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    )) ?? (
+                      <>
+                        <option value="ToDo">Do zrobienia</option>
+                        <option value="InProgress">W trakcie</option>
+                        <option value="Complete">Zakończone</option>
+                        <option value="Break">Wstrzymane</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -194,12 +214,20 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
                     id="deal-tasks-priority-filter"
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+                    className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white"
                   >
                     <option value="">Wszystkie</option>
-                    <option value="Low">Niski</option>
-                    <option value="Medium">Średni</option>
-                    <option value="High">Wysoki</option>
+                    {dictionaries?.priorities?.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
+                    )) ?? (
+                      <>
+                        <option value="Low">Niski</option>
+                        <option value="Medium">Średni</option>
+                        <option value="High">Wysoki</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -259,59 +287,55 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
           <TableEmptyState message="Brak przypisanych zadań do tej sprzedaży." />
         ) : (
           <div className="space-y-2.5">
-            {tasks.map((task) => {
-              const priority = getTaskPriorityBadge(task.priority);
-              const status = getTaskStatusBadge(task.status);
+            {tasks.map((task) => (
+              <div
+                key={task.id}
+                className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-xs transition-all bg-white"
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <Link
+                    to={`/task/${task.id}`}
+                    className="text-sm font-semibold text-gray-900 hover:text-[#004a8f] hover:underline line-clamp-1"
+                  >
+                    {task.title}
+                  </Link>
 
-              return (
-                <div
-                  key={task.id}
-                  className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-xs transition-all bg-white"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <Link
-                      to={`/task/${task.id}`}
-                      className="text-sm font-semibold text-gray-900 hover:text-[#004a8f] hover:underline line-clamp-1"
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span
+                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${getTaskPriorityBadgeClass(task.priority)}`}
                     >
-                      {task.title}
-                    </Link>
+                      {resolveTaskPriorityLabel(task.priority, getPriorityLabel)}
+                    </span>
 
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span
-                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${priority.bg}`}
-                      >
-                        {priority.label}
-                      </span>
-                      <span
-                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${status.bg}`}
-                      >
-                        {status.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between text-xs text-gray-500 gap-y-1 mt-2 pt-2 border-t border-gray-100">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{new Date(task.dueAt).toLocaleDateString('pl-PL')}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <User className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="truncate max-w-30">
-                        {task.assignedToFirstName} {task.assignedToLastName}
-                      </span>
-                    </div>
-
-                    {task.contactFirstName && (
-                      <span className="text-[11px] text-gray-400 italic">
-                        Dotyczy: {task.contactFirstName} {task.contactLastName}
-                      </span>
-                    )}
+                    <span
+                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${getTaskStatusBadgeClass(task.status)}`}
+                    >
+                      {resolveTaskStatusLabel(task.status, getStatusLabel)}
+                    </span>
                   </div>
                 </div>
-              );
-            })}
+
+                <div className="flex flex-wrap items-center justify-between text-xs text-gray-500 gap-y-1 mt-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                    <span>{new Date(task.dueAt).toLocaleDateString('pl-PL')}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="truncate max-w-30">
+                      {task.assignedToFirstName} {task.assignedToLastName}
+                    </span>
+                  </div>
+
+                  {task.contactFirstName && (
+                    <span className="text-[11px] text-gray-400 italic">
+                      Dotyczy: {task.contactFirstName} {task.contactLastName}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -328,6 +352,13 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
           />
         )}
       </div>
+
+      <AddDealTaskDialog
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleSaveTask}
+        isLoading={isSaving}
+      />
     </div>
   );
 };

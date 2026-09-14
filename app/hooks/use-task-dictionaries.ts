@@ -1,12 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 
+export interface DictionaryItem {
+  value: string;
+  label: string;
+}
+
+export interface TaskDictionariesData {
+  statuses: DictionaryItem[];
+  priorities: DictionaryItem[];
+}
+
 export const useTaskDictionaries = () => {
-  const { data: dictionaries, isLoading } = useQuery({
+  const { data: dictionaries, isLoading } = useQuery<TaskDictionariesData>({
     queryKey: ['task-dictionaries'],
     queryFn: async () => {
       const res = await api.get('/tasks/dictionaries');
-      return res.data.data;
+      return res.data?.data || res.data;
     },
     staleTime: Infinity,
   });
@@ -14,7 +24,7 @@ export const useTaskDictionaries = () => {
   const getStatusLabel = (statusValue: string) => {
     if (!dictionaries?.statuses) return statusValue;
     const found = dictionaries.statuses.find(
-      (s: { value: string; label: string }) => s.value === statusValue,
+      (s) => s.value.toLowerCase() === statusValue.toLowerCase(),
     );
     return found ? found.label : statusValue;
   };
@@ -22,7 +32,7 @@ export const useTaskDictionaries = () => {
   const getPriorityLabel = (priorityValue: string) => {
     if (!dictionaries?.priorities) return priorityValue;
     const found = dictionaries.priorities.find(
-      (p: { value: string; label: string }) => p.value === priorityValue,
+      (p) => p.value.toLowerCase() === priorityValue.toLowerCase(),
     );
     return found ? found.label : priorityValue;
   };
