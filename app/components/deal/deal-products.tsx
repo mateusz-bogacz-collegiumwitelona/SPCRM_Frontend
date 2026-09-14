@@ -2,7 +2,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
@@ -12,10 +12,12 @@ import {
   ArrowUpNarrowWide,
   Filter,
   PackageOpen,
+  Plus,
   X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { DataTable } from '~/components/common/data-table';
+import { AddDealProductDialog } from '~/components/deal/add-deal-product-dialog';
 
 interface DealProductResponse {
   productId: string;
@@ -155,6 +157,8 @@ const ProductMobileCard = ({ product }: { product: DealProductResponse }) => {
 };
 
 export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -222,6 +226,9 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopProducts.length;
 
+  const dealCache = useQueryClient().getQueryData<{ currencyCode: string }>(['deal-info', dealId]);
+  const currentCurrency = dealCache?.currencyCode || desktopProducts[0]?.currencyCode || 'PLN';
+
   useEffect(() => {
     const items: DealProductResponse[] = data?.items;
     if (!items || items.length === 0) return;
@@ -278,175 +285,195 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
       : null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-lg font-medium text-gray-800 flex items-center gap-2">
-          <PackageOpen className="w-5 h-5 text-gray-500" />
-          Pozycje zamówienia
-        </h2>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Szukaj produktu..."
-            className="w-full sm:w-64 border border-gray-300 rounded-md bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
-          />
-
-          <div className="flex w-full sm:w-auto items-center gap-2">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-[#004a8f]"
-            >
-              <option value="name">Nazwa</option>
-              <option value="steelgrade">Gatunek</option>
-              <option value="quantity">Ilość</option>
-              <option value="totalprice">Wartość</option>
-            </select>
-
+    <>
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-medium text-gray-800 flex items-center gap-2">
+              <PackageOpen className="w-5 h-5 text-gray-500" />
+              Pozycje zamówienia
+            </h2>
             <Button
-              variant="outline"
-              onClick={() => setSortDescending(!sortDescending)}
-              className="shrink-0 text-gray-700 border-gray-300 px-3"
+              type="button"
+              size="sm"
+              onClick={() => setIsAddProductOpen(true)}
+              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-1.5 text-xs h-8"
             >
-              {sortDescending ? (
-                <ArrowDownWideNarrow className="w-4 h-4" />
-              ) : (
-                <ArrowUpNarrowWide className="w-4 h-4" />
-              )}
+              <Plus className="w-3.5 h-3.5" />
+              <span>Dodaj produkt</span>
             </Button>
+          </div>
 
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Szukaj produktu..."
+              className="w-full sm:w-64 border border-gray-300 rounded-md bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
+            />
+
+            <div className="flex w-full sm:w-auto items-center gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-[#004a8f]"
+              >
+                <option value="name">Nazwa</option>
+                <option value="steelgrade">Gatunek</option>
+                <option value="quantity">Ilość</option>
+                <option value="totalprice">Wartość</option>
+              </select>
+
               <Button
                 variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 text-gray-700 border-gray-300"
+                onClick={() => setSortDescending(!sortDescending)}
+                className="shrink-0 text-gray-700 border-gray-300 px-3"
               >
-                <Filter className="w-4 h-4" />
-                <span className="hidden sm:inline">Filtry</span>
-                {(productFilter || steelGradeFilter) && (
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-[#004a8f]"></span>
-                  </span>
+                {sortDescending ? (
+                  <ArrowDownWideNarrow className="w-4 h-4" />
+                ) : (
+                  <ArrowUpNarrowWide className="w-4 h-4" />
                 )}
               </Button>
 
-              {showFilters && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
-                  <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
-                  <div className="space-y-4">
-                    <div className="flex flex-col">
-                      <label
-                        htmlFor="sale-product-category"
-                        className="text-xs font-medium text-gray-700 mb-1"
-                      >
-                        Kategoria
-                      </label>
-                      <input
-                        id="sale-product-category"
-                        type="text"
-                        value={productFilter}
-                        onChange={(e) => setProductFilter(e.target.value)}
-                        placeholder="np. Rury, Blachy..."
-                        className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-[#004a8f]"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <label
-                        htmlFor="sale-product-steel-grade"
-                        className="text-xs font-medium text-gray-700 mb-1"
-                      >
-                        Gatunek stali
-                      </label>
-                      <input
-                        id="sale-product-steel-grade"
-                        type="text"
-                        value={steelGradeFilter}
-                        onChange={(e) => setSteelGradeFilter(e.target.value)}
-                        placeholder="np. S355J2"
-                        className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-[#004a8f]"
-                      />
-                    </div>
-                    <div className="pt-3 mt-2 border-t border-gray-100 flex justify-between items-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProductFilter('');
-                          setSteelGradeFilter('');
-                        }}
-                        className="text-xs text-gray-500 hover:text-gray-900 underline"
-                      >
-                        Wyczyść
-                      </button>
-                      <Button
-                        size="sm"
-                        onClick={() => setShowFilters(false)}
-                        className="h-8 px-4 bg-[#004a8f] text-white text-xs"
-                      >
-                        Zamknij
-                      </Button>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2 text-gray-700 border-gray-300"
+                >
+                  <Filter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filtry</span>
+                  {(productFilter || steelGradeFilter) && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-[#004a8f]"></span>
+                    </span>
+                  )}
+                </Button>
+
+                {showFilters && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
+                    <div className="space-y-4">
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="sale-product-category"
+                          className="text-xs font-medium text-gray-700 mb-1"
+                        >
+                          Kategoria
+                        </label>
+                        <input
+                          id="sale-product-category"
+                          type="text"
+                          value={productFilter}
+                          onChange={(e) => setProductFilter(e.target.value)}
+                          placeholder="np. Rury, Blachy..."
+                          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-[#004a8f]"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="sale-product-steel-grade"
+                          className="text-xs font-medium text-gray-700 mb-1"
+                        >
+                          Gatunek stali
+                        </label>
+                        <input
+                          id="sale-product-steel-grade"
+                          type="text"
+                          value={steelGradeFilter}
+                          onChange={(e) => setSteelGradeFilter(e.target.value)}
+                          placeholder="np. S355J2"
+                          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-[#004a8f]"
+                        />
+                      </div>
+                      <div className="pt-3 mt-2 border-t border-gray-100 flex justify-between items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductFilter('');
+                            setSteelGradeFilter('');
+                          }}
+                          className="text-xs text-gray-500 hover:text-gray-900 underline"
+                        >
+                          Wyczyść
+                        </button>
+                        <Button
+                          size="sm"
+                          onClick={() => setShowFilters(false)}
+                          className="h-8 px-4 bg-[#004a8f] text-white text-xs"
+                        >
+                          Zamknij
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-4 lg:p-6">
-        {formError && (
-          <div className="mb-6 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-            <div className="flex-1 pr-4">
-              <p className="font-medium leading-tight">{formError.title}</p>
-              {formError.details && formError.details.length > 0 && (
-                <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                  {formError.details.map((detailErr, idx) => (
-                    <li key={idx}>{detailErr}</li>
-                  ))}
-                </ul>
-              )}
+        <div className="p-4 lg:p-6">
+          {formError && (
+            <div className="mb-6 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-4">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={idx}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsErrorDismissed(true)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsErrorDismissed(true)}
-              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-              title="Zamknij"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
+          )}
 
-        <DataTable
-          table={table}
-          isLoading={isLoading}
-          isError={isError}
-          data={accumulatedMobileProducts}
-          pageNumber={pageNumber}
-          totalPages={totalPages}
-          isFetching={isFetching}
-          onMobileLoadMore={handleMobileLoadMore}
-          mobileCardKeyExtractor={(item) => item.productId}
-          renderMobileCard={(item) => <ProductMobileCard product={item} />}
-          emptyMessage="Brak produktów do wyświetlenia."
-          loadingMessage="Ładowanie produktów..."
-          paginationProps={{
-            pageNumber,
-            pageSize,
-            totalPages,
-            totalItems,
-            isFetching,
-            onPageSizeChange: setPageSize,
-            onPageChange: handleDesktopPageChange,
-            pageSizeOptions: [10, 25, 50],
-          }}
-        />
+          <DataTable
+            table={table}
+            isLoading={isLoading}
+            isError={isError}
+            data={accumulatedMobileProducts}
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            isFetching={isFetching}
+            onMobileLoadMore={handleMobileLoadMore}
+            mobileCardKeyExtractor={(item) => item.productId}
+            renderMobileCard={(item) => <ProductMobileCard product={item} />}
+            emptyMessage="Brak produktów do wyświetlenia."
+            loadingMessage="Ładowanie produktów..."
+            paginationProps={{
+              pageNumber,
+              pageSize,
+              totalPages,
+              totalItems,
+              isFetching,
+              onPageSizeChange: setPageSize,
+              onPageChange: handleDesktopPageChange,
+              pageSizeOptions: [10, 25, 50],
+            }}
+          />
+        </div>
       </div>
-    </div>
+
+      <AddDealProductDialog
+        isOpen={isAddProductOpen}
+        onClose={() => setIsAddProductOpen(false)}
+        dealId={dealId}
+        currencyCode={currentCurrency}
+      />
+    </>
   );
 };
