@@ -1,11 +1,11 @@
 import { useParams } from 'react-router';
 import { MainLayout } from '~/components/layout/main-layout';
-import { DealInfo } from '~/components/deals/deal-info';
-import { SaleProductsTable } from '~/components/deals/deal-products';
-import { DealNote } from '~/components/deals/deal-note';
+import { DealInfo } from '~/components/deal/deal-info';
+import { SaleProductsTable } from '~/components/deal/deal-products';
+import { DealNote } from '~/components/deal/deal-note';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
-import { DealTasks } from '~/components/deals/deal-tasks';
+import { DealTasks } from '~/components/deal/deal-tasks';
 
 export default function DealDetail() {
   const { dealId } = useParams<{ dealId: string }>();

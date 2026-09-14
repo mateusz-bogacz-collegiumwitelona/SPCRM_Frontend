@@ -136,7 +136,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     isLoading: isLoadingContacts,
     isFetching: isFetchingContacts,
   } = useQuery<PagedResult<ContactDealResponse>>({
-    queryKey: ['contacts-to-deals', contactPage, debouncedContactSearch],
+    queryKey: ['contacts-to-deal', contactPage, debouncedContactSearch],
     queryFn: async () => {
       const res = await api.get('/contacts/to-deals', {
         params: {

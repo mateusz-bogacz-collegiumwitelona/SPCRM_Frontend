@@ -6,7 +6,9 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
+  CheckCircle2,
   CircleDollarSign,
+  Clock,
   Receipt,
   Tag,
   Trash2,
@@ -19,7 +21,8 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
-import { DeleteDealDialog } from '~/components/deals/delete-deal-dialog';
+import { DeleteDealDialog } from '~/components/deal/delete-deal-dialog';
+import { ExtendDealDialog } from '~/components/deal/extend-deal-dialog';
 
 interface SaleDetailResponse {
   id: string;
@@ -44,6 +47,15 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isExtendOpen, setIsExtendOpen] = useState(false);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const {
     data: deal,
@@ -63,8 +75,23 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
       return await api.delete(`/sales/${dealId}`);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['deal-list'] });
       navigate('/sales');
+    },
+  });
+
+  const extendMutation = useMutation({
+    mutationFn: async (newCloseDate: Date) => {
+      return await api.put('/sales/extend-close-date', {
+        dealId: dealId,
+        newCloseDate: newCloseDate.toISOString(),
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
+      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
+      setSuccessMessage('Termin transakcji został pomyślnie przedłużony.');
+      setIsExtendOpen(false);
     },
   });
 
@@ -138,6 +165,23 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
 
   return (
     <>
+      {successMessage && (
+        <div className="mb-4 relative flex items-center justify-between p-3.5 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm shadow-xs transition-all">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+            <span className="font-medium">{successMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage(null)}
+            className="text-green-600 hover:text-green-800 p-0.5 rounded transition-colors"
+            title="Zamknij"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
@@ -180,6 +224,16 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
 
           {!canDelete && (
             <div className="self-end sm:self-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsExtendOpen(true)}
+                className="text-[#004a8f] border-blue-200 hover:bg-blue-50 flex items-center gap-2 text-sm"
+              >
+                <Clock className="w-4 h-4" />
+                Przedłuż termin
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
@@ -255,6 +309,17 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         }}
         isLoading={deleteMutation.isPending}
         dealTitle={deal.name}
+      />
+
+      <ExtendDealDialog
+        isOpen={isExtendOpen}
+        onClose={() => setIsExtendOpen(false)}
+        onConfirm={async (newDate) => {
+          await extendMutation.mutateAsync(newDate);
+        }}
+        isLoading={extendMutation.isPending}
+        dealName={deal.name}
+        currentCloseDate={deal.closeDate}
       />
     </>
   );
