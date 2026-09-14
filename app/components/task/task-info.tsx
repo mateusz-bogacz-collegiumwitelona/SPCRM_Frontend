@@ -6,6 +6,7 @@ import {
   AlignLeft,
   Calendar,
   CheckCircle2,
+  CheckSquare,
   Clock,
   Pencil,
   Trash2,
@@ -22,6 +23,10 @@ import {
   type ExtendTaskDueDatePayload,
 } from '~/components/task/extend-task-due-date-dialog';
 import { ChangeTaskAssigneeDialog } from '~/components/task/change-task-assignee-dialog';
+import {
+  ChangeTaskStatusDialog,
+  type ChangeTaskStatusPayload,
+} from '~/components/task/change-task-status-dialog';
 import { HasRole } from '~/lib/has-role';
 import { Button } from '~/components/ui/button';
 import { useNavigate } from 'react-router';
@@ -49,6 +54,8 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
   const [isExtending, setIsExtending] = useState(false);
   const [isAssigneeOpen, setIsAssigneeOpen] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   const {
     data: task,
@@ -121,6 +128,18 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
       navigate('/calendar');
     } finally {
       setIsAssigning(false);
+    }
+  };
+
+  const handleChangeStatus = async (payload: ChangeTaskStatusPayload) => {
+    setIsChangingStatus(true);
+    try {
+      await api.put('/tasks/change-status', payload);
+      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setIsStatusOpen(false);
+    } finally {
+      setIsChangingStatus(false);
     }
   };
 
@@ -220,6 +239,16 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
               <Button
                 type="button"
                 variant="outline"
+                onClick={() => setIsStatusOpen(true)}
+                className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
+              >
+                <CheckSquare className="w-4 h-4 text-[#004a8f]" />
+                Zmień status
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsEditOpen(true)}
                 className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
               >
@@ -306,6 +335,16 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
         isLoading={isAssigning}
         taskTitle={task.title}
         currentAssigneeId={task.assignedToId}
+      />
+
+      <ChangeTaskStatusDialog
+        isOpen={isStatusOpen}
+        onClose={() => setIsStatusOpen(false)}
+        onSave={handleChangeStatus}
+        isLoading={isChangingStatus}
+        taskId={task.id}
+        taskTitle={task.title}
+        currentStatus={task.status}
       />
     </div>
   );

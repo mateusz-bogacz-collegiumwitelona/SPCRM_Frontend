@@ -16,7 +16,7 @@ export const useTaskDictionaries = () => {
     queryKey: ['task-dictionaries'],
     queryFn: async () => {
       const res = await api.get('/tasks/dictionaries');
-      return res.data?.data || res.data;
+      return res.data?.data || res.data?.value || res.data;
     },
     staleTime: Infinity,
   });
@@ -39,6 +39,8 @@ export const useTaskDictionaries = () => {
 
   return {
     dictionaries,
+    statuses: dictionaries?.statuses ?? [],
+    priorities: dictionaries?.priorities ?? [],
     isLoading,
     getStatusLabel,
     getPriorityLabel,
