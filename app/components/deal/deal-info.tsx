@@ -10,6 +10,7 @@ import {
   CircleDollarSign,
   Clock,
   Receipt,
+  RefreshCw,
   Tag,
   Trash2,
   User,
@@ -23,6 +24,7 @@ import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { DeleteDealDialog } from '~/components/deal/delete-deal-dialog';
 import { ExtendDealDialog } from '~/components/deal/extend-deal-dialog';
+import { ChangeDealStatusDialog } from '~/components/deal/change-deal-status-dialog';
 
 interface SaleDetailResponse {
   id: string;
@@ -47,12 +49,13 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isExtendOpen, setIsExtendOpen] = useState(false);
+  const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      const timer = setTimeout(() => setSuccessMessage(null), 6000);
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
@@ -66,7 +69,7 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
     queryKey: ['deal-info', dealId],
     queryFn: async () => {
       const response = await api.get(`/sales/${dealId}`);
-      return response.data.data;
+      return response.data?.data || response.data?.value || response.data;
     },
   });
 
@@ -75,7 +78,7 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
       return await api.delete(`/sales/${dealId}`);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
       navigate('/sales');
     },
   });
@@ -159,9 +162,20 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
 
   const status = getStatusConfig(deal.status);
   const isFullyPaid = deal.paidAmount >= deal.value;
-  const statusLower = deal.status?.toLowerCase();
+  const statusLower = deal.status?.toLowerCase() || '';
+  const canModify = !['completed', 'complete', 'cancelled', 'canceled'].includes(statusLower);
 
-  const canDelete = ['complete', 'cancelled'].includes(statusLower);
+  const handleStatusChangeSuccess = (newStatus: string, sentToEmail?: string | null) => {
+    if (sentToEmail) {
+      setSuccessMessage(
+        `Status zmieniony na ${getStatusConfig(newStatus).label}. Faktura została wygenerowana i wysłana na adres: ${sentToEmail}.`,
+      );
+    } else {
+      setSuccessMessage(
+        `Status transakcji został zmieniony na: ${getStatusConfig(newStatus).label}.`,
+      );
+    }
+  };
 
   return (
     <>
@@ -222,13 +236,24 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
             </div>
           </div>
 
-          {!canDelete && (
-            <div className="self-end sm:self-auto">
+          {/* Przyciski akcji */}
+          {canModify && (
+            <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsChangeStatusOpen(true)}
+                className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
+              >
+                <RefreshCw className="w-4 h-4 text-gray-500" />
+                Zmień status
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsExtendOpen(true)}
-                className="text-[#004a8f] border-blue-200 hover:bg-blue-50 flex items-center gap-2 text-sm"
+                className="text-[#004a8f] border-blue-200 hover:bg-blue-50 flex items-center gap-1.5 text-sm"
               >
                 <Clock className="w-4 h-4" />
                 Przedłuż termin
@@ -238,10 +263,10 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
                 type="button"
                 variant="outline"
                 onClick={() => setIsDeleteOpen(true)}
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 flex items-center gap-2 text-sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5 text-sm"
               >
                 <Trash2 className="w-4 h-4" />
-                Usuń transakcję
+                Usuń
               </Button>
             </div>
           )}
@@ -301,6 +326,7 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         </div>
       </div>
 
+      {/* Dialog usuwania */}
       <DeleteDealDialog
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
@@ -311,6 +337,7 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         dealTitle={deal.name}
       />
 
+      {/* Dialog przedłużania terminu */}
       <ExtendDealDialog
         isOpen={isExtendOpen}
         onClose={() => setIsExtendOpen(false)}
@@ -320,6 +347,15 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         isLoading={extendMutation.isPending}
         dealName={deal.name}
         currentCloseDate={deal.closeDate}
+      />
+
+      {/* Dialog zmiany statusu */}
+      <ChangeDealStatusDialog
+        isOpen={isChangeStatusOpen}
+        onClose={() => setIsChangeStatusOpen(false)}
+        dealId={dealId}
+        currentStatus={deal.status}
+        onSuccess={handleStatusChangeSuccess}
       />
     </>
   );
