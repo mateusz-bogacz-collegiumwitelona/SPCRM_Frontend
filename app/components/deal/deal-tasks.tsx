@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import { AlertCircle, Calendar, Filter, ListTodo, Plus, Trash2, User, X } from 'lucide-react';
+import {
+  AlertCircle,
+  Calendar,
+  Filter,
+  ListTodo,
+  Pencil,
+  Plus,
+  Trash2,
+  User,
+  X,
+} from 'lucide-react';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -17,6 +27,7 @@ import {
 } from '~/utils/task-helpers';
 import { AddDealTaskDialog, type AddDealTaskRequestPayload } from './add-deal-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
+import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/edit-task-dialog';
 
 export interface SaleTaskResponse {
   id: string;
@@ -49,6 +60,8 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<SaleTaskResponse | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -120,6 +133,18 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
       setTaskToDelete(null);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleEditTask = async (taskId: string, payload: EditTaskRequestPayload) => {
+    setIsEditing(true);
+    try {
+      await api.put(`/tasks/${taskId}`, payload);
+      await queryClient.invalidateQueries({ queryKey: ['deal-tasks', dealId] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setTaskToEdit(null);
+    } finally {
+      setIsEditing(false);
     }
   };
 
@@ -337,6 +362,15 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTaskToEdit(task)}
+                      className="text-gray-400 hover:text-[#004a8f] p-1 rounded transition-colors"
+                      title="Edytuj zadanie"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
@@ -391,6 +425,14 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
         onConfirm={handleDeleteTaskConfirm}
         isLoading={isDeleting}
         taskTitle={taskToDelete?.title}
+      />
+
+      <EditTaskDialog
+        isOpen={Boolean(taskToEdit)}
+        onClose={() => setTaskToEdit(null)}
+        taskId={taskToEdit?.id ?? null}
+        onSave={handleEditTask}
+        isLoading={isEditing}
       />
     </div>
   );
