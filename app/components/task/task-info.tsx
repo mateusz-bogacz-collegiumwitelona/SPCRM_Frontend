@@ -1,20 +1,40 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import { AlertCircle, AlignLeft, Calendar, CheckCircle2, X } from 'lucide-react';
+import { AlertCircle, AlignLeft, Calendar, CheckCircle2, Pencil, Trash2, X } from 'lucide-react';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/edit-task-dialog';
+import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
+import { Button } from '~/components/ui/button';
+import { useNavigate } from 'react-router';
+
+interface TaskCoreDetails {
+  id: string;
+  title: string;
+  description?: string;
+  priority: string;
+  status: string;
+  dueAt: string;
+}
 
 export const TaskInfo = ({ taskId }: { taskId: string }) => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     data: task,
     isLoading,
     isError,
     error: queryError,
-  } = useQuery({
+  } = useQuery<TaskCoreDetails>({
     queryKey: ['task-core-details', taskId],
     queryFn: async () => {
       const res = await api.get(`/tasks/${taskId}`);
@@ -32,6 +52,31 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
       setIsErrorDismissed(false);
     }
   }, [isError, queryError]);
+
+  const handleEditTask = async (id: string, payload: EditTaskRequestPayload) => {
+    setIsEditing(true);
+    try {
+      await api.put(`/tasks/${id}`, payload);
+      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setIsEditOpen(false);
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const handleDeleteTaskConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      await queryClient.invalidateQueries({ queryKey: ['deal-tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setIsDeleteOpen(false);
+      navigate('/calendar');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const formError: FormErrorState | null =
     (isError || (!isLoading && !task)) && !isErrorDismissed
@@ -122,6 +167,28 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
             })}
             {isOverdue && ' (Zaległe)'}
           </span>
+
+          <div className="flex items-center gap-2 ml-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditOpen(true)}
+              className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
+            >
+              <Pencil className="w-4 h-4 text-[#004a8f]" />
+              Edytuj
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteOpen(true)}
+              className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5 text-sm"
+            >
+              <Trash2 className="w-4 h-4" />
+              Usuń
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -135,6 +202,22 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
           </div>
         </div>
       )}
+
+      <EditTaskDialog
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        taskId={task.id}
+        onSave={handleEditTask}
+        isLoading={isEditing}
+      />
+
+      <DeleteTaskDialog
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleDeleteTaskConfirm}
+        isLoading={isDeleting}
+        taskTitle={task.title}
+      />
     </div>
   );
 };

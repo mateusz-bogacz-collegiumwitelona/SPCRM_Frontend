@@ -326,7 +326,6 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         </div>
       </div>
 
-      {/* Dialog usuwania */}
       <DeleteDealDialog
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
@@ -337,7 +336,6 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         dealTitle={deal.name}
       />
 
-      {/* Dialog przedłużania terminu */}
       <ExtendDealDialog
         isOpen={isExtendOpen}
         onClose={() => setIsExtendOpen(false)}
@@ -349,7 +347,6 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         currentCloseDate={deal.closeDate}
       />
 
-      {/* Dialog zmiany statusu */}
       <ChangeDealStatusDialog
         isOpen={isChangeStatusOpen}
         onClose={() => setIsChangeStatusOpen(false)}
