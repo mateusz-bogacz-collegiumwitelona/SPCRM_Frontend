@@ -11,7 +11,7 @@ import {
 } from '~/components/ui/dialog';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import { useTaskDictionaries, type DictionaryItem } from '~/hooks/use-task-dictionaries';
+import { type DictionaryItem, useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 

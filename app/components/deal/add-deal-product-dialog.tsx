@@ -10,7 +10,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
-import { AlertCircle, Loader2, Package, Plus, Search, X } from 'lucide-react';
+import { AlertCircle, Loader2, Package, Search, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency } from '~/utils/data-formatters';

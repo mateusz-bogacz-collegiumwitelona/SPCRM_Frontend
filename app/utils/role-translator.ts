@@ -5,6 +5,24 @@ export interface RoleConfig {
   iconColor: string;
 }
 
+export const translateRole = (rawRole?: string | null): string => {
+  const role = (rawRole || '').toLowerCase();
+
+  switch (role) {
+    case 'admin':
+      return 'Administrator';
+
+    case 'manager':
+      return 'Menadżer';
+
+    case 'user':
+      return 'Pracownik';
+
+    default:
+      return rawRole || 'Brak roli';
+  }
+};
+
 export const getRoleConfig = (rawRole?: string | null): RoleConfig => {
   const role = (rawRole || '').toLowerCase();
 

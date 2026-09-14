@@ -9,6 +9,7 @@ import {
   Clock,
   Pencil,
   Trash2,
+  UserCheck,
   X,
 } from 'lucide-react';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
@@ -16,12 +17,14 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/edit-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
-import { Button } from '~/components/ui/button';
-import { useNavigate } from 'react-router';
 import {
   ExtendTaskDueDateDialog,
   type ExtendTaskDueDatePayload,
 } from '~/components/task/extend-task-due-date-dialog';
+import { ChangeTaskAssigneeDialog } from '~/components/task/change-task-assignee-dialog';
+import { HasRole } from '~/lib/has-role';
+import { Button } from '~/components/ui/button';
+import { useNavigate } from 'react-router';
 
 interface TaskCoreDetails {
   id: string;
@@ -30,6 +33,7 @@ interface TaskCoreDetails {
   priority: string;
   status: string;
   dueAt: string;
+  assignedToId?: string;
 }
 
 export const TaskInfo = ({ taskId }: { taskId: string }) => {
@@ -43,6 +47,8 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isExtendOpen, setIsExtendOpen] = useState(false);
   const [isExtending, setIsExtending] = useState(false);
+  const [isAssigneeOpen, setIsAssigneeOpen] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   const {
     data: task,
@@ -102,6 +108,19 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
       setIsExtendOpen(false);
     } finally {
       setIsExtending(false);
+    }
+  };
+
+  const handleChangeAssignee = async (newAssigneeId: string) => {
+    setIsAssigning(true);
+    try {
+      await api.put(`/tasks/${taskId}/change-assigned-user/${newAssigneeId}`);
+      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setIsAssigneeOpen(false);
+      navigate('/calendar');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -218,6 +237,18 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
                 Przedłuż termin
               </Button>
 
+              <HasRole allowedRoles={['Manager']}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAssigneeOpen(true)}
+                  className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
+                >
+                  <UserCheck className="w-4 h-4 text-[#004a8f]" />
+                  Zmień pracownika
+                </Button>
+              </HasRole>
+
               <Button
                 type="button"
                 variant="outline"
@@ -266,6 +297,15 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
         isLoading={isExtending}
         taskTitle={task.title}
         currentDueAt={task.dueAt}
+      />
+
+      <ChangeTaskAssigneeDialog
+        isOpen={isAssigneeOpen}
+        onClose={() => setIsAssigneeOpen(false)}
+        onSave={handleChangeAssignee}
+        isLoading={isAssigning}
+        taskTitle={task.title}
+        currentAssigneeId={task.assignedToId}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
-import { type NoteEditData, EditNoteDialog } from '~/components/note/edit-note-dialog';
+import { EditNoteDialog, type NoteEditData } from '~/components/note/edit-note-dialog';
 import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { useAddNote } from '~/hooks/use-add-note';
