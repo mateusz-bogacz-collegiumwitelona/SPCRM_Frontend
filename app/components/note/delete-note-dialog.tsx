@@ -12,7 +12,7 @@ interface NoteDeleteDialogProps {
   isLoading: boolean;
 }
 
-export const NoteDeleteDialog: React.FC<NoteDeleteDialogProps> = ({
+export const DeleteNoteDialog: React.FC<NoteDeleteDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,

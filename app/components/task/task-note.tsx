@@ -3,13 +3,13 @@ import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
-import { type NoteEditData, NoteEditDialog } from '~/components/note/note-edit-dialog';
+import { type NoteEditData, EditNoteDialog } from '~/components/note/edit-note-dialog';
 import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { useAddNote } from '~/hooks/use-add-note';
-import { NoteAddDialog } from '~/components/note/note-add-dialog';
+import { AddNoteDialog } from '~/components/note/add-note-dialog';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
-import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
+import { DeleteNoteDialog } from '~/components/note/delete-note-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
@@ -135,21 +135,21 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
         onDeleteClick={(note) => setDeletingNoteId(note.noteId)}
       />
 
-      <NoteEditDialog
+      <EditNoteDialog
         isOpen={!!editingNote}
         onClose={() => setEditingNote(null)}
         note={editingNote}
         onSave={editNoteAsync}
       />
 
-      <NoteAddDialog
+      <AddNoteDialog
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewNote}
         isLoading={isAdding}
       />
 
-      <NoteDeleteDialog
+      <DeleteNoteDialog
         isOpen={!!deletingNoteId}
         onClose={() => setDeletingNoteId(null)}
         onConfirm={handleDeleteConfirm}

@@ -21,14 +21,14 @@ import {
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 import { useEditNote } from '~/hooks/use-edit-note';
-import { NoteEditDialog } from '~/components/note/note-edit-dialog';
+import { EditNoteDialog } from '~/components/note/edit-note-dialog';
 import { type ContactNote, ContactNoteDialog } from './contact-note-dialog';
 
 import { useAddNote } from '~/hooks/use-add-note';
-import { NoteAddDialog } from '~/components/note/note-add-dialog';
+import { AddNoteDialog } from '~/components/note/add-note-dialog';
 import { ActionGuard } from '~/lib/action-guard';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
-import { NoteDeleteDialog } from '~/components/note/note-delete-dialog';
+import { DeleteNoteDialog } from '~/components/note/delete-note-dialog';
 
 import { getErrorMessage } from '~/utils/error-mapper';
 
@@ -555,21 +555,21 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
         onClose={() => setSelectedNote(null)}
       />
 
-      <NoteEditDialog
+      <EditNoteDialog
         isOpen={!!editingNote}
         onClose={() => setEditingNote(null)}
         note={editingNote}
         onSave={editNoteAsync}
       />
 
-      <NoteAddDialog
+      <AddNoteDialog
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewNote}
         isLoading={isAdding}
       />
 
-      <NoteDeleteDialog
+      <DeleteNoteDialog
         isOpen={!!deletingNoteId}
         onClose={() => setDeletingNoteId(null)}
         onConfirm={handleDeleteConfirm}
