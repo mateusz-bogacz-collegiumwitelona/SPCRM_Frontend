@@ -9,6 +9,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency, formatWeight } from '~/utils/data-formatters';
+import { ProductDeals } from '~/components/products/product-deals';
 
 interface ActivePromotionResponse {
   name: string;
@@ -305,20 +306,24 @@ export default function ProductDetails() {
               />
               {product && (
                 <>
-                  <div className="block lg:hidden space-y-6">
-                    <ProductLogisticsInfo product={product} />
-                    <ProductPricingInfo product={product} />
-                  </div>
-
-                  <div className="hidden lg:flex flex-row gap-8 items-start relative">
-                    <div className="flex-1 min-w-0">
-                      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm min-h-100 flex items-center justify-center text-gray-400 border-dashed">
-                        Tutaj w przyszłości pojawi się tabela &#34;Otwarte szanse sprzedaży
-                        (Deals)&#34; lub &#34;Historia dostaw&#34; powiązana z tym produktem.
+                  <div className="block xl:hidden space-y-6 w-full min-w-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <ProductLogisticsInfo product={product} />
+                      <div className="md:mt-0">
+                        <ProductPricingInfo product={product} />
                       </div>
                     </div>
+                    <div className="w-full min-w-0 overflow-hidden">
+                      <ProductDeals productId={product.id} unitSymbol={product.unitSymbol} />
+                    </div>
+                  </div>
 
-                    <div className="w-100 xl:w-112.5 shrink-0 sticky top-24">
+                  <div className="hidden xl:flex flex-row gap-8 items-start w-full min-w-0">
+                    <div className="flex-1 min-w-0 overflow-hidden space-y-6">
+                      <ProductDeals productId={product.id} unitSymbol={product.unitSymbol} />
+                    </div>
+
+                    <div className="w-96 xl:w-104 shrink-0 sticky top-24">
                       <ProductLogisticsInfo product={product} />
                       <ProductPricingInfo product={product} />
                     </div>
