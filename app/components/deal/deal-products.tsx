@@ -18,7 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { DataTable } from '~/components/common/data-table';
+import { DataTable } from '~/components/table/data-table';
 import { AddDealProductDialog } from '~/components/deal/add-deal-product-dialog';
 import { DeleteDealProductDialog } from '~/components/deal/delete-deal-product-dialog';
 import { EditDealProductDialog } from '~/components/deal/edit-deal-product-dialog';

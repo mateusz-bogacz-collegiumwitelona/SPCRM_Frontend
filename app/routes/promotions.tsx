@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
 import { Link, useNavigate } from 'react-router';
-import { DataTable } from '~/components/common/data-table';
+import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import {
   AddPromotionDialog,

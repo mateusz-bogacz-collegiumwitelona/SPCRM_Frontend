@@ -31,4 +31,5 @@ export default [
   route('auth/confirm-email-change', 'routes/auth/confirm-email-change.tsx'),
   route('auth/forgot-password', 'routes/auth/forgot-password.tsx'),
   route('auth/reset-password', 'routes/auth/reset-password.tsx'),
+  route('invoices', 'routes/invoices.tsx'),
 ] satisfies RouteConfig;

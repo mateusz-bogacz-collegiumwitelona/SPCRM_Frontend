@@ -15,7 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import { api } from '~/api/api';
-import { TableEmptyState, TableLoadingState } from '~/components/common/table-state-views';
+import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 
 export interface UserDetailResponse {
   id: string;

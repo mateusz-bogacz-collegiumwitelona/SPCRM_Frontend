@@ -20,7 +20,7 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
-import { DataTable } from '~/components/common/data-table';
+import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
 import { getRoleConfig } from '~/utils/role-translator';
 import { AddUserDialog, type AddUserRequestPayload } from '~/components/user/add-user-dialog';

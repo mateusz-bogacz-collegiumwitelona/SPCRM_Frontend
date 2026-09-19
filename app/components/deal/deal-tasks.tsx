@@ -16,8 +16,8 @@ import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { TablePagination } from '~/components/common/table-pagination';
-import { TableEmptyState, TableLoadingState } from '~/components/common/table-state-views';
+import { TablePagination } from '~/components/table/table-pagination';
+import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import {
   getTaskPriorityBadgeClass,
