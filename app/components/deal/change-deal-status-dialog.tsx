@@ -42,7 +42,6 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
   const [customEmail, setCustomEmail] = useState<string>('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  // Pobranie dostępnych statusów z backendu (GET /sales/statuses)
   const { data: availableStatuses = [], isLoading: isLoadingStatuses } = useQuery<string[]>({
     queryKey: ['deal-statuses'],
     queryFn: async () => {
@@ -162,16 +161,13 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
               </button>
             </div>
           )}
-
-          {/* Obecny status */}
+          W{' '}
           <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex items-center justify-between">
             <span className="text-xs text-gray-500 font-medium">Obecny status:</span>
             <span className="text-xs font-bold uppercase tracking-wider text-gray-800">
               {getStatusConfig(currentStatus).label}
             </span>
           </div>
-
-          {/* Wybór nowego statusu */}
           <div>
             <label
               htmlFor="deal-status-select"
@@ -201,8 +197,6 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
               </select>
             )}
           </div>
-
-          {/* Sekcja opcji fakturowania przy przejściu na Complete */}
           {isTransitionToComplete && (
             <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
               <div className="flex items-start gap-2 text-blue-900 text-xs">
@@ -252,7 +246,6 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
               </div>
             </div>
           )}
-
           <DialogFooter className="pt-3 border-t border-gray-100">
             <Button
               type="button"

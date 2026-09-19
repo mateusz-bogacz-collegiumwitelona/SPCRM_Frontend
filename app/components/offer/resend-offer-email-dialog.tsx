@@ -21,7 +21,6 @@ interface ResendOfferEmailDialogProps {
   recipientName?: string;
 }
 
-// Komponenty wektorowych flag
 const PolandFlag = () => (
   <svg
     className="w-6 h-4 rounded-xs shadow-xs border border-gray-200 overflow-hidden"

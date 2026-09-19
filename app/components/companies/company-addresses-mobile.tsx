@@ -15,7 +15,7 @@ interface Address {
 interface CompanyAddressesMobileProps {
   addresses: Address[];
   onEditAddress?: (addr: Address) => void;
-  onDeleteAddress?: (addr: Address) => void; // <-- dodany prop
+  onDeleteAddress?: (addr: Address) => void;
 }
 
 export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({

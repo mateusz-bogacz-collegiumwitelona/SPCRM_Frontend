@@ -320,7 +320,6 @@ export default function CompanyDetails() {
                     )}
                   </div>
 
-                  {/* Lista kafelków adresów z przyciskami Edytuj i Usuń */}
                   <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
                     {addresses.map((addr) => (
                       <div

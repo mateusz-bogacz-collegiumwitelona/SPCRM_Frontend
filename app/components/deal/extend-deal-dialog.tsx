@@ -92,7 +92,6 @@ export const ExtendDealDialog: React.FC<ExtendDealDialogProps> = ({
       return;
     }
 
-    // Ustawiamy koniec dnia (23:59:59), aby konwersja do UTC nie cofnęła dnia w tył
     const targetDate = endOfDay(selectedDate);
 
     if (currentCloseDate && targetDate <= new Date(currentCloseDate)) {

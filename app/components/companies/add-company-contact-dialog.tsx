@@ -115,7 +115,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    // Walidacja lokalna
     const validationErrors: string[] = [];
     if (!firstName.trim()) validationErrors.push('Imię jest wymagane.');
     if (!lastName.trim()) validationErrors.push('Nazwisko jest wymagane.');
@@ -187,7 +186,6 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* noValidate pozwala przejąć kontrolę walidacji przez React i formError */}
         <form onSubmit={handleSubmit} noValidate className="space-y-6 py-4">
           {formError && (
             <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">

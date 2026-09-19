@@ -253,7 +253,6 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
             )}
           </div>
 
-          {/* Krok 2: Parametry pozycji (Ilość i Cena) */}
           {selectedProduct && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
               <div>

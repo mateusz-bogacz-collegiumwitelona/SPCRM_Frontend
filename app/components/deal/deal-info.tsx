@@ -236,7 +236,6 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
             </div>
           </div>
 
-          {/* Przyciski akcji */}
           {canModify && (
             <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
               <Button

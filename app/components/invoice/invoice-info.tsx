@@ -14,6 +14,7 @@ import {
   Plus,
   Receipt,
   X,
+  Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -23,6 +24,7 @@ import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AddInvoicePaymentDialog } from './add-invoice-payment-dialog';
+import { DownloadInvoicePdfDialog } from './download-invoice-pdf-dialog';
 
 export interface InvoiceDetailResponse {
   invoiceId: string;
@@ -53,7 +55,7 @@ export interface InvoicePaymentSummaryResponse {
 export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
-
+  const [isDownloadPdfOpen, setIsDownloadPdfOpen] = useState(false);
   const {
     data: invoice,
     isLoading: isInvoiceLoading,
@@ -206,9 +208,18 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
           </div>
         </div>
 
-        {/* Akcja dodania wpłaty – dostępna dopóki faktura nie jest w całości spłacona */}
-        {!isFullyPaid && (
-          <div className="self-end sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsDownloadPdfOpen(true)}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-2 text-sm shadow-xs"
+          >
+            <Download className="w-4 h-4 text-blue-900" />
+            <span>Pobierz PDF</span>
+          </Button>
+
+          {!isFullyPaid && (
             <Button
               type="button"
               onClick={() => setIsAddPaymentOpen(true)}
@@ -217,8 +228,8 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
               <Plus className="w-4 h-4" />
               <span>Zarejestruj wpłatę</span>
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
@@ -299,6 +310,13 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
         remainingAmount={remaining}
         currencyCode={currency}
         decimalPlaces={decimals}
+      />
+
+      <DownloadInvoicePdfDialog
+        isOpen={isDownloadPdfOpen}
+        onClose={() => setIsDownloadPdfOpen(false)}
+        invoiceId={invoiceId}
+        invoiceNumber={invoice.invoiceNumber}
       />
     </div>
   );

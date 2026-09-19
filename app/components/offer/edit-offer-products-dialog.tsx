@@ -18,7 +18,7 @@ export interface EditableProductItem {
   productName: string;
   steelGrade?: string;
   quantity: number;
-  quotedPrice: number; // long x100000
+  quotedPrice: number;
 }
 
 interface EditOfferProductsDialogProps {

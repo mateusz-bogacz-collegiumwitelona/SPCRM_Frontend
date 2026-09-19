@@ -5,6 +5,7 @@ import {
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
   CalendarIcon,
+  Download,
   Filter,
   X,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { formatCurrency } from '~/utils/data-formatters';
 import { DataTable } from '~/components/table/data-table';
+import { DownloadInvoicePdfDialog } from '~/components/invoice/download-invoice-pdf-dialog';
 
 export interface InvoiceListResponse {
   id: string;
@@ -51,109 +53,13 @@ const parseIsOverDueFilter = (filterValue: string): boolean | undefined => {
 
 const columnHelper = createColumnHelper<InvoiceListResponse>();
 
-const columns = [
-  columnHelper.accessor('invoiceNumber', {
-    header: 'Numer faktury',
-    cell: (info) => (
-      <Link
-        to={`/invoice/${info.row.original.id}`}
-        className="font-semibold text-blue-900 hover:underline"
-      >
-        {info.getValue()}
-      </Link>
-    ),
-  }),
-  columnHelper.display({
-    id: 'company',
-    header: 'Kontrahent',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{row.companyName}</span>
-          <span className="text-xs text-gray-500">NIP: {row.companyNip}</span>
-        </div>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'amounts',
-    header: 'Wartość brutto / Pozostało',
-    cell: (info) => {
-      const row = info.row.original;
-      const total = formatCurrency(row.totalAmount, row.currencyCode, row.decimalPlaces);
-      const remaining = formatCurrency(row.remainingAmount, row.currencyCode, row.decimalPlaces);
-
-      return (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-900">{total}</span>
-          <span
-            className={cn(
-              'text-xs',
-              row.remainingAmount > 0 ? 'text-amber-600 font-semibold' : 'text-gray-500',
-            )}
-          >
-            Pozostało: {remaining}
-          </span>
-        </div>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'dates',
-    header: 'Wystawiono / Termin',
-    cell: (info) => {
-      const row = info.row.original;
-      return (
-        <div className="flex flex-col text-xs text-gray-600">
-          <span>Wystawiona: {format(new Date(row.issueDate), 'dd.MM.yyyy', { locale: pl })}</span>
-          <span className={cn(row.isOverDue && 'text-red-600 font-bold')}>
-            Termin: {format(new Date(row.dueDate), 'dd.MM.yyyy', { locale: pl })}
-          </span>
-        </div>
-      );
-    },
-  }),
-  columnHelper.accessor('isOverDue', {
-    header: 'Status',
-    cell: (info) => {
-      const row = info.row.original;
-      if (row.remainingAmount <= 0) {
-        return (
-          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700">
-            Opłacona
-          </span>
-        );
-      }
-      if (row.isOverDue) {
-        return (
-          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700">
-            Przeterminowana
-          </span>
-        );
-      }
-      return (
-        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">
-          Do zapłaty
-        </span>
-      );
-    },
-  }),
-  columnHelper.display({
-    id: 'actions',
-    header: 'Akcje',
-    cell: (info) => (
-      <Link
-        to={`/invoice/${info.row.original.id}`}
-        className="font-medium text-blue-900 hover:underline text-xs"
-      >
-        Szczegóły
-      </Link>
-    ),
-  }),
-];
-
-const InvoiceMobileCard = ({ item }: { readonly item: InvoiceListResponse }) => (
+const InvoiceMobileCard = ({
+  item,
+  onDownloadPdf,
+}: {
+  readonly item: InvoiceListResponse;
+  readonly onDownloadPdf: (invoice: { id: string; invoiceNumber: string }) => void;
+}) => (
   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
     <div className="mb-2 flex items-start justify-between gap-2">
       <div className="overflow-hidden">
@@ -201,12 +107,22 @@ const InvoiceMobileCard = ({ item }: { readonly item: InvoiceListResponse }) => 
       >
         Termin: {format(new Date(item.dueDate), 'dd.MM.yyyy')}
       </span>
-      <Link
-        to={`/invoice/${item.id}`}
-        className="text-xs font-medium text-blue-900 hover:underline"
-      >
-        Szczegóły
-      </Link>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onDownloadPdf({ id: item.id, invoiceNumber: item.invoiceNumber })}
+          className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1"
+        >
+          <Download className="w-3.5 h-3.5" />
+          PDF
+        </button>
+        <Link
+          to={`/invoice/${item.id}`}
+          className="text-xs font-medium text-blue-900 hover:underline"
+        >
+          Szczegóły
+        </Link>
+      </div>
     </div>
   </div>
 );
@@ -227,6 +143,11 @@ export default function InvoicesList() {
   const [companyNipFilter, setCompanyNipFilter] = useState<string>('');
   const [amountFrom, setAmountFrom] = useState<string>('');
   const [amountTo, setAmountTo] = useState<string>('');
+
+  const [selectedInvoiceForPdf, setSelectedInvoiceForPdf] = useState<{
+    id: string;
+    invoiceNumber: string;
+  } | null>(null);
 
   const [accumulatedMobileInvoices, setAccumulatedMobileInvoices] = useState<InvoiceListResponse[]>(
     [],
@@ -348,6 +269,132 @@ export default function InvoicesList() {
     isMobileAppend.current = false;
     setPageNumber(newPage);
   };
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('invoiceNumber', {
+        header: 'Numer faktury',
+        cell: (info) => (
+          <Link
+            to={`/invoice/${info.row.original.id}`}
+            className="font-semibold text-blue-900 hover:underline"
+          >
+            {info.getValue()}
+          </Link>
+        ),
+      }),
+      columnHelper.display({
+        id: 'company',
+        header: 'Kontrahent',
+        cell: (info) => {
+          const row = info.row.original;
+          return (
+            <div className="flex flex-col">
+              <span className="font-medium text-gray-900">{row.companyName}</span>
+              <span className="text-xs text-gray-500">NIP: {row.companyNip}</span>
+            </div>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: 'amounts',
+        header: 'Wartość brutto / Pozostało',
+        cell: (info) => {
+          const row = info.row.original;
+          const total = formatCurrency(row.totalAmount, row.currencyCode, row.decimalPlaces);
+          const remaining = formatCurrency(
+            row.remainingAmount,
+            row.currencyCode,
+            row.decimalPlaces,
+          );
+
+          return (
+            <div className="flex flex-col">
+              <span className="font-medium text-gray-900">{total}</span>
+              <span
+                className={cn(
+                  'text-xs',
+                  row.remainingAmount > 0 ? 'text-amber-600 font-semibold' : 'text-gray-500',
+                )}
+              >
+                Pozostało: {remaining}
+              </span>
+            </div>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: 'dates',
+        header: 'Wystawiono / Termin',
+        cell: (info) => {
+          const row = info.row.original;
+          return (
+            <div className="flex flex-col text-xs text-gray-600">
+              <span>
+                Wystawiona: {format(new Date(row.issueDate), 'dd.MM.yyyy', { locale: pl })}
+              </span>
+              <span className={cn(row.isOverDue && 'text-red-600 font-bold')}>
+                Termin: {format(new Date(row.dueDate), 'dd.MM.yyyy', { locale: pl })}
+              </span>
+            </div>
+          );
+        },
+      }),
+      columnHelper.accessor('isOverDue', {
+        header: 'Status',
+        cell: (info) => {
+          const row = info.row.original;
+          if (row.remainingAmount <= 0) {
+            return (
+              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700">
+                Opłacona
+              </span>
+            );
+          }
+          if (row.isOverDue) {
+            return (
+              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700">
+                Przeterminowana
+              </span>
+            );
+          }
+          return (
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">
+              Do zapłaty
+            </span>
+          );
+        },
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Akcje',
+        cell: (info) => (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedInvoiceForPdf({
+                  id: info.row.original.id,
+                  invoiceNumber: info.row.original.invoiceNumber,
+                })
+              }
+              className="p-1 rounded text-gray-500 hover:text-blue-900 hover:bg-gray-100 transition-colors"
+              title="Pobierz PDF"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <Link
+              to={`/invoice/${info.row.original.id}`}
+              className="font-medium text-blue-900 hover:underline text-xs"
+            >
+              Szczegóły
+            </Link>
+          </div>
+        ),
+      }),
+    ],
+    [],
+  );
 
   const table = useReactTable({
     data: desktopInvoices,
@@ -633,7 +680,12 @@ export default function InvoicesList() {
             isFetching={isFetching}
             onMobileLoadMore={handleMobileLoadMore}
             mobileCardKeyExtractor={(item) => item.id}
-            renderMobileCard={(item) => <InvoiceMobileCard item={item} />}
+            renderMobileCard={(item) => (
+              <InvoiceMobileCard
+                item={item}
+                onDownloadPdf={(inv) => setSelectedInvoiceForPdf(inv)}
+              />
+            )}
             emptyMessage="Brak faktur do wyświetlenia."
             loadingMessage="Wczytywanie listy faktur..."
             paginationProps={{
@@ -645,6 +697,13 @@ export default function InvoicesList() {
               onPageSizeChange: setPageSize,
               onPageChange: handleDesktopPageChange,
             }}
+          />
+
+          <DownloadInvoicePdfDialog
+            isOpen={Boolean(selectedInvoiceForPdf)}
+            onClose={() => setSelectedInvoiceForPdf(null)}
+            invoiceId={selectedInvoiceForPdf?.id ?? ''}
+            invoiceNumber={selectedInvoiceForPdf?.invoiceNumber ?? ''}
           />
         </MainLayout>
       </RoleGuard>

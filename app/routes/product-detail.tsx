@@ -238,7 +238,6 @@ const ProductPricingInfo = ({ product }: { product: ProductDetailResponse }) => 
           <Scale className="w-6 h-6 text-blue-900 shrink-0" />
           <div>
             <p className="text-xs text-gray-500">Waga dla 1 {product.unitSymbol}</p>
-            {/* Użycie formatWeight dla pola wagi */}
             <p className="text-sm font-semibold text-gray-900">{formatWeight(product.weight)}</p>
           </div>
         </div>
