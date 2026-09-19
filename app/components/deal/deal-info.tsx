@@ -14,6 +14,7 @@ import {
   Tag,
   Trash2,
   User,
+  UserCheck,
   X,
 } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
@@ -25,6 +26,7 @@ import { Button } from '~/components/ui/button';
 import { DeleteDealDialog } from '~/components/deal/delete-deal-dialog';
 import { ExtendDealDialog } from '~/components/deal/extend-deal-dialog';
 import { ChangeDealStatusDialog } from '~/components/deal/change-deal-status-dialog';
+import { ChangeDealContactDialog } from '~/components/deal/change-deal-contact-dialog';
 
 interface SaleDetailResponse {
   id: string;
@@ -37,6 +39,8 @@ interface SaleDetailResponse {
   ownerFirstName: string;
   ownerLastName: string;
   companyName: string;
+  contactFirstName?: string;
+  contactLastName?: string;
   invoicedAmount: number;
   paidAmount: number;
   isOverdueInvoices: boolean;
@@ -51,6 +55,7 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isExtendOpen, setIsExtendOpen] = useState(false);
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
+  const [isChangeContactOpen, setIsChangeContactOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,6 +100,18 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
       await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
       setSuccessMessage('Termin transakcji został pomyślnie przedłużony.');
       setIsExtendOpen(false);
+    },
+  });
+
+  const changeContactMutation = useMutation({
+    mutationFn: async (newContactId: string) => {
+      return await api.put(`/sales/${dealId}/contact?contactId=${newContactId}`);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
+      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
+      setSuccessMessage('Osoba kontaktowa została pomyślnie zmieniona.');
+      setIsChangeContactOpen(false);
     },
   });
 
@@ -241,6 +258,16 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
               <Button
                 type="button"
                 variant="outline"
+                onClick={() => setIsChangeContactOpen(true)}
+                className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
+              >
+                <UserCheck className="w-4 h-4 text-gray-500" />
+                Zmień kontakt
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setIsChangeStatusOpen(true)}
                 className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
               >
@@ -272,12 +299,25 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             <div className="flex flex-col gap-1.5">
               <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
                 <Building2 className="w-4 h-4 text-gray-400" /> Klient
               </span>
               <span className="text-base text-gray-900 font-semibold">{deal.companyName}</span>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500 flex items-center gap-1.5 font-medium">
+                  <UserCheck className="w-4 h-4 text-gray-400" /> Kontakt
+                </span>
+              </div>
+              <span className="text-base text-gray-900 font-medium">
+                {deal.contactFirstName && deal.contactLastName
+                  ? `${deal.contactFirstName} ${deal.contactLastName}`
+                  : 'Brak kontaktu'}
+              </span>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -352,6 +392,16 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         dealId={dealId}
         currentStatus={deal.status}
         onSuccess={handleStatusChangeSuccess}
+      />
+
+      <ChangeDealContactDialog
+        isOpen={isChangeContactOpen}
+        dealId={dealId}
+        onClose={() => setIsChangeContactOpen(false)}
+        onSave={async (newContactId) => {
+          await changeContactMutation.mutateAsync(newContactId);
+        }}
+        isLoading={changeContactMutation.isPending}
       />
     </>
   );
