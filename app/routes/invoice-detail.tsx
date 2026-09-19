@@ -4,6 +4,7 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { InvoiceInfo } from '~/components/invoice/invoice-info';
 import { InvoiceProductsTable } from '~/components/invoice/invoice-products';
+import { InvoicePaymentsList } from '~/components/invoice/invoice-payments';
 
 export default function InvoiceDetail() {
   const { invoiceId } = useParams<{ invoiceId: string }>();
@@ -20,6 +21,10 @@ export default function InvoiceDetail() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
               <div className="xl:col-span-2 w-full overflow-hidden">
                 <InvoiceProductsTable invoiceId={invoiceId} />
+              </div>
+
+              <div className="xl:col-span-1 w-full space-y-6">
+                <InvoicePaymentsList invoiceId={invoiceId} />
               </div>
             </div>
           </div>
