@@ -174,6 +174,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             steelGrades={steelGrades}
             units={units}
             currencies={currencies}
+            showStockQuantity={true}
           />
 
           <DialogFooter className="pt-4 border-t mt-4">

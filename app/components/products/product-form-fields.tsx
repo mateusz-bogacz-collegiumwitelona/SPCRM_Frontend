@@ -13,7 +13,7 @@ export interface ProductFormData {
   unitId: string;
   currencyId: string;
   pricePerUnit: number;
-  stockQuantity: number;
+  stockQuantity?: number;
   category: string;
 }
 
@@ -83,6 +83,7 @@ interface ProductFormFieldsProps {
   readonly units: UnitOption[];
   readonly currencies: CurrencyOption[];
   readonly isDiameterRequired?: boolean;
+  readonly showStockQuantity?: boolean;
 }
 
 export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
@@ -93,6 +94,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
   units,
   currencies,
   isDiameterRequired = false,
+  showStockQuantity = false,
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,19 +283,24 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
         </div>
       </div>
 
-      <div className="space-y-1.5 md:col-span-2">
-        <label htmlFor="product-stock" className="text-sm font-medium text-gray-700">
-          Ilość na stanie
-        </label>
-        <input
-          id="product-stock"
-          type="number"
-          step="any"
-          value={formData.stockQuantity}
-          onChange={(e) => onChange('stockQuantity', Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
-        />
-      </div>
+      {showStockQuantity && (
+        <div className="space-y-1.5 md:col-span-2">
+          <label htmlFor="product-stock" className="text-sm font-medium text-gray-700">
+            Ilość początkowa na stanie *
+          </label>
+          <input
+            id="product-stock"
+            type="number"
+            step="1"
+            min="1"
+            value={formData.stockQuantity ?? ''}
+            onChange={(e) => onChange('stockQuantity', Number(e.target.value))}
+            placeholder="Wprowadź stan początkowy (> 0)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+            required
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -30,7 +30,6 @@ export interface EditProductRequest {
   unitId: string;
   currencyId: string;
   pricePerUnit: number;
-  stockQuantity: number;
   category: string;
 }
 
@@ -47,7 +46,6 @@ interface EditProductDetailResponse {
   diameter?: number | null;
   weight: number;
   pricePerUnit: number;
-  stockQuantity: number;
 }
 
 interface EditProductDialogProps {
@@ -69,7 +67,6 @@ const defaultFormData: ProductFormData = {
   unitId: '',
   currencyId: '',
   pricePerUnit: 0,
-  stockQuantity: 0,
   category: '',
 };
 
@@ -108,7 +105,6 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
       unitId: productData.unitId ?? '',
       currencyId: productData.currencyId ?? '',
       pricePerUnit: productData.pricePerUnit ?? 0,
-      stockQuantity: productData.stockQuantity ?? 0,
       category: productData.category ?? '',
     });
     setFormError(null);
@@ -142,8 +138,6 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
     if (!formData.currencyId) validationErrors.push('Waluta jest wymagana.');
     if (Number(formData.pricePerUnit) < 0)
       validationErrors.push('Cena jednostkowa nie może być ujemna.');
-    if (Number(formData.stockQuantity) < 0)
-      validationErrors.push('Stan magazynowy nie może być ujemny.');
 
     if (isDiameterRequired && (formData.diameter === '' || Number(formData.diameter) <= 0)) {
       validationErrors.push('Średnica jest wymagana dla kategorii Pipe oraz Wire.');
@@ -169,7 +163,6 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
       unitId: formData.unitId,
       currencyId: formData.currencyId,
       pricePerUnit: Number(formData.pricePerUnit),
-      stockQuantity: Number(formData.stockQuantity),
       category: formData.category,
     };
 

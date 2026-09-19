@@ -12,6 +12,7 @@ import {
   Edit2,
   Filter,
   MoreHorizontal,
+  PackagePlus,
   Pencil,
   Plus,
   Trash2,
@@ -35,6 +36,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
+import { HasRole } from '~/lib/has-role';
+import {
+  AddProductStockDialog,
+  type AddProductStockRequest,
+} from '~/components/products/add-product-stock-dialog';
 
 interface ProductResponse {
   id: string;
@@ -55,6 +61,12 @@ interface SteelGradeResponse {
 interface ProductTableMeta {
   onEdit: (id: string) => void;
   onDelete: (product: { id: string; name: string }) => void;
+  onAddStock: (product: {
+    id: string;
+    name: string;
+    currentStock: number;
+    unitSymbol: string;
+  }) => void;
 }
 
 const columnHelper = createColumnHelper<ProductResponse>();
@@ -97,7 +109,7 @@ const columns = [
     header: 'Wymiary',
     cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
   }),
-  columnHelper.display({
+  (columnHelper.display({
     id: 'quantity',
     header: 'Ilość na stanie',
     cell: (info) => {
@@ -124,7 +136,8 @@ const columns = [
           >
             Szczegóły
           </Link>
-          <RoleGuard allowedRoles={['Manager', 'Admin']}>
+
+          <HasRole allowedRoles={['Manager', 'Admin']}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -139,28 +152,49 @@ const columns = [
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-40 bg-white">
-                <DropdownMenuItem
-                  onClick={() => meta.onEdit(product.id)}
-                  className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
-                >
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  <span>Edytuj</span>
-                </DropdownMenuItem>
+                <HasRole allowedRoles={['Manager', 'Admin']}>
+                  <DropdownMenuItem
+                    onClick={() => meta.onEdit(product.id)}
+                    className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+                  >
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    <span>Edytuj</span>
+                  </DropdownMenuItem>
+                </HasRole>
 
-                <DropdownMenuItem
-                  onClick={() => meta.onDelete({ id: product.id, name: product.name })}
-                  className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>Usuń</span>
-                </DropdownMenuItem>
+                <HasRole allowedRoles={['Admin']}>
+                  <DropdownMenuItem
+                    onClick={() => meta.onDelete({ id: product.id, name: product.name })}
+                    className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Usuń</span>
+                  </DropdownMenuItem>
+                </HasRole>
+
+                <HasRole allowedRoles={['Manager', 'User', 'Admin']}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      meta.onAddStock({
+                        id: product.id,
+                        name: product.name,
+                        currentStock: product.stockQuantity,
+                        unitSymbol: product.unitSymbol,
+                      })
+                    }
+                    className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+                  >
+                    <PackagePlus className="mr-2 h-4 w-4 text-blue-900" />
+                    <span>Dodaj produkt</span>
+                  </DropdownMenuItem>
+                </HasRole>
               </DropdownMenuContent>
             </DropdownMenu>
-          </RoleGuard>
+          </HasRole>
         </div>
       );
     },
-  }),
+  })),
 ];
 
 const ProductMobileCard = ({
@@ -180,13 +214,15 @@ const ProductMobileCard = ({
         Ilość: {product.stockQuantity} {product.unitSymbol}
       </div>
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onEdit(product.id)}
-          className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1"
-        >
-          <Pencil className="w-3 h-3" /> Edytuj
-        </button>
+        <HasRole allowedRoles={['Manager', 'Admin']}>
+          <button
+            type="button"
+            onClick={() => onEdit(product.id)}
+            className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1"
+          >
+            <Pencil className="w-3 h-3" /> Edytuj
+          </button>
+        </HasRole>
         <Link
           to={`/products/${product.id}`}
           className="text-xs font-medium text-blue-900 hover:underline"
@@ -216,6 +252,13 @@ export default function ProductsList() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<{ id: string; name: string } | null>(null);
+
+  const [stockModalProduct, setStockModalProduct] = useState<{
+    id: string;
+    name: string;
+    currentStock: number;
+    unitSymbol: string;
+  } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -248,6 +291,17 @@ export default function ProductsList() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['products-list'] });
       setDeletingProduct(null);
+    },
+  });
+
+  const addStockMutation = useMutation({
+    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
+      const payload: AddProductStockRequest = { quantityToAdd: quantity };
+      await api.post(`/products/${productId}/stock`, payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
+      setStockModalProduct(null);
     },
   });
 
@@ -352,6 +406,7 @@ export default function ProductsList() {
     meta: {
       onEdit: (id) => setEditingProductId(id),
       onDelete: (product) => setDeletingProduct(product),
+      onAddStock: (product) => setStockModalProduct(product),
     } satisfies ProductTableMeta,
   });
 
@@ -625,6 +680,21 @@ export default function ProductsList() {
               }
             }}
             isLoading={deleteProductMutation.isPending}
+          />
+
+          <AddProductStockDialog
+            isOpen={Boolean(stockModalProduct)}
+            product={stockModalProduct}
+            onClose={() => setStockModalProduct(null)}
+            onSave={async (quantity) => {
+              if (stockModalProduct) {
+                await addStockMutation.mutateAsync({
+                  productId: stockModalProduct.id,
+                  quantity,
+                });
+              }
+            }}
+            isLoading={addStockMutation.isPending}
           />
         </MainLayout>
       </RoleGuard>
