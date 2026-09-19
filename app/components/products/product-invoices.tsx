@@ -3,96 +3,105 @@ import { Link } from 'react-router';
 import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { AlertCircle, Briefcase, Calendar, Building2, X } from 'lucide-react';
+import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, X } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import { getStatusConfig } from '~/utils/sale-status';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { DataTable } from '~/components/table/data-table';
 
-export interface ProductDealItemResponse {
-  dealId: string;
-  dealName: string;
+export interface ProductInvoiceItemResponse {
+  invoiceId: string;
+  invoiceNumber: string;
   companyName: string;
-  status: string;
+  issueDate: string;
+  dueDate: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
   currencyCode: string;
   decimalPlaces: number;
-  closeDate: string;
+  isPaid: boolean;
 }
 
-const columnHelper = createColumnHelper<ProductDealItemResponse>();
+const columnHelper = createColumnHelper<ProductInvoiceItemResponse>();
 
-const mergeDeals = (
-  existing: ProductDealItemResponse[],
-  incoming: ProductDealItemResponse[],
-): ProductDealItemResponse[] => {
-  const existingIds = new Set(existing.map((item) => item.dealId));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.dealId));
+const mergeInvoices = (
+  existing: ProductInvoiceItemResponse[],
+  incoming: ProductInvoiceItemResponse[],
+): ProductInvoiceItemResponse[] => {
+  const existingIds = new Set(existing.map((item) => item.invoiceId));
+  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.invoiceId));
   return [...existing, ...uniqueIncoming];
 };
 
-const ProductDealMobileCard = ({
+const ProductInvoiceMobileCard = ({
   item,
   unitSymbol,
 }: {
-  readonly item: ProductDealItemResponse;
+  readonly item: ProductInvoiceItemResponse;
   readonly unitSymbol: string;
-}) => {
-  const statusCfg = getStatusConfig(item.status);
-
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm relative">
-      <div className="flex justify-between items-start gap-2 mb-2">
-        <div>
-          <Link
-            to={`/sale/${item.dealId}`}
-            className="text-sm font-bold text-blue-900 hover:underline"
-          >
-            {item.dealName}
-          </Link>
-          <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
-            <Building2 className="w-3.5 h-3.5 text-gray-400" />
-            <span>{item.companyName}</span>
-          </div>
-        </div>
-
-        <span
-          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusCfg.bgColor} ${statusCfg.textColor}`}
+}) => (
+  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm relative">
+    <div className="flex justify-between items-start gap-2 mb-2">
+      <div>
+        <Link
+          to={`/invoice/${item.invoiceId}`}
+          className="text-sm font-bold text-blue-900 hover:underline"
         >
-          {statusCfg.label}
+          {item.invoiceNumber}
+        </Link>
+        <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
+          <Building2 className="w-3.5 h-3.5 text-gray-400" />
+          <span>{item.companyName}</span>
+        </div>
+      </div>
+
+      <span
+        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
+          item.isPaid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+        }`}
+      >
+        {item.isPaid ? (
+          <>
+            <CheckCircle2 className="w-3 h-3" /> Opłacona
+          </>
+        ) : (
+          <>
+            <Clock className="w-3 h-3" /> Oczekuje
+          </>
+        )}
+      </span>
+    </div>
+
+    <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
+      <div className="text-gray-600 text-xs">
+        Ilość:{' '}
+        <span className="font-semibold text-gray-900">
+          {item.quantity} {unitSymbol}
         </span>
       </div>
-
-      <div className="flex justify-between items-center text-sm border-t border-gray-100 pt-2 mt-2">
-        <div className="text-gray-600 text-xs">
-          Ilość:{' '}
-          <span className="font-semibold text-gray-900">
-            {item.quantity} {unitSymbol}
-          </span>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500">
-            {formatCurrency(item.unitPrice, item.currencyCode, item.decimalPlaces)} / {unitSymbol}
-          </p>
-          <p className="font-bold text-gray-900 text-sm">
-            {formatCurrency(item.totalPrice, item.currencyCode, item.decimalPlaces)}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-1 text-[11px] text-gray-400 mt-2 pt-1.5 border-t border-gray-100">
-        <Calendar className="w-3 h-3 text-gray-400" />
-        <span>Termin: {format(new Date(item.closeDate), 'dd.MM.yyyy')}</span>
+      <div className="text-right">
+        <p className="text-xs text-gray-500">
+          {formatCurrency(item.unitPrice, item.currencyCode, item.decimalPlaces)} / {unitSymbol}
+        </p>
+        <p className="font-bold text-gray-900 text-sm">
+          {formatCurrency(item.totalPrice, item.currencyCode, item.decimalPlaces)}
+        </p>
       </div>
     </div>
-  );
-};
 
-export const ProductDeals = ({
+    <div className="flex items-center justify-between text-[11px] text-gray-400 mt-2 pt-1.5 border-t border-gray-100">
+      <div className="flex items-center gap-1">
+        <Calendar className="w-3 h-3 text-gray-400" />
+        <span>Wystawiono: {format(new Date(item.issueDate), 'dd.MM.yyyy')}</span>
+      </div>
+      <span>Termin: {format(new Date(item.dueDate), 'dd.MM.yyyy')}</span>
+    </div>
+  </div>
+);
+
+export const ProductInvoices = ({
   productId,
   unitSymbol = 'szt.',
 }: {
@@ -104,9 +113,9 @@ export const ProductDeals = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const [accumulatedMobileDeals, setAccumulatedMobileDeals] = useState<ProductDealItemResponse[]>(
-    [],
-  );
+  const [accumulatedMobileInvoices, setAccumulatedMobileInvoices] = useState<
+    ProductInvoiceItemResponse[]
+  >([]);
   const isMobileAppend = useRef(false);
 
   useEffect(() => {
@@ -126,7 +135,7 @@ export const ProductDeals = ({
     isError,
     error: queryError,
   } = useQuery({
-    queryKey: ['product-deals', productId, { pageNumber, pageSize, debouncedSearch }],
+    queryKey: ['product-invoices', productId, { pageNumber, pageSize, debouncedSearch }],
     queryFn: async () => {
       const params = {
         PageNumber: pageNumber,
@@ -134,26 +143,26 @@ export const ProductDeals = ({
         SearchTerm: debouncedSearch || undefined,
       };
 
-      const response = await api.get(`/products/${productId}/deals`, { params });
+      const response = await api.get(`/products/${productId}/invoices`, { params });
       return response.data?.value || response.data?.data || response.data;
     },
     placeholderData: keepPreviousData,
   });
 
-  const desktopDeals = useMemo(() => data?.items || [], [data]);
+  const desktopInvoices = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
-  const totalItems = data?.totalItems || data?.totalCount || desktopDeals.length;
+  const totalItems = data?.totalItems || data?.totalCount || desktopInvoices.length;
 
   useEffect(() => {
-    const items: ProductDealItemResponse[] = data?.items;
+    const items: ProductInvoiceItemResponse[] = data?.items;
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileDeals(items);
+      setAccumulatedMobileInvoices(items);
       return;
     }
 
-    setAccumulatedMobileDeals((prev) => mergeDeals(prev, items));
+    setAccumulatedMobileInvoices((prev) => mergeInvoices(prev, items));
   }, [data, pageNumber]);
 
   const handleMobileLoadMore = () => {
@@ -169,30 +178,40 @@ export const ProductDeals = ({
   const columns = useMemo(
     () => [
       columnHelper.display({
-        id: 'dealName',
-        header: 'Szansa sprzedaży',
+        id: 'invoiceNumber',
+        header: 'Numer faktury',
         cell: (info) => (
           <Link
-            to={`/sale/${info.row.original.dealId}`}
+            to={`/invoice/${info.row.original.invoiceId}`}
             className="font-medium text-blue-900 hover:underline"
           >
-            {info.row.original.dealName}
+            {info.row.original.invoiceNumber}
           </Link>
         ),
       }),
       columnHelper.accessor('companyName', {
-        header: 'Klient',
+        header: 'Nabywca',
         cell: (info) => <span className="text-gray-900 font-medium">{info.getValue()}</span>,
       }),
-      columnHelper.accessor('status', {
+      columnHelper.accessor('isPaid', {
         header: 'Status',
         cell: (info) => {
-          const statusCfg = getStatusConfig(info.getValue());
+          const isPaid = info.getValue();
           return (
             <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${statusCfg.bgColor} ${statusCfg.textColor}`}
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 w-fit ${
+                isPaid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+              }`}
             >
-              {statusCfg.label}
+              {isPaid ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Opłacona
+                </>
+              ) : (
+                <>
+                  <Clock className="w-3.5 h-3.5" /> Oczekuje
+                </>
+              )}
             </span>
           );
         },
@@ -231,8 +250,8 @@ export const ProductDeals = ({
           );
         },
       }),
-      columnHelper.accessor('closeDate', {
-        header: 'Termin',
+      columnHelper.accessor('issueDate', {
+        header: 'Data wystawienia',
         cell: (info) => (
           <span className="text-gray-500 text-xs">
             {format(new Date(info.getValue()), 'dd.MM.yyyy')}
@@ -244,7 +263,7 @@ export const ProductDeals = ({
   );
 
   const table = useReactTable({
-    data: desktopDeals,
+    data: desktopInvoices,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -266,7 +285,7 @@ export const ProductDeals = ({
             responseData?.errorCode,
             responseData?.message ||
               activeError?.message ||
-              'Nie udało się pobrać szans sprzedaży powiązanych z produktem.',
+              'Nie udało się pobrać faktur powiązanych z produktem.',
           ),
           details:
             responseData?.errors && responseData.errors.length > 0
@@ -276,30 +295,30 @@ export const ProductDeals = ({
       : null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-medium text-gray-800 flex items-center gap-2">
-            <Briefcase className="w-5 h-5 text-gray-500" />
-            Powiązane szanse sprzedaży
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 w-full min-w-0 max-w-full overflow-hidden">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <h2 className="text-base sm:text-lg font-medium text-gray-800 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-gray-500 shrink-0" />
+            <span>Powiązane faktury</span>
           </h2>
-          <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium shrink-0">
             {totalItems}
           </span>
         </div>
 
-        <div className="w-full md:w-auto">
+        <div className="w-full sm:w-72 md:w-80 min-w-0">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Szukaj po nazwie transakcji lub kliencie..."
-            className="w-full sm:w-80 border border-gray-300 rounded-md bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
+            placeholder="Szukaj numeru faktury lub firmy..."
+            className="w-full border border-gray-300 rounded-md bg-white px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
           />
         </div>
       </div>
 
-      <div className="p-4 lg:p-6">
+      <div className="p-4 sm:p-6 min-w-0 w-full overflow-x-auto">
         {formError && (
           <div className="mb-6 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
             <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
@@ -324,30 +343,34 @@ export const ProductDeals = ({
           </div>
         )}
 
-        <DataTable
-          table={table}
-          isLoading={isLoading}
-          isError={isError}
-          data={accumulatedMobileDeals}
-          pageNumber={pageNumber}
-          totalPages={totalPages}
-          isFetching={isFetching}
-          onMobileLoadMore={handleMobileLoadMore}
-          mobileCardKeyExtractor={(item) => item.dealId}
-          renderMobileCard={(item) => <ProductDealMobileCard item={item} unitSymbol={unitSymbol} />}
-          emptyMessage="Ten produkt nie jest powiązany z żadną szansą sprzedaży."
-          loadingMessage="Ładowanie szans sprzedaży..."
-          paginationProps={{
-            pageNumber,
-            pageSize,
-            totalPages,
-            totalItems,
-            isFetching,
-            onPageSizeChange: setPageSize,
-            onPageChange: handleDesktopPageChange,
-            pageSizeOptions: [5, 10, 20],
-          }}
-        />
+        <div className="w-full min-w-0 overflow-x-auto">
+          <DataTable
+            table={table}
+            isLoading={isLoading}
+            isError={isError}
+            data={accumulatedMobileInvoices}
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            isFetching={isFetching}
+            onMobileLoadMore={handleMobileLoadMore}
+            mobileCardKeyExtractor={(item) => item.invoiceId}
+            renderMobileCard={(item) => (
+              <ProductInvoiceMobileCard item={item} unitSymbol={unitSymbol} />
+            )}
+            emptyMessage="Ten produkt nie został jeszcze zafakturowany na żadnej fakturze."
+            loadingMessage="Ładowanie powiązanych faktur..."
+            paginationProps={{
+              pageNumber,
+              pageSize,
+              totalPages,
+              totalItems,
+              isFetching,
+              onPageSizeChange: setPageSize,
+              onPageChange: handleDesktopPageChange,
+              pageSizeOptions: [5, 10, 20],
+            }}
+          />
+        </div>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency, formatWeight } from '~/utils/data-formatters';
 import { ProductDeals } from '~/components/products/product-deals';
+import { ProductInvoices } from '~/components/products/product-invoices';
 
 interface ActivePromotionResponse {
   name: string;
@@ -313,14 +314,17 @@ export default function ProductDetails() {
                         <ProductPricingInfo product={product} />
                       </div>
                     </div>
-                    <div className="w-full min-w-0 overflow-hidden">
+
+                    <div className="w-full min-w-0 space-y-6 overflow-hidden">
                       <ProductDeals productId={product.id} unitSymbol={product.unitSymbol} />
+                      <ProductInvoices productId={product.id} unitSymbol={product.unitSymbol} />
                     </div>
                   </div>
 
                   <div className="hidden xl:flex flex-row gap-8 items-start w-full min-w-0">
                     <div className="flex-1 min-w-0 overflow-hidden space-y-6">
                       <ProductDeals productId={product.id} unitSymbol={product.unitSymbol} />
+                      <ProductInvoices productId={product.id} unitSymbol={product.unitSymbol} />
                     </div>
 
                     <div className="w-96 xl:w-104 shrink-0 sticky top-24">
