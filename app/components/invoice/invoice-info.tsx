@@ -11,15 +11,18 @@ import {
   CreditCard,
   FileText,
   Handshake,
+  Plus,
   Receipt,
   X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { api } from '~/api/api';
+import { Button } from '~/components/ui/button';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import { AddInvoicePaymentDialog } from './add-invoice-payment-dialog';
 
 export interface InvoiceDetailResponse {
   invoiceId: string;
@@ -49,6 +52,7 @@ export interface InvoicePaymentSummaryResponse {
 
 export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+  const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
 
   const {
     data: invoice,
@@ -201,6 +205,20 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
             )}
           </div>
         </div>
+
+        {/* Akcja dodania wpłaty – dostępna dopóki faktura nie jest w całości spłacona */}
+        {!isFullyPaid && (
+          <div className="self-end sm:self-auto">
+            <Button
+              type="button"
+              onClick={() => setIsAddPaymentOpen(true)}
+              className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-2 text-sm shadow-xs"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Zarejestruj wpłatę</span>
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
@@ -273,6 +291,15 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
           </div>
         </div>
       </div>
+
+      <AddInvoicePaymentDialog
+        isOpen={isAddPaymentOpen}
+        onClose={() => setIsAddPaymentOpen(false)}
+        invoiceId={invoiceId}
+        remainingAmount={remaining}
+        currencyCode={currency}
+        decimalPlaces={decimals}
+      />
     </div>
   );
 };
