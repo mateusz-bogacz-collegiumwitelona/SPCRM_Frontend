@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Plus,
   Search,
   User,
   X,
@@ -30,6 +31,7 @@ import {
   resolveTaskPriorityLabel,
   resolveTaskStatusLabel,
 } from '~/utils/task-helpers';
+import { AddTaskDialog, type AddTaskRequestPayload } from '~/components/task/add-task-dialog';
 import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/edit-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
 
@@ -64,6 +66,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [accumulatedMobileTasks, setAccumulatedMobileTasks] = useState<ContactTaskItem[]>([]);
   const isMobileAppend = useRef(false);
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ContactTaskItem | null>(null);
   const [deletingTask, setDeletingTask] = useState<ContactTaskItem | null>(null);
 
@@ -98,6 +101,17 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
     placeholderData: keepPreviousData,
   });
 
+  const addTaskMutation = useMutation({
+    mutationFn: async (payload: AddTaskRequestPayload) => {
+      await api.post(`/contacts/${contactId}/tasks`, payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setIsAddModalOpen(false);
+    },
+  });
+
   const editTaskMutation = useMutation({
     mutationFn: async ({
       taskId,
@@ -110,6 +124,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
       setEditingTask(null);
     },
   });
@@ -120,6 +135,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
       setDeletingTask(null);
     },
   });
@@ -167,7 +183,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
           const task = info.row.original;
           return (
             <div className="flex flex-col">
-              <Link to={`/tasks/${task.id}`} className="font-medium text-blue-900 hover:underline">
+              <Link to={`/task/${task.id}`} className="font-medium text-blue-900 hover:underline">
                 {task.title}
               </Link>
               {task.dealId && task.dealName && (
@@ -318,6 +334,15 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
         <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center gap-3">
           <CheckSquare className="h-8 w-8 text-gray-300" />
           <p className="text-gray-500 font-medium text-sm">Brak zadań dla tego kontaktu.</p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAddModalOpen(true)}
+            className="mt-2 text-blue-900 border-gray-300"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Dodaj pierwsze zadanie
+          </Button>
         </div>
       );
     }
@@ -326,10 +351,20 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
       <>
         <div className="block lg:hidden space-y-4">
           <div className="flex items-center justify-between gap-4 mb-2">
-            <h2 className="text-xl font-normal text-gray-800">Zadania</h2>
-            <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
-              {totalItems}
-            </span>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-normal text-gray-800">Zadania</h2>
+              <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-medium">
+                {totalItems}
+              </span>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-1"
+            >
+              <Plus className="w-4 h-4" /> Dodaj
+            </Button>
           </div>
 
           <div className="relative w-full mb-3">
@@ -462,6 +497,15 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
                 />
               </div>
             </div>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-1 shrink-0"
+            >
+              <Plus className="w-4 h-4" /> Dodaj zadanie
+            </Button>
           </div>
 
           <div className="overflow-x-auto">
@@ -574,6 +618,16 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
 
         {renderContent()}
       </div>
+
+      <AddTaskDialog
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={async (payload) => {
+          await addTaskMutation.mutateAsync(payload);
+        }}
+        isLoading={addTaskMutation.isPending}
+        dialogTitle="Dodaj zadanie do kontaktu"
+      />
 
       <EditTaskDialog
         isOpen={!!editingTask}

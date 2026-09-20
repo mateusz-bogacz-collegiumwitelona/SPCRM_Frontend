@@ -25,7 +25,7 @@ import {
   resolveTaskPriorityLabel,
   resolveTaskStatusLabel,
 } from '~/utils/task-helpers';
-import { AddDealTaskDialog, type AddDealTaskRequestPayload } from './add-deal-task-dialog';
+import { AddTaskDialog, type AddTaskRequestPayload } from '~/components/task/add-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
 import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/edit-task-dialog';
 
@@ -112,7 +112,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || tasks.length;
 
-  const handleSaveTask = async (payload: AddDealTaskRequestPayload) => {
+  const handleSaveTask = async (payload: AddTaskRequestPayload) => {
     setIsSaving(true);
     try {
       await api.post(`/sales/${dealId}/tasks`, payload);
@@ -412,11 +412,12 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
         )}
       </div>
 
-      <AddDealTaskDialog
+      <AddTaskDialog
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveTask}
         isLoading={isSaving}
+        dialogTitle="Dodaj zadanie do sprzedaży"
       />
 
       <DeleteTaskDialog

@@ -18,7 +18,7 @@ import { type DictionaryItem, useTaskDictionaries } from '~/hooks/use-task-dicti
 import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
-export interface AddDealTaskRequestPayload {
+export interface AddTaskRequestPayload {
   title: string;
   description: string;
   dueAt: string;
@@ -26,19 +26,21 @@ export interface AddDealTaskRequestPayload {
   assignedToId?: string | null;
 }
 
-interface AddDealTaskDialogProps {
+interface AddTaskDialogProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly onSave: (payload: AddDealTaskRequestPayload) => Promise<void>;
+  readonly onSave: (payload: AddTaskRequestPayload) => Promise<void>;
   readonly isLoading?: boolean;
+  readonly dialogTitle?: string;
 }
 
-export function AddDealTaskDialog({
+export function AddTaskDialog({
   isOpen,
   onClose,
   onSave,
   isLoading = false,
-}: AddDealTaskDialogProps) {
+  dialogTitle = 'Dodaj nowe zadanie',
+}: AddTaskDialogProps) {
   const { dictionaries, isLoading: isDictionariesLoading } = useTaskDictionaries();
 
   const [title, setTitle] = useState('');
@@ -132,9 +134,7 @@ export function AddDealTaskDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-120 bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-[#004a8f]">
-            Dodaj nowe zadanie
-          </DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-[#004a8f]">{dialogTitle}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4 pt-2">
