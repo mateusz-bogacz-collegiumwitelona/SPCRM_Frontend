@@ -13,7 +13,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import plLocale from '@fullcalendar/core/locales/pl';
 import { type TaskCalendarResponse } from '~/interfaces/task-calendar-response';
-import { TaskDialog } from '~/components/calendar/task-dialog';
+import { TaskDetailDialog } from '~/components/task/task-detail-dialog';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 
@@ -245,7 +245,7 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          <TaskDialog
+          <TaskDetailDialog
             task={selectedTask}
             isOpen={!!selectedTask}
             onClose={() => setSelectedTask(null)}
