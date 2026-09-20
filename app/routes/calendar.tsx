@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
-import { AlertCircle, Filter, Loader2, X } from 'lucide-react';
+import { AlertCircle, Filter, Loader2, Plus, X } from 'lucide-react';
+import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import FullCalendar from '@fullcalendar/react';
@@ -14,16 +15,20 @@ import listPlugin from '@fullcalendar/list';
 import plLocale from '@fullcalendar/core/locales/pl';
 import { type TaskCalendarResponse } from '~/interfaces/task-calendar-response';
 import { TaskDetailDialog } from '~/components/task/task-detail-dialog';
+import { AddTaskDialog, type AddTaskRequestPayload } from '~/components/task/add-task-dialog';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 
 export default function CalendarPage() {
+  const queryClient = useQueryClient();
+
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskCalendarResponse | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -63,8 +68,17 @@ export default function CalendarPage() {
     placeholderData: keepPreviousData,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+  const addTaskMutation = useMutation({
+    mutationFn: async (payload: AddTaskRequestPayload) => {
+      await api.post('/tasks', payload);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+      setIsAddModalOpen(false);
+    },
+  });
 
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
@@ -129,6 +143,16 @@ export default function CalendarPage() {
               Mój Kalendarz
               {isFetching && <Loader2 className="animate-spin w-5 h-5 text-blue-200" />}
             </h1>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-1.5 shadow-xs"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Dodaj zadanie</span>
+            </Button>
           </div>
 
           <div className="mb-4 bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -146,6 +170,7 @@ export default function CalendarPage() {
                   Status:
                 </label>
                 <select
+                  id="calendar-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700"
@@ -161,12 +186,13 @@ export default function CalendarPage() {
 
               <div className="flex items-center gap-2">
                 <label
-                  htmlFor="calendat-piority-filter"
+                  htmlFor="calendar-priority-filter"
                   className="text-xs text-gray-500 w-16 sm:w-auto"
                 >
                   Priorytet:
                 </label>
                 <select
+                  id="calendar-priority-filter"
                   value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value)}
                   className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700"
@@ -207,7 +233,17 @@ export default function CalendarPage() {
           )}
 
           <div className="bg-white p-3 lg:p-6 rounded-lg border border-gray-200 shadow-sm">
-            <div className="calendar-container">
+            <div
+              className="
+              [&_.fc-button-primary]:!bg-blue-900
+              [&_.fc-button-primary]:!border-blue-900
+              [&_.fc-button-primary:hover]:!bg-blue-800
+              [&_.fc-button-active]:!bg-blue-950
+              [&_.fc-toolbar.fc-header-toolbar]:max-md:flex-col
+              [&_.fc-toolbar.fc-header-toolbar]:max-md:gap-3
+              [&_.fc-toolbar-title]:max-md:!text-xl
+            "
+            >
               <FullCalendar
                 key={isMobile ? 'mobile-calendar' : 'desktop-calendar'}
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
@@ -251,29 +287,15 @@ export default function CalendarPage() {
             onClose={() => setSelectedTask(null)}
           />
 
-          <style>{`
-          .calendar-container .fc-button-primary {
-            background-color: #1e3a8a !important; 
-            border-color: #1e3a8a !important;
-          }
-          .calendar-container .fc-button-primary:hover {
-            background-color: #1e40af !important; 
-          }
-          .calendar-container .fc-button-active {
-            background-color: #172554 !important; 
-          }
-          
-          @media (max-width: 768px) {
-            .fc .fc-toolbar.fc-header-toolbar {
-              display: flex;
-              flex-direction: column;
-              gap: 12px;
-            }
-            .fc .fc-toolbar-title {
-              font-size: 1.25rem !important;
-            }
-          }
-        `}</style>
+          <AddTaskDialog
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onSave={async (payload) => {
+              await addTaskMutation.mutateAsync(payload);
+            }}
+            isLoading={addTaskMutation.isPending}
+            dialogTitle="Dodaj nowe zadanie"
+          />
         </MainLayout>
       </RoleGuard>
     </AuthGuard>
