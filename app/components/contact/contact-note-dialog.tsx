@@ -58,12 +58,6 @@ export const ContactNoteDialog: React.FC<ContactNoteDialogProps> = ({ note, isOp
             Zamknij
           </Button>
         </DialogFooter>
-
-        <div className="mt-4 flex justify-end">
-          <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
-            Zamknij
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

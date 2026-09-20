@@ -6,6 +6,7 @@ import { ContactWays } from '~/components/contact/contact-ways';
 import { ContactNotes } from '~/components/contact/contact-notes';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { ContactTasks } from '~/components/contact/contact-tasks';
 
 export default function ContactDetails() {
   const { contactId } = useParams<{ contactId: string }>();
@@ -24,7 +25,8 @@ export default function ContactDetails() {
                 <ContactWays contactId={contactId} />
               </div>
 
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 space-y-6">
+                <ContactTasks contactId={contactId} />
                 <ContactNotes contactId={contactId} />
               </div>
             </div>
