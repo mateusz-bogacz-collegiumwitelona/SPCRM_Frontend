@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { CurrencyAmountResponse } from '~/components/analytics/team-kpi-cards';
+import type { CurrencyAmountResponse } from '~/components/analytics/kpi-cards';
 
 export type AnalyticsPeriod = 'CurrentMonth' | 'HalfYear' | 'CurrentYear';
 
@@ -88,7 +88,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
   return null;
 };
 
-export const TeamRevenueChart: React.FC<TeamRevenueChartProps> = ({
+export const RevenueChart: React.FC<TeamRevenueChartProps> = ({
   data,
   selectedPeriod,
   onPeriodChange,

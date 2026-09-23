@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertCircle, Download, Globe, Loader2, X } from 'lucide-react';
+import { AlertCircle, Calendar, Download, FileText, Loader2, X } from 'lucide-react';
 import { api } from '~/api/api';
 import {
   Dialog,
@@ -9,31 +9,33 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { AnalyticsPeriod } from '~/components/analytics/revenue-chart';
 import { downloadBase64Pdf } from '~/utils/pdf-downloader';
 
-interface DownloadInvoicePdfDialogProps {
-  readonly invoiceId: string;
-  readonly invoiceNumber: string;
+interface DownloadAnalyticsReportDialogProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
+  readonly endpoint: string;
+  readonly title?: string;
+  readonly defaultPeriod?: AnalyticsPeriod;
 }
 
-export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> = ({
-  invoiceId,
-  invoiceNumber,
+export const DownloadAnalyticsReportDialog: React.FC<DownloadAnalyticsReportDialogProps> = ({
   isOpen,
   onClose,
+  endpoint,
+  title = 'Pobierz raport analityczny PDF',
+  defaultPeriod = 'CurrentMonth',
 }) => {
-  const [language, setLanguage] = useState<'pl' | 'en'>('pl');
+  const [period, setPeriod] = useState<AnalyticsPeriod>(defaultPeriod);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const handleClose = () => {
     if (isLoading) return;
-    setLanguage('pl');
+    setPeriod(defaultPeriod);
     setFormError(null);
     onClose();
   };
@@ -43,21 +45,21 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
     setFormError(null);
 
     try {
-      const response = await api.get(`/invoice/${invoiceId}/pdf`, {
-        params: { language },
+      const response = await api.get(endpoint, {
+        params: { Period: period },
       });
 
       const payload = response.data?.value || response.data?.data || response.data;
-      downloadBase64Pdf(
-        payload,
-        `${language === 'en' ? 'Invoice' : 'Faktura'}_${invoiceNumber}.pdf`,
-      );
+      downloadBase64Pdf(payload, `Raport_${period}.pdf`);
+      handleClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
       const responseData = apiError.response?.data;
       const code = responseData?.errorCode;
       const fallback =
-        responseData?.message || apiError.message || 'Wystąpił błąd podczas pobierania faktury.';
+        responseData?.message ||
+        apiError.message ||
+        'Wystąpił błąd podczas generowania raportu PDF.';
 
       setFormError({
         title: getErrorMessage(code, fallback),
@@ -74,8 +76,8 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
           <DialogTitle className="text-blue-900 text-lg font-semibold flex items-center gap-2">
-            <Download className="w-5 h-5 text-blue-900" />
-            Pobierz fakturę VAT
+            <FileText className="w-5 h-5 text-blue-900" />
+            {title}
           </DialogTitle>
         </DialogHeader>
 
@@ -105,53 +107,75 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
           )}
 
           <p className="text-xs text-gray-600">
-            Wybierz język, w jakim ma zostać wygenerowany dokument PDF dla faktury{' '}
-            <strong className="text-gray-900">{invoiceNumber}</strong>:
+            Wybierz zakres czasu, który ma zostać podsumowany w dokumencie PDF:
           </p>
 
           <div className="space-y-2">
             <label
-              htmlFor="lang-pl"
+              htmlFor="period-month"
               className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
-                language === 'pl'
+                period === 'CurrentMonth'
                   ? 'border-blue-900 bg-blue-50/50 text-blue-900 font-semibold'
                   : 'border-gray-200 hover:bg-gray-50 text-gray-700'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Globe className="w-4 h-4 text-gray-500" />
-                <span className="text-sm">Język polski (PL)</span>
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <span className="text-sm">Bieżący miesiąc</span>
               </div>
               <input
-                id="lang-pl"
+                id="period-month"
                 type="radio"
-                name="pdf-language"
-                value="pl"
-                checked={language === 'pl'}
-                onChange={() => setLanguage('pl')}
+                name="report-period"
+                value="CurrentMonth"
+                checked={period === 'CurrentMonth'}
+                onChange={() => setPeriod('CurrentMonth')}
                 className="text-blue-900 focus:ring-blue-900"
               />
             </label>
 
             <label
-              htmlFor="lang-en"
+              htmlFor="period-half-year"
               className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
-                language === 'en'
+                period === 'HalfYear'
                   ? 'border-blue-900 bg-blue-50/50 text-blue-900 font-semibold'
                   : 'border-gray-200 hover:bg-gray-50 text-gray-700'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Globe className="w-4 h-4 text-gray-500" />
-                <span className="text-sm">Język angielski (EN)</span>
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <span className="text-sm">Ostatnie pół roku (6 miesięcy)</span>
               </div>
               <input
-                id="lang-en"
+                id="period-half-year"
                 type="radio"
-                name="pdf-language"
-                value="en"
-                checked={language === 'en'}
-                onChange={() => setLanguage('en')}
+                name="report-period"
+                value="HalfYear"
+                checked={period === 'HalfYear'}
+                onChange={() => setPeriod('HalfYear')}
+                className="text-blue-900 focus:ring-blue-900"
+              />
+            </label>
+
+            <label
+              htmlFor="period-year"
+              className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                period === 'CurrentYear'
+                  ? 'border-blue-900 bg-blue-50/50 text-blue-900 font-semibold'
+                  : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <span className="text-sm">Bieżący rok kalendarzowy</span>
+              </div>
+              <input
+                id="period-year"
+                type="radio"
+                name="report-period"
+                value="CurrentYear"
+                checked={period === 'CurrentYear'}
+                onChange={() => setPeriod('CurrentYear')}
                 className="text-blue-900 focus:ring-blue-900"
               />
             </label>
@@ -176,11 +200,11 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Pobieranie...
+                <Loader2 className="w-4 h-4 animate-spin" /> Generowanie PDF...
               </>
             ) : (
               <>
-                <Download className="w-4 h-4" /> Pobierz plik
+                <Download className="w-4 h-4" /> Pobierz raport
               </>
             )}
           </Button>

@@ -68,7 +68,7 @@ const RevenueCell = ({ amounts }: { amounts?: CurrencyAmountResponse[] }) => {
   );
 };
 
-export const TeamLeaderboardTable: React.FC<TeamLeaderboardTableProps> = ({
+export const LeaderboardTable: React.FC<TeamLeaderboardTableProps> = ({
   items = [],
   pageNumber,
   pageSize,

@@ -28,3 +28,8 @@ export interface LeaderboardItemResponse {
   activeDealsCount: number;
   winRatePercentageThisMonth: number;
 }
+
+export interface EmployeeKpiSummaryResponse extends TeamKpiSummaryResponse {
+  activeDealsPipelineValue?: CurrencyAmountResponse[];
+  winRatePercentageThisMonth?: number;
+}

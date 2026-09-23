@@ -4,19 +4,20 @@ import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
-import { TeamKpiCards, type TeamKpiSummaryResponse } from '~/components/analytics/team-kpi-cards';
 import {
   type AnalyticsChartMetricResponse,
   type AnalyticsPeriod,
   type CurrencyListResponse,
-  TeamRevenueChart,
-} from '~/components/analytics/team-revenue-chart';
-import { AlertCircle, BarChart3, Loader2, RefreshCw, X } from 'lucide-react';
+  RevenueChart,
+} from '~/components/analytics/revenue-chart';
+import { AlertCircle, BarChart3, FileText, Loader2, RefreshCw, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { LeaderboardItemResponse } from '~/interfaces/analytics';
-import { TeamLeaderboardTable } from '~/components/analytics/team-leaderboard-table';
+import type { LeaderboardItemResponse, TeamKpiSummaryResponse } from '~/interfaces/analytics';
+import { LeaderboardTable } from '~/components/analytics/leaderboard-table';
+import { DownloadAnalyticsReportDialog } from '~/components/analytics/download-analytics-report-dialog';
+import { KpiCards } from '~/components/analytics/kpi-cards';
 
 export default function TeamAnalyticsPage() {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
@@ -24,6 +25,7 @@ export default function TeamAnalyticsPage() {
   const [selectedCurrencyCode, setSelectedCurrencyCode] = useState<string>('PLN');
   const [leaderboardPage, setLeaderboardPage] = useState(1);
   const [leaderboardPageSize, setLeaderboardPageSize] = useState(5);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
   const { data: currencies } = useQuery<CurrencyListResponse[]>({
     queryKey: ['currencies-simple'],
@@ -134,7 +136,7 @@ export default function TeamAnalyticsPage() {
       <RoleGuard allowedRoles={['Manager']}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-6 flex justify-between items-center">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-blue-200" />
               <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-3">
                 Statystyki zespołu
@@ -142,16 +144,28 @@ export default function TeamAnalyticsPage() {
               </h1>
             </div>
 
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleRefreshAll}
-              disabled={isGlobalFetching}
-              className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-1.5 shadow-xs"
-            >
-              <RefreshCw className={`w-4 h-4 ${isGlobalFetching ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Odśwież</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setIsPdfModalOpen(true)}
+                className="bg-white/10 hover:bg-white/20 text-white font-medium flex items-center gap-1.5 shadow-xs border border-white/20"
+              >
+                <FileText className="w-4 h-4" />
+                <span className="hidden sm:inline">Raport PDF</span>
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleRefreshAll}
+                disabled={isGlobalFetching}
+                className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-1.5 shadow-xs"
+              >
+                <RefreshCw className={`w-4 h-4 ${isGlobalFetching ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Odśwież</span>
+              </Button>
+            </div>
           </div>
 
           {kpiError && (
@@ -185,9 +199,9 @@ export default function TeamAnalyticsPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {kpiData && <TeamKpiCards data={kpiData} />}
+              {kpiData && <KpiCards data={kpiData} />}
 
-              <TeamRevenueChart
+              <RevenueChart
                 data={chartData || []}
                 selectedPeriod={selectedPeriod}
                 onPeriodChange={setSelectedPeriod}
@@ -197,7 +211,7 @@ export default function TeamAnalyticsPage() {
                 isLoading={isChartLoading}
               />
 
-              <TeamLeaderboardTable
+              <LeaderboardTable
                 items={leaderboardItems}
                 pageNumber={leaderboardPage}
                 pageSize={leaderboardPageSize}
@@ -209,6 +223,14 @@ export default function TeamAnalyticsPage() {
                   setLeaderboardPageSize(newSize);
                   setLeaderboardPage(1);
                 }}
+              />
+
+              <DownloadAnalyticsReportDialog
+                isOpen={isPdfModalOpen}
+                onClose={() => setIsPdfModalOpen(false)}
+                endpoint="/analytics/team/report/pdf"
+                title="Raport analityczny zespołu (PDF)"
+                defaultPeriod={selectedPeriod}
               />
             </div>
           )}
