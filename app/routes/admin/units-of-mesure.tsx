@@ -6,19 +6,14 @@ import { api } from '~/api/api';
 import { mergeById } from '~/utils/table-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import {
-  AddUnitDialog,
-  type AddUnitRequestPayload,
-} from '~/components/unit/dialogs/add-unit-dialog';
-import {
-  EditUnitDialog,
-  type EditUnitRequestPayload,
-} from '~/components/unit/dialogs/edit-unit-dialog';
+import { AddUnitDialog } from '~/components/unit/dialogs/add-unit-dialog';
+import { EditUnitDialog } from '~/components/unit/dialogs/edit-unit-dialog';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
 import { Button } from '~/components/ui/button';
 import { DataTable } from '~/components/table/data-table';
 import { MainLayout } from '~/components/layout/main-layout';
+import type { AddUnitRequestPayload, EditUnitRequestPayload } from '~/interfaces/unit';
 
 interface UnitListResponse {
   id: string;

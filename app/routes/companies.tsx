@@ -26,10 +26,8 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
-import {
-  AddCompanyDialog,
-  type AddCompanyRequest,
-} from '~/components/companies/dialogs/add-company-dialog';
+import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dialog';
+import type { AddCompanyRequest } from '~/interfaces/company';
 
 interface GetCompanyResponse {
   id: string;

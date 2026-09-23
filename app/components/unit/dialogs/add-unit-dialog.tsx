@@ -10,12 +10,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface AddUnitRequestPayload {
-  name: string;
-  symbol: string;
-  baseMultiplier: number;
-}
+import type { AddUnitRequestPayload } from '~/interfaces/unit';
 
 interface AddUnitDialogProps {
   readonly isOpen: boolean;

@@ -15,17 +15,7 @@ import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface SetLockoutPayload {
-  userId: string;
-  lockoutEnd?: string | null;
-}
-
-export interface UserToLockout {
-  id: string;
-  fullName: string;
-  role: string;
-}
+import type { SetLockoutPayload, UserToLockout } from '~/interfaces/user';
 
 interface LockoutUserDialogProps {
   readonly user: UserToLockout | null;

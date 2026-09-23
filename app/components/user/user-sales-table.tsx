@@ -27,17 +27,7 @@ import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface UserSaleItem {
-  id: string;
-  name: string;
-  status: string;
-  closeDate: string;
-  value: number;
-  decimalPlace: number;
-  currency: string;
-  companyName: string;
-}
+import type { UserDealItem } from '~/interfaces/deal';
 
 const PAGE_SIZE = 5;
 
@@ -46,7 +36,7 @@ const formatDate = (dateString?: string | null) => {
   return format(new Date(dateString), 'dd.MM.yyyy', { locale: pl });
 };
 
-const columnHelper = createColumnHelper<UserSaleItem>();
+const columnHelper = createColumnHelper<UserDealItem>();
 
 const columns = [
   columnHelper.accessor('name', {

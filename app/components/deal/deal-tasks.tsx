@@ -25,15 +25,10 @@ import {
   resolveTaskPriorityLabel,
   resolveTaskStatusLabel,
 } from '~/utils/task-helpers';
-import {
-  AddTaskDialog,
-  type AddTaskRequestPayload,
-} from '~/components/task/dialogs/add-task-dialog';
+import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
-import {
-  EditTaskDialog,
-  type EditTaskRequestPayload,
-} from '~/components/task/dialogs/edit-task-dialog';
+import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
+import type { AddTaskRequestPayload, EditTaskRequestPayload } from '~/interfaces/task';
 
 export interface SaleTaskResponse {
   id: string;

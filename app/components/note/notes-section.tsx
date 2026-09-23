@@ -1,18 +1,18 @@
-import type { NoteResponse } from '~/interfaces/note-response';
+import type { Note } from '~/interfaces/note';
 import { AlertCircle, Edit2, MessageSquare, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { ActionGuard } from '~/lib/action-guard';
 import type { FormErrorState } from '~/interfaces/api-error';
 
 interface NotesSectionProps {
-  readonly notes?: NoteResponse[];
+  readonly notes?: Note[];
   readonly isLoading: boolean;
   readonly emptyMessage?: string;
   readonly error?: FormErrorState | null;
   readonly onErrorDismiss?: () => void;
-  readonly onEditClick?: (note: NoteResponse) => void;
+  readonly onEditClick?: (note: Note) => void;
   readonly onAddClick?: () => void;
-  readonly onDeleteClick?: (note: NoteResponse) => void;
+  readonly onDeleteClick?: (note: Note) => void;
 }
 
 export const NotesSection = ({

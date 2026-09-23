@@ -2,12 +2,12 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
-import { type ContactWay } from '~/interfaces/contact-way';
+import { type Contact } from '~/interfaces/contact';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AlertCircle, X } from 'lucide-react';
 
-const ContactWayItem = ({ way }: { way: ContactWay }) => (
+const ContactWayItem = ({ way }: { way: Contact }) => (
   <li className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-800">
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 flex-1 min-w-0">
       <div className="flex items-center shrink-0">
@@ -36,7 +36,7 @@ export const ContactWays: React.FC<{ contactId: string }> = ({ contactId }) => {
     isLoading,
     isError,
     error: queryError,
-  } = useQuery<ContactWay[]>({
+  } = useQuery<Contact[]>({
     queryKey: ['contact-ways', contactId],
     queryFn: async () => {
       const res = await api.get(`/contacts/${contactId}/ways`);

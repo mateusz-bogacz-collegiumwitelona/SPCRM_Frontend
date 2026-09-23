@@ -13,40 +13,14 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
-  type ProductFormData,
   ProductFormFields,
   useProductFormDictionaries,
 } from '~/components/products/dialogs/product-form-fields';
-
-export interface EditProductRequest {
-  productId: string;
-  name: string;
-  steelGradeId: string;
-  thickness: number;
-  width: number;
-  length: number;
-  diameter?: number | null;
-  weight: number;
-  unitId: string;
-  currencyId: string;
-  pricePerUnit: number;
-  category: string;
-}
-
-interface EditProductDetailResponse {
-  productId: string;
-  name: string;
-  steelGradeId: string;
-  unitId: string;
-  currencyId: string;
-  category: string;
-  thickness: number;
-  width: number;
-  length: number;
-  diameter?: number | null;
-  weight: number;
-  pricePerUnit: number;
-}
+import type {
+  EditProductDetailResponse,
+  EditProductRequest,
+  ProductFormData,
+} from '~/interfaces/product';
 
 interface EditProductDialogProps {
   readonly productId: string | null;

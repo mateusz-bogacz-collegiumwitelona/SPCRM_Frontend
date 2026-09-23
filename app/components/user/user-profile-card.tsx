@@ -17,23 +17,7 @@ import {
 import { api } from '~/api/api';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { HasRole } from '~/lib/has-role';
-
-export interface UserDetailResponse {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  pendingEmail?: string | null;
-  isEmailVerified: boolean;
-  isLocked: boolean;
-  lockoutEndDate?: string | null;
-  companyOwnerCount?: number | null;
-  contactOwnerCount?: number | null;
-  activeDealCount?: number | null;
-  activeTaskCount?: number | null;
-  createdAt: string;
-  updatedAt?: string | null;
-}
+import type { UserDetailResponse } from '~/interfaces/user';
 
 const formatDate = (dateString?: string | null) => {
   if (!dateString) return '-';

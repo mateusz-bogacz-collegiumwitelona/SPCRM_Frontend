@@ -1,9 +1,4 @@
-export interface RoleConfig {
-  label: string;
-  bgColor: string;
-  textColor: string;
-  iconColor: string;
-}
+import type { RoleConfig } from '~/interfaces/user';
 
 export const translateRole = (rawRole?: string | null): string => {
   const role = (rawRole || '').toLowerCase();

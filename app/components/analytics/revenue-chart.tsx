@@ -9,7 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { CurrencyAmountResponse } from '~/components/analytics/kpi-cards';
+import type { CurrencyAmountResponse } from '~/interfaces/analytics';
 
 export type AnalyticsPeriod = 'CurrentMonth' | 'HalfYear' | 'CurrentYear';
 

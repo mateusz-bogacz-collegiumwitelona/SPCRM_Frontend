@@ -10,16 +10,11 @@ import { ExtendOfferValidityDialog } from '~/components/offer/dialogs/extend-off
 import { ChangeOfferStatusDialog } from '~/components/offer/dialogs/change-offer-status-dialog';
 import { Button } from '~/components/ui/button';
 import { CalendarClock, CheckCircle, Mail, Trash2, XCircle } from 'lucide-react';
-import {
-  type EditableProductItem,
-  EditOfferProductsDialog,
-} from '~/components/offer/dialogs/edit-offer-products-dialog';
-import {
-  type OfferProductResponse,
-  OfferProductsTable,
-} from '~/components/offer/offer-product-table';
+import { EditOfferProductsDialog } from '~/components/offer/dialogs/edit-offer-products-dialog';
+import { OfferProductsTable } from '~/components/offer/offer-product-table';
 import { ResendOfferEmailDialog } from '~/components/offer/dialogs/resend-offer-email-dialog';
 import { DeleteOfferDialog } from '~/components/offer/dialogs/delete-offer-dialog';
+import type { EditableProductItem, OfferProductResponse } from '~/interfaces/offer';
 
 interface OfferAllowedActionsResponse {
   canEdit: boolean;

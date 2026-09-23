@@ -31,28 +31,11 @@ import {
   resolveTaskPriorityLabel,
   resolveTaskStatusLabel,
 } from '~/utils/task-helpers';
-import {
-  AddTaskDialog,
-  type AddTaskRequestPayload,
-} from '~/components/task/dialogs/add-task-dialog';
-import {
-  EditTaskDialog,
-  type EditTaskRequestPayload,
-} from '~/components/task/dialogs/edit-task-dialog';
+import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
+import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
-
-export interface ContactTaskItem {
-  id: string;
-  title: string;
-  dueAt: string;
-  status: string;
-  priority: string;
-  assignedToId: string;
-  assignedToFirstName: string;
-  assignedToLastName: string;
-  dealId?: string | null;
-  dealName?: string | null;
-}
+import type { ContactTaskItem } from '~/interfaces/contact';
+import type { AddTaskRequestPayload, EditTaskRequestPayload } from '~/interfaces/task';
 
 interface TaskTableMeta {
   onEdit: (task: ContactTaskItem) => void;

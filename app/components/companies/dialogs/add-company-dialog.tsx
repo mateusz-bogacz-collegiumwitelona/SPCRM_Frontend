@@ -16,21 +16,7 @@ import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-
-export interface AddCompanyAddressRequest {
-  street: string;
-  city: string;
-  zipCode: string;
-  longitude: number;
-  latitude: number;
-  type: string;
-}
-
-export interface AddCompanyRequest {
-  name: string;
-  nip: string;
-  addresses: AddCompanyAddressRequest[];
-}
+import type { AddCompanyAddressRequest, AddCompanyRequest } from '~/interfaces/company';
 
 interface FormAddressItem extends AddCompanyAddressRequest {
   id: string;

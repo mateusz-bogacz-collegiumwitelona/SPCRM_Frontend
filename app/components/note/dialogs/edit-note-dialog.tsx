@@ -10,12 +10,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface NoteEditData {
-  id: string;
-  title: string;
-  content: string;
-}
+import type { NoteEditData } from '~/interfaces/note';
 
 interface NoteEditDialogProps {
   isOpen: boolean;

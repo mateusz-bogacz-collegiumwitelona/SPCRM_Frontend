@@ -29,21 +29,7 @@ import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { formatCurrency } from '~/utils/data-formatters';
 import { DataTable } from '~/components/table/data-table';
 import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-invoice-pdf-dialog';
-
-export interface InvoiceListResponse {
-  id: string;
-  invoiceNumber: string;
-  totalAmount: number;
-  paidAmount: number;
-  remainingAmount: number;
-  companyName: string;
-  companyNip: string;
-  currencyCode: string;
-  decimalPlaces: number;
-  issueDate: string;
-  dueDate: string;
-  isOverDue: boolean;
-}
+import type { InvoiceListResponse } from '~/interfaces/invoice';
 
 const parseIsOverDueFilter = (filterValue: string): boolean | undefined => {
   if (filterValue === 'true') return true;

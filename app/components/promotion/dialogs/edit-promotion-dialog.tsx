@@ -12,31 +12,21 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
   buildBasePromotionPayload,
-  type EditPromotionInitialData,
   mapInitialDataToSharedForm,
   PromotionSharedFields,
-  type PromotionSharedFormData,
   resolvePromotionPricingPayload,
   usePromotionDictionaries,
 } from '~/components/promotion/dialogs/promotion-form-shared';
-
-export interface EditPromotionRequestPayload {
-  id: string;
-  name?: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  discountPercentage?: number | null;
-  promotionalPrice?: number | null;
-  currencyId?: string | null;
-  contactId?: string | null;
-  minQuantity?: number | null;
-  minWeight?: number | null;
-}
+import type {
+  EditPromotionInitialData,
+  EditPromotionRequest,
+  PromotionSharedFormData,
+} from '~/interfaces/promotion';
 
 interface EditPromotionDialogProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly onSave: (payload: EditPromotionRequestPayload) => Promise<void>;
+  readonly onSave: (payload: EditPromotionRequest) => Promise<void>;
   readonly isLoading: boolean;
   readonly initialData: EditPromotionInitialData;
 }
@@ -112,7 +102,7 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
       return;
     }
 
-    const payload: EditPromotionRequestPayload = {
+    const payload: EditPromotionRequest = {
       id: initialData.id,
       name: name.trim(),
       ...buildBasePromotionPayload(sharedForm),

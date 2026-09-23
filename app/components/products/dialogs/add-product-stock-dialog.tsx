@@ -11,10 +11,6 @@ import { AlertCircle, Boxes, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
-export interface AddProductStockRequest {
-  quantityToAdd: number;
-}
-
 interface AddProductStockDialogProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
@@ -52,9 +48,7 @@ export const AddProductStockDialog: React.FC<AddProductStockDialogProps> = ({
   };
 
   const parsedQuantity = Number(quantity);
-  const newProjectedStock = product
-    ? product.currentStock + (parsedQuantity > 0 ? parsedQuantity : 0)
-    : 0;
+  const newProjectedStock = product ? product.currentStock + Math.max(parsedQuantity, 0) : 0;
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();

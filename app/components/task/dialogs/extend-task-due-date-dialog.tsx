@@ -15,10 +15,7 @@ import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface ExtendTaskDueDatePayload {
-  newDueDate: string;
-}
+import type { ExtendTaskDueDatePayload } from '~/interfaces/task';
 
 interface ExtendTaskDueDateDialogProps {
   isOpen: boolean;

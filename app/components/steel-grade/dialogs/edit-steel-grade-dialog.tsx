@@ -10,17 +10,8 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import {
-  type SteelGradeFormData,
-  SteelGradeFormFields,
-} from '~/components/steel-grade/dialogs/steel-grade-form-fields';
-
-export interface EditSteelGradePayload {
-  id: string;
-  name: string;
-  standard?: string | null;
-  density?: number | null;
-}
+import { SteelGradeFormFields } from '~/components/steel-grade/dialogs/steel-grade-form-fields';
+import type { EditSteelGradePayload, SteelGradeFormData } from '~/interfaces/steel-grade';
 
 interface EditSteelGradeDialogProps {
   readonly isOpen: boolean;

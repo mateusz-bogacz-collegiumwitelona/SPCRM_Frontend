@@ -11,15 +11,10 @@ import {
 } from '~/components/ui/dialog';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import { type DictionaryItem, useTaskDictionaries } from '~/hooks/use-task-dictionaries';
+import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface EditTaskRequestPayload {
-  title?: string;
-  description?: string;
-  priority?: string;
-}
+import type { DictionaryItem, EditTaskRequestPayload } from '~/interfaces/task';
 
 interface EditTaskDialogProps {
   readonly isOpen: boolean;

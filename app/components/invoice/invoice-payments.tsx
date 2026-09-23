@@ -8,18 +8,7 @@ import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { formatCurrency } from '~/utils/data-formatters';
-
-export interface InvoicePaymentListResponse {
-  paymentId: string;
-  amount: number;
-  currencyCode: string;
-  decimalPlaces: number;
-  paymentDate: string;
-  referenceNumber?: string | null;
-  note?: string | null;
-  createdByFirstName?: string | null;
-  createdByLastName?: string | null;
-}
+import type { InvoicePaymentListResponse } from '~/interfaces/invoice';
 
 export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);

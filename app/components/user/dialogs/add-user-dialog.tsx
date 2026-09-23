@@ -13,13 +13,7 @@ import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getRoleConfig } from '~/utils/role-translator';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface AddUserRequestPayload {
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-}
+import type { AddUserRequestPayload } from '~/interfaces/user';
 
 interface AddUserDialogProps {
   readonly isOpen: boolean;

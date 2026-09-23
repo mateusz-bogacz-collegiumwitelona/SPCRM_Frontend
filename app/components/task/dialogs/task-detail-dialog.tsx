@@ -1,4 +1,4 @@
-import type { TaskCalendarResponse } from '~/interfaces/task-calendar-response';
+import type { DictionaryItem, Task } from '~/interfaces/task';
 import React, { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog';
@@ -8,13 +8,13 @@ import { AlertCircle, Briefcase, Calendar, Clock, Loader2, User, X } from 'lucid
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { api } from '~/api/api';
-import { type DictionaryItem, useTaskDictionaries } from '~/hooks/use-task-dictionaries';
+import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getTaskPriorityBadgeClass, getTaskStatusBadgeClass } from '~/utils/task-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 interface TaskDialogProps {
-  task: TaskCalendarResponse | null;
+  task: Task | null;
   isOpen: boolean;
   onClose: () => void;
 }

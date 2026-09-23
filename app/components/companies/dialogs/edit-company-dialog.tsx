@@ -12,18 +12,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface EditCompanyRequest {
-  id: string;
-  name?: string;
-  nip?: string;
-}
-
-export interface EditCompanyDetailResponse {
-  id: string;
-  name: string;
-  nip: string;
-}
+import type { EditCompanyDetailResponse, EditCompanyRequest } from '~/interfaces/company';
 
 interface EditCompanyDialogProps {
   companyId: string | null;
@@ -93,7 +82,7 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
     const payload: EditCompanyRequest = {
       id: companyId,
       name: name.trim(),
-      nip: nip.replace(/[\s-]/g, ''),
+      nip: nip.replaceAll(/[\s-]/g, ''),
     };
 
     try {

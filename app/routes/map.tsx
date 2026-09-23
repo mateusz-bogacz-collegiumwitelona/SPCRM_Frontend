@@ -9,18 +9,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import { RoleGuard } from '~/lib/role-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
-
-export interface CompanyMapData {
-  id: string;
-  name: string;
-  nip: string;
-  street: string;
-  city: string;
-  zipCode: string;
-  latitude: number | null;
-  longitude: number | null;
-  type: string;
-}
+import type { CompanyMapData } from '~/interfaces/map';
 
 interface ApiResponse {
   success: boolean;

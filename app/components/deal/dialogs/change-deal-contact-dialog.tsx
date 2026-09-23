@@ -12,14 +12,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, UserCheck, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface DealAssignableContactResponse {
-  id: string;
-  fullName: string;
-  jobTitle?: string | null;
-  email: string;
-  isPrimary: boolean;
-}
+import type { DealAssignableContactResponse } from '~/interfaces/deal';
 
 interface ChangeDealContactDialogProps {
   isOpen: boolean;

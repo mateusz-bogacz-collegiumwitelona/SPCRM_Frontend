@@ -9,20 +9,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { DataTable } from '~/components/table/data-table';
-
-export interface ProductInvoiceItemResponse {
-  invoiceId: string;
-  invoiceNumber: string;
-  companyName: string;
-  issueDate: string;
-  dueDate: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  currencyCode: string;
-  decimalPlaces: number;
-  isPaid: boolean;
-}
+import type { ProductInvoiceItemResponse } from '~/interfaces/product';
 
 const columnHelper = createColumnHelper<ProductInvoiceItemResponse>();
 

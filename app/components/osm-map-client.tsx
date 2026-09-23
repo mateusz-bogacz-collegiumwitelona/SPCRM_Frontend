@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { ExternalLink } from 'lucide-react';
-import type { CompanyMapData } from '~/routes/map';
 import 'leaflet/dist/leaflet.css';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
+import type { CompanyMapData } from '~/interfaces/map';
 
 export type OSMMapClientProps = {
   center: [number, number];
@@ -76,7 +76,6 @@ export default function OSMMapClient({
   selectedCoords,
   onLocationSelect,
   onEditAddress,
-  onDeleteAddress,
 }: Readonly<OSMMapClientProps>) {
   const getGoogleMapsLink = (lat: number, lng: number) => {
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;

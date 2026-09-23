@@ -10,19 +10,7 @@ import { getStatusConfig } from '~/utils/sale-status';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { DataTable } from '~/components/table/data-table';
-
-export interface ProductDealItemResponse {
-  dealId: string;
-  dealName: string;
-  companyName: string;
-  status: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  currencyCode: string;
-  decimalPlaces: number;
-  closeDate: string;
-}
+import type { ProductDealItemResponse } from '~/interfaces/product';
 
 const columnHelper = createColumnHelper<ProductDealItemResponse>();
 

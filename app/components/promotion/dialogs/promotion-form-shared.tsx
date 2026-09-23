@@ -8,54 +8,13 @@ import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
-
-export interface CurrencyOption {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
-export interface ContactOption {
-  contactId: string;
-  contactFirstName: string;
-  contactLastName: string;
-  companyName: string;
-}
-
-export interface PromotionSharedFormData {
-  discountType: 'percentage' | 'fixed';
-  discountPercentage: string;
-  promotionalPrice: string;
-  currencyId: string;
-  contactId: string;
-  startDate?: Date;
-  endDate?: Date;
-  minQuantity: string;
-  minWeight: string;
-}
-
-export interface PromotionPricingPayloadResult {
-  discountPercentage: number | null;
-  promotionalPrice: number | null;
-  currencyId: string | null;
-}
-
-export interface EditPromotionInitialData {
-  id: string;
-  name: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  discountPercentage?: number | null;
-  promotionalPrice?: number | null;
-  currencyCode?: string | null;
-  contactId?: string | null;
-  contactFirstName?: string | null;
-  contactLastName?: string | null;
-  contactCompanyName?: string | null;
-  minQuantity?: number | null;
-  minWeight?: number | null;
-}
+import type { CurrencyOption } from '~/interfaces/currency';
+import type { ContactOption } from '~/interfaces/contact';
+import type {
+  EditPromotionInitialData,
+  PromotionPricingPayloadResult,
+  PromotionSharedFormData,
+} from '~/interfaces/promotion';
 
 export const defaultPromotionSharedState: PromotionSharedFormData = {
   discountType: 'percentage',

@@ -57,8 +57,8 @@ export default [
 
   // Invoices
   route('invoices', 'routes/invoices.tsx'),
+  route('invoice/:invoiceId', 'routes/invoice-detail.tsx'),
 
   // Analytics
-  route('invoice/:invoiceId', 'routes/invoice-detail.tsx'),
-  route('analytics', 'routes/analytics/team-analytics.tsx'),
+  route('analytics', 'routes/team-analytics.tsx'),
 ] satisfies RouteConfig;

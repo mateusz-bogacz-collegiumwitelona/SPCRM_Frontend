@@ -10,12 +10,7 @@ import {
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface AddCurrencyRequestPayload {
-  name: string;
-  code: string;
-  decimalPlaces: number;
-}
+import type { AddCurrencyRequestPayload } from '~/interfaces/currency';
 
 interface AddCurrencyDialogProps {
   readonly isOpen: boolean;

@@ -25,32 +25,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AddInvoicePaymentDialog } from './dialogs/add-invoice-payment-dialog';
 import { DownloadInvoicePdfDialog } from './dialogs/download-invoice-pdf-dialog';
-
-export interface InvoiceDetailResponse {
-  invoiceId: string;
-  invoiceNumber: string;
-  issueDate: string;
-  dueDate: string;
-  paymentDate?: string | null;
-  companyId: string;
-  companyName: string;
-  companyNip: string;
-  dealId?: string | null;
-  dealName?: string | null;
-}
-
-export interface InvoicePaymentSummaryResponse {
-  invoiceId: string;
-  invoiceNumber: string;
-  totalAmount: number;
-  paidAmount: number;
-  remainingAmount: number;
-  currencyCode: string;
-  decimalPlaces: number;
-  paymentsCount: number;
-  isOverDue: boolean;
-  paymentDate?: string | null;
-}
+import type { InvoiceDetailResponse, InvoicePaymentSummaryResponse } from '~/interfaces/invoice';
 
 export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);

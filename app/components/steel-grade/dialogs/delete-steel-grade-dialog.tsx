@@ -6,16 +6,12 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { SteelGradeOption } from '~/interfaces/steel-grade';
 
 interface ProductItem {
   id: string;
   name: string;
   category: string;
-}
-
-interface SteelGradeOption {
-  id: string;
-  name: string;
 }
 
 interface DeleteSteelGradeDialogProps {

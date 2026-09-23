@@ -10,11 +10,7 @@ import { Button } from '~/components/ui/button';
 import { DeactivatePromotionDialog } from '~/components/promotion/dialogs/deactivate-promotion-dialog';
 import { ActivatePromotionDialog } from '~/components/promotion/dialogs/activate-promotion-dialog';
 import { DeletePromotionDialog } from '~/components/promotion/dialogs/delete-promotion-dialog';
-import {
-  EditPromotionDialog,
-  type EditPromotionRequestPayload,
-} from '~/components/promotion/dialogs/edit-promotion-dialog';
-
+import { EditPromotionDialog } from '~/components/promotion/dialogs/edit-promotion-dialog';
 import {
   AlertCircle,
   ArrowLeft,
@@ -37,6 +33,7 @@ import { pl } from 'date-fns/locale';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { EditPromotionRequest } from '~/interfaces/promotion';
 
 interface PromotionDetailResponse {
   id: string;
@@ -131,7 +128,7 @@ const PromotionHeader: React.FC<{
   });
 
   const editMutation = useMutation({
-    mutationFn: async (payload: EditPromotionRequestPayload) => {
+    mutationFn: async (payload: EditPromotionRequest) => {
       return await api.patch('/promotion/edit', payload);
     },
     onSuccess: async () => {

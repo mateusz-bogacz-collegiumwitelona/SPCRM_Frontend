@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
-import { type ContactWay } from '~/interfaces/contact-way';
+import { type Contact } from '~/interfaces/contact';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { AlertCircle, Building2, User, X } from 'lucide-react';
@@ -14,7 +14,7 @@ interface TaskContactResponse {
   lastName: string;
   jobTitle?: string;
   companyName: string;
-  contactWays: ContactWay[];
+  contactWays: Contact[];
 }
 
 export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => {
@@ -117,7 +117,7 @@ export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => 
       </div>
 
       <div className="space-y-2 border-t border-gray-100 pt-3">
-        {contact.contactWays?.map((way: ContactWay) => (
+        {contact.contactWays?.map((way: Contact) => (
           <div key={`${way.type}-${way.value}`} className="flex items-center text-sm">
             {getIcon(way.type)}
 

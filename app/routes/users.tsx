@@ -28,36 +28,13 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
 import { getRoleConfig } from '~/utils/role-translator';
-import {
-  AddUserDialog,
-  type AddUserRequestPayload,
-} from '~/components/user/dialogs/add-user-dialog';
-import {
-  LockoutUserDialog,
-  type SetLockoutPayload,
-  type UserToLockout,
-} from '~/components/user/dialogs/lockout-user-dialog';
-import { UnlockUserDialog, type UserToUnlock } from '~/components/user/dialogs/unlock-user-dialog';
-import {
-  DeleteUserDialog,
-  type DeleteUserPayload,
-  type UserToDelete,
-} from '~/components/user/dialogs/delete-user-dialog';
-import {
-  EditUserDialog,
-  type EditUserRequestPayload,
-  type UserToEdit,
-} from '~/components/user/dialogs/edit-user-dialog';
-import {
-  ChangeUserEmailDialog,
-  type ChangeUserEmailPayload,
-  type UserToChangeEmail,
-} from '~/components/user/dialogs/change-user-email-dialog';
-import {
-  ChangeUserRoleDialog,
-  type ChangeUserRolePayload,
-  type UserToChangeRole,
-} from '~/components/user/dialogs/change-user-role-dialog';
+import { AddUserDialog } from '~/components/user/dialogs/add-user-dialog';
+import { LockoutUserDialog } from '~/components/user/dialogs/lockout-user-dialog';
+import { UnlockUserDialog } from '~/components/user/dialogs/unlock-user-dialog';
+import { DeleteUserDialog } from '~/components/user/dialogs/delete-user-dialog';
+import { EditUserDialog } from '~/components/user/dialogs/edit-user-dialog';
+import { ChangeUserEmailDialog } from '~/components/user/dialogs/change-user-email-dialog';
+import { ChangeUserRoleDialog } from '~/components/user/dialogs/change-user-role-dialog';
 import { HasRole } from '~/lib/has-role';
 import {
   DropdownMenu,
@@ -65,6 +42,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
+import type {
+  AddUserRequestPayload,
+  ChangeUserEmailPayload,
+  ChangeUserRolePayload,
+  DeleteUserPayload,
+  EditUserRequestPayload,
+  SetLockoutPayload,
+  UserToChangeEmail,
+  UserToChangeRole,
+  UserToDelete,
+  UserToEdit,
+  UserToLockout,
+  UserToUnlock,
+} from '~/interfaces/user';
 
 interface UserListResponse {
   id: string;

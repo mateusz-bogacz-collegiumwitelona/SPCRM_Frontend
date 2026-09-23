@@ -12,14 +12,9 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
 import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
-import {
-  AddCurrencyDialog,
-  type AddCurrencyRequestPayload,
-} from '~/components/currency/dialogs/add-currency-dialog';
-import {
-  EditCurrencyDialog,
-  type EditCurrencyRequestPayload,
-} from '~/components/currency/dialogs/edit-currency-dialog';
+import { AddCurrencyDialog } from '~/components/currency/dialogs/add-currency-dialog';
+import { EditCurrencyDialog } from '~/components/currency/dialogs/edit-currency-dialog';
+import type { AddCurrencyRequestPayload, EditCurrencyRequestPayload } from '~/interfaces/currency';
 
 interface CurrencyListResponse {
   currencyId: string;

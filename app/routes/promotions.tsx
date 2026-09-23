@@ -28,10 +28,8 @@ import type { DateRange } from 'react-day-picker';
 import { Link, useNavigate } from 'react-router';
 import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
-import {
-  AddPromotionDialog,
-  type AddPromotionRequestPayload,
-} from '~/components/promotion/dialogs/add-promotion-dialog';
+import { AddPromotionDialog } from '~/components/promotion/dialogs/add-promotion-dialog';
+import type { AddPromotionRequest } from '~/interfaces/promotion';
 
 interface PromotionResponse {
   id: string;
@@ -291,7 +289,7 @@ export default function PromotionsList() {
   });
 
   const addMutation = useMutation({
-    mutationFn: async (payload: AddPromotionRequestPayload) => {
+    mutationFn: async (payload: AddPromotionRequest) => {
       const res = await api.post('/promotion', payload);
       return res.data?.data;
     },

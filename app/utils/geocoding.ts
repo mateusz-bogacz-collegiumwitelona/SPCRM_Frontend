@@ -1,11 +1,4 @@
-export interface GeocodeResult {
-  lat: number;
-  lng: number;
-  displayName: string;
-  street?: string;
-  city?: string;
-  zipCode?: string;
-}
+import type { GeocodeResult } from '~/interfaces/map';
 
 interface NominatimAddress {
   road?: string;

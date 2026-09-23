@@ -11,23 +11,20 @@ import { CompanySalesSection } from '~/components/companies/company-sales-sectio
 import { CompanyDebtsSection } from '~/components/companies/company-debts-section';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { AuthGuard } from '~/lib/auth-guard';
-import {
-  EditCompanyDialog,
-  type EditCompanyRequest,
-} from '~/components/companies/dialogs/edit-company-dialog';
-
+import { EditCompanyDialog } from '~/components/companies/dialogs/edit-company-dialog';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 import { Button } from '~/components/ui/button';
-import {
-  type AddressItemToEdit,
-  CompanyAddressDialog,
-  type CompanyAddressFormData,
-} from '~/components/companies/dialogs/company-address-dialog';
+import { CompanyAddressDialog } from '~/components/companies/dialogs/company-address-dialog';
 import { DeleteCompanyDialog } from '~/components/companies/dialogs/delete-company-dialog';
 import { DeleteCompanyAddressDialog } from '~/components/companies/dialogs/delete-company-address-dialog';
 import { ChangeCompanyOwnerDialog } from '~/components/companies/dialogs/change-company-owner-dialog';
 import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
+import type {
+  AddressItemToEdit,
+  CompanyAddressFormData,
+  EditCompanyRequest,
+} from '~/interfaces/company';
 
 interface CompanyAddress {
   id: string;

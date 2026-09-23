@@ -11,7 +11,6 @@ import {
   UserCog,
   X,
 } from 'lucide-react';
-
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
@@ -23,10 +22,7 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
-import {
-  EditContactDialog,
-  type EditContactRequest,
-} from '~/components/contact/dialogs/edit-contact-dialog';
+import { EditContactDialog } from '~/components/contact/dialogs/edit-contact-dialog';
 import { SetCompanyPrimaryContactDialog } from '~/components/companies/dialogs/set-company-primary-contact-dialog';
 import {
   DropdownMenu,
@@ -36,6 +32,7 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { ChangeContactOwnerDialog } from '~/components/contact/dialogs/change-contact-owner-dialog';
 import { useAuth } from '~/context/auth-context';
+import type { EditContactRequest } from '~/interfaces/contact';
 
 interface ContactResponse {
   id: string;

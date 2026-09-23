@@ -12,18 +12,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { UserSimpleListResponse } from '~/components/companies/dialogs/change-company-owner-dialog';
-
-export interface DeleteUserPayload {
-  userId: string;
-  reassignToUserId: string;
-}
-
-export interface UserToDelete {
-  id: string;
-  fullName: string;
-  role: string;
-}
+import type { DeleteUserPayload, UserSimpleListResponse, UserToDelete } from '~/interfaces/user';
 
 interface DeleteUserDialogProps {
   readonly user: UserToDelete | null;

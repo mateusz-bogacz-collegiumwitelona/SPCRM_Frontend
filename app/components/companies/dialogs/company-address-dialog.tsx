@@ -15,26 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface CompanyAddressFormData {
-  addressId?: string;
-  street: string;
-  city: string;
-  zipCode: string;
-  longitude: number;
-  latitude: number;
-  type: string;
-}
-
-export interface AddressItemToEdit {
-  id?: string;
-  street?: string;
-  city?: string;
-  zipCode?: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  type?: string;
-}
+import type { AddressItemToEdit, CompanyAddressFormData } from '~/interfaces/company';
 
 interface EditCompanyAddressDialogProps {
   readonly address: AddressItemToEdit | null;

@@ -1,8 +1,3 @@
-export interface DictionaryItem {
-  value: string;
-  label: string;
-}
-
 export const FALLBACK_TASK_STATUS_LABELS: Record<string, string> = {
   todo: 'Do zrobienia',
   inprogress: 'W trakcie',

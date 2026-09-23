@@ -13,6 +13,7 @@ import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
+import { getStatusConfig } from '~/utils/sale-status';
 
 interface Sale {
   id: string;
@@ -26,24 +27,13 @@ interface Sale {
   createdAt: string;
 }
 
-const getStatusConfig = (status: string) => {
-  switch (status) {
-    case 'Complete':
-      return { label: 'Zakończona', style: 'bg-[#d4edda] text-[#28a745]' };
-    case 'InProgress':
-      return { label: 'W trakcie', style: 'bg-blue-100 text-[#004a8f]' };
-    case 'ToDo':
-      return { label: 'Do zrobienia', style: 'bg-yellow-100 text-yellow-800' };
-    case 'Cancelled':
-      return { label: 'Anulowana', style: 'bg-red-100 text-red-700' };
-    default:
-      return { label: status, style: 'bg-gray-100 text-gray-600' };
-  }
-};
-
 const StatusBadge = ({ status }: { status: string }) => {
   const config = getStatusConfig(status);
-  return <span className={`text-xs px-2 py-0.5 rounded-full ${config.style}`}>{config.label}</span>;
+  return (
+    <span className={`text-xs px-2 py-0.5 rounded-full ${config.textColor} ${config.bgColor}`}>
+      {config.label}
+    </span>
+  );
 };
 
 const SaleCard = ({ s }: { s: Sale }) => (
@@ -106,7 +96,7 @@ const columns = [
       const config = getStatusConfig(info.getValue());
       return (
         <span
-          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${config.style}`}
+          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${config.bgColor} ${config.textColor}`}
         >
           {config.label}
         </span>

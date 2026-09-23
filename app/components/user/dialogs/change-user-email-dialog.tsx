@@ -10,16 +10,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Info, Loader2, Mail, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface ChangeUserEmailPayload {
-  userId: string;
-  newEmail: string;
-}
-
-export interface UserToChangeEmail {
-  id: string;
-  fullName: string;
-}
+import type { ChangeUserEmailPayload, UserToChangeEmail } from '~/interfaces/user';
 
 interface ChangeUserEmailDialogProps {
   readonly user: UserToChangeEmail | null;

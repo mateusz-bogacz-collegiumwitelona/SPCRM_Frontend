@@ -12,24 +12,10 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface AddContactRequest {
-  companyId: string;
-  firstName: string;
-  lastName: string;
-  jobTitle?: string;
-  details: AddContactDetailRequest[];
-}
+import type { AddContactDetailRequest, AddContactRequest } from '~/interfaces/contact';
 
 interface FormContactDetail extends AddContactDetailRequest {
   id: string;
-}
-
-export interface AddContactDetailRequest {
-  label: string;
-  value: string;
-  isPrimary: boolean;
-  type: string;
 }
 
 interface AddContactDialogProps {

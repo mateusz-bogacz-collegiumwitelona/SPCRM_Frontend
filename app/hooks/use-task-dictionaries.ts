@@ -1,15 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-
-export interface DictionaryItem {
-  value: string;
-  label: string;
-}
-
-export interface TaskDictionariesData {
-  statuses: DictionaryItem[];
-  priorities: DictionaryItem[];
-}
+import type { TaskDictionariesData } from '~/interfaces/task';
 
 export const useTaskDictionaries = () => {
   const { data: dictionaries, isLoading } = useQuery<TaskDictionariesData>({
@@ -18,7 +9,6 @@ export const useTaskDictionaries = () => {
       const res = await api.get('/tasks/dictionaries');
       return res.data?.data || res.data?.value || res.data;
     },
-    staleTime: Infinity,
   });
 
   const getStatusLabel = (statusValue: string) => {

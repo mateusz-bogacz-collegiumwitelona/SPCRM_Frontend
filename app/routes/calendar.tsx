@@ -13,12 +13,9 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import plLocale from '@fullcalendar/core/locales/pl';
-import { type TaskCalendarResponse } from '~/interfaces/task-calendar-response';
+import { type AddTaskRequestPayload, type Task } from '~/interfaces/task';
 import { TaskDetailDialog } from '~/components/task/dialogs/task-detail-dialog';
-import {
-  AddTaskDialog,
-  type AddTaskRequestPayload,
-} from '~/components/task/dialogs/add-task-dialog';
+import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 
@@ -28,7 +25,7 @@ export default function CalendarPage() {
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<TaskCalendarResponse | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -65,7 +62,7 @@ export default function CalendarPage() {
           TaskPriority: priorityFilter || undefined,
         },
       });
-      return res.data.data as TaskCalendarResponse[];
+      return res.data.data as Task[];
     },
     enabled: !!dateRange,
     placeholderData: keepPreviousData,
@@ -238,13 +235,11 @@ export default function CalendarPage() {
           <div className="bg-white p-3 lg:p-6 rounded-lg border border-gray-200 shadow-sm">
             <div
               className="
-              [&_.fc-button-primary]:!bg-blue-900
-              [&_.fc-button-primary]:!border-blue-900
-              [&_.fc-button-primary:hover]:!bg-blue-800
-              [&_.fc-button-active]:!bg-blue-950
+              [&_.fc-button-primary]:bg-blue-900!
+              [&_.fc-button-primary]:border-blue-900!
               [&_.fc-toolbar.fc-header-toolbar]:max-md:flex-col
               [&_.fc-toolbar.fc-header-toolbar]:max-md:gap-3
-              [&_.fc-toolbar-title]:max-md:!text-xl
+              [&_.fc-toolbar-title]:max-md:text-xl!
             "
             >
               <FullCalendar
@@ -277,7 +272,7 @@ export default function CalendarPage() {
                 }}
                 events={calendarEvents}
                 eventClick={(info) => {
-                  const task = info.event.extendedProps as TaskCalendarResponse;
+                  const task = info.event.extendedProps as Task;
                   setSelectedTask(task);
                 }}
               />

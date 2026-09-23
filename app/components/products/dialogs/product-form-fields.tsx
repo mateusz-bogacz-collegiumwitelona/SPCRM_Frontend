@@ -1,39 +1,10 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-
-export interface ProductFormData {
-  name: string;
-  steelGradeId: string;
-  thickness: number;
-  width: number;
-  length: number;
-  diameter: number | '';
-  weight: number;
-  unitId: string;
-  currencyId: string;
-  pricePerUnit: number;
-  stockQuantity?: number;
-  category: string;
-}
-
-export interface SteelGradeOption {
-  id: string;
-  name: string;
-}
-
-export interface UnitOption {
-  id: string;
-  name: string;
-  symbol: string;
-}
-
-export interface CurrencyOption {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
+import type { SteelGradeOption } from '~/interfaces/steel-grade';
+import type { UnitOption } from '~/interfaces/unit';
+import type { CurrencyOption } from '~/interfaces/currency';
+import type { ProductFormData } from '~/interfaces/product';
 
 export function useProductFormDictionaries(enabled: boolean) {
   const { data: categories = [] } = useQuery<string[]>({

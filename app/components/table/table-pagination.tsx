@@ -1,17 +1,7 @@
 import React from 'react';
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-export interface TablePaginationProps {
-  readonly pageNumber: number;
-  readonly pageSize: number;
-  readonly totalPages: number;
-  readonly totalItems: number;
-  readonly isFetching: boolean;
-  readonly onPageSizeChange: (newPageSize: number) => void;
-  readonly onPageChange: (newPage: number) => void;
-  readonly pageSizeOptions?: number[];
-}
+import type { TablePaginationProps } from '~/interfaces/table';
 
 export const TablePagination: React.FC<TablePaginationProps> = ({
   pageNumber,
@@ -33,7 +23,7 @@ export const TablePagination: React.FC<TablePaginationProps> = ({
         <select
           value={pageSize}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 focus:border-blue-900 text-gray-700 shadow-sm"
+          className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700 shadow-sm"
         >
           {pageSizeOptions.map((opt) => (
             <option key={opt} value={opt}>

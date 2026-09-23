@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import type { NoteResponse } from '~/interfaces/note-response';
+import type { Note, NoteEditData } from '~/interfaces/note';
 import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
-import { EditNoteDialog, type NoteEditData } from '~/components/note/dialogs/edit-note-dialog';
+import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { useAddNote } from '~/hooks/use-add-note';
@@ -25,7 +25,7 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
     isLoading,
     isError,
     error: queryError,
-  } = useQuery<NoteResponse[]>({
+  } = useQuery<Note[]>({
     queryKey: ['task-notes', taskId],
     queryFn: async () => {
       const response = await api.get(`/tasks/${taskId}/notes`);
@@ -69,7 +69,7 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
     if (deletingNoteId) await deleteNoteAsync(deletingNoteId);
   };
 
-  const handleEditClick = (note: NoteResponse) => {
+  const handleEditClick = (note: Note) => {
     setEditingNote({
       id: note.noteId,
       title: note.title,

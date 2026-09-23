@@ -1,10 +1,5 @@
 import React from 'react';
-
-export interface SteelGradeFormData {
-  name: string;
-  standard: string;
-  density: number | '';
-}
+import type { SteelGradeFormData } from '~/interfaces/steel-grade';
 
 interface SteelGradeFormFieldsProps {
   readonly formData: SteelGradeFormData;

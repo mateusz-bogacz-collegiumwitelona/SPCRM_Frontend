@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import type { NoteResponse } from '~/interfaces/note-response';
+import type { Note, NoteEditData } from '~/interfaces/note';
 import { NotesSection } from '~/components/note/notes-section';
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
-import { EditNoteDialog, type NoteEditData } from '~/components/note/dialogs/edit-note-dialog';
+import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
-
 import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -24,7 +23,7 @@ export const DealNote = ({ dealId }: { dealId: string }) => {
     isLoading,
     isError,
     error: queryError,
-  } = useQuery<NoteResponse[]>({
+  } = useQuery<Note[]>({
     queryKey: ['deal-notes', dealId],
     queryFn: async () => {
       const response = await api.get(`/sales/${dealId}/notes`);

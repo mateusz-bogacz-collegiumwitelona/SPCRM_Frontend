@@ -28,14 +28,9 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { DeleteSteelGradeDialog } from '~/components/steel-grade/dialogs/delete-steel-grade-dialog';
-import {
-  EditSteelGradeDialog,
-  type EditSteelGradePayload,
-} from '~/components/steel-grade/dialogs/edit-steel-grade-dialog';
-import {
-  AddSteelGradeDialog,
-  type AddSteelGradePayload,
-} from '~/components/steel-grade/dialogs/add-steel-grade-dialog';
+import { EditSteelGradeDialog } from '~/components/steel-grade/dialogs/edit-steel-grade-dialog';
+import { AddSteelGradeDialog } from '~/components/steel-grade/dialogs/add-steel-grade-dialog';
+import type { AddSteelGradePayload, EditSteelGradePayload } from '~/interfaces/steel-grade';
 
 interface SteelGradeListResponse {
   id: string;

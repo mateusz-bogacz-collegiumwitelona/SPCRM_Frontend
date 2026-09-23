@@ -13,17 +13,7 @@ import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getRoleConfig } from '~/utils/role-translator';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface ChangeUserRolePayload {
-  userId: string;
-  role: string;
-}
-
-export interface UserToChangeRole {
-  id: string;
-  fullName: string;
-  currentRole: string;
-}
+import type { ChangeUserRolePayload, UserToChangeRole } from '~/interfaces/user';
 
 interface ChangeUserRoleDialogProps {
   readonly user: UserToChangeRole | null;

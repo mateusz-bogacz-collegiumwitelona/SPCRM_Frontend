@@ -16,23 +16,10 @@ import {
   buildBasePromotionPayload,
   defaultPromotionSharedState,
   PromotionSharedFields,
-  type PromotionSharedFormData,
   resolvePromotionPricingPayload,
   usePromotionDictionaries,
 } from '~/components/promotion/dialogs/promotion-form-shared';
-
-export interface AddPromotionRequestPayload {
-  name: string;
-  productId: string;
-  startDate?: string | null;
-  endDate?: string | null;
-  discountPercentage?: number | null;
-  promotionalPrice?: number | null;
-  currencyId?: string | null;
-  contactId?: string | null;
-  minQuantity?: number | null;
-  minWeight?: number | null;
-}
+import type { AddPromotionRequest, PromotionSharedFormData } from '~/interfaces/promotion';
 
 interface ProductOption {
   productId: string;
@@ -44,7 +31,7 @@ interface ProductOption {
 interface AddPromotionDialogProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly onSave: (payload: AddPromotionRequestPayload) => Promise<void>;
+  readonly onSave: (payload: AddPromotionRequest) => Promise<void>;
   readonly isLoading: boolean;
 }
 
@@ -130,7 +117,7 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
       return;
     }
 
-    const payload: AddPromotionRequestPayload = {
+    const payload: AddPromotionRequest = {
       name: name.trim(),
       productId,
       ...buildBasePromotionPayload(sharedForm),

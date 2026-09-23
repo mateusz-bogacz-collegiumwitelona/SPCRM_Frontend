@@ -11,25 +11,10 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
-  type ProductFormData,
   ProductFormFields,
   useProductFormDictionaries,
 } from '~/components/products/dialogs/product-form-fields';
-
-export interface AddProductRequest {
-  name: string;
-  steelGradeId: string;
-  thickness: number;
-  width: number;
-  length: number;
-  diameter?: number | null;
-  weight: number;
-  unitId: string;
-  currencyId: string;
-  pricePerUnit: number;
-  stockQuantity: number;
-  category: string;
-}
+import type { AddProductRequest, ProductFormData } from '~/interfaces/product';
 
 interface AddProductDialogProps {
   readonly isOpen: boolean;

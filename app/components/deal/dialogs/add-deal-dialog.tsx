@@ -19,43 +19,13 @@ import { Calendar } from '~/components/ui/calendar';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
-
-export interface AddDealProductItem {
-  productId: string;
-  name: string;
-  dimension?: string;
-  quantity: number;
-  unitPrice: number;
-  stockPrice?: number;
-}
-
-export interface AddDealPayload {
-  closeDate: string;
-  currencyId: string;
-  companyId: string;
-  contactId: string;
-  products: {
-    productId: string;
-    quantity: number;
-    unitPrice: number;
-  }[];
-}
+import type { AddDealPayload, AddDealProductItem, ContactDealResponse } from '~/interfaces/deal';
 
 interface CurrencySimple {
   currencyId: string;
   name: string;
   code: string;
   decimalPlace: number;
-}
-
-export interface ContactDealResponse {
-  contactId: string;
-  contactFirstName: string;
-  contactLastName: string;
-  isPrimary: boolean;
-  companyId: string;
-  companyName: string;
-  nip: string;
 }
 
 interface PagedResult<T> {

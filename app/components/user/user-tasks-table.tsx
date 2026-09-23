@@ -26,7 +26,6 @@ import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import {
-  type DictionaryItem,
   FALLBACK_TASK_PRIORITY_LABELS,
   FALLBACK_TASK_STATUS_LABELS,
   getTaskPriorityBadgeClass,
@@ -36,14 +35,7 @@ import {
 } from '~/utils/task-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface UserTaskItem {
-  id: string;
-  title: string;
-  dueAt: string;
-  status: string;
-  priority: string;
-}
+import type { DictionaryItem, UserTaskItem } from '~/interfaces/task';
 
 const PAGE_SIZE = 5;
 

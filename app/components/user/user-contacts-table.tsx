@@ -25,15 +25,7 @@ import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface UserContactItem {
-  id: string;
-  firstName: string;
-  lastName: string;
-  jobTitle?: string | null;
-  companyName: string;
-  isPrimary: boolean;
-}
+import type { UserContactItem } from '~/interfaces/contact';
 
 const PAGE_SIZE = 5;
 

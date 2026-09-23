@@ -12,22 +12,11 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface EditContactDetailRequest {
-  contactDetailId: string | null;
-  label: string;
-  value: string;
-  isPrimary: boolean;
-  type: string;
-}
-
-export interface EditContactRequest {
-  contactId: string;
-  firstName: string;
-  lastName: string;
-  jobTitle?: string;
-  details: EditContactDetailRequest[];
-}
+import type {
+  ContactDetailResponse,
+  EditContactDetailRequest,
+  EditContactRequest,
+} from '~/interfaces/contact';
 
 interface EditContactDialogProps {
   contactId: string | null;
@@ -35,14 +24,6 @@ interface EditContactDialogProps {
   onClose: () => void;
   onSave: (contactData: EditContactRequest) => Promise<void>;
   isLoading?: boolean;
-}
-
-export interface ContactDetailResponse {
-  contactDetailId: string;
-  label: string;
-  value: string;
-  isPrimary: boolean;
-  type: string;
 }
 
 export const EditContactDialog: React.FC<EditContactDialogProps> = ({

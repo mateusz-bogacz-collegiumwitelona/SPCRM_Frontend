@@ -21,16 +21,7 @@ import {
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface OfferProductResponse {
-  productId: string;
-  productName: string;
-  steelGrade: string;
-  quantity: number;
-  quotedPrice: number;
-  currencyCode: string;
-  decimalPlaces: number;
-}
+import type { OfferProductResponse } from '~/interfaces/offer';
 
 export interface OfferProductsTableProps {
   offerId: string;

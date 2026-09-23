@@ -7,16 +7,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AlertCircle, PackageOpen, X } from 'lucide-react';
 import { DataTable } from '~/components/table/data-table';
-
-export interface InvoiceProductsListResponse {
-  invoiceProductId: string;
-  productName: string;
-  steelGrade?: string | null;
-  unitSymbol: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-}
+import type { InvoiceProductsListResponse } from '~/interfaces/invoice';
 
 const columnHelper = createColumnHelper<InvoiceProductsListResponse>();
 

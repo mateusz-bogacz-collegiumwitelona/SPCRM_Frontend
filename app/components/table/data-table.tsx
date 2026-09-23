@@ -1,11 +1,12 @@
 import React from 'react';
 import { flexRender, type Table as ReactTableInstance } from '@tanstack/react-table';
-import { TablePagination, type TablePaginationProps } from '~/components/table/table-pagination';
+import { TablePagination } from '~/components/table/table-pagination';
 import {
   MobileLoadMoreButton,
   TableEmptyState,
   TableLoadingState,
 } from '~/components/table/table-state-views';
+import type { TablePaginationProps } from '~/interfaces/table';
 
 interface DataTableProps<T> {
   readonly table: ReactTableInstance<T>;

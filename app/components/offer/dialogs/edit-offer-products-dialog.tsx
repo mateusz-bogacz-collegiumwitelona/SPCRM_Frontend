@@ -12,14 +12,7 @@ import { api } from '~/api/api';
 import { AlertCircle, Edit3, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface EditableProductItem {
-  productId: string;
-  productName: string;
-  steelGrade?: string;
-  quantity: number;
-  quotedPrice: number;
-}
+import type { EditableProductItem } from '~/interfaces/offer';
 
 interface EditOfferProductsDialogProps {
   isOpen: boolean;
