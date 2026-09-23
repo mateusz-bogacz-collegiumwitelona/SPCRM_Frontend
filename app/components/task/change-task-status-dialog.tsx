@@ -8,7 +8,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, CheckSquare, Loader2, X } from 'lucide-react';
-import { useTaskDictionaries, type DictionaryItem } from '~/hooks/use-task-dictionaries';
+import { type DictionaryItem, useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 

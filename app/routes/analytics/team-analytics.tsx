@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -6,10 +6,10 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { TeamKpiCards, type TeamKpiSummaryResponse } from '~/components/analytics/team-kpi-cards';
 import {
-  TeamRevenueChart,
-  type AnalyticsPeriod,
   type AnalyticsChartMetricResponse,
+  type AnalyticsPeriod,
   type CurrencyListResponse,
+  TeamRevenueChart,
 } from '~/components/analytics/team-revenue-chart';
 import { AlertCircle, BarChart3, Loader2, RefreshCw, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';

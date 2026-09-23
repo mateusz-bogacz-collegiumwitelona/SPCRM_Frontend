@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import saveAs from 'file-saver';
-import { Download, Globe, Loader2, X, AlertCircle } from 'lucide-react';
+import { AlertCircle, Download, Globe, Loader2, X } from 'lucide-react';
 import { api } from '~/api/api';
 import {
   Dialog,
