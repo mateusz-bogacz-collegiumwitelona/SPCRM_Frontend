@@ -6,8 +6,13 @@ import {
   ArrowUpNarrowWide,
   Ban,
   CheckCircle2,
+  Edit2,
   Filter,
+  Mail,
+  MoreHorizontal,
   ShieldCheck,
+  Trash2,
+  UserCog,
   UserPlus,
   X,
 } from 'lucide-react';
@@ -50,6 +55,13 @@ import {
   type ChangeUserRolePayload,
   type UserToChangeRole,
 } from '~/components/user/change-user-role-dialog';
+import { HasRole } from '~/lib/has-role';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 
 interface UserListResponse {
   id: string;
@@ -103,7 +115,7 @@ const columns = [
       );
     },
   }),
-  (columnHelper.accessor('isBlocked', {
+  columnHelper.accessor('isBlocked', {
     header: 'Status',
     cell: (info) => {
       const isBlocked = info.getValue();
@@ -126,106 +138,129 @@ const columns = [
     cell: (info) => {
       const user = info.row.original;
       const meta = info.table.options.meta as UserTableMeta;
-      const isAdmin = user.role?.toLowerCase() === 'admin';
       const fullName = `${user.firstName} ${user.lastName}`;
+      const isTargetAdmin = user.role?.toLowerCase() === 'admin';
 
       return (
-        <div className="flex items-center gap-3">
-          <Link
-            to={`/user/${user.id}`}
-            className="font-medium text-blue-900 hover:underline text-xs"
-          >
-            Profil
-          </Link>
-
-          <button
-            type="button"
-            onClick={() =>
-              meta.onEdit({
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-              })
-            }
-            className="text-xs font-medium text-blue-800 hover:text-blue-950 hover:underline cursor-pointer"
-          >
-            Edytuj
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              meta.onChangeEmail({
-                id: user.id,
-                fullName,
-              })
-            }
-            className="text-xs font-medium text-slate-700 hover:text-slate-900 hover:underline cursor-pointer"
-          >
-            Zmień e-mail
-          </button>
-
-          {user.isBlocked ? (
-            <button
-              type="button"
-              onClick={() => meta.onUnlock({ id: user.id, fullName })}
-              className="text-xs font-medium text-green-700 hover:text-green-800 hover:underline cursor-pointer"
+        <div className="flex items-center justify-start gap-2">
+          {!isTargetAdmin && (
+            <Link
+              to={`/user/${user.id}`}
+              className="font-medium text-blue-900 hover:underline text-xs px-2"
             >
-              Odblokuj
-            </button>
-          ) : (
-            !isAdmin && (
-              <button
-                type="button"
-                onClick={() =>
-                  meta.onLockout({
-                    id: user.id,
-                    fullName,
-                    role: user.role,
-                  })
-                }
-                className="text-xs font-medium text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+              Profil
+            </Link>
+          )}
+
+          <HasRole allowedRoles={['Admin']}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-500 hover:text-blue-900 cursor-pointer"
+                >
+                  <span className="sr-only">Otwórz menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                className="w-44 bg-white shadow-lg border border-gray-200"
               >
-                Zablokuj
-              </button>
-            )
-          )}
+                <DropdownMenuItem
+                  onClick={() =>
+                    meta.onEdit({
+                      id: user.id,
+                      firstName: user.firstName,
+                      lastName: user.lastName,
+                    })
+                  }
+                  className="cursor-pointer text-xs text-gray-700 focus:bg-gray-50 flex items-center gap-2"
+                >
+                  <Edit2 className="h-3.5 w-3.5 text-blue-800" />
+                  <span>Edytuj</span>
+                </DropdownMenuItem>
 
-          {!isAdmin && (
-            <button
-              type="button"
-              onClick={() =>
-                meta.onDelete({
-                  id: user.id,
-                  fullName,
-                  role: user.role,
-                })
-              }
-              className="text-xs font-medium text-red-600 hover:text-red-800 hover:underline cursor-pointer"
-            >
-              Usuń
-            </button>
-          )}
+                <DropdownMenuItem
+                  onClick={() =>
+                    meta.onChangeEmail({
+                      id: user.id,
+                      fullName,
+                    })
+                  }
+                  className="cursor-pointer text-xs text-gray-700 focus:bg-gray-50 flex items-center gap-2"
+                >
+                  <Mail className="h-3.5 w-3.5 text-slate-700" />
+                  <span>Zmień e-mail</span>
+                </DropdownMenuItem>
 
-          {!isAdmin && (
-            <button
-              type="button"
-              onClick={() =>
-                meta.onChangeRole({
-                  id: user.id,
-                  fullName,
-                  currentRole: user.role,
-                })
-              }
-              className="text-xs font-medium text-indigo-700 hover:text-indigo-900 hover:underline cursor-pointer"
-            >
-              Zmień rolę
-            </button>
-          )}
+                {!isTargetAdmin && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      meta.onChangeRole({
+                        id: user.id,
+                        fullName,
+                        currentRole: user.role,
+                      })
+                    }
+                    className="cursor-pointer text-xs text-indigo-700 focus:bg-indigo-50 flex items-center gap-2"
+                  >
+                    <UserCog className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>Zmień rolę</span>
+                  </DropdownMenuItem>
+                )}
+
+                {user.isBlocked ? (
+                  <DropdownMenuItem
+                    onClick={() => meta.onUnlock({ id: user.id, fullName })}
+                    className="cursor-pointer text-xs text-green-700 focus:bg-green-50 flex items-center gap-2"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                    <span>Odblokuj</span>
+                  </DropdownMenuItem>
+                ) : (
+                  !isTargetAdmin && (
+                    <DropdownMenuItem
+                      onClick={() =>
+                        meta.onLockout({
+                          id: user.id,
+                          fullName,
+                          role: user.role,
+                        })
+                      }
+                      className="cursor-pointer text-xs text-amber-700 focus:bg-amber-50 flex items-center gap-2"
+                    >
+                      <Ban className="h-3.5 w-3.5 text-amber-600" />
+                      <span>Zablokuj</span>
+                    </DropdownMenuItem>
+                  )
+                )}
+
+                {!isTargetAdmin && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      meta.onDelete({
+                        id: user.id,
+                        fullName,
+                        role: user.role,
+                      })
+                    }
+                    className="cursor-pointer text-xs text-red-600 focus:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                    <span>Usuń</span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </HasRole>
         </div>
       );
     },
-  })),
+  }),
 ];
 
 const UserMobileCard = ({
@@ -246,8 +281,8 @@ const UserMobileCard = ({
   readonly onChangeRole: (user: UserToChangeRole) => void;
 }) => {
   const roleConfig = getRoleConfig(user.role);
-  const isAdmin = user.role?.toLowerCase() === 'admin';
   const fullName = `${user.firstName} ${user.lastName}`;
+  const isTargetAdmin = user.role?.toLowerCase() === 'admin';
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -258,7 +293,7 @@ const UserMobileCard = ({
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${roleConfig.bgColor} ${roleConfig.textColor}`}
             >
-              <ShieldCheck className={`w-3 h-3 ${roleConfig.iconColor}`} />
+              <ShieldCheck className={`w-3.5 h-3.5 ${roleConfig.iconColor}`} />
               {roleConfig.label}
             </span>
           </div>
@@ -275,96 +310,120 @@ const UserMobileCard = ({
       </div>
 
       <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-xs">
-        <div className="flex items-center gap-2">
-          {user.isBlocked ? (
-            <button
-              type="button"
-              onClick={() => onUnlock({ id: user.id, fullName })}
-              className="text-green-700 font-medium hover:underline cursor-pointer"
-            >
-              Odblokuj
-            </button>
+        <div>
+          {!isTargetAdmin ? (
+            <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
+              Szczegóły profilu
+            </Link>
           ) : (
-            !isAdmin && (
-              <button
-                type="button"
-                onClick={() =>
-                  onLockout({
-                    id: user.id,
-                    fullName,
-                    role: user.role,
-                  })
-                }
-                className="text-amber-700 font-medium hover:underline cursor-pointer"
-              >
-                Zablokuj
-              </button>
-            )
-          )}
-
-          {!isAdmin && (
-            <button
-              type="button"
-              onClick={() =>
-                onDelete({
-                  id: user.id,
-                  fullName,
-                  role: user.role,
-                })
-              }
-              className="text-red-600 font-medium hover:underline cursor-pointer"
-            >
-              Usuń
-            </button>
+            <span className="text-gray-400 text-xs italic">Konto administracyjne</span>
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() =>
-            onEdit({
-              id: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-            })
-          }
-          className="text-blue-800 font-medium hover:underline cursor-pointer"
-        >
-          Edytuj
-        </button>
+        <HasRole allowedRoles={['Admin']}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-500 hover:text-blue-900 cursor-pointer"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
 
-        <button
-          type="button"
-          onClick={() =>
-            onChangeEmail({
-              id: user.id,
-              fullName,
-            })
-          }
-          className="text-slate-700 font-medium hover:underline cursor-pointer"
-        >
-          Zmień E-mail
-        </button>
+            <DropdownMenuContent
+              align="end"
+              className="w-44 bg-white shadow-lg border border-gray-200"
+            >
+              <DropdownMenuItem
+                onClick={() =>
+                  onEdit({
+                    id: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                  })
+                }
+                className="cursor-pointer text-xs text-gray-700 focus:bg-gray-50 flex items-center gap-2"
+              >
+                <Edit2 className="h-3.5 w-3.5 text-blue-800" />
+                <span>Edytuj</span>
+              </DropdownMenuItem>
 
-        {!isAdmin && (
-          <button
-            type="button"
-            onClick={() =>
-              onChangeRole({
-                id: user.id,
-                fullName,
-                currentRole: user.role,
-              })
-            }
-            className="text-indigo-700 font-medium hover:underline cursor-pointer"
-          >
-            Zmień rolę
-          </button>
-        )}
+              <DropdownMenuItem
+                onClick={() =>
+                  onChangeEmail({
+                    id: user.id,
+                    fullName,
+                  })
+                }
+                className="cursor-pointer text-xs text-gray-700 focus:bg-gray-50 flex items-center gap-2"
+              >
+                <Mail className="h-3.5 w-3.5 text-slate-700" />
+                <span>Zmień e-mail</span>
+              </DropdownMenuItem>
 
-        <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
-          Szczegóły
-        </Link>
+              {!isTargetAdmin && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    onChangeRole({
+                      id: user.id,
+                      fullName,
+                      currentRole: user.role,
+                    })
+                  }
+                  className="cursor-pointer text-xs text-indigo-700 focus:bg-indigo-50 flex items-center gap-2"
+                >
+                  <UserCog className="h-3.5 w-3.5 text-indigo-600" />
+                  <span>Zmień rolę</span>
+                </DropdownMenuItem>
+              )}
+
+              {user.isBlocked ? (
+                <DropdownMenuItem
+                  onClick={() => onUnlock({ id: user.id, fullName })}
+                  className="cursor-pointer text-xs text-green-700 focus:bg-green-50 flex items-center gap-2"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                  <span>Odblokuj</span>
+                </DropdownMenuItem>
+              ) : (
+                !isTargetAdmin && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onLockout({
+                        id: user.id,
+                        fullName,
+                        role: user.role,
+                      })
+                    }
+                    className="cursor-pointer text-xs text-amber-700 focus:bg-amber-50 flex items-center gap-2"
+                  >
+                    <Ban className="h-3.5 w-3.5 text-amber-600" />
+                    <span>Zablokuj</span>
+                  </DropdownMenuItem>
+                )
+              )}
+
+              {!isTargetAdmin && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    onDelete({
+                      id: user.id,
+                      fullName,
+                      role: user.role,
+                    })
+                  }
+                  className="cursor-pointer text-xs text-red-600 focus:bg-red-50 flex items-center gap-2"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                  <span>Usuń</span>
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </HasRole>
       </div>
     </div>
   );
@@ -588,18 +647,20 @@ export default function UserList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Admin']}>
+      <RoleGuard allowedRoles={['Admin', 'Manager']}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold">Użytkownicy systemu</h1>
-            <Button
-              type="button"
-              onClick={() => setIsAddUserOpen(true)}
-              className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-2 cursor-pointer"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Dodaj użytkownika</span>
-            </Button>
+            <HasRole allowedRoles={['Admin']}>
+              <Button
+                type="button"
+                onClick={() => setIsAddUserOpen(true)}
+                className="bg-white text-blue-900 hover:bg-blue-50 font-medium flex items-center gap-2 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Dodaj użytkownika</span>
+              </Button>
+            </HasRole>
           </div>
 
           <div className="mb-6 flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">

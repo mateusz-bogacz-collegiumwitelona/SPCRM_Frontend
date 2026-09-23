@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { api } from '~/api/api';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
+import { HasRole } from '~/lib/has-role';
 
 export interface UserDetailResponse {
   id: string;
@@ -84,17 +85,19 @@ export const UserProfileCard: React.FC<{ readonly userId: string }> = ({ userId 
             </span>
           )}
 
-          {user.isEmailVerified ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-400/30">
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-300" />
-              Email zweryfikowany
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-200 border border-amber-400/30">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
-              Wymaga weryfikacji
-            </span>
-          )}
+          <HasRole allowedRoles={['Admin']}>
+            {user.isEmailVerified ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-400/30">
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-300" />
+                Email zweryfikowany
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-200 border border-amber-400/30">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
+                Wymaga weryfikacji
+              </span>
+            )}
+          </HasRole>
         </div>
       </div>
 
@@ -153,15 +156,17 @@ export const UserProfileCard: React.FC<{ readonly userId: string }> = ({ userId 
             </div>
           </div>
 
-          {user.pendingEmail && (
-            <div>
-              <span className="text-gray-500 block text-xs mb-1">Oczekujący nowy e-mail</span>
-              <div className="flex items-center gap-2 text-amber-700 font-medium">
-                <Mail className="w-4 h-4 text-amber-500" />
-                <span>{user.pendingEmail}</span>
+          <HasRole allowedRoles={['Admin']}>
+            {user.pendingEmail && (
+              <div>
+                <span className="text-gray-500 block text-xs mb-1">Oczekujący nowy e-mail</span>
+                <div className="flex items-center gap-2 text-amber-700 font-medium">
+                  <Mail className="w-4 h-4 text-amber-500" />
+                  <span>{user.pendingEmail}</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </HasRole>
 
           <div>
             <span className="text-gray-500 block text-xs mb-1">Data utworzenia</span>

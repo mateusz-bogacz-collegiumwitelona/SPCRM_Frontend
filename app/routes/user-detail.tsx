@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
+import { HasRole } from '~/lib/has-role';
 import { Button } from '~/components/ui/button';
 import { UserProfileCard } from '~/components/user/user-profile-card';
 import { UserCompaniesTable } from '~/components/user/user-companies-table';
@@ -19,7 +20,7 @@ export default function UserDetailPage() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Admin']}>
+      <RoleGuard allowedRoles={['Admin', 'Manager']}>
         <MainLayout>
           <div className="mb-4">
             <Button
@@ -38,13 +39,12 @@ export default function UserDetailPage() {
           <div className="space-y-6">
             <UserProfileCard userId={userId} />
 
-            <UserCompaniesTable userId={userId} />
-
-            <UserContactsTable userId={userId} />
-
-            <UserSalesTable userId={userId} />
-
-            <UserTasksTable userId={userId} />
+            <HasRole allowedRoles={['Manager']}>
+              <UserCompaniesTable userId={userId} />
+              <UserContactsTable userId={userId} />
+              <UserSalesTable userId={userId} />
+              <UserTasksTable userId={userId} />
+            </HasRole>
           </div>
         </MainLayout>
       </RoleGuard>
