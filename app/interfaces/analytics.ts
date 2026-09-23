@@ -28,4 +28,3 @@ export interface LeaderboardItemResponse {
   activeDealsCount: number;
   winRatePercentageThisMonth: number;
 }
-F;
