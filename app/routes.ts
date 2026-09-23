@@ -33,4 +33,5 @@ export default [
   route('auth/reset-password', 'routes/auth/reset-password.tsx'),
   route('invoices', 'routes/invoices.tsx'),
   route('invoice/:invoiceId', 'routes/invoice-detail.tsx'),
+  route('analytics', 'routes/analytics/team-analytics.tsx'),
 ] satisfies RouteConfig;
