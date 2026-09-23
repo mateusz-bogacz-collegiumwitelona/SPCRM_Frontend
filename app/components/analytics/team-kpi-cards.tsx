@@ -54,7 +54,6 @@ const RevenueList = ({ amounts }: { amounts: CurrencyAmountResponse[] }) => {
 export const TeamKpiCards: React.FC<TeamKpiCardsProps> = ({ data }) => {
   return (
     <div className="space-y-6">
-      {/* 1. SEKCJA: PRZYCHÓD */}
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">
           Przychody zespołu
@@ -98,7 +97,6 @@ export const TeamKpiCards: React.FC<TeamKpiCardsProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* 2. SEKCJA: TRANSAKCJE (DEALS) */}
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">
           Szanse sprzedaży (Deals)
@@ -136,7 +134,6 @@ export const TeamKpiCards: React.FC<TeamKpiCardsProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* 3. SEKCJA: ZADANIA ZESPOŁU */}
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">
           Zadania zespołu

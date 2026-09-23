@@ -17,3 +17,15 @@ export interface TeamKpiSummaryResponse {
   pendingTasksCount: number;
   overdueTasksCount: number;
 }
+
+export interface LeaderboardItemResponse {
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  revenueThisMonth: CurrencyAmountResponse[];
+  wonDealsThisMonth: number;
+  activeDealsCount: number;
+  winRatePercentageThisMonth: number;
+}
+F;

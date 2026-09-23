@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
@@ -15,11 +15,15 @@ import { AlertCircle, BarChart3, Loader2, RefreshCw, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
+import type { LeaderboardItemResponse } from '~/interfaces/analytics';
+import { TeamLeaderboardTable } from '~/components/analytics/team-leaderboard-table';
 
 export default function TeamAnalyticsPage() {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('CurrentMonth');
   const [selectedCurrencyCode, setSelectedCurrencyCode] = useState<string>('PLN');
+  const [leaderboardPage, setLeaderboardPage] = useState(1);
+  const [leaderboardPageSize, setLeaderboardPageSize] = useState(5);
 
   const { data: currencies } = useQuery<CurrencyListResponse[]>({
     queryKey: ['currencies-simple'],
@@ -69,9 +73,33 @@ export default function TeamAnalyticsPage() {
     },
   });
 
+  const {
+    data: leaderboardData,
+    isFetching: isLeaderboardFetching,
+    refetch: refetchLeaderboard,
+  } = useQuery({
+    queryKey: ['team-leaderboard', leaderboardPage, leaderboardPageSize],
+    queryFn: async () => {
+      const response = await api.get('/analytics/team/leaderboard', {
+        params: {
+          PageNumber: leaderboardPage,
+          PageSize: leaderboardPageSize,
+        },
+      });
+      return response.data?.value || response.data?.data || response.data;
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const pagedResult = leaderboardData?.data || leaderboardData;
+  const leaderboardItems: LeaderboardItemResponse[] = pagedResult?.items || [];
+  const leaderboardTotalPages: number = pagedResult?.totalPages || 1;
+  const leaderboardTotalCount: number = pagedResult?.totalCount || leaderboardItems.length;
+
   const handleRefreshAll = () => {
     refetchKpi();
     refetchChart();
+    refetchLeaderboard();
   };
 
   const isGlobalFetching = isKpiFetching || isChartFetching;
@@ -167,6 +195,20 @@ export default function TeamAnalyticsPage() {
                 selectedCurrencyCode={selectedCurrencyCode}
                 onCurrencyChange={setSelectedCurrencyCode}
                 isLoading={isChartLoading}
+              />
+
+              <TeamLeaderboardTable
+                items={leaderboardItems}
+                pageNumber={leaderboardPage}
+                pageSize={leaderboardPageSize}
+                totalPages={leaderboardTotalPages}
+                totalCount={leaderboardTotalCount}
+                isFetching={isLeaderboardFetching}
+                onPageChange={setLeaderboardPage}
+                onPageSizeChange={(newSize) => {
+                  setLeaderboardPageSize(newSize);
+                  setLeaderboardPage(1);
+                }}
               />
             </div>
           )}
