@@ -16,7 +16,7 @@ import {
   type ProductFormData,
   ProductFormFields,
   useProductFormDictionaries,
-} from '~/components/products/product-form-fields';
+} from '~/components/products/dialogs/product-form-fields';
 
 export interface EditProductRequest {
   productId: string;

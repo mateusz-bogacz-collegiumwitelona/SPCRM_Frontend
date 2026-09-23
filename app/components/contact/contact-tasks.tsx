@@ -31,9 +31,15 @@ import {
   resolveTaskPriorityLabel,
   resolveTaskStatusLabel,
 } from '~/utils/task-helpers';
-import { AddTaskDialog, type AddTaskRequestPayload } from '~/components/task/add-task-dialog';
-import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/edit-task-dialog';
-import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
+import {
+  AddTaskDialog,
+  type AddTaskRequestPayload,
+} from '~/components/task/dialogs/add-task-dialog';
+import {
+  EditTaskDialog,
+  type EditTaskRequestPayload,
+} from '~/components/task/dialogs/edit-task-dialog';
+import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 
 export interface ContactTaskItem {
   id: string;

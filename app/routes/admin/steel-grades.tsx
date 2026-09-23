@@ -27,15 +27,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { DeleteSteelGradeDialog } from '~/components/steel-grade/delete-steel-grade-dialog';
+import { DeleteSteelGradeDialog } from '~/components/steel-grade/dialogs/delete-steel-grade-dialog';
 import {
   EditSteelGradeDialog,
   type EditSteelGradePayload,
-} from '~/components/steel-grade/edit-steel-grade-dialog';
+} from '~/components/steel-grade/dialogs/edit-steel-grade-dialog';
 import {
   AddSteelGradeDialog,
   type AddSteelGradePayload,
-} from '~/components/steel-grade/add-steel-grade-dialog';
+} from '~/components/steel-grade/dialogs/add-steel-grade-dialog';
 
 interface SteelGradeListResponse {
   id: string;

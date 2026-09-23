@@ -28,33 +28,36 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
 import { getRoleConfig } from '~/utils/role-translator';
-import { AddUserDialog, type AddUserRequestPayload } from '~/components/user/add-user-dialog';
+import {
+  AddUserDialog,
+  type AddUserRequestPayload,
+} from '~/components/user/dialogs/add-user-dialog';
 import {
   LockoutUserDialog,
   type SetLockoutPayload,
   type UserToLockout,
-} from '~/components/user/lockout-user-dialog';
-import { UnlockUserDialog, type UserToUnlock } from '~/components/user/unlock-user-dialog';
+} from '~/components/user/dialogs/lockout-user-dialog';
+import { UnlockUserDialog, type UserToUnlock } from '~/components/user/dialogs/unlock-user-dialog';
 import {
   DeleteUserDialog,
   type DeleteUserPayload,
   type UserToDelete,
-} from '~/components/user/delete-user-dialog';
+} from '~/components/user/dialogs/delete-user-dialog';
 import {
   EditUserDialog,
   type EditUserRequestPayload,
   type UserToEdit,
-} from '~/components/user/edit-user-dialog';
+} from '~/components/user/dialogs/edit-user-dialog';
 import {
   ChangeUserEmailDialog,
   type ChangeUserEmailPayload,
   type UserToChangeEmail,
-} from '~/components/user/change-user-email-dialog';
+} from '~/components/user/dialogs/change-user-email-dialog';
 import {
   ChangeUserRoleDialog,
   type ChangeUserRolePayload,
   type UserToChangeRole,
-} from '~/components/user/change-user-role-dialog';
+} from '~/components/user/dialogs/change-user-role-dialog';
 import { HasRole } from '~/lib/has-role';
 import {
   DropdownMenu,

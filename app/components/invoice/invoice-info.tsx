@@ -23,8 +23,8 @@ import { Button } from '~/components/ui/button';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { AddInvoicePaymentDialog } from './add-invoice-payment-dialog';
-import { DownloadInvoicePdfDialog } from './download-invoice-pdf-dialog';
+import { AddInvoicePaymentDialog } from './dialogs/add-invoice-payment-dialog';
+import { DownloadInvoicePdfDialog } from './dialogs/download-invoice-pdf-dialog';
 
 export interface InvoiceDetailResponse {
   invoiceId: string;

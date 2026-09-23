@@ -1,14 +1,14 @@
 import React from 'react';
 import {
-  TrendingUp,
-  DollarSign,
-  Briefcase,
-  CheckCircle2,
-  XCircle,
-  Clock,
   AlertTriangle,
+  Briefcase,
   Calendar,
+  CheckCircle2,
+  Clock,
+  DollarSign,
   Percent,
+  TrendingUp,
+  XCircle,
 } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { CurrencyAmountResponse, EmployeeKpiSummaryResponse } from '~/interfaces/analytics';

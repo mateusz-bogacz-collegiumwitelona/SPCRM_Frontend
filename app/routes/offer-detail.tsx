@@ -6,20 +6,20 @@ import { MainLayout } from '~/components/layout/main-layout';
 import React, { useState } from 'react';
 import { OfferDetailHeader } from '~/components/offer/offer-detail-header';
 import { OfferClientDetail } from '~/components/offer/offer-contact-detail';
-import { ExtendOfferValidityDialog } from '~/components/offer/extend-offer-validity-dialog';
-import { ChangeOfferStatusDialog } from '~/components/offer/change-offer-status-dialog';
+import { ExtendOfferValidityDialog } from '~/components/offer/dialogs/extend-offer-validity-dialog';
+import { ChangeOfferStatusDialog } from '~/components/offer/dialogs/change-offer-status-dialog';
 import { Button } from '~/components/ui/button';
 import { CalendarClock, CheckCircle, Mail, Trash2, XCircle } from 'lucide-react';
 import {
   type EditableProductItem,
   EditOfferProductsDialog,
-} from '~/components/offer/edit-offer-products-dialog';
+} from '~/components/offer/dialogs/edit-offer-products-dialog';
 import {
   type OfferProductResponse,
   OfferProductsTable,
 } from '~/components/offer/offer-product-table';
-import { ResendOfferEmailDialog } from '~/components/offer/resend-offer-email-dialog';
-import { DeleteOfferDialog } from '~/components/offer/delete-offer-dialog';
+import { ResendOfferEmailDialog } from '~/components/offer/dialogs/resend-offer-email-dialog';
+import { DeleteOfferDialog } from '~/components/offer/dialogs/delete-offer-dialog';
 
 interface OfferAllowedActionsResponse {
   canEdit: boolean;

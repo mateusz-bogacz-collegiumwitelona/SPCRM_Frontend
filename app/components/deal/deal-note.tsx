@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
-import { AddNoteDialog } from '~/components/note/add-note-dialog';
-import { DeleteNoteDialog } from '~/components/note/delete-note-dialog';
-import { EditNoteDialog, type NoteEditData } from '~/components/note/edit-note-dialog';
+import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
+import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
+import { EditNoteDialog, type NoteEditData } from '~/components/note/dialogs/edit-note-dialog';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
 
 import { useEffect, useState } from 'react';

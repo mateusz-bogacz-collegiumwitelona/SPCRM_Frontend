@@ -30,7 +30,7 @@ import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { useAuth } from '~/context/auth-context';
 import { HasRole } from '~/lib/has-role';
-import { AddDealDialog } from '~/components/deal/add-deal-dialog';
+import { AddDealDialog } from '~/components/deal/dialogs/add-deal-dialog';
 
 interface UserSalesResponse {
   id: string;

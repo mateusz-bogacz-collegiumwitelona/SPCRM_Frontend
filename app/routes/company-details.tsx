@@ -14,7 +14,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import {
   EditCompanyDialog,
   type EditCompanyRequest,
-} from '~/components/companies/edit-company-dialog';
+} from '~/components/companies/dialogs/edit-company-dialog';
 
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 import { Button } from '~/components/ui/button';
@@ -22,10 +22,10 @@ import {
   type AddressItemToEdit,
   CompanyAddressDialog,
   type CompanyAddressFormData,
-} from '~/components/companies/company-address-dialog';
-import { DeleteCompanyDialog } from '~/components/companies/delete-company-dialog';
-import { DeleteCompanyAddressDialog } from '~/components/companies/delete-company-address-dialog';
-import { ChangeCompanyOwnerDialog } from '~/components/companies/change-company-owner-dialog';
+} from '~/components/companies/dialogs/company-address-dialog';
+import { DeleteCompanyDialog } from '~/components/companies/dialogs/delete-company-dialog';
+import { DeleteCompanyAddressDialog } from '~/components/companies/dialogs/delete-company-address-dialog';
+import { ChangeCompanyOwnerDialog } from '~/components/companies/dialogs/change-company-owner-dialog';
 import type ApiError from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 

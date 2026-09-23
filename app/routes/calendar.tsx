@@ -14,8 +14,11 @@ import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import plLocale from '@fullcalendar/core/locales/pl';
 import { type TaskCalendarResponse } from '~/interfaces/task-calendar-response';
-import { TaskDetailDialog } from '~/components/task/task-detail-dialog';
-import { AddTaskDialog, type AddTaskRequestPayload } from '~/components/task/add-task-dialog';
+import { TaskDetailDialog } from '~/components/task/dialogs/task-detail-dialog';
+import {
+  AddTaskDialog,
+  type AddTaskRequestPayload,
+} from '~/components/task/dialogs/add-task-dialog';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 

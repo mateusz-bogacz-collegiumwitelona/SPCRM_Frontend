@@ -1,7 +1,7 @@
 import React from 'react';
-import { Trophy, Medal, Briefcase, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Briefcase, CheckCircle2, ChevronLeft, ChevronRight, Medal, Trophy } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { LeaderboardItemResponse, CurrencyAmountResponse } from '~/interfaces/analytics';
+import type { CurrencyAmountResponse, LeaderboardItemResponse } from '~/interfaces/analytics';
 import { Button } from '~/components/ui/button';
 
 interface TeamLeaderboardTableProps {

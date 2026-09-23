@@ -21,14 +21,14 @@ import {
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
 import { useEditNote } from '~/hooks/use-edit-note';
-import { EditNoteDialog } from '~/components/note/edit-note-dialog';
-import { type ContactNote, ContactNoteDialog } from './contact-note-dialog';
+import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
+import { type ContactNote, ContactNoteDialog } from './dialogs/contact-note-dialog';
 
 import { useAddNote } from '~/hooks/use-add-note';
-import { AddNoteDialog } from '~/components/note/add-note-dialog';
+import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { ActionGuard } from '~/lib/action-guard';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
-import { DeleteNoteDialog } from '~/components/note/delete-note-dialog';
+import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 
 import { getErrorMessage } from '~/utils/error-mapper';
 

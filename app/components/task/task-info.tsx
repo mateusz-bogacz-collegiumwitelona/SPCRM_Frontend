@@ -16,17 +16,20 @@ import {
 import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { EditTaskDialog, type EditTaskRequestPayload } from '~/components/task/edit-task-dialog';
-import { DeleteTaskDialog } from '~/components/task/delete-task-dialog';
+import {
+  EditTaskDialog,
+  type EditTaskRequestPayload,
+} from '~/components/task/dialogs/edit-task-dialog';
+import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import {
   ExtendTaskDueDateDialog,
   type ExtendTaskDueDatePayload,
-} from '~/components/task/extend-task-due-date-dialog';
-import { ChangeTaskAssigneeDialog } from '~/components/task/change-task-assignee-dialog';
+} from '~/components/task/dialogs/extend-task-due-date-dialog';
+import { ChangeTaskAssigneeDialog } from '~/components/task/dialogs/change-task-assignee-dialog';
 import {
   ChangeTaskStatusDialog,
   type ChangeTaskStatusPayload,
-} from '~/components/task/change-task-status-dialog';
+} from '~/components/task/dialogs/change-task-status-dialog';
 import { HasRole } from '~/lib/has-role';
 import { Button } from '~/components/ui/button';
 import { useNavigate } from 'react-router';

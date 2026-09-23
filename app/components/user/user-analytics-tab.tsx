@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 
@@ -12,7 +12,7 @@ import {
 import type { EmployeeKpiSummaryResponse } from '~/interfaces/analytics';
 import { KpiCards } from '~/components/analytics/kpi-cards';
 import { Button } from '~/components/ui/button';
-import { DownloadAnalyticsReportDialog } from '~/components/analytics/download-analytics-report-dialog';
+import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
 
 export const UserAnalyticsTab = ({ userId }: { userId: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('CurrentMonth');

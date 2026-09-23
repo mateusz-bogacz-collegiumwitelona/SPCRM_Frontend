@@ -16,7 +16,7 @@ import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { LeaderboardItemResponse, TeamKpiSummaryResponse } from '~/interfaces/analytics';
 import { LeaderboardTable } from '~/components/analytics/leaderboard-table';
-import { DownloadAnalyticsReportDialog } from '~/components/analytics/download-analytics-report-dialog';
+import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
 import { KpiCards } from '~/components/analytics/kpi-cards';
 
 export default function TeamAnalyticsPage() {

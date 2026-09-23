@@ -7,13 +7,13 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { useAuth } from '~/context/auth-context';
 import { Button } from '~/components/ui/button';
-import { DeactivatePromotionDialog } from '~/components/promotion/deactivate-promotion-dialog';
-import { ActivatePromotionDialog } from '~/components/promotion/activate-promotion-dialog';
-import { DeletePromotionDialog } from '~/components/promotion/delete-promotion-dialog';
+import { DeactivatePromotionDialog } from '~/components/promotion/dialogs/deactivate-promotion-dialog';
+import { ActivatePromotionDialog } from '~/components/promotion/dialogs/activate-promotion-dialog';
+import { DeletePromotionDialog } from '~/components/promotion/dialogs/delete-promotion-dialog';
 import {
   EditPromotionDialog,
   type EditPromotionRequestPayload,
-} from '~/components/promotion/edit-promotion-dialog';
+} from '~/components/promotion/dialogs/edit-promotion-dialog';
 
 import {
   AlertCircle,

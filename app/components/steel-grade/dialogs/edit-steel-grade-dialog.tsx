@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,45 +6,66 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
-import { AlertCircle, Loader2, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import { AlertCircle, Loader2, X } from 'lucide-react';
+import { getErrorMessage } from '~/utils/error-mapper';
+import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
   type SteelGradeFormData,
   SteelGradeFormFields,
-} from '~/components/steel-grade/steel-grade-form-fields';
+} from '~/components/steel-grade/dialogs/steel-grade-form-fields';
 
-export interface AddSteelGradePayload {
+export interface EditSteelGradePayload {
+  id: string;
   name: string;
   standard?: string | null;
-  density: number | null;
+  density?: number | null;
 }
 
-interface AddSteelGradeDialogProps {
+interface EditSteelGradeDialogProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly onSave: (data: AddSteelGradePayload) => Promise<void>;
+  readonly onSave: (data: EditSteelGradePayload) => Promise<void>;
+  readonly initialData: {
+    id: string;
+    name: string;
+    standard?: string | null;
+    density: number;
+  } | null;
   readonly isLoading?: boolean;
 }
 
-const initialFormState: SteelGradeFormData = {
+const defaultFormState: SteelGradeFormData = {
   name: '',
   standard: '',
   density: '',
 };
 
-export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
+export const EditSteelGradeDialog: React.FC<EditSteelGradeDialogProps> = ({
   isOpen,
   onClose,
   onSave,
+  initialData,
   isLoading = false,
 }) => {
-  const [formData, setFormData] = useState<SteelGradeFormData>(initialFormState);
+  const [formData, setFormData] = useState<SteelGradeFormData>(defaultFormState);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const resetForm = () => {
-    setFormData(initialFormState);
+  const handleClose = () => {
     setFormError(null);
+    onClose();
   };
+
+  useEffect(() => {
+    if (!initialData || !isOpen) return;
+
+    setFormData({
+      name: initialData.name || '',
+      standard: initialData.standard || '',
+      density: initialData.density ?? '',
+    });
+    setFormError(null);
+  }, [initialData, isOpen]);
 
   const handleFieldChange = <K extends keyof SteelGradeFormData>(
     field: K,
@@ -59,15 +78,15 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
+    if (!initialData) return;
+
     const validationErrors: string[] = [];
 
     if (!formData.name.trim()) {
       validationErrors.push('Nazwa jest wymagana.');
     }
 
-    if (formData.density === '') {
-      validationErrors.push('Gęstość jest wymagana.');
-    } else if (Number(formData.density) <= 0) {
+    if (formData.density !== '' && Number(formData.density) <= 0) {
       validationErrors.push('Gęstość musi być większa od zera.');
     }
 
@@ -79,23 +98,23 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
       return;
     }
 
-    const payload: AddSteelGradePayload = {
+    const payload: EditSteelGradePayload = {
+      id: initialData.id,
       name: formData.name.trim(),
       standard: formData.standard.trim() === '' ? null : formData.standard.trim(),
-      density: Number(formData.density),
+      density: formData.density === '' ? null : Number(formData.density),
     };
 
     try {
       await onSave(payload);
-      resetForm();
-      onClose();
+      handleClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
       const responseData = apiError.response?.data;
 
       const code = responseData?.errorCode;
       const fallback =
-        responseData?.message || apiError.message || 'Nie udało się dodać gatunku stali.';
+        responseData?.message || apiError.message || 'Nie udało się zaktualizować gatunku stali.';
 
       setFormError({
         title: getErrorMessage(code, fallback),
@@ -110,15 +129,14 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
       open={isOpen}
       onOpenChange={(open) => {
         if (!open && !isLoading) {
-          resetForm();
-          onClose();
+          handleClose();
         }
       }}
     >
       <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle className="text-xl font-normal text-[#004a8f]">
-            Dodaj gatunek stali
+            Edytuj gatunek stali
           </DialogTitle>
         </DialogHeader>
 
@@ -150,19 +168,11 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
           <SteelGradeFormFields
             formData={formData}
             onChange={handleFieldChange}
-            idPrefix="add-steel-grade"
+            idPrefix="edit-steel-grade"
           />
 
           <DialogFooter className="pt-4 border-t mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                resetForm();
-                onClose();
-              }}
-              disabled={isLoading}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
               Anuluj
             </Button>
             <Button
@@ -171,7 +181,7 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
               className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? 'Zapisywanie...' : 'Dodaj gatunek'}
+              {isLoading ? 'Zapisywanie...' : 'Zapisz zmiany'}
             </Button>
           </DialogFooter>
         </form>

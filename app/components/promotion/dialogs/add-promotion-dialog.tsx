@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -12,17 +14,16 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
   buildBasePromotionPayload,
-  type EditPromotionInitialData,
-  mapInitialDataToSharedForm,
+  defaultPromotionSharedState,
   PromotionSharedFields,
   type PromotionSharedFormData,
   resolvePromotionPricingPayload,
   usePromotionDictionaries,
-} from '~/components/promotion/promotion-form-shared';
+} from '~/components/promotion/dialogs/promotion-form-shared';
 
-export interface EditPromotionRequestPayload {
-  id: string;
-  name?: string;
+export interface AddPromotionRequestPayload {
+  name: string;
+  productId: string;
   startDate?: string | null;
   endDate?: string | null;
   discountPercentage?: number | null;
@@ -33,51 +34,65 @@ export interface EditPromotionRequestPayload {
   minWeight?: number | null;
 }
 
-interface EditPromotionDialogProps {
-  readonly isOpen: boolean;
-  readonly onClose: () => void;
-  readonly onSave: (payload: EditPromotionRequestPayload) => Promise<void>;
-  readonly isLoading: boolean;
-  readonly initialData: EditPromotionInitialData;
+interface ProductOption {
+  productId: string;
+  name: string;
+  dimension: string;
+  stockPrice: number;
 }
 
-export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
+interface AddPromotionDialogProps {
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: (payload: AddPromotionRequestPayload) => Promise<void>;
+  readonly isLoading: boolean;
+}
+
+export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
   isOpen,
   onClose,
   onSave,
   isLoading,
-  initialData,
 }) => {
-  const [name, setName] = useState(initialData.name);
-  const [sharedForm, setSharedForm] = useState<PromotionSharedFormData>(() =>
-    mapInitialDataToSharedForm(initialData),
+  const [name, setName] = useState('');
+  const [productId, setProductId] = useState('');
+  const [sharedForm, setSharedForm] = useState<PromotionSharedFormData>(
+    defaultPromotionSharedState,
   );
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   const { currencies, contacts } = usePromotionDictionaries(isOpen);
 
+  const { data: products = [] } = useQuery<ProductOption[]>({
+    queryKey: ['mailing-products-list'],
+    queryFn: async () => {
+      const res = await api.get('/mailing/products', { params: { PageNumber: 1, PageSize: 100 } });
+      return res.data?.data?.items || [];
+    },
+    enabled: isOpen,
+  });
+
   const handleClose = () => {
+    setName('');
+    setProductId('');
+    setSharedForm(defaultPromotionSharedState);
     setFormError(null);
     onClose();
   };
 
   useEffect(() => {
     if (!isOpen) return;
-
-    setName(initialData.name);
-    setSharedForm(mapInitialDataToSharedForm(initialData));
+    setName('');
+    setProductId('');
+    setSharedForm(defaultPromotionSharedState);
     setFormError(null);
-  }, [isOpen, initialData]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (currencies.length > 0 && !sharedForm.currencyId) {
-      const matched = currencies.find((c) => c.code === initialData.currencyCode);
-      setSharedForm((prev) => ({
-        ...prev,
-        currencyId: matched?.currencyId ?? currencies[0].currencyId,
-      }));
+      setSharedForm((prev) => ({ ...prev, currencyId: currencies[0].currencyId }));
     }
-  }, [currencies, initialData.currencyCode, sharedForm.currencyId]);
+  }, [currencies, sharedForm.currencyId]);
 
   const handleSharedChange = <K extends keyof PromotionSharedFormData>(
     field: K,
@@ -94,6 +109,9 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
 
     if (!name.trim()) {
       validationErrors.push('Nazwa promocji jest wymagana.');
+    }
+    if (!productId) {
+      validationErrors.push('Wybierz produkt objęty promocją.');
     }
     if (sharedForm.startDate && sharedForm.endDate && sharedForm.endDate < sharedForm.startDate) {
       validationErrors.push('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.');
@@ -112,9 +130,9 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
       return;
     }
 
-    const payload: EditPromotionRequestPayload = {
-      id: initialData.id,
+    const payload: AddPromotionRequestPayload = {
       name: name.trim(),
+      productId,
       ...buildBasePromotionPayload(sharedForm),
       ...pricing!,
     };
@@ -128,7 +146,7 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
 
       const code = responseData?.errorCode;
       const fallback =
-        responseData?.message || apiError.message || 'Nie udało się zaktualizować promocji.';
+        responseData?.message || apiError.message || 'Nie udało się utworzyć promocji.';
 
       setFormError({
         title: getErrorMessage(code, fallback),
@@ -142,7 +160,9 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && handleClose()}>
       <DialogContent className="sm:max-w-175 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-100 pb-4">
-          <DialogTitle className="text-xl font-normal text-blue-900">Edytuj promocję</DialogTitle>
+          <DialogTitle className="text-xl font-normal text-blue-900">
+            Utwórz nową promocję
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5 py-4">
@@ -171,21 +191,42 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
           )}
 
           <div className="space-y-1.5">
-            <label htmlFor="edit-promo-name" className="text-xs font-semibold text-gray-700">
+            <label htmlFor="promo-name" className="text-xs font-semibold text-gray-700">
               Nazwa promocji *
             </label>
             <input
-              id="edit-promo-name"
+              id="promo-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="np. Wiosenna Zniżka na Rury Precyzyjne"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-900"
               required
             />
           </div>
 
+          <div className="space-y-1.5">
+            <label htmlFor="promo-product" className="text-xs font-semibold text-gray-700">
+              Produkt *
+            </label>
+            <select
+              id="promo-product"
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-900 bg-white"
+              required
+            >
+              <option value="">-- Wybierz produkt --</option>
+              {products.map((p) => (
+                <option key={p.productId} value={p.productId}>
+                  {p.name} ({p.dimension})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <PromotionSharedFields
-            idPrefix="edit-promo"
+            idPrefix="promo"
             formData={sharedForm}
             onChange={handleSharedChange}
             currencies={currencies}
@@ -208,7 +249,7 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
               className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              Zapisz zmiany
+              Utwórz promocję
             </Button>
           </DialogFooter>
         </form>

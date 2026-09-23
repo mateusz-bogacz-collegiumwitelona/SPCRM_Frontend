@@ -12,7 +12,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { UserSimpleListResponse } from '~/components/companies/change-company-owner-dialog';
+import type { UserSimpleListResponse } from '~/components/companies/dialogs/change-company-owner-dialog';
 
 export interface DeleteUserPayload {
   userId: string;

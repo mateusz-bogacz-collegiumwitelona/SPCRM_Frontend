@@ -29,7 +29,7 @@ import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import {
   AddCompanyDialog,
   type AddCompanyRequest,
-} from '~/components/companies/add-company-dialog';
+} from '~/components/companies/dialogs/add-company-dialog';
 
 interface GetCompanyResponse {
   id: string;

@@ -28,7 +28,7 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { formatCurrency } from '~/utils/data-formatters';
 import { DataTable } from '~/components/table/data-table';
-import { DownloadInvoicePdfDialog } from '~/components/invoice/download-invoice-pdf-dialog';
+import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-invoice-pdf-dialog';
 
 export interface InvoiceListResponse {
   id: string;

@@ -19,9 +19,9 @@ import {
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { DataTable } from '~/components/table/data-table';
-import { AddDealProductDialog } from '~/components/deal/add-deal-product-dialog';
-import { DeleteDealProductDialog } from '~/components/deal/delete-deal-product-dialog';
-import { EditDealProductDialog } from '~/components/deal/edit-deal-product-dialog';
+import { AddDealProductDialog } from '~/components/deal/dialogs/add-deal-product-dialog';
+import { DeleteDealProductDialog } from '~/components/deal/dialogs/delete-deal-product-dialog';
+import { EditDealProductDialog } from '~/components/deal/dialogs/edit-deal-product-dialog';
 
 interface DealProductResponse {
   dealProductId: string;

@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import {
-  ResponsiveContainer,
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
 } from 'recharts';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { CurrencyAmountResponse } from '~/components/analytics/kpi-cards';

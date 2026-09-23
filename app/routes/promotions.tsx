@@ -31,7 +31,7 @@ import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import {
   AddPromotionDialog,
   type AddPromotionRequestPayload,
-} from '~/components/promotion/add-promotion-dialog';
+} from '~/components/promotion/dialogs/add-promotion-dialog';
 
 interface PromotionResponse {
   id: string;

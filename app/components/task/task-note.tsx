@@ -3,13 +3,13 @@ import { api } from '~/api/api';
 import type { NoteResponse } from '~/interfaces/note-response';
 import { NotesSection } from '~/components/note/notes-section';
 import { useEditNote } from '~/hooks/use-edit-note';
-import { EditNoteDialog, type NoteEditData } from '~/components/note/edit-note-dialog';
+import { EditNoteDialog, type NoteEditData } from '~/components/note/dialogs/edit-note-dialog';
 import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { useAddNote } from '~/hooks/use-add-note';
-import { AddNoteDialog } from '~/components/note/add-note-dialog';
+import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { UseDeleteNote } from '~/hooks/use-delete-note';
-import { DeleteNoteDialog } from '~/components/note/delete-note-dialog';
+import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 

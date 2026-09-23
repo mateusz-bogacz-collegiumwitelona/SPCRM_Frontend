@@ -26,15 +26,15 @@ import { mergeById } from '~/utils/table-helpers';
 import {
   EditContactDialog,
   type EditContactRequest,
-} from '~/components/contact/edit-contact-dialog';
-import { SetCompanyPrimaryContactDialog } from '~/components/companies/set-company-primary-contact-dialog';
+} from '~/components/contact/dialogs/edit-contact-dialog';
+import { SetCompanyPrimaryContactDialog } from '~/components/companies/dialogs/set-company-primary-contact-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { ChangeContactOwnerDialog } from '~/components/contact/change-contact-owner-dialog';
+import { ChangeContactOwnerDialog } from '~/components/contact/dialogs/change-contact-owner-dialog';
 import { useAuth } from '~/context/auth-context';
 
 interface ContactResponse {

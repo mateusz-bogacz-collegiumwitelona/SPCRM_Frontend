@@ -24,12 +24,15 @@ import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
-import { AddProductDialog, type AddProductRequest } from '~/components/products/add-product-dialog';
+import {
+  AddProductDialog,
+  type AddProductRequest,
+} from '~/components/products/dialogs/add-product-dialog';
 import {
   EditProductDialog,
   type EditProductRequest,
-} from '~/components/products/edit-product-dialog';
-import { DeleteProductDialog } from '~/components/products/delete-product-dialog';
+} from '~/components/products/dialogs/edit-product-dialog';
+import { DeleteProductDialog } from '~/components/products/dialogs/delete-product-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +43,7 @@ import { HasRole } from '~/lib/has-role';
 import {
   AddProductStockDialog,
   type AddProductStockRequest,
-} from '~/components/products/add-product-stock-dialog';
+} from '~/components/products/dialogs/add-product-stock-dialog';
 
 interface ProductResponse {
   id: string;

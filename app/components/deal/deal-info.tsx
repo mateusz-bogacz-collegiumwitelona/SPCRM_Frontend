@@ -23,10 +23,10 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
-import { DeleteDealDialog } from '~/components/deal/delete-deal-dialog';
-import { ExtendDealDialog } from '~/components/deal/extend-deal-dialog';
-import { ChangeDealStatusDialog } from '~/components/deal/change-deal-status-dialog';
-import { ChangeDealContactDialog } from '~/components/deal/change-deal-contact-dialog';
+import { DeleteDealDialog } from '~/components/deal/dialogs/delete-deal-dialog';
+import { ExtendDealDialog } from '~/components/deal/dialogs/extend-deal-dialog';
+import { ChangeDealStatusDialog } from '~/components/deal/dialogs/change-deal-status-dialog';
+import { ChangeDealContactDialog } from '~/components/deal/dialogs/change-deal-contact-dialog';
 
 interface SaleDetailResponse {
   id: string;

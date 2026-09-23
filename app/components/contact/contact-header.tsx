@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { api } from '~/api/api';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
-import { DeleteContactDialog } from './delete-contact-dialog';
+import { DeleteContactDialog } from './dialogs/delete-contact-dialog';
 import { Button } from '~/components/ui/button';
 
 interface ContactBasicInfo {

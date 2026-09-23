@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { AlertCircle, Briefcase, Calendar, Building2, X } from 'lucide-react';
+import { AlertCircle, Briefcase, Building2, Calendar, X } from 'lucide-react';
 import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getStatusConfig } from '~/utils/sale-status';

@@ -15,11 +15,11 @@ import { mergeById } from '~/utils/table-helpers';
 import {
   AddCurrencyDialog,
   type AddCurrencyRequestPayload,
-} from '~/components/currency/add-currency-dialog';
+} from '~/components/currency/dialogs/add-currency-dialog';
 import {
   EditCurrencyDialog,
   type EditCurrencyRequestPayload,
-} from '~/components/currency/edit-currency-dialog';
+} from '~/components/currency/dialogs/edit-currency-dialog';
 
 interface CurrencyListResponse {
   currencyId: string;

@@ -10,13 +10,16 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, ChevronLeft, ChevronRight, UserPlus, X } from 'lucide-react';
 import { api } from '~/api/api';
-import { AddCompanyContactDialog, type AddContactRequest } from './add-company-contact-dialog';
+import {
+  AddCompanyContactDialog,
+  type AddContactRequest,
+} from './dialogs/add-company-contact-dialog';
 import { Link } from 'react-router';
 import {
   EditContactDialog,
   type EditContactRequest,
-} from '~/components/contact/edit-contact-dialog';
-import { SetCompanyPrimaryContactDialog } from '~/components/companies/set-company-primary-contact-dialog';
+} from '~/components/contact/dialogs/edit-contact-dialog';
+import { SetCompanyPrimaryContactDialog } from '~/components/companies/dialogs/set-company-primary-contact-dialog';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 
