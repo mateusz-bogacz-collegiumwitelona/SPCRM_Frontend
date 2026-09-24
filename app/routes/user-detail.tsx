@@ -40,8 +40,8 @@ export default function UserDetailPage() {
           </div>
 
           <div className="space-y-6">
+            <UserProfileCard userId={userId} />
             <HasRole allowedRoles={['Manager']}>
-              <UserProfileCard userId={userId} />
               <div className="border-b border-gray-200">
                 <nav className="flex space-x-6" aria-label="Tabs">
                   <button
