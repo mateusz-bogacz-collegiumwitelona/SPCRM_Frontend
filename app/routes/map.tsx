@@ -150,7 +150,7 @@ export default function MapPage() {
         <MainLayout
           wrapperClassName="relative min-h-screen overflow-hidden bg-[#f1f5f9] pt-20 md:pl-32"
           contentClassName="relative w-full h-[calc(100vh-5rem)] p-0 m-0"
-          navDesktopWidthClass="w-32"
+          navDesktopWidthClass="w-52"
           navDesktopClassName="top-20 border-r-0 pt-4"
         >
           <section className="w-full h-full relative">
