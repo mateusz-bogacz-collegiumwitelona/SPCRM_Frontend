@@ -11,9 +11,7 @@ export default [
   route('auth/reset-password', 'routes/auth/reset-password.tsx'),
 
   // Dashboards
-  route('admin-dashboard', 'routes/admin/dashboard.tsx'),
-  route('manager-dashboard', 'routes/manager/dashboard.tsx'),
-  route('dashboard', 'routes/user/dashboard.tsx'),
+  route('dashboard', 'routes/dashboard.tsx'),
 
   // Company
   route('map', 'routes/map.tsx'),
@@ -58,7 +56,4 @@ export default [
   // Invoices
   route('invoices', 'routes/invoices.tsx'),
   route('invoice/:invoiceId', 'routes/invoice-detail.tsx'),
-
-  // Analytics
-  route('analytics', 'routes/team-analytics.tsx'),
 ] satisfies RouteConfig;

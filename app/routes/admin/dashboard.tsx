@@ -7,7 +7,7 @@ import { NavigationBar } from '~/components/layout/navigation-bar';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 

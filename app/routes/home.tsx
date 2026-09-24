@@ -20,15 +20,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && user) {
-      if (user.roles.includes('Admin')) {
-        navigate('/admin-dashboard', { replace: true });
-      } else if (user.roles.includes('Manager')) {
-        navigate('/manager-dashboard', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
-    }
+    if (!isLoading && user) navigate('/dashboard', { replace: true });
   }, [isLoading, user, navigate]);
 
   const loginMutation = useMutation({

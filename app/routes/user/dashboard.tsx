@@ -6,7 +6,7 @@ import { useAuth } from '~/context/auth-context';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 
-export default function Dashboard() {
+export default function UserDashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
