@@ -15,7 +15,7 @@ export function MainLayout({
   wrapperClassName = 'min-h-screen bg-gray-50 pt-20 md:pl-52 pb-24 md:pb-0',
   contentClassName = 'mx-auto w-full max-w-400 p-4 lg:p-8',
   navDesktopWidthClass = 'w-52',
-  navDesktopClassName = 'top-20 border-r border-[#004a8f]/10 bg-[#004a8f]',
+  navDesktopClassName = 'top-20 border-r border-brand/10 bg-brand',
 }: MainLayoutProps) {
   return (
     <div className={wrapperClassName}>

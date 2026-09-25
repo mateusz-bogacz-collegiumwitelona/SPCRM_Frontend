@@ -90,14 +90,14 @@ export const TaskDeals = ({ taskId }: { taskId: string }) => {
   if (!deal) return null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 border-t-4 border-t-[#004a8f]">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 border-t-4 border-t-brand">
       <h2 className="text-lg font-normal text-gray-800 mb-3 flex items-center gap-2">
-        <Briefcase className="text-[#004a8f] w-5 h-5" /> Transakcja
+        <Briefcase className="text-brand w-5 h-5" /> Transakcja
       </h2>
 
       <Link
         to={`/deals/${deal.dealId}`}
-        className="text-[#004a8f] font-medium hover:underline leading-tight block mb-3"
+        className="text-brand font-medium hover:underline leading-tight block mb-3"
       >
         {deal.name}
       </Link>

@@ -134,7 +134,7 @@ export const EditNoteDialog: React.FC<NoteEditDialogProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={50}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-brand"
               placeholder="Wprowadź tytuł"
             />
             <div className="text-right text-xs text-gray-500">{title.length}/50</div>
@@ -149,7 +149,7 @@ export const EditNoteDialog: React.FC<NoteEditDialogProps> = ({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               maxLength={500}
-              className="flex min-h-40 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#004a8f] resize-y"
+              className="flex min-h-40 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-brand resize-y"
               placeholder="Wpisz treść notatki..."
             />
             <div className="text-right text-xs text-gray-500">{content.length}/500</div>
@@ -168,7 +168,7 @@ export const EditNoteDialog: React.FC<NoteEditDialogProps> = ({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full sm:w-auto bg-[#004a8f] text-white hover:bg-blue-800 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-brand text-white hover:bg-blue-800 flex items-center justify-center gap-2"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isSubmitting ? 'Zapisywanie...' : 'Zapisz'}

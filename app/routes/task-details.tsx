@@ -37,7 +37,7 @@ const TaskDetails: React.FC = () => {
     <AuthGuard>
       <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
-          <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
+          <div className="bg-white lg:bg-layout-bg w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
               <div className="block lg:hidden space-y-4">
                 <TaskInfo taskId={taskId} />

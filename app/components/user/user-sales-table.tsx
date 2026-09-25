@@ -259,7 +259,9 @@ export const UserSalesTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Status transakcji:</label>
+                  <label htmlFor="status-filter" className="block text-gray-500 mb-1">
+                    Status transakcji:
+                  </label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
@@ -275,7 +277,9 @@ export const UserSalesTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Data od:</label>
+                  <label htmlFor="date-from" className="block text-gray-500 mb-1">
+                    Data od:
+                  </label>
                   <input
                     type="date"
                     value={dateFrom}
@@ -285,7 +289,9 @@ export const UserSalesTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Data do:</label>
+                  <label htmlFor="date-to" className="block text-gray-500 mb-1">
+                    Data do:
+                  </label>
                   <input
                     type="date"
                     value={dateTo}

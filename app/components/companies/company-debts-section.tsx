@@ -271,7 +271,7 @@ export const CompanyDebtsSection: React.FC<{
             ))}
             {page < totalPages && (
               <Button
-                className="w-full bg-[#004a8f]"
+                className="w-full bg-brand"
                 onClick={() => {
                   isMobileAppend.current = true;
                   setPage((p) => p + 1);

@@ -105,12 +105,12 @@ export default function Help() {
       <Navbar />
 
       <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
-        <div className="mx-auto w-full max-w-170 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+        <div className="mx-auto w-full max-w-170 rounded-2xl border border-card-border bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
           <div className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-            <h1 className="text-center text-[24px] leading-none text-[#004a8f] sm:text-[30px] lg:text-[36px]">
+            <h1 className="text-center text-[24px] leading-none text-brand sm:text-[30px] lg:text-[36px]">
               Pomoc techniczna
             </h1>
-            <p className="mt-4 text-center text-[14px] leading-normal text-[#1f1f1f] sm:text-[18px] lg:text-[20px]">
+            <p className="mt-4 text-center text-[14px] leading-normal text-card-dark sm:text-[18px] lg:text-[20px]">
               Podaj dane, aby zgłosić problem
             </p>
 
@@ -122,7 +122,7 @@ export default function Help() {
               <div className="space-y-2">
                 <label
                   htmlFor="email-input"
-                  className="block text-[14px] text-[#004a8f] sm:text-[16px]"
+                  className="block text-[14px] text-brand sm:text-[16px]"
                 >
                   Email
                 </label>
@@ -133,14 +133,14 @@ export default function Help() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="example@example.com"
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
+                  className="h-9 w-full rounded-[3px] border border-card-border-dark bg-white px-2 text-[12px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 sm:h-10 sm:text-[14px] lg:h-11"
                 />
               </div>
 
               <div className="space-y-2">
                 <label
                   htmlFor="title-input"
-                  className="block text-[14px] text-[#004a8f] sm:text-[16px]"
+                  className="block text-[14px] text-brand sm:text-[16px]"
                 >
                   Tytuł
                 </label>
@@ -151,14 +151,14 @@ export default function Help() {
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="Przykładowy tytuł"
-                  className="h-9 w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 sm:h-10 sm:text-[14px] lg:h-11"
+                  className="h-9 w-full rounded-[3px] border border-card-border-dark bg-white px-2 text-[12px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 sm:h-10 sm:text-[14px] lg:h-11"
                 />
               </div>
 
               <div className="space-y-2">
                 <label
                   htmlFor="message-input"
-                  className="block text-[14px] text-[#004a8f] sm:text-[16px]"
+                  className="block text-[14px] text-brand sm:text-[16px]"
                 >
                   Treść
                 </label>
@@ -169,10 +169,10 @@ export default function Help() {
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Przykładowa treść"
-                    className="w-full rounded-[3px] border border-[#d9dce1] bg-white px-2 text-[12px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30 min-h-50 sm:text-[14px]"
+                    className="w-full rounded-[3px] border border-card-border-dark bg-white px-2 text-[12px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 min-h-50 sm:text-[14px]"
                     maxLength={maxCharacters}
                   />
-                  <span className="absolute bottom-2 right-2 text-xs text-[#7f8490]">
+                  <span className="absolute bottom-2 right-2 text-xs text-count-gray">
                     {characterCount}/{maxCharacters}
                   </span>
                 </div>
@@ -211,7 +211,7 @@ export default function Help() {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="mt-6 h-8.5 w-full rounded-[5px] bg-[#004a8f] text-[12px] text-white hover:bg-[#004a8f]/95 sm:h-10 sm:text-[14px] lg:h-11"
+                className="mt-6 h-8.5 w-full rounded-[5px] bg-brand text-[12px] text-white hover:bg-brand/95 sm:h-10 sm:text-[14px] lg:h-11"
               >
                 {isPending ? 'Wysyłanie...' : 'Wyślij'}
               </Button>

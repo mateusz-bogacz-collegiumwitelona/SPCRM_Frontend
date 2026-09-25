@@ -84,7 +84,7 @@ export default function ConfirmRegistration() {
     <main className="min-h-screen bg-white">
       <Navbar />
       <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
-        <Card className="mx-auto w-full max-w-170 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-20">
+        <Card className="mx-auto w-full max-w-170 rounded-2xl border border-card-border bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-20">
           <CardContent className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
             {isLinkInvalid ? (
               <div className="text-center py-6">
@@ -98,7 +98,7 @@ export default function ConfirmRegistration() {
                   Link aktywacyjny jest niekompletny lub wygasł. Upewnij się, że skopiowano cały
                   adres z wiadomości e-mail.
                 </p>
-                <Button asChild className="bg-[#004a8f] text-white hover:bg-[#004a8f]/90">
+                <Button asChild className="bg-brand text-white hover:bg-brand/90">
                   <Link to="/">Przejdź do logowania</Link>
                 </Button>
               </div>
@@ -114,7 +114,7 @@ export default function ConfirmRegistration() {
                 </p>
                 <Button
                   onClick={() => navigate('/')}
-                  className="bg-[#004a8f] text-white hover:bg-[#004a8f]/90 w-full sm:w-auto px-8"
+                  className="bg-brand text-white hover:bg-brand/90 w-full sm:w-auto px-8"
                 >
                   Zaloguj się
                 </Button>
@@ -122,10 +122,10 @@ export default function ConfirmRegistration() {
             ) : (
               <>
                 <div className="text-center">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-[#004a8f] mb-3">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-brand mb-3">
                     <Lock className="h-5 w-5" />
                   </div>
-                  <h1 className="text-[24px] font-semibold text-[#004a8f] sm:text-[28px]">
+                  <h1 className="text-[24px] font-semibold text-brand sm:text-[28px]">
                     Aktywacja konta
                   </h1>
                   <p className="mt-2 text-[14px] text-gray-600">
@@ -162,7 +162,7 @@ export default function ConfirmRegistration() {
                   <div className="space-y-2">
                     <label
                       htmlFor="password"
-                      className="block text-[13px] font-medium text-[#004a8f] sm:text-[14px]"
+                      className="block text-[13px] font-medium text-brand sm:text-[14px]"
                     >
                       Nowe hasło *
                     </label>
@@ -173,7 +173,7 @@ export default function ConfirmRegistration() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Wpisz nowe hasło (min. 8 znaków)"
-                        className="h-10 w-full rounded-[3px] border border-[#d9dce1] bg-white px-3 pr-10 text-[13px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30"
+                        className="h-10 w-full rounded-[3px] border border-card-border-dark bg-white px-3 pr-10 text-[13px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                       />
                       <button
                         type="button"
@@ -192,7 +192,7 @@ export default function ConfirmRegistration() {
                   <div className="space-y-2">
                     <label
                       htmlFor="confirmPassword"
-                      className="block text-[13px] font-medium text-[#004a8f] sm:text-[14px]"
+                      className="block text-[13px] font-medium text-brand sm:text-[14px]"
                     >
                       Powtórz nowe hasło *
                     </label>
@@ -202,14 +202,14 @@ export default function ConfirmRegistration() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Wpisz ponownie hasło"
-                      className="h-10 w-full rounded-[3px] border border-[#d9dce1] bg-white px-3 text-[13px] text-[#1f1f1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#004a8f]/30"
+                      className="h-10 w-full rounded-[3px] border border-card-border-dark bg-white px-3 text-[13px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
                     />
                   </div>
 
                   <Button
                     type="submit"
                     disabled={confirmMutation.isPending}
-                    className="mt-6 h-10 w-full rounded-[5px] bg-[#004a8f] text-[13px] font-medium text-white hover:bg-[#004a8f]/95 flex items-center justify-center gap-2"
+                    className="mt-6 h-10 w-full rounded-[5px] bg-brand text-[13px] font-medium text-white hover:bg-brand/95 flex items-center justify-center gap-2"
                   >
                     {confirmMutation.isPending ? (
                       <>

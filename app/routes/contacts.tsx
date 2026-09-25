@@ -133,7 +133,7 @@ const columns = [
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
+                className="h-8 w-8 text-gray-500 hover:text-brand"
               >
                 <span className="sr-only">Otwórz menu</span>
                 <MoreHorizontal className="h-4 w-4" />
@@ -211,7 +211,7 @@ const ContactMobileCard = ({
       <button
         type="button"
         onClick={() => onEdit(contact.id)}
-        className="text-xs font-medium text-gray-500 hover:text-[#004a8f] hover:underline"
+        className="text-xs font-medium text-gray-500 hover:text-brand hover:underline"
       >
         Edytuj
       </button>
@@ -219,7 +219,7 @@ const ContactMobileCard = ({
       <button
         type="button"
         onClick={() => onChangeOwner(contact.id)}
-        className="text-xs font-medium text-gray-500 hover:text-[#004a8f] hover:underline"
+        className="text-xs font-medium text-gray-500 hover:text-brand hover:underline"
       >
         Zmień opiekuna
       </button>

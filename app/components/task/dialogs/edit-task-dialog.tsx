@@ -122,12 +122,12 @@ export function EditTaskDialog({
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && handleClose()}>
       <DialogContent className="sm:max-w-120 bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-[#004a8f]">Edycja zadania</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-brand">Edycja zadania</DialogTitle>
         </DialogHeader>
 
         {isTaskLoading ? (
           <div className="py-8 flex flex-col items-center justify-center gap-2 text-gray-500">
-            <Loader2 className="w-6 h-6 animate-spin text-[#004a8f]" />
+            <Loader2 className="w-6 h-6 animate-spin text-brand" />
             <span className="text-xs">Ładowanie danych zadania...</span>
           </div>
         ) : (
@@ -169,7 +169,7 @@ export function EditTaskDialog({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="np. Przygotowanie oferty handlowej"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 required
               />
             </div>
@@ -187,7 +187,7 @@ export function EditTaskDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Wprowadź szczegóły zadania..."
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 required
               />
             </div>
@@ -204,7 +204,7 @@ export function EditTaskDialog({
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
                 disabled={isDictionariesLoading}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white h-9"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white h-9"
               >
                 {priorityOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -227,7 +227,7 @@ export function EditTaskDialog({
               <Button
                 type="submit"
                 disabled={isFormDisabled}
-                className="bg-[#004a8f] text-white hover:bg-blue-800"
+                className="bg-brand text-white hover:bg-blue-800"
               >
                 {isLoading ? (
                   <>

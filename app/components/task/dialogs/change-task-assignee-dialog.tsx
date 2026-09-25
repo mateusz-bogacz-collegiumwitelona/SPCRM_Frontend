@@ -114,7 +114,7 @@ export const ChangeTaskAssigneeDialog: React.FC<ChangeTaskAssigneeDialogProps> =
     if (isAssigneesLoading) {
       return (
         <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand mb-4" />
           <p className="text-gray-500 text-sm">Pobieranie listy pracowników...</p>
         </div>
       );
@@ -168,7 +168,7 @@ export const ChangeTaskAssigneeDialog: React.FC<ChangeTaskAssigneeDialogProps> =
             id="new-task-assignee"
             value={selectedAssigneeId}
             onChange={(e) => setSelectedAssigneeId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
             required
           >
             <option value="" disabled>
@@ -199,7 +199,7 @@ export const ChangeTaskAssigneeDialog: React.FC<ChangeTaskAssigneeDialogProps> =
           <Button
             type="submit"
             disabled={isLoading || !selectedAssigneeId}
-            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+            className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Zapisz zmiany
@@ -214,7 +214,7 @@ export const ChangeTaskAssigneeDialog: React.FC<ChangeTaskAssigneeDialogProps> =
       <DialogContent className="sm:max-w-112.5">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mt-2">
-            <UserCog className="w-6 h-6 text-[#004a8f]" />
+            <UserCog className="w-6 h-6 text-brand" />
           </div>
           <DialogTitle className="text-xl font-normal text-gray-900 text-center">
             Zmień przypisanego pracownika

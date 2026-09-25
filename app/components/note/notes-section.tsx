@@ -42,7 +42,7 @@ export const NotesSection = ({
     return (
       <div className="space-y-4">
         {notes.map((note) => (
-          <div key={note.noteId} className="border-l-2 border-[#004a8f] pl-4 py-1">
+          <div key={note.noteId} className="border-l-2 border-brand pl-4 py-1">
             <div className="flex items-center justify-between mb-1">
               <span className="font-medium text-sm text-gray-900">
                 {note.authorFirstName} {note.authorLastName}
@@ -54,7 +54,7 @@ export const NotesSection = ({
                     <button
                       type="button"
                       onClick={() => onEditClick(note)}
-                      className="text-gray-400 hover:text-[#004a8f] transition-colors ml-2"
+                      className="text-gray-400 hover:text-brand transition-colors ml-2"
                       title="Edytuj notatkę"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -92,7 +92,7 @@ export const NotesSection = ({
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-normal text-gray-800 flex items-center gap-2">
-          <MessageSquare className="text-[#004a8f] w-5 h-5" /> Historia działań i notatki
+          <MessageSquare className="text-brand w-5 h-5" /> Historia działań i notatki
         </h2>
 
         {onAddClick && (
@@ -100,7 +100,7 @@ export const NotesSection = ({
             type="button"
             onClick={onAddClick}
             size="sm"
-            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-1"
+            className="bg-brand text-white hover:bg-blue-800 flex items-center gap-1"
           >
             <Plus className="w-4 h-4" /> Dodaj notatkę
           </Button>

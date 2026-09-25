@@ -39,7 +39,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 const SaleCard = ({ s }: { s: Sale }) => (
   <div className="border border-black rounded-lg p-3 bg-white text-sm">
     <div className="flex justify-between items-start mb-3">
-      <div className="text-[#004a8f] leading-tight">
+      <div className="text-brand leading-tight">
         <p>
           Kto: {s.salesmanFirstName} {s.salesmanLastName}
         </p>
@@ -49,7 +49,7 @@ const SaleCard = ({ s }: { s: Sale }) => (
     </div>
     <div className="border-t border-black pt-2 flex justify-between items-center text-xs">
       <p>Utworzono: {new Date(s.createdAt).toLocaleDateString('pl-PL')}</p>
-      <button className="text-[#004a8f] hover:underline">Szczegóły</button>
+      <button className="text-brand hover:underline">Szczegóły</button>
     </div>
   </div>
 );
@@ -71,7 +71,7 @@ const columns = [
     header: 'Sprzedawca',
     cell: (info) => (
       <div className="flex flex-col">
-        <span className="text-[#004a8f] font-normal text-sm">
+        <span className="text-brand font-normal text-sm">
           {info.row.original.salesmanFirstName} {info.row.original.salesmanLastName}
         </span>
         <span className="text-xs text-gray-500 mt-0.5">{info.row.original.name}</span>
@@ -115,7 +115,7 @@ const columns = [
     id: 'actions',
     header: 'Akcje',
     cell: () => (
-      <button className="text-[#004a8f] hover:underline font-medium text-sm">Szczegóły</button>
+      <button className="text-brand hover:underline font-medium text-sm">Szczegóły</button>
     ),
   }),
 ];
@@ -253,7 +253,7 @@ export const CompanySalesSection: React.FC<{
       )}
 
       <section className="block xl:hidden">
-        <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
+        <h2 className="text-xl text-brand font-normal mb-3 mt-6 flex justify-between items-center">
           Sprzedaż: {isLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
         </h2>
         {mobileSales.length === 0 && !isLoading ? (
@@ -269,7 +269,7 @@ export const CompanySalesSection: React.FC<{
         )}
         {page < totalPages && (
           <button
-            className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium"
+            className="w-full bg-brand text-white py-2.5 rounded-lg mt-3 text-base font-medium"
             onClick={() => setPage((p) => p + 1)}
           >
             Pokaż więcej

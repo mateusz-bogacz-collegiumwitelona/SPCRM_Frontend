@@ -8,7 +8,7 @@ export function Navbar() {
   const closeMenu = () => setIsOpen(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex h-20 items-center border-b border-black/5 bg-[#004a8f] px-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex h-20 items-center border-b border-black/5 bg-brand px-4 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
       <div className="relative ml-auto">
         <button
           type="button"
@@ -28,7 +28,7 @@ export function Navbar() {
               <Link
                 to="/help"
                 onClick={closeMenu}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-[#1f1f1f] transition-colors hover:bg-blue-50 hover:text-[#004a8f]"
+                className="flex items-center gap-3 px-4 py-3 text-sm text-card-dark transition-colors hover:bg-blue-50 hover:text-brand"
               >
                 <LifeBuoy size={18} />
                 <span className="font-medium">Pomoc techniczna</span>

@@ -171,7 +171,7 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
           <p className="text-xs text-gray-500">{p.dimension || p.dimmension || 'Standard'}</p>
         </div>
         <div className="text-right">
-          <span className="text-xs font-bold text-[#004a8f]">
+          <span className="text-xs font-bold text-brand">
             {formatCurrency(p.promotionalPrice ?? p.stockPrice, currencyCode, 2)}
           </span>
         </div>
@@ -186,8 +186,8 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
     >
       <DialogContent className="sm:max-w-xl bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-[#004a8f] text-lg font-semibold flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#004a8f]" />
+          <DialogTitle className="text-brand text-lg font-semibold flex items-center gap-2">
+            <Package className="w-5 h-5 text-brand" />
             Dodaj pozycję do zamówienia
           </DialogTitle>
         </DialogHeader>
@@ -299,7 +299,7 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
                 />
               </div>
 
-              <div className="sm:col-span-2 p-3 bg-blue-50 border border-blue-100 rounded-md flex justify-between items-center text-sm font-semibold text-[#004a8f]">
+              <div className="sm:col-span-2 p-3 bg-blue-50 border border-blue-100 rounded-md flex justify-between items-center text-sm font-semibold text-brand">
                 <span>Łączna wartość pozycji:</span>
                 <span>{formatCurrency(totalValue * 10000, currencyCode, 2)}</span>
               </div>
@@ -319,7 +319,7 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
             <Button
               type="submit"
               disabled={addProductMutation.isPending || !selectedProduct}
-              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2"
+              className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"
             >
               {addProductMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Dodaj do zamówienia

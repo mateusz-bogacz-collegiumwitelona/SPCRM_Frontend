@@ -52,7 +52,7 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-[#004a8f] mb-6 lg:mb-8">
+      <div className="flex items-center gap-2 text-brand mb-6 lg:mb-8">
         <Loader2 className="animate-spin w-6 h-6" />
         <span className="text-sm font-medium">Ładowanie danych kontaktu...</span>
       </div>
@@ -90,14 +90,14 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
 
             <p className="text-lg text-gray-900 mt-1.5">{info.companyName}</p>
             {info.jobTitle && (
-              <p className="text-sm font-medium text-[#004a8f] mt-0.5">{info.jobTitle}</p>
+              <p className="text-sm font-medium text-brand mt-0.5">{info.jobTitle}</p>
             )}
           </div>
 
           <div className="flex flex-col items-start lg:items-end gap-2 mt-2 lg:mt-0">
             <div
               className={`inline-block px-3 py-1 rounded-full ${
-                info.isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600'
+                info.isPrimary ? 'bg-is-primary-bg text-is-primary' : 'bg-gray-100 text-gray-600'
               }`}
             >
               <span className="font-medium text-sm">

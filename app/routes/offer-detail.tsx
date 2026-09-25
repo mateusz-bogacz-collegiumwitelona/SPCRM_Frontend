@@ -169,7 +169,7 @@ const OfferDetail: React.FC = () => {
     <AuthGuard>
       <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
-          <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
+          <div className="bg-white lg:bg-layout-bg w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto space-y-6">
               <div className="flex flex-col gap-4">
                 <OfferDetailHeader
@@ -184,7 +184,7 @@ const OfferDetail: React.FC = () => {
                       type="button"
                       variant="outline"
                       onClick={() => setIsResendModalOpen(true)}
-                      className="text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100 flex items-center gap-1.5 text-xs sm:text-sm"
+                      className="text-brand border-blue-200 bg-blue-50/50 hover:bg-blue-100 flex items-center gap-1.5 text-xs sm:text-sm"
                     >
                       <Mail className="w-4 h-4" />
                       Wyślij e-mail ponownie
@@ -222,7 +222,7 @@ const OfferDetail: React.FC = () => {
                     <Button
                       type="button"
                       onClick={() => setIsExtendModalOpen(true)}
-                      className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2 font-medium text-xs sm:text-sm"
+                      className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2 font-medium text-xs sm:text-sm"
                     >
                       <CalendarClock className="w-4 h-4" />
                       Przedłuż ważność

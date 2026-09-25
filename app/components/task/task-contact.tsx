@@ -98,13 +98,13 @@ export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6">
       <h2 className="text-lg font-normal text-gray-800 mb-4 flex items-center gap-2">
-        <User className="text-[#004a8f] w-5 h-5" /> Powiązany kontakt
+        <User className="text-brand w-5 h-5" /> Powiązany kontakt
       </h2>
 
       <div className="mb-4">
         <Link
           to={`/contacts/${contact.contactId}`}
-          className="text-[#004a8f] text-lg font-medium hover:underline"
+          className="text-brand text-lg font-medium hover:underline"
         >
           {contact.firstName} {contact.lastName}
         </Link>

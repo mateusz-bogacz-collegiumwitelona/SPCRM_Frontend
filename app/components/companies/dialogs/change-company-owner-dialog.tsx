@@ -85,7 +85,7 @@ export const ChangeCompanyOwnerDialog: React.FC<ChangeCompanyOwnerDialogProps> =
       <DialogContent className="sm:max-w-112.5 bg-white">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mt-2">
-            <UserCheck className="w-6 h-6 text-[#004a8f]" />
+            <UserCheck className="w-6 h-6 text-brand" />
           </div>
           <DialogTitle className="text-xl font-normal text-gray-900 text-center">
             Zmień opiekuna firmy
@@ -132,7 +132,7 @@ export const ChangeCompanyOwnerDialog: React.FC<ChangeCompanyOwnerDialogProps> =
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
               disabled={isUsersLoading || isLoading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-brand"
             >
               <option value="" disabled>
                 {isUsersLoading ? 'Ładowanie listy pracowników...' : 'Wybierz opiekuna...'}
@@ -158,7 +158,7 @@ export const ChangeCompanyOwnerDialog: React.FC<ChangeCompanyOwnerDialogProps> =
             <Button
               type="submit"
               disabled={isLoading || isUsersLoading || !selectedUserId}
-              className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+              className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Zapisywanie...' : 'Przypisz opiekuna'}

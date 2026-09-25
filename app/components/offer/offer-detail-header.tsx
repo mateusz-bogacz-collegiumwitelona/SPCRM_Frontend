@@ -110,7 +110,7 @@ export const OfferDetailHeader: React.FC<OfferDetailHeaderProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-5 mb-5">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#004a8f] tracking-tight">
+            <h1 className="text-2xl lg:text-3xl font-bold text-brand tracking-tight">
               {basicInfo.offerName}
             </h1>
           </div>
@@ -124,8 +124,8 @@ export const OfferDetailHeader: React.FC<OfferDetailHeaderProps> = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="flex items-center gap-3 bg-[#f8f9fa] rounded-lg p-3 border border-gray-100">
-          <div className="w-9 h-9 rounded-lg bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 bg-layout-bg rounded-lg p-3 border border-gray-100">
+          <div className="w-9 h-9 rounded-lg bg-blue-50 text-brand flex items-center justify-center shrink-0">
             <Clock className="w-4 h-4" />
           </div>
           <div>
@@ -134,8 +134,8 @@ export const OfferDetailHeader: React.FC<OfferDetailHeaderProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-[#f8f9fa] rounded-lg p-3 border border-gray-100">
-          <div className="w-9 h-9 rounded-lg bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 bg-layout-bg rounded-lg p-3 border border-gray-100">
+          <div className="w-9 h-9 rounded-lg bg-blue-50 text-brand flex items-center justify-center shrink-0">
             <User className="w-4 h-4" />
           </div>
           <div>
@@ -146,8 +146,8 @@ export const OfferDetailHeader: React.FC<OfferDetailHeaderProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-[#f8f9fa] rounded-lg p-3 border border-gray-100">
-          <div className="w-9 h-9 rounded-lg bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 bg-layout-bg rounded-lg p-3 border border-gray-100">
+          <div className="w-9 h-9 rounded-lg bg-blue-50 text-brand flex items-center justify-center shrink-0">
             <Calendar className="w-4 h-4" />
           </div>
           <div>

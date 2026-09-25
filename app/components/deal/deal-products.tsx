@@ -129,7 +129,7 @@ const columns = [
           <button
             type="button"
             onClick={() => meta.onEdit(product)}
-            className="text-gray-400 hover:text-[#004a8f] transition-colors"
+            className="text-gray-400 hover:text-brand transition-colors"
             title="Edytuj pozycję"
           >
             <Pencil className="w-4 h-4" />
@@ -172,7 +172,7 @@ const ProductMobileCard = ({
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm relative">
       <div className="flex justify-between items-start mb-2 pr-16">
         <div>
-          <p className="text-sm font-bold text-[#004a8f]">{product.name}</p>
+          <p className="text-sm font-bold text-brand">{product.name}</p>
           <p className="text-xs text-gray-500 mt-0.5">Wymiary: {product.dimensions}</p>
         </div>
       </div>
@@ -181,7 +181,7 @@ const ProductMobileCard = ({
         <button
           type="button"
           onClick={() => onEditClick(product)}
-          className="text-gray-400 hover:text-[#004a8f] p-1 rounded"
+          className="text-gray-400 hover:text-brand p-1 rounded"
           title="Edytuj pozycję"
         >
           <Pencil className="w-4 h-4" />
@@ -379,7 +379,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
               type="button"
               size="sm"
               onClick={() => setIsAddProductOpen(true)}
-              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-1.5 text-xs h-8"
+              className="bg-brand text-white hover:bg-brand-hover flex items-center gap-1.5 text-xs h-8"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Dodaj produkt</span>
@@ -392,14 +392,14 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Szukaj produktu..."
-              className="w-full sm:w-64 border border-gray-300 rounded-md bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
+              className="w-full sm:w-64 border border-gray-300 rounded-md bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
 
             <div className="flex w-full sm:w-auto items-center gap-2">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-[#004a8f]"
+                className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-brand"
               >
                 <option value="name">Nazwa</option>
                 <option value="steelgrade">Gatunek</option>
@@ -430,7 +430,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                   {(productFilter || steelGradeFilter) && (
                     <span className="absolute -top-1 -right-1 flex h-3 w-3">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-[#004a8f]"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-brand"></span>
                     </span>
                   )}
                 </Button>
@@ -452,7 +452,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                           value={productFilter}
                           onChange={(e) => setProductFilter(e.target.value)}
                           placeholder="np. Rury, Blachy..."
-                          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-[#004a8f]"
+                          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-brand"
                         />
                       </div>
                       <div className="flex flex-col">
@@ -468,7 +468,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                           value={steelGradeFilter}
                           onChange={(e) => setSteelGradeFilter(e.target.value)}
                           placeholder="np. S355J2"
-                          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-[#004a8f]"
+                          className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-brand"
                         />
                       </div>
                       <div className="pt-3 mt-2 border-t border-gray-100 flex justify-between items-center">
@@ -485,7 +485,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                         <Button
                           size="sm"
                           onClick={() => setShowFilters(false)}
-                          className="h-8 px-4 bg-[#004a8f] text-white text-xs"
+                          className="h-8 px-4 bg-brand text-white text-xs"
                         >
                           Zamknij
                         </Button>

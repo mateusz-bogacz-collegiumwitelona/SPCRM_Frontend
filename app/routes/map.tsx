@@ -117,8 +117,8 @@ export default function MapPage() {
   const renderMapArea = () => {
     if (isLoading) {
       return (
-        <div className="flex h-full w-full items-center justify-center bg-[#f1f5f9] text-[#0f172a]">
-          <div className="animate-pulse flex items-center gap-2 text-[#004a8f]">
+        <div className="flex h-full w-full items-center justify-center bg-loading-bg text-loading-text">
+          <div className="animate-pulse flex items-center gap-2 text-brand">
             <MapPinned className="animate-bounce" /> Ładowanie mapy...
           </div>
         </div>
@@ -137,8 +137,8 @@ export default function MapPage() {
     }
 
     return (
-      <div className="flex h-full w-full items-center justify-center bg-[#f1f5f9] text-[#0f172a]">
-        <div className="flex items-center gap-2 text-[#004a8f]">
+      <div className="flex h-full w-full items-center justify-center bg-loading-bg text-loading-text">
+        <div className="flex items-center gap-2 text-brand">
           <MapPinned /> Brak komponentu mapy
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function MapPage() {
     <AuthGuard>
       <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout
-          wrapperClassName="relative min-h-screen overflow-hidden bg-[#f1f5f9] pt-20 md:pl-32"
+          wrapperClassName="relative min-h-screen overflow-hidden bg-loading-bg pt-20 md:pl-32"
           contentClassName="relative w-full h-[calc(100vh-5rem)] p-0 m-0"
           navDesktopWidthClass="w-52"
           navDesktopClassName="top-20 border-r-0 pt-4"
@@ -159,7 +159,7 @@ export default function MapPage() {
               <form
                 id="search-form"
                 role="search"
-                className="flex w-full bg-white rounded-md overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-[#004a8f]"
+                className="flex w-full bg-white rounded-md overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-brand"
                 onSubmit={handleSearch}
               >
                 <input
@@ -171,7 +171,7 @@ export default function MapPage() {
                 />
                 <button
                   type="submit"
-                  className="px-4 py-3 bg-white text-[#004a8f] hover:bg-gray-50 flex items-center justify-center"
+                  className="px-4 py-3 bg-white text-brand hover:bg-gray-50 flex items-center justify-center"
                 >
                   <Search size={20} />
                 </button>

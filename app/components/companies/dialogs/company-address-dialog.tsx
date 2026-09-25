@@ -195,7 +195,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-220 max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">
+          <DialogTitle className="text-xl font-normal text-brand">
             {isEditing ? 'Edytuj adres firmy' : 'Dodaj nowy adres firmy'}
           </DialogTitle>
         </DialogHeader>
@@ -247,7 +247,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                   value={type}
                   onChange={(e) => setType(e.target.value)}
                   disabled={isTypesLoading}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-brand"
                 >
                   {isTypesLoading && <option value="">Ładowanie typów...</option>}
                   {!isTypesLoading && addressTypes.length === 0 && (
@@ -277,7 +277,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                   value={street}
                   onChange={(e) => handleFieldChange('street', e.target.value)}
                   placeholder="np. Złota 44"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
 
@@ -291,7 +291,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                     value={zipCode}
                     onChange={(e) => handleFieldChange('zipCode', e.target.value)}
                     placeholder="00-000"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -303,7 +303,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                     value={city}
                     onChange={(e) => handleFieldChange('city', e.target.value)}
                     placeholder="np. Warszawa"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
               </div>
@@ -313,7 +313,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-xs font-semibold text-gray-700">Pozycja na mapie</span>
                 {isGeocoding && (
-                  <span className="text-[11px] text-[#004a8f] flex items-center gap-1 animate-pulse">
+                  <span className="text-[11px] text-brand flex items-center gap-1 animate-pulse">
                     <Loader2 className="w-3 h-3 animate-spin" /> Geokodowanie...
                   </span>
                 )}
@@ -331,7 +331,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm gap-2">
-                    <MapPinned className="animate-bounce text-[#004a8f]" /> Ładowanie mapy...
+                    <MapPinned className="animate-bounce text-brand" /> Ładowanie mapy...
                   </div>
                 )}
               </div>
@@ -354,7 +354,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading || isGeocoding}
-              className="bg-[#004a8f] text-white hover:bg-blue-800"
+              className="bg-brand text-white hover:bg-blue-800"
             >
               {isLoading ? 'Zapisywanie...' : isEditing ? 'Zapisz zmiany' : 'Dodaj adres'}
             </Button>

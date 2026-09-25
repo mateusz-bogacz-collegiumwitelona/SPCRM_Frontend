@@ -167,9 +167,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
     >
       <DialogContent className="sm:max-w-175 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">
-            Dodaj nowy kontakt
-          </DialogTitle>
+          <DialogTitle className="text-xl font-normal text-brand">Dodaj nowy kontakt</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-6 py-4">
@@ -208,7 +206,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                   id="contact-first-name"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div className="space-y-1.5">
@@ -219,7 +217,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                   id="contact-first-last"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -231,7 +229,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                 id="contact-title"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
           </div>
@@ -262,7 +260,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                     name="primaryContact"
                     checked={detail.isPrimary}
                     onChange={() => handleSetPrimary(detail.id)}
-                    className="w-4 h-4 text-[#004a8f] focus:ring-[#004a8f] cursor-pointer"
+                    className="w-4 h-4 text-brand focus:ring-brand cursor-pointer"
                     title="Ustaw jako główny kontakt"
                   />
                   <label
@@ -285,7 +283,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                       id={`type-${detail.id}`}
                       value={detail.type}
                       onChange={(e) => handleDetailChange(detail.id, 'type', e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
                       disabled={isTypesLoading}
                     >
                       <option value="" disabled>
@@ -311,7 +309,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                       value={detail.label}
                       onChange={(e) => handleDetailChange(detail.id, 'label', e.target.value)}
                       placeholder="np. Służbowy"
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                     />
                   </div>
 
@@ -327,7 +325,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
                       value={detail.value}
                       onChange={(e) => handleDetailChange(detail.id, 'value', e.target.value)}
                       placeholder="Email / Telefon"
-                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                     />
                   </div>
                 </div>
@@ -368,7 +366,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading || details.length === 0}
-              className="bg-[#004a8f] text-white hover:bg-blue-800"
+              className="bg-brand text-white hover:bg-blue-800"
             >
               {isLoading ? 'Zapisywanie...' : 'Zapisz'}
             </Button>

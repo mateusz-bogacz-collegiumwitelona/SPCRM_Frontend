@@ -122,9 +122,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-200 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">
-            Dodaj nowy produkt
-          </DialogTitle>
+          <DialogTitle className="text-xl font-normal text-brand">Dodaj nowy produkt</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-6 py-4">
@@ -169,7 +167,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+              className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Zapisywanie...' : 'Dodaj produkt'}

@@ -87,7 +87,7 @@ export const ChangeDealContactDialog: React.FC<ChangeDealContactDialogProps> = (
     if (isContactsLoading) {
       return (
         <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand mb-4" />
           <p className="text-gray-500 text-sm">Pobieranie listy kontaktów firmy...</p>
         </div>
       );
@@ -146,7 +146,7 @@ export const ChangeDealContactDialog: React.FC<ChangeDealContactDialogProps> = (
             id="new-deal-contact"
             value={selectedContactId}
             onChange={(e) => setSelectedContactId(e.target.value)}
-            className="w-full max-w-full min-w-0 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white truncate"
+            className="w-full max-w-full min-w-0 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white truncate"
             required
           >
             <option value="" disabled>
@@ -199,7 +199,7 @@ export const ChangeDealContactDialog: React.FC<ChangeDealContactDialogProps> = (
           <Button
             type="submit"
             disabled={isLoading || !selectedContactId}
-            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+            className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Zapisz zmiany

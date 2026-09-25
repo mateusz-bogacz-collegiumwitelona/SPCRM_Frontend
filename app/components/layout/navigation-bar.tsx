@@ -177,7 +177,7 @@ export function NavigationBar({
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 md:hidden flex items-center justify-around h-16 px-1 bg-[#004a8f] z-40 shadow-lg border-t border-blue-900/30">
+      <nav className="fixed bottom-0 left-0 right-0 md:hidden flex items-center justify-around h-16 px-1 bg-brand z-40 shadow-lg border-t border-blue-900/30">
         {isAdmin ? (
           getDesktopItems()
             .slice(0, 5)
@@ -228,7 +228,7 @@ export function NavigationBar({
               onClick={() => setIsAddMenuOpen(true)}
               className="flex flex-col items-center justify-center text-white"
             >
-              <div className="bg-white text-[#004a8f] p-2.5 rounded-full shadow-lg -mt-5 border-2 border-[#004a8f] active:scale-95 transition-transform">
+              <div className="bg-white text-brand p-2.5 rounded-full shadow-lg -mt-5 border-2 border-brand active:scale-95 transition-transform">
                 <CirclePlus className="w-6 h-6" />
               </div>
               <span className="text-[10px] mt-0.5 font-medium">Dodaj</span>
@@ -261,14 +261,14 @@ export function NavigationBar({
       </nav>
 
       <nav
-        className={`hidden md:flex fixed left-0 top-20 bottom-0 ${desktopWidthClassName} bg-[#004a8f] flex-col items-center justify-start pt-5 px-3 gap-1.5 z-40 overflow-y-auto border-r border-[#004a8f]/20 ${desktopClassName}`}
+        className={`hidden md:flex fixed left-0 top-20 bottom-0 ${desktopWidthClassName} bg-brand flex-col items-center justify-start pt-5 px-3 gap-1.5 z-40 overflow-y-auto border-r border-brand/20 ${desktopClassName}`}
         aria-label="Desktop navigation"
       >
         {!isAdmin && (
           <button
             type="button"
             onClick={() => setIsAddMenuOpen(true)}
-            className="w-full mb-3 px-3.5 py-2.5 bg-white text-[#004a8f] hover:bg-blue-50 rounded-lg text-sm font-bold flex items-center justify-center gap-2.5 shadow-md transition-all active:scale-[0.98] cursor-pointer"
+            className="w-full mb-3 px-3.5 py-2.5 bg-white text-brand hover:bg-blue-50 rounded-lg text-sm font-bold flex items-center justify-center gap-2.5 shadow-md transition-all active:scale-[0.98] cursor-pointer"
           >
             <Plus className="w-5 h-5 stroke-[2.5]" />
             <span>Utwórz nowy</span>

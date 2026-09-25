@@ -17,7 +17,7 @@ export function PageLoader({
     <AuthGuard>
       <RoleGuard allowedRoles={allowedRoles as string[]}>
         <MainLayout>
-          <div className="flex h-[50vh] items-center justify-center gap-2 text-[#004a8f]">
+          <div className="flex h-[50vh] items-center justify-center gap-2 text-brand">
             <Loader2 className="animate-spin w-8 h-8" />
             <span className="text-base font-medium">{message}</span>
           </div>

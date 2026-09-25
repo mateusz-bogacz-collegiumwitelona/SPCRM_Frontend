@@ -191,12 +191,12 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
     >
       <DialogContent className="sm:max-w-175 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">Edytuj kontakt</DialogTitle>
+          <DialogTitle className="text-xl font-normal text-brand">Edytuj kontakt</DialogTitle>
         </DialogHeader>
 
         {isModalLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-4" />
+            <Loader2 className="h-8 w-8 animate-spin text-brand mb-4" />
             <p className="text-gray-500 text-sm">Pobieranie danych kontaktu...</p>
           </div>
         ) : (
@@ -235,7 +235,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                   <input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -245,7 +245,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                   <input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                   />
                 </div>
               </div>
@@ -256,7 +256,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                 <input
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -277,7 +277,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
 
               {details.map((detail, index) => (
                 <div
-                  key={index}
+                  key={`${index}-${detail.contactDetailId}`}
                   className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg relative"
                 >
                   <div className="flex flex-col items-center justify-start pt-2 px-1">
@@ -286,7 +286,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                       name="primaryContactEdit"
                       checked={detail.isPrimary}
                       onChange={() => handleSetPrimary(index)}
-                      className="w-4 h-4 text-[#004a8f] focus:ring-[#004a8f] cursor-pointer"
+                      className="w-4 h-4 text-brand focus:ring-brand cursor-pointer"
                       title="Ustaw jako główny kontakt"
                     />
                     <span className="text-[10px] text-gray-500 mt-1">Główny</span>
@@ -300,7 +300,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                       <select
                         value={detail.type}
                         onChange={(e) => handleDetailChange(index, 'type', e.target.value)}
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
                       >
                         <option value="" disabled>
                           Wybierz...
@@ -321,7 +321,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                         value={detail.label}
                         onChange={(e) => handleDetailChange(index, 'label', e.target.value)}
                         placeholder="np. Służbowy"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                       />
                     </div>
 
@@ -333,7 +333,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                         value={detail.value}
                         onChange={(e) => handleDetailChange(index, 'value', e.target.value)}
                         placeholder="Email / Telefon"
-                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                        className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                       />
                     </div>
                   </div>
@@ -374,7 +374,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
               <Button
                 type="submit"
                 disabled={isLoading || details.length === 0}
-                className="bg-[#004a8f] text-white hover:bg-blue-800"
+                className="bg-brand text-white hover:bg-blue-800"
               >
                 {isLoading ? 'Zapisywanie...' : 'Zapisz zmiany'}
               </Button>

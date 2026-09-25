@@ -113,14 +113,12 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
     >
       <DialogContent className="sm:max-w-125 bg-white">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">
-            Edytuj dane firmy
-          </DialogTitle>
+          <DialogTitle className="text-xl font-normal text-brand">Edytuj dane firmy</DialogTitle>
         </DialogHeader>
 
         {isCompanyLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-3" />
+            <Loader2 className="h-8 w-8 animate-spin text-brand mb-3" />
             <p className="text-gray-500 text-sm">Pobieranie szczegółów firmy...</p>
           </div>
         ) : (
@@ -160,7 +158,7 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Wprowadź nazwę firmy"
                 maxLength={100}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
 
@@ -175,7 +173,7 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
                 onChange={(e) => setNip(e.target.value)}
                 placeholder="10 cyfr bez spacji i kresek"
                 maxLength={13}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
 
@@ -192,7 +190,7 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-[#004a8f] text-white hover:bg-blue-800"
+                className="bg-brand text-white hover:bg-blue-800"
               >
                 {isLoading ? (
                   <>

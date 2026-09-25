@@ -109,7 +109,7 @@ export const ResendOfferEmailDialog: React.FC<ResendOfferEmailDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-115">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-blue-50 text-[#004a8f] flex items-center justify-center mt-2">
+          <div className="w-12 h-12 rounded-full bg-blue-50 text-brand flex items-center justify-center mt-2">
             <Mail className="w-6 h-6" />
           </div>
           <DialogTitle className="text-xl font-normal text-gray-900 text-center">
@@ -123,7 +123,7 @@ export const ResendOfferEmailDialog: React.FC<ResendOfferEmailDialogProps> = ({
           </p>
 
           {recipientEmail && (
-            <div className="bg-[#f8f9fa] border border-gray-200 rounded-lg p-3 text-xs flex flex-col gap-1">
+            <div className="bg-layout-bg border border-gray-200 rounded-lg p-3 text-xs flex flex-col gap-1">
               <span className="text-gray-500 font-medium">Odbiorca:</span>
               <span className="font-semibold text-gray-900">
                 {recipientName ? `${recipientName} ` : ''}({recipientEmail})
@@ -147,7 +147,7 @@ export const ResendOfferEmailDialog: React.FC<ResendOfferEmailDialogProps> = ({
                     onClick={() => setSelectedLanguage(lang.code)}
                     className={`flex items-center justify-center gap-2.5 p-3 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-[#004a8f] bg-blue-50/60 text-[#004a8f] ring-1 ring-[#004a8f]'
+                        ? 'border-brand bg-blue-50/60 text-brand ring-1 ring-brand'
                         : 'border-gray-200 hover:bg-gray-50 text-gray-700'
                     }`}
                   >
@@ -198,7 +198,7 @@ export const ResendOfferEmailDialog: React.FC<ResendOfferEmailDialogProps> = ({
             type="button"
             onClick={handleConfirm}
             disabled={isLoading}
-            className="bg-[#004a8f] hover:bg-[#003870] text-white flex items-center gap-2"
+            className="bg-brand hover:bg-brand-hover text-white flex items-center gap-2"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

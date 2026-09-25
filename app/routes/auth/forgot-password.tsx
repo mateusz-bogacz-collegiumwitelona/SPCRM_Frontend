@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
     <main className="min-h-screen bg-white">
       <Navbar />
       <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
-        <Card className="mx-auto w-full max-w-140 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-16">
+        <Card className="mx-auto w-full max-w-140 rounded-2xl border border-card-border bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-16">
           <CardContent className="px-5 py-8 sm:px-8 sm:py-10">
             {isSuccess ? (
               <div className="text-center">
@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
                       setIsSuccess(false);
                       setEmail('');
                     }}
-                    className="w-full sm:w-auto bg-[#004a8f] text-white hover:bg-[#004a8f]/90"
+                    className="w-full sm:w-auto bg-brand text-white hover:bg-brand/90"
                   >
                     Wyślij ponownie
                   </Button>
@@ -100,7 +100,7 @@ export default function ForgotPasswordPage() {
             ) : (
               <div>
                 <div className="flex flex-col items-center text-center mb-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-[#004a8f] mb-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-brand mb-3">
                     <KeyRound className="h-6 w-6" />
                   </div>
                   <h1 className="text-2xl font-bold text-gray-900 mb-1">Zapomniałeś hasła?</h1>
@@ -150,7 +150,7 @@ export default function ForgotPasswordPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="twoj.email@firma.pl"
-                        className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
+                        className="w-full border border-gray-300 rounded-md pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                       />
                     </div>
                   </div>
@@ -158,7 +158,7 @@ export default function ForgotPasswordPage() {
                   <Button
                     type="submit"
                     disabled={mutation.isPending}
-                    className="w-full bg-[#004a8f] text-white hover:bg-[#004a8f]/90 flex items-center justify-center gap-2 h-10"
+                    className="w-full bg-brand text-white hover:bg-brand/90 flex items-center justify-center gap-2 h-10"
                   >
                     {mutation.isPending ? (
                       <>
@@ -173,7 +173,7 @@ export default function ForgotPasswordPage() {
                 <div className="mt-6 border-t border-gray-100 pt-4 text-center">
                   <Link
                     to="/"
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-[#004a8f] transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-brand transition-colors"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     Wróć do logowania

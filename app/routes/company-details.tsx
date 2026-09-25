@@ -269,7 +269,7 @@ export default function CompanyDetails() {
   return (
     <AuthGuard>
       <MainLayout>
-        <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
+        <div className="bg-white lg:bg-layout-bg w-full min-h-screen pb-12">
           <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">
             <CompanyClientHeader
               isLoading={isBasicInfoLoading}
@@ -306,7 +306,7 @@ export default function CompanyDetails() {
                       type="button"
                       size="sm"
                       onClick={handleOpenAddAddress}
-                      className="h-7 text-xs bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-1"
+                      className="h-7 text-xs bg-brand text-white hover:bg-blue-800 flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" /> Dodaj adres
                     </Button>
@@ -354,7 +354,7 @@ export default function CompanyDetails() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenEditAddress(addr)}
-                            className="h-7 text-xs text-[#004a8f] hover:text-blue-900 hover:bg-blue-50 px-2"
+                            className="h-7 text-xs text-brand hover:text-blue-900 hover:bg-blue-50 px-2"
                             title="Edytuj adres"
                           >
                             <Pencil className="w-3.5 h-3.5 mr-1" /> Edytuj

@@ -22,7 +22,7 @@ const ContactWayItem = ({ way }: { way: Contact }) => (
 
     {way.isPrimary && (
       <div className="shrink-0 self-start sm:self-auto">
-        <span className="text-[10px] uppercase tracking-wider bg-[#d4edda] text-[#28a745] px-2 py-0.5 rounded-full">
+        <span className="text-[10px] uppercase tracking-wider bg-is-primary-bg text-is-primary px-2 py-0.5 rounded-full">
           Główny
         </span>
       </div>

@@ -324,7 +324,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                   {contact.contactFirstName} {contact.contactLastName}
                 </p>
                 {contact.isPrimary && (
-                  <span className="bg-blue-100 text-[#004a8f] px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                  <span className="bg-blue-100 text-brand px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                     Główny
                   </span>
                 )}
@@ -372,7 +372,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
               <span>{product.dimension || product.dimmension}</span>
             )}
             <span>•</span>
-            <span className="font-medium text-[#004a8f]">
+            <span className="font-medium text-brand">
               {formatCurrency(
                 product.promotionalPrice ?? product.stockPrice,
                 selectedCurrency?.code || 'PLN',
@@ -390,7 +390,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-2xl bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-[#004a8f] text-lg font-semibold">
+          <DialogTitle className="text-brand text-lg font-semibold">
             Dodaj nową transakcję
           </DialogTitle>
         </DialogHeader>
@@ -432,7 +432,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                       {selectedContact.contactFirstName} {selectedContact.contactLastName}
                     </p>
                     {selectedContact.isPrimary && (
-                      <span className="bg-blue-100 text-[#004a8f] px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                      <span className="bg-blue-100 text-brand px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
                         Główny
                       </span>
                     )}
@@ -485,7 +485,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                 id="deal-currency"
                 value={currencyId}
                 onChange={(e) => setCurrencyId(e.target.value)}
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               >
                 {currencies.map((c) => (
                   <option key={c.currencyId} value={c.currencyId}>
@@ -541,7 +541,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                 variant="outline"
                 size="sm"
                 onClick={() => setIsProductPickerOpen(true)}
-                className="text-xs border-[#004a8f] text-[#004a8f] hover:bg-blue-50"
+                className="text-xs border-brand text-brand hover:bg-blue-50"
               >
                 <Plus className="mr-1 h-3.5 w-3.5" /> Dodaj produkt
               </Button>
@@ -606,7 +606,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
               </div>
             )}
 
-            <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-100 rounded-md text-sm font-semibold text-[#004a8f]">
+            <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-100 rounded-md text-sm font-semibold text-brand">
               <span>Łączna wartość:</span>
               <span>
                 {formatCurrency(
@@ -631,7 +631,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-[#004a8f] text-white hover:bg-[#003870]"
+              className="bg-brand text-white hover:bg-brand-hover"
             >
               {isLoading ? (
                 <>
@@ -648,7 +648,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-[#004a8f]">Wybierz produkt</h3>
+                <h3 className="text-lg font-medium text-brand">Wybierz produkt</h3>
                 <button
                   type="button"
                   onClick={() => setIsProductPickerOpen(false)}

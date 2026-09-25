@@ -182,7 +182,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
             <div className="flex items-start justify-between gap-2 mb-1.5">
               <Link
                 to={`/task/${task.id}`}
-                className="text-sm font-semibold text-gray-900 hover:text-[#004a8f] hover:underline line-clamp-1 flex-1"
+                className="text-sm font-semibold text-gray-900 hover:text-brand hover:underline line-clamp-1 flex-1"
               >
                 {task.title}
               </Link>
@@ -212,7 +212,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
                 <button
                   type="button"
                   onClick={() => setTaskToEdit(task)}
-                  className="text-gray-400 hover:text-[#004a8f] p-1 rounded transition-colors"
+                  className="text-gray-400 hover:text-brand p-1 rounded transition-colors"
                   title="Edytuj zadanie"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -261,7 +261,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
             type="button"
             size="sm"
             onClick={() => setIsAddModalOpen(true)}
-            className="h-8 flex items-center gap-1.5 bg-[#004a8f] text-white hover:bg-blue-800 text-xs shrink-0 shadow-xs"
+            className="h-8 flex items-center gap-1.5 bg-brand text-white hover:bg-blue-800 text-xs shrink-0 shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Dodaj zadanie</span>
@@ -275,7 +275,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Szukaj zadania..."
-              className="w-full border border-gray-300 rounded-md bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+              className="w-full border border-gray-300 rounded-md bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -290,7 +290,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
               <Filter className="w-3.5 h-3.5" />
               <span>Filtry</span>
               {(statusFilter || priorityFilter) && (
-                <span className="w-2 h-2 rounded-full bg-[#004a8f]" />
+                <span className="w-2 h-2 rounded-full bg-brand" />
               )}
             </Button>
 
@@ -366,7 +366,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
                   </button>
                   <Button
                     size="sm"
-                    className="h-7 text-xs bg-[#004a8f] text-white px-2.5"
+                    className="h-7 text-xs bg-brand text-white px-2.5"
                     onClick={() => setShowFilters(false)}
                   >
                     Zamknij

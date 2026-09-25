@@ -125,8 +125,8 @@ export const EditDealProductDialog: React.FC<EditDealProductDialogProps> = ({
     >
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
-          <DialogTitle className="text-[#004a8f] text-lg font-semibold flex items-center gap-2">
-            <Pencil className="w-5 h-5 text-[#004a8f]" />
+          <DialogTitle className="text-brand text-lg font-semibold flex items-center gap-2">
+            <Pencil className="w-5 h-5 text-brand" />
             Edycja pozycji w zamówieniu
           </DialogTitle>
         </DialogHeader>
@@ -200,7 +200,7 @@ export const EditDealProductDialog: React.FC<EditDealProductDialogProps> = ({
             </div>
           </div>
 
-          <div className="p-3 bg-blue-50 border border-blue-100 rounded-md flex justify-between items-center text-sm font-semibold text-[#004a8f]">
+          <div className="p-3 bg-blue-50 border border-blue-100 rounded-md flex justify-between items-center text-sm font-semibold text-brand">
             <span>Nowa wartość pozycji:</span>
             <span>{formatCurrency(totalValue * 10000, currencyCode, 2)}</span>
           </div>
@@ -218,7 +218,7 @@ export const EditDealProductDialog: React.FC<EditDealProductDialogProps> = ({
             <Button
               type="submit"
               disabled={editMutation.isPending}
-              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2"
+              className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"
             >
               {editMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Zapisz zmiany

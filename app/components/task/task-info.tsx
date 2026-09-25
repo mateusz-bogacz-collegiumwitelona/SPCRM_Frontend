@@ -201,11 +201,11 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
   return (
     <div className="mb-6">
       <div className="mb-6">
-        <h1 className="text-3xl lg:text-4xl font-normal text-[#004a8f] mb-3">{task.title}</h1>
+        <h1 className="text-3xl lg:text-4xl font-normal text-brand mb-3">{task.title}</h1>
         <div className="flex flex-wrap items-center gap-3">
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
-              isCompleted ? 'bg-[#d4edda] text-[#28a745]' : 'bg-blue-100 text-[#004a8f]'
+              isCompleted ? 'bg-is-primary-bg text-is-primary' : 'bg-blue-100 text-brand'
             }`}
           >
             {isCompleted ? (
@@ -242,7 +242,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
                 onClick={() => setIsStatusOpen(true)}
                 className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
               >
-                <CheckSquare className="w-4 h-4 text-[#004a8f]" />
+                <CheckSquare className="w-4 h-4 text-brand" />
                 Zmień status
               </Button>
 
@@ -252,7 +252,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
                 onClick={() => setIsEditOpen(true)}
                 className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
               >
-                <Pencil className="w-4 h-4 text-[#004a8f]" />
+                <Pencil className="w-4 h-4 text-brand" />
                 Edytuj
               </Button>
 
@@ -262,7 +262,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
                 onClick={() => setIsExtendOpen(true)}
                 className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
               >
-                <Clock className="w-4 h-4 text-[#004a8f]" />
+                <Clock className="w-4 h-4 text-brand" />
                 Przedłuż termin
               </Button>
 
@@ -273,7 +273,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
                   onClick={() => setIsAssigneeOpen(true)}
                   className="text-gray-700 border-gray-300 hover:bg-gray-50 flex items-center gap-1.5 text-sm"
                 >
-                  <UserCheck className="w-4 h-4 text-[#004a8f]" />
+                  <UserCheck className="w-4 h-4 text-brand" />
                   Zmień pracownika
                 </Button>
               </HasRole>
@@ -295,7 +295,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
       {task.description && (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 mb-6">
           <h2 className="text-xl font-normal text-gray-800 mb-4 flex items-center gap-2">
-            <AlignLeft className="text-[#004a8f] w-5 h-5" /> Opis zadania
+            <AlignLeft className="text-brand w-5 h-5" /> Opis zadania
           </h2>
           <div className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded-md border border-gray-100">
             {task.description}

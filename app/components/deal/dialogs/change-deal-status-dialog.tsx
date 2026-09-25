@@ -131,8 +131,8 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
     >
       <DialogContent className="sm:max-w-md bg-white">
         <DialogHeader>
-          <DialogTitle className="text-[#004a8f] text-lg font-semibold flex items-center gap-2">
-            <RefreshCw className="w-5 h-5 text-[#004a8f]" />
+          <DialogTitle className="text-brand text-lg font-semibold flex items-center gap-2">
+            <RefreshCw className="w-5 h-5 text-brand" />
             Zmień status transakcji
           </DialogTitle>
         </DialogHeader>
@@ -184,7 +184,7 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
                 id="deal-status-select"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               >
                 <option value="">Wybierz docelowy status...</option>
                 {availableStatuses
@@ -200,7 +200,7 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
           {isTransitionToComplete && (
             <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
               <div className="flex items-start gap-2 text-blue-900 text-xs">
-                <FileText className="w-4 h-4 text-[#004a8f] shrink-0 mt-0.5" />
+                <FileText className="w-4 h-4 text-brand shrink-0 mt-0.5" />
                 <p className="leading-relaxed">
                   Zakończenie transakcji sukcesem wygeneruje <strong>fakturę VAT</strong> i wyśle ją
                   do klienta.
@@ -218,7 +218,7 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
                   id="invoice-lang"
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
                 >
                   <option value="pl">Polski (PL)</option>
                   <option value="en">Angielski (EN)</option>
@@ -259,7 +259,7 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
             <Button
               type="submit"
               disabled={changeStatusMutation.isPending || !selectedStatus}
-              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2"
+              className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"
             >
               {changeStatusMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               Zmień status

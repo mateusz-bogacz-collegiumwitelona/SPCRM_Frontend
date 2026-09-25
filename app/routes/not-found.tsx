@@ -14,14 +14,12 @@ export default function NotFound() {
   const homeLabel = isLogged ? 'Przejdź do Dashboardu' : 'Strona logowania';
 
   const ErrorCard = (
-    <div className="mx-auto w-full max-w-170 rounded-2xl border border-[#d6d9dd] bg-white p-8 sm:p-12 shadow-[0_4px_4px_rgba(0,0,0,0.25)] text-center">
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-[#004a8f]">
+    <div className="mx-auto w-full max-w-170 rounded-2xl border border-card-border bg-white p-8 sm:p-12 shadow-[0_4px_4px_rgba(0,0,0,0.25)] text-center">
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-brand">
         <Compass className="h-10 w-10 stroke-[1.5]" />
       </div>
 
-      <span className="text-sm font-semibold tracking-wider text-[#004a8f] uppercase">
-        Błąd 404
-      </span>
+      <span className="text-sm font-semibold tracking-wider text-brand uppercase">Błąd 404</span>
 
       <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
         Nie znaleziono strony
@@ -46,7 +44,7 @@ export default function NotFound() {
         <Button
           type="button"
           onClick={() => navigate(homePath)}
-          className="w-full sm:w-auto h-10 px-6 bg-[#004a8f] text-white hover:bg-blue-800 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+          className="w-full sm:w-auto h-10 px-6 bg-brand text-white hover:bg-blue-800 flex items-center justify-center gap-2 shadow-sm cursor-pointer"
         >
           {isLogged ? <Home className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
           <span>{homeLabel}</span>
@@ -57,7 +55,7 @@ export default function NotFound() {
         <p className="text-xs text-gray-500 flex items-center justify-center gap-1.5">
           <HelpCircle className="w-4 h-4 text-gray-400" />
           <span>Coś nie działa poprawnie?</span>
-          <Link to="/help" className="font-medium text-[#004a8f] hover:underline">
+          <Link to="/help" className="font-medium text-brand hover:underline">
             Skontaktuj się z pomocą
           </Link>
         </p>

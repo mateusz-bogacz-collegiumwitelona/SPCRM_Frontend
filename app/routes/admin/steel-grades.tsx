@@ -88,7 +88,7 @@ const columns = [
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-500 hover:text-[#004a8f]"
+                className="h-8 w-8 text-gray-500 hover:text-brand"
               >
                 <span className="sr-only">Otwórz menu</span>
                 <MoreHorizontal className="h-4 w-4" />

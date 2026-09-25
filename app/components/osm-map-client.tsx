@@ -129,7 +129,7 @@ export default function OSMMapClient({
                       <button
                         type="button"
                         onClick={() => onEditAddress(company.id)}
-                        className="text-[#004a8f] font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-brand font-medium hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         Edytuj adres
                       </button>
@@ -139,7 +139,7 @@ export default function OSMMapClient({
                       href={getGoogleMapsLink(company.latitude, company.longitude)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-[#004a8f] font-medium flex items-center gap-1 ml-auto hover:underline"
+                      className="text-gray-600 hover:text-brand font-medium flex items-center gap-1 ml-auto hover:underline"
                     >
                       Nawiguj <ExternalLink size={12} />
                     </a>

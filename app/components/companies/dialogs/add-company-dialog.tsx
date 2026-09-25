@@ -293,7 +293,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-300 max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">
+          <DialogTitle className="text-xl font-normal text-brand">
             Dodaj nową firmę z lokalizacjami
           </DialogTitle>
         </DialogHeader>
@@ -337,7 +337,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="np. Pol-Stal Sp. z o.o."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div className="space-y-1.5">
@@ -349,7 +349,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
                   placeholder="10 cyfr"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-1 focus:ring-brand"
                 />
               </div>
             </div>
@@ -366,7 +366,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handleAddAddress}
-                  className="h-8 text-xs flex items-center gap-1 text-[#004a8f]"
+                  className="h-8 text-xs flex items-center gap-1 text-brand"
                 >
                   <Plus className="w-3.5 h-3.5" /> Dodaj kolejny adres
                 </Button>
@@ -383,7 +383,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                       onFocusCapture={() => setActiveAddressId(addr.id)}
                       className={`p-4 border rounded-lg transition-all relative ${
                         isCurrent
-                          ? 'border-[#004a8f] bg-blue-50/20 shadow-sm'
+                          ? 'border-brand bg-blue-50/20 shadow-sm'
                           : 'border-gray-200 bg-white hover:border-gray-300'
                       }`}
                     >
@@ -397,14 +397,14 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                             #{index + 1} {isHq ? 'Siedziba główna' : 'Oddział'}
                           </span>
                           {isCurrent ? (
-                            <span className="text-[11px] text-[#004a8f] font-semibold flex items-center gap-1">
+                            <span className="text-[11px] text-brand font-semibold flex items-center gap-1">
                               <MapPin className="w-3 h-3" /> Wybrany na mapie
                             </span>
                           ) : (
                             <button
                               type="button"
                               onClick={() => setActiveAddressId(addr.id)}
-                              className="text-[11px] text-gray-500 hover:text-[#004a8f] font-medium flex items-center gap-1 transition-colors"
+                              className="text-[11px] text-gray-500 hover:text-brand font-medium flex items-center gap-1 transition-colors"
                             >
                               <MapPin className="w-3 h-3" /> Wybierz na mapie
                             </button>
@@ -447,7 +447,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                             value={addr.street}
                             onChange={(e) => handleAddressChange(addr.id, 'street', e.target.value)}
                             placeholder="np. Kolejowa 5"
-                            className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
+                            className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-brand"
                           />
                         </div>
 
@@ -463,7 +463,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                             value={addr.type}
                             onChange={(e) => handleAddressChange(addr.id, 'type', e.target.value)}
                             disabled={isTypesLoading}
-                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-brand"
                           >
                             {addressTypes.map((t) => (
                               <option key={t} value={t}>
@@ -487,7 +487,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                               handleAddressChange(addr.id, 'zipCode', e.target.value)
                             }
                             placeholder="00-000"
-                            className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
+                            className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-brand"
                           />
                         </div>
 
@@ -503,7 +503,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                             value={addr.city}
                             onChange={(e) => handleAddressChange(addr.id, 'city', e.target.value)}
                             placeholder="np. Warszawa"
-                            className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-[#004a8f]"
+                            className="w-full px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:ring-1 focus:ring-brand"
                           />
                         </div>
                       </div>
@@ -519,7 +519,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   Lokalizacja zaznaczonego adresu
                 </h3>
                 {isGeocoding && (
-                  <span className="text-xs text-[#004a8f] flex items-center gap-1 animate-pulse">
+                  <span className="text-xs text-brand flex items-center gap-1 animate-pulse">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" /> Synchronizacja...
                   </span>
                 )}
@@ -542,7 +542,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm gap-2">
-                    <MapPinned className="animate-bounce text-[#004a8f]" /> Ładowanie mapy...
+                    <MapPinned className="animate-bounce text-brand" /> Ładowanie mapy...
                   </div>
                 )}
               </div>
@@ -571,7 +571,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading || isGeocoding}
-              className="bg-[#004a8f] text-white hover:bg-blue-800"
+              className="bg-brand text-white hover:bg-blue-800"
             >
               {isLoading ? 'Zapisywanie...' : 'Zapisz firmę i adresy'}
             </Button>

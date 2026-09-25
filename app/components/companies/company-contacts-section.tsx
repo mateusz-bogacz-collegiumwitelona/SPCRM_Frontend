@@ -34,7 +34,7 @@ export interface CompanyContactTableMeta {
 }
 
 const PrimaryBadge = ({ isPrimary }: { isPrimary: boolean }) => {
-  const className = isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600';
+  const className = isPrimary ? 'bg-is-primary-bg text-is-primary' : 'bg-gray-100 text-gray-600';
   return (
     <span className={`text-xs px-2 py-0.5 rounded-full ${className}`}>
       {isPrimary ? 'Główny' : 'Dodatkowy'}
@@ -62,7 +62,7 @@ const columns = [
       const row = info.row.original;
       return (
         <div className="flex flex-col">
-          <span className="text-[#004a8f] font-normal text-sm">
+          <span className="text-brand font-normal text-sm">
             {row.firstName} {row.lastName}
           </span>
           {row.jobTitle && <span className="text-xs text-gray-500 mt-0.5">{row.jobTitle}</span>}
@@ -74,7 +74,9 @@ const columns = [
     header: 'Główny kontakt',
     cell: (info) => {
       const isPrimary = info.getValue();
-      const badgeClass = isPrimary ? 'bg-[#d4edda] text-[#28a745]' : 'bg-gray-100 text-gray-600';
+      const badgeClass = isPrimary
+        ? 'bg-is-primary-bg text-is-primary'
+        : 'bg-gray-100 text-gray-600';
       return (
         <span
           className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${badgeClass}`}
@@ -105,13 +107,13 @@ const columns = [
         <div className="flex gap-3 items-center">
           <Link
             to={`/contact/${info.row.original.id}`}
-            className="text-[#004a8f] hover:underline font-medium text-sm"
+            className="text-brand hover:underline font-medium text-sm"
           >
             Szczegóły
           </Link>
           <button
             onClick={() => meta.onEdit(info.row.original.id)}
-            className="text-gray-500 hover:text-[#004a8f] hover:underline font-medium text-sm"
+            className="text-gray-500 hover:text-brand hover:underline font-medium text-sm"
           >
             Edytuj
           </button>
@@ -290,12 +292,12 @@ export const CompanyContactsSection: React.FC<{
         </div>
       )}
       <section className="block xl:hidden">
-        <h2 className="text-xl text-[#004a8f] font-normal mb-3 mt-6 flex justify-between items-center">
+        <h2 className="text-xl text-brand font-normal mb-3 mt-6 flex justify-between items-center">
           <span>
             Kontakty: {isLoading && <span className="text-sm text-gray-400">Ładowanie...</span>}
           </span>
           <Button size="icon" variant="ghost" onClick={() => setIsAddModalOpen(true)}>
-            <UserPlus className="w-5 h-5 text-[#004a8f]" />
+            <UserPlus className="w-5 h-5 text-brand" />
           </Button>
         </h2>
         {mobileContacts.length === 0 && !isLoading ? (
@@ -307,7 +309,7 @@ export const CompanyContactsSection: React.FC<{
             {mobileContacts.map((c) => (
               <div key={c.id} className="border border-black rounded-lg p-3 bg-white text-sm">
                 <div className="flex justify-between items-start mb-3">
-                  <div className="text-[#004a8f] leading-tight">
+                  <div className="text-brand leading-tight">
                     <p className="font-medium">
                       {c.firstName} {c.lastName}
                     </p>
@@ -322,11 +324,11 @@ export const CompanyContactsSection: React.FC<{
                   <div className="flex gap-3">
                     <button
                       onClick={() => setEditingContactId(c.id)}
-                      className="text-gray-500 hover:text-[#004a8f] hover:underline font-medium"
+                      className="text-gray-500 hover:text-brand hover:underline font-medium"
                     >
                       Edytuj
                     </button>
-                    <Link className="text-[#004a8f] hover:underline" to={`/contact/${c.id}`}>
+                    <Link className="text-brand hover:underline" to={`/contact/${c.id}`}>
                       Szczegóły
                     </Link>
                   </div>
@@ -337,7 +339,7 @@ export const CompanyContactsSection: React.FC<{
         )}
         {page < totalPages && (
           <button
-            className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium"
+            className="w-full bg-brand text-white py-2.5 rounded-lg mt-3 text-base font-medium"
             onClick={() => setPage((p) => p + 1)}
           >
             Pokaż więcej
@@ -349,7 +351,7 @@ export const CompanyContactsSection: React.FC<{
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <h2 className="text-xl font-normal text-gray-800">Kontakty</h2>
           <Button
-            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+            className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
             onClick={() => setIsAddModalOpen(true)}
           >
             <UserPlus className="w-4 h-4" /> Dodaj

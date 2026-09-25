@@ -160,7 +160,7 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
 
         {isLoadingProducts ? (
           <div className="py-12 flex flex-col items-center justify-center text-gray-500 gap-2">
-            <Loader2 className="w-6 h-6 animate-spin text-[#004a8f]" />
+            <Loader2 className="w-6 h-6 animate-spin text-brand" />
             <span className="text-xs">Sprawdzanie powiązanych produktów...</span>
           </div>
         ) : (

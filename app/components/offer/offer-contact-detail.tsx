@@ -105,13 +105,13 @@ export const OfferClientDetail: React.FC<{ offerId: string }> = ({ offerId }) =>
     <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4 mb-4">
         <div className="flex items-center gap-2 text-gray-900">
-          <Contact className="w-5 h-5 text-[#004a8f]" />
+          <Contact className="w-5 h-5 text-brand" />
           <h2 className="text-lg font-bold text-gray-900">Osoba kontaktowa klienta</h2>
         </div>
 
         <Link
           to={`/contact/${info.contactId}`}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#004a8f] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-brand bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
         >
           <span>Profil kontaktu</span>
           <ExternalLink className="w-3.5 h-3.5" />
@@ -119,8 +119,8 @@ export const OfferClientDetail: React.FC<{ offerId: string }> = ({ offerId }) =>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center gap-3.5 p-3.5 rounded-lg border border-gray-100 bg-[#f8f9fa]">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0 font-bold text-sm">
+        <div className="flex items-center gap-3.5 p-3.5 rounded-lg border border-gray-100 bg-layout-bg">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand flex items-center justify-center shrink-0 font-bold text-sm">
             {info.contactFirstName.charAt(0)}
             {info.contactLastName.charAt(0)}
           </div>
@@ -135,8 +135,8 @@ export const OfferClientDetail: React.FC<{ offerId: string }> = ({ offerId }) =>
           </div>
         </div>
 
-        <div className="flex items-center gap-3.5 p-3.5 rounded-lg border border-gray-100 bg-[#f8f9fa]">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3.5 p-3.5 rounded-lg border border-gray-100 bg-layout-bg">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand flex items-center justify-center shrink-0">
             <Building2 className="w-5 h-5" />
           </div>
           <div>

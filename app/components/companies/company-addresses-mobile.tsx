@@ -27,7 +27,7 @@ export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
 
   return (
     <section className="block xl:hidden">
-      <h2 className="text-xl text-[#004a8f] font-normal mb-3">Adresy:</h2>
+      <h2 className="text-xl text-brand font-normal mb-3">Adresy:</h2>
       <div className="space-y-3">
         {addresses.slice(0, limit).map((addr) => (
           <div
@@ -35,7 +35,7 @@ export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
             className="border border-gray-200 rounded-lg p-3 bg-white text-sm shadow-sm"
           >
             <div className="flex justify-between items-start mb-3">
-              <div className="text-[#004a8f] leading-tight space-y-1">
+              <div className="text-brand leading-tight space-y-1">
                 <p className="text-gray-800 font-semibold">{addr.street}</p>
                 <p className="text-gray-500 text-xs">
                   {addr.zipCode} {addr.city}
@@ -56,7 +56,7 @@ export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
                   <button
                     type="button"
                     onClick={() => onEditAddress(addr)}
-                    className="text-[#004a8f] font-medium hover:underline flex items-center gap-1"
+                    className="text-brand font-medium hover:underline flex items-center gap-1"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     <span>Edytuj</span>
@@ -83,9 +83,9 @@ export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-600 hover:text-[#004a8f] font-medium flex items-center gap-1 ml-auto"
+                className="text-gray-600 hover:text-brand font-medium flex items-center gap-1 ml-auto"
               >
-                <Navigation className="w-3 h-3 text-[#004a8f]" />
+                <Navigation className="w-3 h-3 text-brand" />
                 <span>Nawiguj</span>
               </a>
             </div>
@@ -95,7 +95,7 @@ export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
 
       {limit < addresses.length && (
         <button
-          className="w-full bg-[#004a8f] text-white py-2.5 rounded-lg mt-3 text-base font-medium"
+          className="w-full bg-brand text-white py-2.5 rounded-lg mt-3 text-base font-medium"
           onClick={() => setLimit((prev) => prev + 3)}
         >
           Pokaż więcej

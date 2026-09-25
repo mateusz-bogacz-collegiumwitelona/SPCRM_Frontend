@@ -233,7 +233,7 @@ export default function MailingCreator() {
           <input
             id={checkboxId}
             type="checkbox"
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-[#004a8f] focus:ring-[#004a8f]"
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
             checked={selectedContacts.includes(client.contactId)}
             onChange={() => toggleContact(client.contactId)}
           />
@@ -285,7 +285,7 @@ export default function MailingCreator() {
                 </span>
               </div>
             ) : (
-              <span className="font-medium text-[#004a8f]">
+              <span className="font-medium text-brand">
                 Cena bazowa: {formatCurrency(product.stockPrice, 'PLN', 2)}
               </span>
             )}
@@ -301,7 +301,7 @@ export default function MailingCreator() {
       <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="mx-auto max-w-2xl pb-16 pt-6">
-            <h1 className="mb-6 text-2xl font-semibold text-[#004a8f]">Kreator Mailingu</h1>
+            <h1 className="mb-6 text-2xl font-semibold text-brand">Kreator Mailingu</h1>
 
             {formError && (
               <div className="mb-4 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
@@ -334,7 +334,7 @@ export default function MailingCreator() {
 
             <div className="mb-6 overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
               <div className="border-b border-gray-200 px-4 py-3">
-                <h2 className="text-lg font-medium text-[#004a8f]">1. Wybierz odbiorców</h2>
+                <h2 className="text-lg font-medium text-brand">1. Wybierz odbiorców</h2>
               </div>
               <div className="p-4">
                 <div className="relative mb-4">
@@ -356,7 +356,7 @@ export default function MailingCreator() {
 
             <div className="mb-6 overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
               <div className="border-b border-gray-200 px-4 py-3">
-                <h2 className="text-lg font-medium text-[#004a8f]">2. Oferta produktowa</h2>
+                <h2 className="text-lg font-medium text-brand">2. Oferta produktowa</h2>
               </div>
               <div className="p-4">
                 {selectedProducts.length > 0 && (
@@ -411,7 +411,7 @@ export default function MailingCreator() {
                               }
                               className="h-8 w-24 bg-white px-2 py-1 text-sm font-medium"
                             />
-                            <span className="text-sm font-bold text-[#004a8f]">{currencyCode}</span>
+                            <span className="text-sm font-bold text-brand">{currencyCode}</span>
                           </div>
                         </div>
                       </div>
@@ -422,7 +422,7 @@ export default function MailingCreator() {
                 <Button
                   type="button"
                   onClick={() => setIsProductModalOpen(true)}
-                  className="w-full bg-[#004a8f] hover:bg-[#003870]"
+                  className="w-full bg-brand hover:bg-brand-hover"
                 >
                   Dodaj nowy produkt
                 </Button>
@@ -431,7 +431,7 @@ export default function MailingCreator() {
 
             <div className="mb-8 overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
               <div className="border-b border-gray-200 px-4 py-3">
-                <h2 className="text-lg font-medium text-[#004a8f]">
+                <h2 className="text-lg font-medium text-brand">
                   3. Ustawienia wiadomości i waluty
                 </h2>
               </div>
@@ -444,7 +444,7 @@ export default function MailingCreator() {
                     id="mailing-lang"
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                   >
                     <option value="pl">Polski (PL)</option>
                     <option value="en">English (EN)</option>
@@ -459,7 +459,7 @@ export default function MailingCreator() {
                     id="mailing-currency"
                     value={currencyCode}
                     onChange={(e) => setCurrencyCode(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                   >
                     {currencies.map((curr) => (
                       <option key={curr.currencyId} value={curr.code}>
@@ -475,7 +475,7 @@ export default function MailingCreator() {
               type="button"
               onClick={handleSubmit}
               disabled={isSending}
-              className="h-12 w-full text-base bg-[#004a8f] hover:bg-[#003870]"
+              className="h-12 w-full text-base bg-brand hover:bg-brand-hover"
             >
               {isSending ? (
                 <>
@@ -492,7 +492,7 @@ export default function MailingCreator() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
               <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-[#004a8f]">Wybierz produkt</h3>
+                  <h3 className="text-lg font-medium text-brand">Wybierz produkt</h3>
                   <button
                     type="button"
                     onClick={() => setIsProductModalOpen(false)}

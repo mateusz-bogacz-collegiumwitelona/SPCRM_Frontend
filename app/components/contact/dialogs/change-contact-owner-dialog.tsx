@@ -92,7 +92,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
     if (isOwnersLoading) {
       return (
         <div className="flex flex-col items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand mb-4" />
           <p className="text-gray-500 text-sm">Pobieranie listy pracowników...</p>
         </div>
       );
@@ -140,7 +140,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
             id="new-contact-owner"
             value={selectedOwnerId}
             onChange={(e) => setSelectedOwnerId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
             required
           >
             <option value="" disabled>
@@ -170,7 +170,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
           <Button
             type="submit"
             disabled={isLoading || !selectedOwnerId}
-            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+            className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Zapisz zmiany

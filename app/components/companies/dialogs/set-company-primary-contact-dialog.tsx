@@ -63,7 +63,7 @@ export const SetCompanyPrimaryContactDialog: React.FC<SetPrimaryContactDialogPro
       <DialogContent className="sm:max-w-112.5">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mt-2">
-            <Star className="w-6 h-6 text-[#004a8f]" />
+            <Star className="w-6 h-6 text-brand" />
           </div>
           <DialogTitle className="text-xl font-normal text-gray-900 text-center">
             Zmień główny kontakt
@@ -115,7 +115,7 @@ export const SetCompanyPrimaryContactDialog: React.FC<SetPrimaryContactDialogPro
           <Button
             onClick={handleConfirm}
             disabled={isLoading}
-            className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+            className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Ustaw jako główny

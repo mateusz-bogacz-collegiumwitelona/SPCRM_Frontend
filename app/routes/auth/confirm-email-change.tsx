@@ -69,7 +69,7 @@ export default function ConfirmEmailChangePage() {
           Parametry autoryzacyjne w linku są niekompletne lub wygasły. Upewnij się, że cały adres z
           wiadomości e-mail został skopiowany poprawnie.
         </p>
-        <Button asChild className="bg-[#004a8f] text-white hover:bg-[#004a8f]/90">
+        <Button asChild className="bg-brand text-white hover:bg-brand/90">
           <Link to="/">Przejdź do logowania</Link>
         </Button>
       </div>
@@ -89,7 +89,7 @@ export default function ConfirmEmailChangePage() {
         </p>
         <Button
           onClick={() => navigate('/')}
-          className="bg-[#004a8f] text-white hover:bg-[#004a8f]/90 px-8"
+          className="bg-brand text-white hover:bg-brand/90 px-8"
         >
           Zaloguj się
         </Button>
@@ -98,7 +98,7 @@ export default function ConfirmEmailChangePage() {
   } else {
     content = (
       <div>
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-[#004a8f] mb-4">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-brand mb-4">
           <MailCheck className="h-6 w-6" />
         </div>
         <h1 className="text-xl font-bold text-gray-900 mb-2">Potwierdzenie zmiany adresu e-mail</h1>
@@ -122,7 +122,7 @@ export default function ConfirmEmailChangePage() {
         <Button
           onClick={() => confirmMutation.mutate()}
           disabled={confirmMutation.isPending}
-          className="bg-[#004a8f] text-white hover:bg-[#004a8f]/90 px-8 flex items-center gap-2 mx-auto"
+          className="bg-brand text-white hover:bg-brand/90 px-8 flex items-center gap-2 mx-auto"
         >
           {confirmMutation.isPending ? (
             <>
@@ -140,7 +140,7 @@ export default function ConfirmEmailChangePage() {
     <main className="min-h-screen bg-white">
       <Navbar />
       <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
-        <Card className="mx-auto w-full max-w-160 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-20">
+        <Card className="mx-auto w-full max-w-160 rounded-2xl border border-card-border bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-20">
           <CardContent className="px-5 py-8 sm:px-8 sm:py-10 text-center">{content}</CardContent>
         </Card>
       </section>

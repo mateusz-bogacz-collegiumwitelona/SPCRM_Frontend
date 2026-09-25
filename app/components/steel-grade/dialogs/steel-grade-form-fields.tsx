@@ -27,7 +27,7 @@ export const SteelGradeFormFields: React.FC<SteelGradeFormFieldsProps> = ({
           value={formData.name}
           onChange={(e) => onChange('name', e.target.value)}
           placeholder="np. S355J2, 1.4301"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
@@ -41,7 +41,7 @@ export const SteelGradeFormFields: React.FC<SteelGradeFormFieldsProps> = ({
           value={formData.standard}
           onChange={(e) => onChange('standard', e.target.value)}
           placeholder="np. EN 10025-2, DIN 17100"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
@@ -57,7 +57,7 @@ export const SteelGradeFormFields: React.FC<SteelGradeFormFieldsProps> = ({
           value={formData.density}
           onChange={(e) => onChange('density', e.target.value === '' ? '' : Number(e.target.value))}
           placeholder="np. 7.85"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
     </>

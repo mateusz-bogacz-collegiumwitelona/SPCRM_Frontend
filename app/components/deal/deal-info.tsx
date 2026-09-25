@@ -201,12 +201,12 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
             <div className="flex items-center gap-3 mb-2">
               <Link
                 to="/sales"
-                className="text-gray-500 hover:text-[#004a8f] transition-colors"
+                className="text-gray-500 hover:text-brand transition-colors"
                 title="Powrót do listy szans sprzedaży"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <h1 className="text-2xl lg:text-3xl font-normal text-[#004a8f]">{deal.name}</h1>
+              <h1 className="text-2xl lg:text-3xl font-normal text-brand">{deal.name}</h1>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 ml-8">
@@ -261,7 +261,7 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
                 type="button"
                 variant="outline"
                 onClick={() => setIsExtendOpen(true)}
-                className="text-[#004a8f] border-blue-200 hover:bg-blue-50 flex items-center gap-1.5 text-sm"
+                className="text-brand border-blue-200 hover:bg-blue-50 flex items-center gap-1.5 text-sm"
               >
                 <Clock className="w-4 h-4" />
                 Przedłuż termin
@@ -325,14 +325,14 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
                 <span className="text-gray-500 flex items-center gap-1.5 font-medium">
                   <Receipt className="w-4 h-4 text-gray-400" /> Rozliczenie
                 </span>
-                <span className={`font-bold ${isFullyPaid ? 'text-green-600' : 'text-[#004a8f]'}`}>
+                <span className={`font-bold ${isFullyPaid ? 'text-green-600' : 'text-brand'}`}>
                   {deal.paymentPercentage}%
                 </span>
               </div>
 
               <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                 <div
-                  className={`h-2 rounded-full ${deal.paymentPercentage >= 100 ? 'bg-green-500' : 'bg-[#004a8f]'}`}
+                  className={`h-2 rounded-full ${deal.paymentPercentage >= 100 ? 'bg-green-500' : 'bg-brand'}`}
                   style={{ width: `${Math.min(deal.paymentPercentage, 100)}%` }}
                 ></div>
               </div>

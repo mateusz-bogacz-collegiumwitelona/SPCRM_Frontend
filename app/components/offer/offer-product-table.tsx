@@ -54,7 +54,7 @@ const columns = [
     cell: (info) => {
       const row = info.row.original;
       return (
-        <span className="font-bold text-[#004a8f]">
+        <span className="font-bold text-brand">
           {formatCurrency(row.quotedPrice, row.currencyCode, row.decimalPlaces)}
         </span>
       );
@@ -188,7 +188,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
     if (isLoading) {
       return (
         <div className="flex flex-col items-center justify-center py-10 bg-white rounded-xl border border-gray-200">
-          <Loader2 className="h-8 w-8 animate-spin text-[#004a8f] mb-2" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand mb-2" />
           <p className="text-gray-500 text-sm">Wczytywanie pozycji oferty...</p>
         </div>
       );
@@ -219,7 +219,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Szukaj produktu..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
             />
           </div>
 
@@ -244,7 +244,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
               <div className="border-t border-gray-100 pt-2.5 mt-1 flex justify-between items-center text-xs">
                 <div>
                   <span className="text-gray-500 block">Cena jedn.:</span>
-                  <span className="font-semibold text-[#004a8f]">
+                  <span className="font-semibold text-brand">
                     {formatCurrency(
                       product.quotedPrice,
                       product.currencyCode,
@@ -271,7 +271,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
               <Button
                 onClick={handleMobileLoadMore}
                 disabled={isFetching}
-                className="w-full bg-[#004a8f] text-white hover:bg-[#003870] transition-all flex items-center justify-center gap-2"
+                className="w-full bg-brand text-white hover:bg-brand-hover transition-all flex items-center justify-center gap-2"
               >
                 {isFetching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -296,7 +296,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Szukaj produktu..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
                 />
               </div>
               {canEdit && (
@@ -305,7 +305,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => onEditProducts?.(desktopProducts)}
-                  className="text-[#004a8f] border-blue-200 bg-blue-50 hover:bg-blue-100 flex items-center gap-1.5 text-xs font-semibold"
+                  className="text-brand border-blue-200 bg-blue-50 hover:bg-blue-100 flex items-center gap-1.5 text-xs font-semibold"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                   Edytuj pozycje
@@ -353,7 +353,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm bg-white focus:ring-[#004a8f]"
+                className="border border-gray-300 rounded-md px-2 py-1 text-sm bg-white focus:ring-brand"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -372,7 +372,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
                 disabled={pageNumber === 1 || isFetching}
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 text-[#004a8f] border-gray-300 hover:bg-gray-50"
+                className="h-8 w-8 text-brand border-gray-300 hover:bg-gray-50"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -384,7 +384,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
                 disabled={pageNumber === totalPages || isFetching}
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 text-[#004a8f] border-gray-300 hover:bg-gray-50"
+                className="h-8 w-8 text-brand border-gray-300 hover:bg-gray-50"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

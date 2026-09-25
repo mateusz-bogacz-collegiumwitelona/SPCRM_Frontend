@@ -15,7 +15,7 @@ export function RoleGuard({ allowedRoles, children, redirectTo }: Readonly<RoleG
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-[#004a8f]" />
+        <Loader2 className="h-8 w-8 animate-spin text-brand" />
       </div>
     );
   }

@@ -154,7 +154,7 @@ export default function OffersList() {
     },
   });
 
-  const statuses = statusDictionary || ['Sent', 'Accepted', 'Rejected', 'Expired'];
+  const statuses = statusDictionary ?? ['Sent', 'Accepted', 'Rejected', 'Expired'];
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);

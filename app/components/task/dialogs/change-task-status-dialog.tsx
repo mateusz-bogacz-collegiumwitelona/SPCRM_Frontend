@@ -95,7 +95,7 @@ export const ChangeTaskStatusDialog: React.FC<ChangeTaskStatusDialogProps> = ({
       <DialogContent className="sm:max-w-112.5">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mt-2">
-            <CheckSquare className="w-6 h-6 text-[#004a8f]" />
+            <CheckSquare className="w-6 h-6 text-brand" />
           </div>
           <DialogTitle className="text-xl font-normal text-gray-900 text-center">
             Zmień status zadania
@@ -140,7 +140,7 @@ export const ChangeTaskStatusDialog: React.FC<ChangeTaskStatusDialogProps> = ({
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               disabled={isDictLoading || isLoading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] bg-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
               required
             >
               <option value="" disabled>
@@ -175,7 +175,7 @@ export const ChangeTaskStatusDialog: React.FC<ChangeTaskStatusDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading || !selectedStatus || selectedStatus === currentStatus}
-              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2"
+              className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               Zapisz status

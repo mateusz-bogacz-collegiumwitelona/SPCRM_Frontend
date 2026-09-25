@@ -109,9 +109,7 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
     >
       <DialogContent className="sm:max-w-125">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">
-            Dodaj gatunek stali
-          </DialogTitle>
+          <DialogTitle className="text-xl font-normal text-brand">Dodaj gatunek stali</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4 py-3">
@@ -160,7 +158,7 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+              className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLoading ? 'Zapisywanie...' : 'Dodaj gatunek'}

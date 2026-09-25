@@ -121,7 +121,7 @@ export const ExtendTaskDueDateDialog: React.FC<ExtendTaskDueDateDialogProps> = (
       <DialogContent className="sm:max-w-112.5">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mt-2">
-            <Clock className="w-6 h-6 text-[#004a8f]" />
+            <Clock className="w-6 h-6 text-brand" />
           </div>
           <DialogTitle className="text-xl font-normal text-gray-900 text-center">
             Przedłużenie terminu zadania
@@ -169,7 +169,7 @@ export const ExtendTaskDueDateDialog: React.FC<ExtendTaskDueDateDialogProps> = (
               variant="outline"
               size="sm"
               onClick={() => handleQuickAddDays(1)}
-              className="text-xs text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100"
+              className="text-xs text-brand border-blue-200 bg-blue-50/50 hover:bg-blue-100"
             >
               +1 dzień
             </Button>
@@ -178,7 +178,7 @@ export const ExtendTaskDueDateDialog: React.FC<ExtendTaskDueDateDialogProps> = (
               variant="outline"
               size="sm"
               onClick={() => handleQuickAddDays(3)}
-              className="text-xs text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100"
+              className="text-xs text-brand border-blue-200 bg-blue-50/50 hover:bg-blue-100"
             >
               +3 dni
             </Button>
@@ -187,7 +187,7 @@ export const ExtendTaskDueDateDialog: React.FC<ExtendTaskDueDateDialogProps> = (
               variant="outline"
               size="sm"
               onClick={() => handleQuickAddDays(7)}
-              className="text-xs text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100"
+              className="text-xs text-brand border-blue-200 bg-blue-50/50 hover:bg-blue-100"
             >
               +7 dni
             </Button>
@@ -238,7 +238,7 @@ export const ExtendTaskDueDateDialog: React.FC<ExtendTaskDueDateDialogProps> = (
                 type="time"
                 value={timeValue}
                 onChange={(e) => setTimeValue(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-xs focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-xs focus:outline-none focus:ring-1 focus:ring-brand"
                 required
               />
             </div>
@@ -257,7 +257,7 @@ export const ExtendTaskDueDateDialog: React.FC<ExtendTaskDueDateDialogProps> = (
             <Button
               type="submit"
               disabled={isLoading || !selectedDate}
-              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2"
+              className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               Przedłuż termin

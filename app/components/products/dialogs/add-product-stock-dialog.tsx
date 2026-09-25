@@ -158,7 +158,7 @@ export const AddProductStockDialog: React.FC<AddProductStockDialogProps> = ({
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="np. 25"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               required
               autoFocus
             />
@@ -180,7 +180,7 @@ export const AddProductStockDialog: React.FC<AddProductStockDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading || !quantity || parsedQuantity <= 0}
-              className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+              className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               Przyjmij dostawę

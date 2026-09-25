@@ -226,7 +226,9 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Nazwa firmy:</label>
+                  <label htmlFor="company-name-filter" className="block text-gray-500 mb-1">
+                    Nazwa firmy:
+                  </label>
                   <input
                     type="text"
                     value={companyNameFilter}
@@ -237,7 +239,9 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Typ kontaktu:</label>
+                  <label htmlFor="is-primary-filter" className="block text-gray-500 mb-1">
+                    Typ kontaktu:
+                  </label>
                   <select
                     value={isPrimaryFilter}
                     onChange={(e) => setIsPrimaryFilter(e.target.value)}

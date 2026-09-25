@@ -187,19 +187,20 @@ export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
       : null;
 
   const isFilterActive = Boolean(statusFilter || priorityFilter);
+  const statusTranslate = (value: string): string => {
+    const statuses: Record<string, string> = {
+      todo: 'ToDo',
+      inprogress: 'InProgress',
+      complete: 'Complete',
+    };
 
+    return statuses[value] ?? 'Break';
+  };
   const statusOptions =
     dictionaries?.statuses && dictionaries.statuses.length > 0
       ? dictionaries.statuses
       : Object.entries(FALLBACK_TASK_STATUS_LABELS).map(([value, label]) => ({
-          value:
-            value === 'todo'
-              ? 'ToDo'
-              : value === 'inprogress'
-                ? 'InProgress'
-                : value === 'complete'
-                  ? 'Complete'
-                  : 'Break',
+          value: statusTranslate(value),
           label,
         }));
 

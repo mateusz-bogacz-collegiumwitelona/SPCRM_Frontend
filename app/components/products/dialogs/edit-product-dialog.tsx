@@ -163,12 +163,12 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && handleClose()}>
       <DialogContent className="sm:max-w-200 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-normal text-[#004a8f]">Edytuj produkt</DialogTitle>
+          <DialogTitle className="text-xl font-normal text-brand">Edytuj produkt</DialogTitle>
         </DialogHeader>
 
         {isFetchingProduct ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500 gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-[#004a8f]" />
+            <Loader2 className="w-8 h-8 animate-spin text-brand" />
             <p className="text-sm">Ładowanie danych produktu...</p>
           </div>
         ) : (
@@ -214,7 +214,7 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-[#004a8f] text-white hover:bg-blue-800 flex items-center gap-2"
+                className="bg-brand text-white hover:bg-blue-800 flex items-center gap-2"
               >
                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isLoading ? 'Zapisywanie...' : 'Zapisz zmiany'}

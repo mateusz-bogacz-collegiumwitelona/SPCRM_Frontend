@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
     <main className="min-h-screen bg-white">
       <Navbar />
       <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
-        <Card className="mx-auto w-full max-w-140 rounded-2xl border border-[#d6d9dd] bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-16">
+        <Card className="mx-auto w-full max-w-140 rounded-2xl border border-card-border bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-16">
           <CardContent className="px-5 py-8 sm:px-8 sm:py-10">
             {isLinkInvalid ? (
               <div className="text-center">
@@ -105,7 +105,7 @@ export default function ResetPasswordPage() {
                   <Button asChild variant="outline" className="border-gray-300">
                     <Link to="/auth/forgot-password">Zgłoś ponownie</Link>
                   </Button>
-                  <Button asChild className="bg-[#004a8f] text-white hover:bg-[#004a8f]/90">
+                  <Button asChild className="bg-brand text-white hover:bg-brand/90">
                     <Link to="/">Strona logowania</Link>
                   </Button>
                 </div>
@@ -122,7 +122,7 @@ export default function ResetPasswordPage() {
                 </p>
                 <Button
                   onClick={() => navigate('/')}
-                  className="bg-[#004a8f] text-white hover:bg-[#004a8f]/90 px-8"
+                  className="bg-brand text-white hover:bg-brand/90 px-8"
                 >
                   Przejdź do logowania
                 </Button>
@@ -130,7 +130,7 @@ export default function ResetPasswordPage() {
             ) : (
               <div>
                 <div className="flex flex-col items-center text-center mb-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-[#004a8f] mb-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-brand mb-3">
                     <KeyRound className="h-6 w-6" />
                   </div>
                   <h1 className="text-2xl font-bold text-gray-900 mb-1">Ustaw nowe hasło</h1>
@@ -179,7 +179,7 @@ export default function ResetPasswordPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full border border-gray-300 rounded-md pl-9 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
+                        className="w-full border border-gray-300 rounded-md pl-9 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                       />
                       <button
                         type="button"
@@ -211,7 +211,7 @@ export default function ResetPasswordPage() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full border border-gray-300 rounded-md pl-9 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
+                        className="w-full border border-gray-300 rounded-md pl-9 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
                       />
                       <button
                         type="button"
@@ -231,7 +231,7 @@ export default function ResetPasswordPage() {
                   <Button
                     type="submit"
                     disabled={resetMutation.isPending}
-                    className="w-full bg-[#004a8f] text-white hover:bg-[#004a8f]/90 flex items-center justify-center gap-2 h-10 mt-2"
+                    className="w-full bg-brand text-white hover:bg-brand/90 flex items-center justify-center gap-2 h-10 mt-2"
                   >
                     {resetMutation.isPending ? (
                       <>
@@ -246,7 +246,7 @@ export default function ResetPasswordPage() {
                 <div className="mt-6 border-t border-gray-100 pt-4 text-center">
                   <Link
                     to="/"
-                    className="text-xs font-medium text-gray-600 hover:text-[#004a8f] transition-colors"
+                    className="text-xs font-medium text-gray-600  hover:text-brand transition-colors"
                   >
                     Powrót do logowania
                   </Link>

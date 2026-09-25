@@ -77,7 +77,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           id="product-name"
           value={formData.name}
           onChange={(e) => onChange('name', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
@@ -89,7 +89,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           id="product-steel-grade"
           value={formData.steelGradeId}
           onChange={(e) => onChange('steelGradeId', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-brand"
         >
           <option value="" disabled>
             Wybierz gatunek...
@@ -110,7 +110,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           id="product-category"
           value={formData.category}
           onChange={(e) => onChange('category', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-brand"
         >
           <option value="" disabled>
             Wybierz kategorię...
@@ -131,7 +131,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           id="product-unit"
           value={formData.unitId}
           onChange={(e) => onChange('unitId', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-brand"
         >
           <option value="" disabled>
             Wybierz jednostkę...
@@ -154,7 +154,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           step="any"
           value={formData.thickness}
           onChange={(e) => onChange('thickness', Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
@@ -168,7 +168,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           step="any"
           value={formData.width}
           onChange={(e) => onChange('width', Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
@@ -182,7 +182,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           step="any"
           value={formData.length}
           onChange={(e) => onChange('length', Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
@@ -200,7 +200,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           }
           required={isDiameterRequired}
           placeholder={isDiameterRequired ? 'Wymagane dla tej kategorii' : 'Opcjonalnie'}
-          className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f] ${
+          className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand ${
             isDiameterRequired && formData.diameter === ''
               ? 'border-amber-400 bg-amber-50/20'
               : 'border-gray-300'
@@ -218,7 +218,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
           step="0.01"
           value={formData.weight}
           onChange={(e) => onChange('weight', Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
         />
       </div>
 
@@ -234,13 +234,13 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
             value={formData.pricePerUnit}
             onChange={(e) => onChange('pricePerUnit', Number(e.target.value))}
             placeholder="0.00"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
           />
           <select
             id="product-currency"
             value={formData.currencyId}
             onChange={(e) => onChange('currencyId', e.target.value)}
-            className="w-28 shrink-0 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+            className="w-28 shrink-0 px-3 py-2 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-1 focus:ring-brand"
           >
             <option value="" disabled>
               Waluta
@@ -267,7 +267,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
             value={formData.stockQuantity ?? ''}
             onChange={(e) => onChange('stockQuantity', Number(e.target.value))}
             placeholder="Wprowadź stan początkowy (> 0)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
             required
           />
         </div>

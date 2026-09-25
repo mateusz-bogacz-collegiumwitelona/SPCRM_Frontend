@@ -210,7 +210,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
             </span>
           )}
         </div>
-        <Plus className="w-4 h-4 text-[#004a8f]" />
+        <Plus className="w-4 h-4 text-brand" />
       </button>
     ));
   } else if (isSearching) {
@@ -233,7 +233,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-175 max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-4 border-b border-gray-100 flex flex-row items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-full bg-blue-50 text-brand flex items-center justify-center shrink-0">
             <Edit3 className="w-5 h-5" />
           </div>
           <div>
@@ -283,7 +283,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
                 }}
                 onFocus={() => setIsDropdownOpen(true)}
                 placeholder="Wpisz min. 2 znaki (np. nazwę lub gatunek stali)..."
-                className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#004a8f]"
+                className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand"
               />
               {isSearching && (
                 <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-gray-400" />
@@ -379,7 +379,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
             type="button"
             onClick={handleSubmit}
             disabled={isLoading || items.length === 0}
-            className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2"
+            className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Zapisz zmiany

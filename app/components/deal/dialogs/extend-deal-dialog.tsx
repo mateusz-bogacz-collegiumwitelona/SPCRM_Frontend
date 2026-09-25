@@ -127,7 +127,7 @@ export const ExtendDealDialog: React.FC<ExtendDealDialogProps> = ({
       <DialogContent className="sm:max-w-112.5 bg-white">
         <DialogHeader className="border-b border-gray-100 pb-4 flex flex-col items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mt-2">
-            <Clock className="w-6 h-6 text-[#004a8f]" />
+            <Clock className="w-6 h-6 text-brand" />
           </div>
           <DialogTitle className="text-xl font-normal text-gray-900 text-center">
             Przedłużenie terminu transakcji
@@ -174,7 +174,7 @@ export const ExtendDealDialog: React.FC<ExtendDealDialogProps> = ({
               variant="outline"
               size="sm"
               onClick={() => handleQuickAddDays(7)}
-              className="text-xs text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100"
+              className="text-xs text-brand border-blue-200 bg-blue-50/50 hover:bg-blue-100"
             >
               +7 dni
             </Button>
@@ -183,7 +183,7 @@ export const ExtendDealDialog: React.FC<ExtendDealDialogProps> = ({
               variant="outline"
               size="sm"
               onClick={() => handleQuickAddDays(14)}
-              className="text-xs text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100"
+              className="text-xs text-brand border-blue-200 bg-blue-50/50 hover:bg-blue-100"
             >
               +14 dni
             </Button>
@@ -192,7 +192,7 @@ export const ExtendDealDialog: React.FC<ExtendDealDialogProps> = ({
               variant="outline"
               size="sm"
               onClick={() => handleQuickAddDays(30)}
-              className="text-xs text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100"
+              className="text-xs text-brand border-blue-200 bg-blue-50/50 hover:bg-blue-100"
             >
               +30 dni
             </Button>
@@ -245,7 +245,7 @@ export const ExtendDealDialog: React.FC<ExtendDealDialogProps> = ({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2"
+              className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               Zapisz nowy termin
