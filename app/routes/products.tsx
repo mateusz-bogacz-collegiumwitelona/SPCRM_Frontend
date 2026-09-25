@@ -40,6 +40,7 @@ import type {
   AddProductStockRequest,
   EditProductRequest,
 } from '~/interfaces/product';
+import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 
 interface ProductResponse {
   id: string;
@@ -136,7 +137,7 @@ const columns = [
             Szczegóły
           </Link>
 
-          <HasRole allowedRoles={['Manager', 'Admin']}>
+          <HasRole allowedRoles={MANAGEMENT_ROLES}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -151,7 +152,7 @@ const columns = [
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-40 bg-white">
-                <HasRole allowedRoles={['Manager', 'Admin']}>
+                <HasRole allowedRoles={MANAGEMENT_ROLES}>
                   <DropdownMenuItem
                     onClick={() => meta.onEdit(product.id)}
                     className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
@@ -161,7 +162,7 @@ const columns = [
                   </DropdownMenuItem>
                 </HasRole>
 
-                <HasRole allowedRoles={['Admin']}>
+                <HasRole allowedRoles={[ROLES.ADMIN]}>
                   <DropdownMenuItem
                     onClick={() => meta.onDelete({ id: product.id, name: product.name })}
                     className="cursor-pointer text-sm text-red-600 focus:bg-red-50"
@@ -171,22 +172,20 @@ const columns = [
                   </DropdownMenuItem>
                 </HasRole>
 
-                <HasRole allowedRoles={['Manager', 'User', 'Admin']}>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      meta.onAddStock({
-                        id: product.id,
-                        name: product.name,
-                        currentStock: product.stockQuantity,
-                        unitSymbol: product.unitSymbol,
-                      })
-                    }
-                    className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
-                  >
-                    <PackagePlus className="mr-2 h-4 w-4 text-blue-900" />
-                    <span>Dodaj produkt</span>
-                  </DropdownMenuItem>
-                </HasRole>
+                <DropdownMenuItem
+                  onClick={() =>
+                    meta.onAddStock({
+                      id: product.id,
+                      name: product.name,
+                      currentStock: product.stockQuantity,
+                      unitSymbol: product.unitSymbol,
+                    })
+                  }
+                  className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
+                >
+                  <PackagePlus className="mr-2 h-4 w-4 text-blue-900" />
+                  <span>Dodaj produkt</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </HasRole>
@@ -213,7 +212,7 @@ const ProductMobileCard = ({
         Ilość: {product.stockQuantity} {product.unitSymbol}
       </div>
       <div className="flex items-center gap-3">
-        <HasRole allowedRoles={['Manager', 'Admin']}>
+        <HasRole allowedRoles={MANAGEMENT_ROLES}>
           <button
             type="button"
             onClick={() => onEdit(product.id)}
@@ -438,265 +437,263 @@ export default function ProductsList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager', 'Admin']} redirectTo="/dashboard">
-        <MainLayout>
-          <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
-            <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Produkty</h1>
-            <RoleGuard allowedRoles={['Admin']}>
-              <Button
-                type="button"
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-white text-blue-900 hover:bg-gray-100 font-medium text-xs sm:text-sm flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" /> Dodaj produkt
-              </Button>
-            </RoleGuard>
+      <MainLayout>
+        <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
+          <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Produkty</h1>
+          <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+            <Button
+              type="button"
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-white text-blue-900 hover:bg-gray-100 font-medium text-xs sm:text-sm flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> Dodaj produkt
+            </Button>
+          </RoleGuard>
+        </div>
+
+        <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div className="w-full md:w-80 shrink-0">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Wyszukaj produkt..."
+              className="w-full border border-gray-300 rounded-md bg-white px-4 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-900"
+            />
           </div>
 
-          <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div className="w-full md:w-80 shrink-0">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Wyszukaj produkt..."
-                className="w-full border border-gray-300 rounded-md bg-white px-4 py-2 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-900"
-              />
-            </div>
+          <div className="flex flex-wrap w-full md:w-auto items-center gap-3">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-sm text-gray-500 hidden sm:block">Sortuj po:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+              >
+                <option value="name">Nazwa</option>
+                <option value="steelgrade">Gatunek</option>
+                <option value="quantity">Ilość</option>
+              </select>
 
-            <div className="flex flex-wrap w-full md:w-auto items-center gap-3">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-sm text-gray-500 hidden sm:block">Sortuj po:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
-                >
-                  <option value="name">Nazwa</option>
-                  <option value="steelgrade">Gatunek</option>
-                  <option value="quantity">Ilość</option>
-                </select>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setSortDescending(!sortDescending)}
+                className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3"
+              >
+                {sortDescending ? (
+                  <ArrowDownWideNarrow className="w-4 h-4" />
+                ) : (
+                  <ArrowUpNarrowWide className="w-4 h-4" />
+                )}
+              </Button>
 
+              <div className="relative">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setSortDescending(!sortDescending)}
-                  className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 >
-                  {sortDescending ? (
-                    <ArrowDownWideNarrow className="w-4 h-4" />
-                  ) : (
-                    <ArrowUpNarrowWide className="w-4 h-4" />
+                  <Filter className="w-4 h-4" />
+                  <span>Filtry</span>
+                  {(productFilter || steelGradeFilter || hasActivePromotion) && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
+                    </span>
                   )}
                 </Button>
 
-                <div className="relative">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                  >
-                    <Filter className="w-4 h-4" />
-                    <span>Filtry</span>
-                    {(productFilter || steelGradeFilter || hasActivePromotion) && (
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-900" />
-                      </span>
-                    )}
-                  </Button>
+                {showFilters && (
+                  <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
+                    <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
+                    <div className="space-y-4">
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="product-category-filter"
+                          className="block text-xs font-medium text-gray-700 mb-1"
+                        >
+                          Kategoria
+                        </label>
+                        <select
+                          id="product-category-filter"
+                          value={productFilter}
+                          onChange={(e) => setProductFilter(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+                        >
+                          <option value="">Wszystkie kategorie</option>
+                          {availableCategories.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  {showFilters && (
-                    <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-4">Filtruj asortyment</h3>
-                      <div className="space-y-4">
-                        <div className="flex flex-col">
-                          <label
-                            htmlFor="product-category-filter"
-                            className="block text-xs font-medium text-gray-700 mb-1"
-                          >
-                            Kategoria
-                          </label>
-                          <select
-                            id="product-category-filter"
-                            value={productFilter}
-                            onChange={(e) => setProductFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
-                          >
-                            <option value="">Wszystkie kategorie</option>
-                            {availableCategories.map((category) => (
-                              <option key={category} value={category}>
-                                {category}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor="product-steel-grade-filter"
+                          className="block text-xs font-medium text-gray-700 mb-1"
+                        >
+                          Gatunek stali
+                        </label>
+                        <select
+                          id="product-steel-grade-filter"
+                          value={steelGradeFilter}
+                          onChange={(e) => setSteelGradeFilter(e.target.value)}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
+                        >
+                          <option value="">Wszystkie gatunki</option>
+                          {availableSteelGrades.map((grade) => (
+                            <option key={grade.id} value={grade.name}>
+                              {grade.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                        <div className="flex flex-col">
-                          <label
-                            htmlFor="product-steel-grade-filter"
-                            className="block text-xs font-medium text-gray-700 mb-1"
-                          >
-                            Gatunek stali
-                          </label>
-                          <select
-                            id="product-steel-grade-filter"
-                            value={steelGradeFilter}
-                            onChange={(e) => setSteelGradeFilter(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
-                          >
-                            <option value="">Wszystkie gatunki</option>
-                            {availableSteelGrades.map((grade) => (
-                              <option key={grade.id} value={grade.name}>
-                                {grade.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                      <div className="flex items-center gap-2 mt-4 bg-gray-50 p-2 rounded border border-gray-100">
+                        <input
+                          type="checkbox"
+                          id="promoFilter"
+                          checked={hasActivePromotion}
+                          onChange={(e) => setHasActivePromotion(e.target.checked)}
+                          className="rounded border-gray-300 text-blue-900 focus:ring-blue-900 h-4 w-4"
+                        />
+                        <label
+                          htmlFor="promoFilter"
+                          className="text-xs font-medium text-gray-700 cursor-pointer select-none"
+                        >
+                          Pokaż tylko w promocji
+                        </label>
+                      </div>
 
-                        <div className="flex items-center gap-2 mt-4 bg-gray-50 p-2 rounded border border-gray-100">
-                          <input
-                            type="checkbox"
-                            id="promoFilter"
-                            checked={hasActivePromotion}
-                            onChange={(e) => setHasActivePromotion(e.target.checked)}
-                            className="rounded border-gray-300 text-blue-900 focus:ring-blue-900 h-4 w-4"
-                          />
-                          <label
-                            htmlFor="promoFilter"
-                            className="text-xs font-medium text-gray-700 cursor-pointer select-none"
-                          >
-                            Pokaż tylko w promocji
-                          </label>
-                        </div>
-
-                        <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setProductFilter('');
-                              setSteelGradeFilter('');
-                              setHasActivePromotion(false);
-                            }}
-                            className="text-xs text-gray-500 hover:text-gray-900 underline"
-                          >
-                            Wyczyść
-                          </button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            onClick={() => setShowFilters(false)}
-                            className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
-                          >
-                            Zamknij
-                          </Button>
-                        </div>
+                      <div className="pt-3 mt-4 border-t border-gray-100 flex justify-between items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductFilter('');
+                            setSteelGradeFilter('');
+                            setHasActivePromotion(false);
+                          }}
+                          className="text-xs text-gray-500 hover:text-gray-900 underline"
+                        >
+                          Wyczyść
+                        </button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setShowFilters(false)}
+                          className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
+                        >
+                          Zamknij
+                        </Button>
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
+        </div>
 
-          {listError && (
-            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <div className="flex-1 pr-4">
-                <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
-                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                    {listError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsErrorDismissed(true)}
-                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                title="Zamknij"
-              >
-                <X className="w-4 h-4" />
-              </button>
+        {listError && (
+          <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
+            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="flex-1 pr-4">
+              <p className="font-medium leading-tight">{listError.title}</p>
+              {listError.details && listError.details.length > 0 && (
+                <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
+                  {listError.details.map((detailErr, idx) => (
+                    <li key={idx}>{detailErr}</li>
+                  ))}
+                </ul>
+              )}
             </div>
+            <button
+              type="button"
+              onClick={() => setIsErrorDismissed(true)}
+              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+              title="Zamknij"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          isError={isError}
+          data={accumulatedMobileProducts}
+          pageNumber={pageNumber}
+          totalPages={totalPages}
+          isFetching={isFetching}
+          onMobileLoadMore={handleMobileLoadMore}
+          mobileCardKeyExtractor={(product) => product.id}
+          renderMobileCard={(product) => (
+            <ProductMobileCard product={product} onEdit={setEditingProductId} />
           )}
+          emptyMessage="Brak produktów do wyświetlenia."
+          loadingMessage="Ładowanie produktów..."
+          paginationProps={{
+            pageNumber,
+            pageSize,
+            totalPages,
+            totalItems,
+            isFetching,
+            onPageSizeChange: setPageSize,
+            onPageChange: handleDesktopPageChange,
+          }}
+        />
 
-          <DataTable
-            table={table}
-            isLoading={isLoading}
-            isError={isError}
-            data={accumulatedMobileProducts}
-            pageNumber={pageNumber}
-            totalPages={totalPages}
-            isFetching={isFetching}
-            onMobileLoadMore={handleMobileLoadMore}
-            mobileCardKeyExtractor={(product) => product.id}
-            renderMobileCard={(product) => (
-              <ProductMobileCard product={product} onEdit={setEditingProductId} />
-            )}
-            emptyMessage="Brak produktów do wyświetlenia."
-            loadingMessage="Ładowanie produktów..."
-            paginationProps={{
-              pageNumber,
-              pageSize,
-              totalPages,
-              totalItems,
-              isFetching,
-              onPageSizeChange: setPageSize,
-              onPageChange: handleDesktopPageChange,
-            }}
-          />
+        <AddProductDialog
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSave={async (newProductData) => {
+            await addProductMutation.mutateAsync(newProductData);
+          }}
+          isLoading={addProductMutation.isPending}
+        />
 
-          <AddProductDialog
-            isOpen={isAddModalOpen}
-            onClose={() => setIsAddModalOpen(false)}
-            onSave={async (newProductData) => {
-              await addProductMutation.mutateAsync(newProductData);
-            }}
-            isLoading={addProductMutation.isPending}
-          />
+        <EditProductDialog
+          productId={editingProductId}
+          isOpen={Boolean(editingProductId)}
+          onClose={() => setEditingProductId(null)}
+          onSave={async (updatedProductData) => {
+            await editProductMutation.mutateAsync(updatedProductData);
+          }}
+          isLoading={editProductMutation.isPending}
+        />
 
-          <EditProductDialog
-            productId={editingProductId}
-            isOpen={Boolean(editingProductId)}
-            onClose={() => setEditingProductId(null)}
-            onSave={async (updatedProductData) => {
-              await editProductMutation.mutateAsync(updatedProductData);
-            }}
-            isLoading={editProductMutation.isPending}
-          />
+        <DeleteProductDialog
+          isOpen={Boolean(deletingProduct)}
+          productName={deletingProduct?.name}
+          onClose={() => setDeletingProduct(null)}
+          onConfirm={async () => {
+            if (deletingProduct) {
+              await deleteProductMutation.mutateAsync(deletingProduct.id);
+            }
+          }}
+          isLoading={deleteProductMutation.isPending}
+        />
 
-          <DeleteProductDialog
-            isOpen={Boolean(deletingProduct)}
-            productName={deletingProduct?.name}
-            onClose={() => setDeletingProduct(null)}
-            onConfirm={async () => {
-              if (deletingProduct) {
-                await deleteProductMutation.mutateAsync(deletingProduct.id);
-              }
-            }}
-            isLoading={deleteProductMutation.isPending}
-          />
-
-          <AddProductStockDialog
-            isOpen={Boolean(stockModalProduct)}
-            product={stockModalProduct}
-            onClose={() => setStockModalProduct(null)}
-            onSave={async (quantity) => {
-              if (stockModalProduct) {
-                await addStockMutation.mutateAsync({
-                  productId: stockModalProduct.id,
-                  quantity,
-                });
-              }
-            }}
-            isLoading={addStockMutation.isPending}
-          />
-        </MainLayout>
-      </RoleGuard>
+        <AddProductStockDialog
+          isOpen={Boolean(stockModalProduct)}
+          product={stockModalProduct}
+          onClose={() => setStockModalProduct(null)}
+          onSave={async (quantity) => {
+            if (stockModalProduct) {
+              await addStockMutation.mutateAsync({
+                productId: stockModalProduct.id,
+                quantity,
+              });
+            }
+          }}
+          isLoading={addStockMutation.isPending}
+        />
+      </MainLayout>
     </AuthGuard>
   );
 }

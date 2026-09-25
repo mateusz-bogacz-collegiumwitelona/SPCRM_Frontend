@@ -14,6 +14,7 @@ import { Button } from '~/components/ui/button';
 import { DataTable } from '~/components/table/data-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import type { AddUnitRequestPayload, EditUnitRequestPayload } from '~/interfaces/unit';
+import { ROLES } from '~/constants/roles';
 
 interface UnitListResponse {
   id: string;
@@ -247,7 +248,7 @@ export default function UnitList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Admin']} redirectTo="/dashboard">
+      <RoleGuard allowedRoles={[ROLES.ADMIN]} redirectTo="/dashboard">
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold">Jednostki miary</h1>

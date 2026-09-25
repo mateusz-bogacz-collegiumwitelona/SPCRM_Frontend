@@ -5,15 +5,16 @@ import { useAuth } from '~/context/auth-context';
 import AdminDashboard from '~/routes/admin/dashboard';
 import ManagerDashboard from '~/routes/manager/dashboard';
 import UserDashboard from '~/routes/user/dashboard';
+import { ROLES } from '~/constants/roles';
 
 export default function DashboardRoute() {
   const { user } = useAuth();
 
   const renderDashboardByRole = () => {
     const roles = user?.roles || [];
-    if (roles.includes('Admin')) return <AdminDashboard />;
+    if (roles.includes(ROLES.ADMIN)) return <AdminDashboard />;
 
-    if (roles.includes('Manager')) return <ManagerDashboard />;
+    if (roles.includes(ROLES.MANAGER)) return <ManagerDashboard />;
 
     return <UserDashboard />;
   };

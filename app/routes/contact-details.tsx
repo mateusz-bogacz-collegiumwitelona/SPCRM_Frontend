@@ -7,15 +7,33 @@ import { ContactNotes } from '~/components/contact/contact-notes';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { ContactTasks } from '~/components/contact/contact-tasks';
+import { api, isNotFoundError } from '~/api/api';
+import NotFound from '~/routes/not-found';
+import { useQuery } from '@tanstack/react-query';
+import { PageLoader } from '~/components/layout/page-loader';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 export default function ContactDetails() {
   const { contactId } = useParams<{ contactId: string }>();
 
-  if (!contactId) return null;
+  const { isLoading, error } = useQuery({
+    queryKey: ['contact-details', contactId],
+    queryFn: async () => (await api.get(`/contacts/${contactId}`)).data.data,
+    enabled: !!contactId,
+    retry: false,
+  });
+
+  if (!contactId || isNotFoundError(error)) {
+    return <NotFound />;
+  }
+
+  if (isLoading) {
+    return <PageLoader message="Wczytywanie szczegółów kontaktu..." />;
+  }
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="w-full mx-auto p-4 lg:p-6">
             <ContactHeader contactId={contactId} />

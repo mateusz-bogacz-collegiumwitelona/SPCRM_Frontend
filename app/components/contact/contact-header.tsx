@@ -6,6 +6,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
 import { DeleteContactDialog } from './dialogs/delete-contact-dialog';
 import { Button } from '~/components/ui/button';
+import { MANAGEMENT_ROLES } from '~/constants/roles';
 
 interface ContactBasicInfo {
   id: string;
@@ -24,7 +25,7 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { user } = useAuth();
-  const canDelete = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
+  const canDelete = user?.roles.some((role) => MANAGEMENT_ROLES.includes(role));
 
   const {
     data: info,

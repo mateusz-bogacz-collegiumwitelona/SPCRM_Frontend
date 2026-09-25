@@ -27,6 +27,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
 import { formatOfferStatusLabel, getStatusBadge } from '~/utils/offer-status-helper';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 interface OfferListResponse {
   offerId: string;
@@ -322,7 +323,7 @@ export default function OffersList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager', 'Admin']} redirectTo="/dashboard">
+      <RoleGuard allowedRoles={STANDARD_ROLES} redirectTo="/dashboard">
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Oferty</h1>

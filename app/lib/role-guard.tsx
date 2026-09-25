@@ -1,10 +1,11 @@
+// src/lib/role-guard.tsx
 import { type ReactNode } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '~/context/auth-context';
 import { Loader2 } from 'lucide-react';
 
 interface RoleGuardProps {
-  allowedRoles: string[];
+  allowedRoles: readonly string[];
   children: ReactNode;
   redirectTo?: string;
 }
@@ -22,7 +23,7 @@ export function RoleGuard({ allowedRoles, children, redirectTo }: Readonly<RoleG
 
   if (!user) return <Navigate to="/" replace />;
 
-  const hasAccess = user.roles.some((role) => allowedRoles.includes(role));
+  const hasAccess = user.roles.some((role) => (allowedRoles as readonly string[]).includes(role));
 
   if (!hasAccess) {
     return redirectTo ? <Navigate to={redirectTo} replace /> : null;

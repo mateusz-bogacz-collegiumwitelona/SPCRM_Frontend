@@ -29,6 +29,7 @@ import type {
   EditTaskRequestPayload,
   ExtendTaskDueDatePayload,
 } from '~/interfaces/task';
+import { ROLES } from '~/constants/roles';
 
 interface TaskCoreDetails {
   id: string;
@@ -265,7 +266,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
                 Przedłuż termin
               </Button>
 
-              <HasRole allowedRoles={['Manager']}>
+              <HasRole allowedRoles={[ROLES.MANAGER]}>
                 <Button
                   type="button"
                   variant="outline"

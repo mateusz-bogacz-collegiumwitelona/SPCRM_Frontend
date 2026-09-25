@@ -32,6 +32,7 @@ import { AddDealDialog } from '~/components/deal/dialogs/add-deal-dialog';
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import type { AddCompanyRequest } from '~/interfaces/company';
 import type { AddTaskRequestPayload } from '~/interfaces/task';
+import { ROLES } from '~/constants/roles';
 
 export type NavItem = {
   id: string;
@@ -63,8 +64,8 @@ export function NavigationBar({
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
   const roles = user?.roles || [];
-  const isAdmin = roles.includes('Admin');
-  const isManager = roles.includes('Manager');
+  const isAdmin = roles.includes(ROLES.ADMIN);
+  const isManager = roles.includes(ROLES.MANAGER);
 
   const addCompanyMutation = useMutation({
     mutationFn: async (payload: AddCompanyRequest) => {

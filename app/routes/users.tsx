@@ -56,6 +56,7 @@ import type {
   UserToLockout,
   UserToUnlock,
 } from '~/interfaces/user';
+import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 
 interface UserListResponse {
   id: string;
@@ -146,7 +147,7 @@ const columns = [
             </Link>
           )}
 
-          <HasRole allowedRoles={['Admin']}>
+          <HasRole allowedRoles={[ROLES.ADMIN]}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -276,7 +277,7 @@ const UserMobileCard = ({
 }) => {
   const roleConfig = getRoleConfig(user.role);
   const fullName = `${user.firstName} ${user.lastName}`;
-  const isTargetAdmin = user.role?.toLowerCase() === 'admin';
+  const isTargetAdmin = user.role?.toLowerCase() === ROLES.ADMIN.toLowerCase();
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -314,7 +315,7 @@ const UserMobileCard = ({
           )}
         </div>
 
-        <HasRole allowedRoles={['Admin']}>
+        <HasRole allowedRoles={[ROLES.ADMIN]}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -641,11 +642,11 @@ export default function UserList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Admin', 'Manager']}>
+      <RoleGuard allowedRoles={MANAGEMENT_ROLES}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold">Użytkownicy systemu</h1>
-            <HasRole allowedRoles={['Admin']}>
+            <HasRole allowedRoles={[ROLES.ADMIN]}>
               <Button
                 type="button"
                 onClick={() => setIsAddUserOpen(true)}

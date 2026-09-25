@@ -18,6 +18,7 @@ import { api } from '~/api/api';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { HasRole } from '~/lib/has-role';
 import type { UserDetailResponse } from '~/interfaces/user';
+import { ROLES } from '~/constants/roles';
 
 const formatDate = (dateString?: string | null) => {
   if (!dateString) return '-';
@@ -69,7 +70,7 @@ export const UserProfileCard: React.FC<{ readonly userId: string }> = ({ userId 
             </span>
           )}
 
-          <HasRole allowedRoles={['Admin']}>
+          <HasRole allowedRoles={[ROLES.ADMIN]}>
             {user.isEmailVerified ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-400/30">
                 <CheckCircle2 className="w-3.5 h-3.5 text-blue-300" />
@@ -140,7 +141,7 @@ export const UserProfileCard: React.FC<{ readonly userId: string }> = ({ userId 
             </div>
           </div>
 
-          <HasRole allowedRoles={['Admin']}>
+          <HasRole allowedRoles={[ROLES.ADMIN]}>
             {user.pendingEmail && (
               <div>
                 <span className="text-gray-500 block text-xs mb-1">Oczekujący nowy e-mail</span>

@@ -6,15 +6,38 @@ import { DealNote } from '~/components/deal/deal-note';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { DealTasks } from '~/components/deal/deal-tasks';
+import { useQuery } from '@tanstack/react-query';
+import { api, isNotFoundError } from '~/api/api';
+import type { SaleDetailResponse } from '~/interfaces/deal';
+import NotFound from '~/routes/not-found';
+import React from 'react';
+import { PageLoader } from '~/components/layout/page-loader';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 export default function DealDetail() {
   const { dealId } = useParams<{ dealId: string }>();
 
-  if (!dealId) return null;
+  const { isLoading, error } = useQuery<SaleDetailResponse>({
+    queryKey: ['deal-info', dealId],
+    queryFn: async () => {
+      const response = await api.get(`/sales/${dealId}`);
+      return response.data?.data || response.data?.value || response.data;
+    },
+    enabled: !!dealId,
+    retry: false,
+  });
+
+  if (!dealId || isNotFoundError(error)) {
+    return <NotFound />;
+  }
+
+  if (isLoading) {
+    return <PageLoader message="Wczytywanie szczegółów kontaktu..." />;
+  }
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="w-full mx-auto p-4 lg:p-6">
             <DealInfo dealId={dealId} />

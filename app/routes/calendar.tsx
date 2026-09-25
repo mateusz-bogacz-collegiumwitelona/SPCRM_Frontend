@@ -18,6 +18,7 @@ import { TaskDetailDialog } from '~/components/task/dialogs/task-detail-dialog';
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 export default function CalendarPage() {
   const queryClient = useQueryClient();
@@ -136,7 +137,7 @@ export default function CalendarPage() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-3">

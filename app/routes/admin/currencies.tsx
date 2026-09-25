@@ -15,6 +15,7 @@ import { mergeById } from '~/utils/table-helpers';
 import { AddCurrencyDialog } from '~/components/currency/dialogs/add-currency-dialog';
 import { EditCurrencyDialog } from '~/components/currency/dialogs/edit-currency-dialog';
 import type { AddCurrencyRequestPayload, EditCurrencyRequestPayload } from '~/interfaces/currency';
+import { ROLES } from '~/constants/roles';
 
 interface CurrencyListResponse {
   currencyId: string;
@@ -267,7 +268,7 @@ export default function CurrenciesList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Admin']} redirectTo="/dashboard">
+      <RoleGuard allowedRoles={[ROLES.ADMIN]} redirectTo="/dashboard">
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold">Słownik walut</h1>

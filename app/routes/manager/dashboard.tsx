@@ -5,13 +5,14 @@ import { BarChart3, Briefcase, Users } from 'lucide-react';
 
 import { TeamAnalyticsTab } from '~/components/analytics/team-analytics-tab';
 import { UserDashboardContent } from '~/components/user/user-dashboard-content';
+import { ROLES } from '~/constants/roles';
 
 export default function ManagerDashboard() {
   const [activeTab, setActiveTab] = useState<'team' | 'personal'>('team');
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Manager']}>
+      <RoleGuard allowedRoles={[ROLES.MANAGER]}>
         <div className="space-y-6">
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-lg shadow-sm flex items-center justify-between">
             <div className="flex items-center gap-2">

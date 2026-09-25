@@ -10,6 +10,7 @@ import { RoleGuard } from '~/lib/role-guard';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 interface MailingClientResponse {
   companyName: string;
@@ -211,7 +212,7 @@ export default function MailingCreator() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="mx-auto max-w-2xl pb-16 pt-6">
             <h1 className="mb-6 text-2xl font-semibold text-[#004a8f]">Kreator Mailingu</h1>

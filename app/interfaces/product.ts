@@ -1,3 +1,6 @@
+import { Box } from 'lucide-react';
+import React from 'react';
+
 export interface AddProductRequest {
   name: string;
   steelGradeId: string;
@@ -87,4 +90,28 @@ export interface ProductInvoiceItemResponse {
   currencyCode: string;
   decimalPlaces: number;
   isPaid: boolean;
+}
+
+export interface ActivePromotionResponse {
+  name: string;
+  discountPercentage?: number;
+  promotionalPrice?: number;
+  endDate?: string;
+  minQuantity?: number;
+}
+
+export interface ProductDetailResponse {
+  id: string;
+  name: string;
+  steelGrade: string;
+  category: string;
+  dimensions: string;
+  stockQuantity: number;
+  decimalPlaces: number;
+  currencyCode: string;
+  reservedQuantity: number;
+  unitSymbol: string;
+  pricePerUnit: number;
+  weight: number;
+  activePromotion?: ActivePromotionResponse;
 }

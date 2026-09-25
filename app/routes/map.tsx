@@ -10,6 +10,7 @@ import { RoleGuard } from '~/lib/role-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 import type { CompanyMapData } from '~/interfaces/map';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 interface ApiResponse {
   success: boolean;
@@ -146,7 +147,7 @@ export default function MapPage() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Manager', 'User']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout
           wrapperClassName="relative min-h-screen overflow-hidden bg-[#f1f5f9] pt-20 md:pl-32"
           contentClassName="relative w-full h-[calc(100vh-5rem)] p-0 m-0"

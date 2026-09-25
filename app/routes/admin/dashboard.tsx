@@ -3,16 +3,17 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
 import { Link } from 'react-router';
 import {
-  ShieldCheck,
-  Users,
-  Coins,
-  Ruler,
-  Layers,
   ArrowRight,
-  UserPlus,
+  Coins,
+  Layers,
   Loader2,
+  Ruler,
+  ShieldCheck,
+  UserPlus,
+  Users,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
+import { ROLES } from '~/constants/roles';
 
 interface AdminMetricsResponse {
   totalUsers: number;
@@ -278,9 +279,9 @@ export default function AdminDashboard() {
                               <span
                                 key={role}
                                 className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
-                                  role === 'Admin'
+                                  role === ROLES.ADMIN
                                     ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                                    : role === 'Manager'
+                                    : role === ROLES.MANAGER
                                       ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                       : 'bg-gray-100 text-gray-700'
                                 }`}

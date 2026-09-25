@@ -28,6 +28,7 @@ import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dialog';
 import type { AddCompanyRequest } from '~/interfaces/company';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 interface GetCompanyResponse {
   id: string;
@@ -303,7 +304,7 @@ export default function Companies() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold">Baza firm</h1>

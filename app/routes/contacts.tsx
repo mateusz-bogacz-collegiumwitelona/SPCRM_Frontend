@@ -33,6 +33,7 @@ import {
 import { ChangeContactOwnerDialog } from '~/components/contact/dialogs/change-contact-owner-dialog';
 import { useAuth } from '~/context/auth-context';
 import type { EditContactRequest } from '~/interfaces/contact';
+import { MANAGEMENT_ROLES, STANDARD_ROLES } from '~/constants/roles';
 
 interface ContactResponse {
   id: string;
@@ -148,7 +149,7 @@ const columns = [
                 <span>Edytuj</span>
               </DropdownMenuItem>
 
-              <RoleGuard allowedRoles={['Manager', 'Admin']}>
+              <RoleGuard allowedRoles={STANDARD_ROLES}>
                 <DropdownMenuItem
                   onClick={() => meta.onChangeOwner(info.row.original.id)}
                   className="cursor-pointer text-sm text-gray-700 focus:bg-gray-50"
@@ -262,7 +263,7 @@ export default function ContactList() {
   const queryClient = useQueryClient();
   const [ownerFilter, setOwnerFilter] = useState<string>('');
   const { user } = useAuth();
-  const isManagerOrAdmin = user?.roles.some((r) => ['Manager', 'Admin'].includes(r));
+  const isManagerOrAdmin = user?.roles.some((r) => MANAGEMENT_ROLES.includes(r));
 
   const editContactMutation = useMutation({
     mutationFn: async (updatedContact: EditContactRequest) => {
@@ -434,7 +435,7 @@ export default function ContactList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
             <h1 className="text-lg lg:text-2xl font-semibold">Kontakty</h1>

@@ -30,6 +30,7 @@ import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { AddPromotionDialog } from '~/components/promotion/dialogs/add-promotion-dialog';
 import type { AddPromotionRequest } from '~/interfaces/promotion';
+import { MANAGEMENT_ROLES, STANDARD_ROLES } from '~/constants/roles';
 
 interface PromotionResponse {
   id: string;
@@ -176,7 +177,7 @@ export default function PromotionsList() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const canManage = user?.roles.some((role) => ['Manager', 'Admin'].includes(role));
+  const canManage = user?.roles.some((role) => MANAGEMENT_ROLES.includes(role));
 
   const [isAddOpen, setIsAddOpen] = useState(false);
 
@@ -371,7 +372,7 @@ export default function PromotionsList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex items-center justify-between">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">Promocje</h1>

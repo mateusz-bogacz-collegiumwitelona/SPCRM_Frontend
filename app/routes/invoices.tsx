@@ -30,6 +30,7 @@ import { formatCurrency } from '~/utils/data-formatters';
 import { DataTable } from '~/components/table/data-table';
 import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-invoice-pdf-dialog';
 import type { InvoiceListResponse } from '~/interfaces/invoice';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 const parseIsOverDueFilter = (filterValue: string): boolean | undefined => {
   if (filterValue === 'true') return true;
@@ -423,7 +424,7 @@ export default function InvoicesList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex justify-between items-center">
             <h1 className="text-lg lg:text-2xl font-semibold">Faktury</h1>

@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { ArrowLeft, Compass, HelpCircle, Home, LogIn } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Navbar as UnloggedNavbar } from '~/components/layout/unloged-navbar';

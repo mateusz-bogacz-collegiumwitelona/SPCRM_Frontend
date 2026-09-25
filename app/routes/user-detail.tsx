@@ -12,18 +12,40 @@ import { UserContactsTable } from '~/components/user/user-contacts-table';
 import { UserSalesTable } from '~/components/user/user-sales-table';
 import { UserTasksTable } from '~/components/user/user-tasks-table';
 import { UserAnalyticsTab } from '~/components/user/user-analytics-tab';
+import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
+import NotFound from '~/routes/not-found';
+import { useQuery } from '@tanstack/react-query';
+import type { UserDetailResponse } from '~/interfaces/user';
+import { api, isNotFoundError } from '~/api/api';
+import { PageLoader } from '~/components/layout/page-loader';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics'>('overview');
 
-  if (!userId) {
-    return null;
+  const { isLoading, error } = useQuery<UserDetailResponse>({
+    queryKey: ['user-detail', userId],
+    queryFn: async () => {
+      const response = await api.get(`/user/${userId}`);
+      return response.data?.value || response.data?.data || response.data;
+    },
+    enabled: Boolean(userId),
+    retry: false,
+  });
+
+  if (!userId || isNotFoundError(error)) {
+    return <NotFound />;
+  }
+
+  if (isLoading) {
+    return (
+      <PageLoader message="Wczytywanie profilu użytkownika..." allowedRoles={MANAGEMENT_ROLES} />
+    );
   }
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Admin', 'Manager']}>
+      <RoleGuard allowedRoles={MANAGEMENT_ROLES}>
         <MainLayout>
           <div className="mb-4">
             <Button
@@ -41,7 +63,7 @@ export default function UserDetailPage() {
 
           <div className="space-y-6">
             <UserProfileCard userId={userId} />
-            <HasRole allowedRoles={['Manager']}>
+            <HasRole allowedRoles={[ROLES.MANAGER]}>
               <div className="border-b border-gray-200">
                 <nav className="flex space-x-6" aria-label="Tabs">
                   <button

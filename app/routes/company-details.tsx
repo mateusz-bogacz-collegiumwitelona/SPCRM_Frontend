@@ -1,7 +1,7 @@
 import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { MapPinned, Pencil, Plus, Trash2 } from 'lucide-react';
-import { api } from '~/api/api';
+import { api, isNotFoundError } from '~/api/api';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
@@ -25,6 +25,8 @@ import type {
   CompanyAddressFormData,
   EditCompanyRequest,
 } from '~/interfaces/company';
+import NotFound from '~/routes/not-found';
+import { PageLoader } from '~/components/layout/page-loader';
 
 interface CompanyAddress {
   id: string;
@@ -103,10 +105,12 @@ export default function CompanyDetails() {
     data: basicInfo,
     isLoading: isBasicInfoLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ['company-details', clientId],
     queryFn: async () => (await api.get('/company', { params: { companyId: clientId } })).data.data,
     enabled: !!clientId,
+    retry: false,
   });
 
   const { data: addressesData, isLoading: isAddressesLoading } = useQuery({
@@ -253,6 +257,14 @@ export default function CompanyDetails() {
       alert(getErrorMessage(code, fallback));
     },
   });
+
+  if (!clientId || isNotFoundError(error)) {
+    return <NotFound />;
+  }
+
+  if (isBasicInfoLoading) {
+    return <PageLoader message="Wczytywanie danych firmy..." />;
+  }
 
   return (
     <AuthGuard>

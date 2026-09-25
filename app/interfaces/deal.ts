@@ -47,3 +47,22 @@ export interface UserDealItem {
   currency: string;
   companyName: string;
 }
+
+export interface SaleDetailResponse {
+  id: string;
+  name: string;
+  value: number;
+  status: string;
+  closeDate: string;
+  currencyCode: string;
+  decimalPlaces: number;
+  ownerFirstName: string;
+  ownerLastName: string;
+  companyName: string;
+  contactFirstName?: string;
+  contactLastName?: string;
+  invoicedAmount: number;
+  paidAmount: number;
+  isOverdueInvoices: boolean;
+  paymentPercentage: number;
+}

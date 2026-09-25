@@ -1,5 +1,4 @@
 import { useParams } from 'react-router';
-import { AlertCircle } from 'lucide-react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { TaskContactDetails } from '~/components/task/task-contact';
 import { TaskNote } from '~/components/task/task-note';
@@ -7,27 +6,36 @@ import { TaskDeals } from '~/components/task/task-deals';
 import { TaskInfo } from '~/components/task/task-info';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
+import { useQuery } from '@tanstack/react-query';
+import { api, isNotFoundError } from '~/api/api';
+import NotFound from '~/routes/not-found';
+import { PageLoader } from '~/components/layout/page-loader';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 const TaskDetails: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
 
-  if (!taskId) {
-    return (
-      <div className="m-6 flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs">
-        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-medium leading-tight">Nie znaleziono zadania</p>
-          <p className="mt-1 text-xs text-red-700">
-            Nieprawidłowy identyfikator zadania w adresie URL.
-          </p>
-        </div>
-      </div>
-    );
+  const { error, isLoading } = useQuery({
+    queryKey: ['task-core-details', taskId],
+    queryFn: async () => {
+      const res = await api.get(`/tasks/${taskId}`);
+      return res.data?.data || res.data?.value || res.data;
+    },
+    enabled: !!taskId,
+    retry: false,
+  });
+
+  if (!taskId || isNotFoundError(error)) {
+    return <NotFound />;
+  }
+
+  if (isLoading) {
+    return <PageLoader message="Wczytywanie szczegółów zadania..." />;
   }
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
             <div className="p-4 lg:p-8 max-w-[1600px] mx-auto">

@@ -27,25 +27,7 @@ import { DeleteDealDialog } from '~/components/deal/dialogs/delete-deal-dialog';
 import { ExtendDealDialog } from '~/components/deal/dialogs/extend-deal-dialog';
 import { ChangeDealStatusDialog } from '~/components/deal/dialogs/change-deal-status-dialog';
 import { ChangeDealContactDialog } from '~/components/deal/dialogs/change-deal-contact-dialog';
-
-interface SaleDetailResponse {
-  id: string;
-  name: string;
-  value: number;
-  status: string;
-  closeDate: string;
-  currencyCode: string;
-  decimalPlaces: number;
-  ownerFirstName: string;
-  ownerLastName: string;
-  companyName: string;
-  contactFirstName?: string;
-  contactLastName?: string;
-  invoicedAmount: number;
-  paidAmount: number;
-  isOverdueInvoices: boolean;
-  paymentPercentage: number;
-}
+import type { SaleDetailResponse } from '~/interfaces/deal';
 
 export const DealInfo = ({ dealId }: { dealId: string }) => {
   const navigate = useNavigate();

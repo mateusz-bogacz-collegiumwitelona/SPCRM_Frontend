@@ -31,6 +31,7 @@ import { DeleteSteelGradeDialog } from '~/components/steel-grade/dialogs/delete-
 import { EditSteelGradeDialog } from '~/components/steel-grade/dialogs/edit-steel-grade-dialog';
 import { AddSteelGradeDialog } from '~/components/steel-grade/dialogs/add-steel-grade-dialog';
 import type { AddSteelGradePayload, EditSteelGradePayload } from '~/interfaces/steel-grade';
+import { ROLES } from '~/constants/roles';
 
 interface SteelGradeListResponse {
   id: string;
@@ -312,7 +313,7 @@ export default function SteelGradesList() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['Admin']}>
+      <RoleGuard allowedRoles={[ROLES.ADMIN]}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6 flex items-center justify-between gap-4">
             <h1 className="text-lg lg:text-2xl font-semibold flex items-center gap-2">

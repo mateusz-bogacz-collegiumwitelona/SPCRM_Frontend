@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
+import { api, isNotFoundError } from '~/api/api';
 import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import React, { useState } from 'react';
@@ -15,6 +15,10 @@ import { OfferProductsTable } from '~/components/offer/offer-product-table';
 import { ResendOfferEmailDialog } from '~/components/offer/dialogs/resend-offer-email-dialog';
 import { DeleteOfferDialog } from '~/components/offer/dialogs/delete-offer-dialog';
 import type { EditableProductItem, OfferProductResponse } from '~/interfaces/offer';
+import NotFound from '~/routes/not-found';
+import { PageLoader } from '~/components/layout/page-loader';
+import { RoleGuard } from '~/lib/role-guard';
+import { STANDARD_ROLES } from '~/constants/roles';
 
 interface OfferAllowedActionsResponse {
   canEdit: boolean;
@@ -77,10 +81,12 @@ const OfferDetail: React.FC = () => {
     data: basicInfo,
     isLoading: isBasicInfoLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ['offer-detail', offerId],
     queryFn: async () => (await api.get(`offer/detail/${offerId}`)).data.data,
     enabled: Boolean(offerId),
+    retry: false,
   });
 
   const { data: allowedActions } = useQuery<OfferAllowedActionsResponse>({
@@ -151,142 +157,156 @@ const OfferDetail: React.FC = () => {
 
   const canDelete = allowedActions?.canDelete;
 
+  if (!offerId || isNotFoundError(error)) {
+    return <NotFound />;
+  }
+
+  if (isBasicInfoLoading) {
+    return <PageLoader message="Wczytywanie szczegółów oferty..." />;
+  }
+
   return (
     <AuthGuard>
-      <MainLayout>
-        <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
-          <div className="p-4 lg:p-8 max-w-[1600px] mx-auto space-y-6">
-            <div className="flex flex-col gap-4">
-              <OfferDetailHeader
-                isLoading={isBasicInfoLoading}
-                isError={isError}
-                basicInfo={basicInfo}
-              />
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
+        <MainLayout>
+          <div className="bg-white lg:bg-[#f8f9fa] w-full min-h-screen pb-12">
+            <div className="p-4 lg:p-8 max-w-[1600px] mx-auto space-y-6">
+              <div className="flex flex-col gap-4">
+                <OfferDetailHeader
+                  isLoading={isBasicInfoLoading}
+                  isError={isError}
+                  basicInfo={basicInfo}
+                />
 
-              <div className="flex flex-wrap items-center justify-end gap-2.5">
-                {canResendEmail && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsResendModalOpen(true)}
-                    className="text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100 flex items-center gap-1.5 text-xs sm:text-sm"
-                  >
-                    <Mail className="w-4 h-4" />
-                    Wyślij e-mail ponownie
-                  </Button>
-                )}
+                <div className="flex flex-wrap items-center justify-end gap-2.5">
+                  {canResendEmail && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsResendModalOpen(true)}
+                      className="text-[#004a8f] border-blue-200 bg-blue-50/50 hover:bg-blue-100 flex items-center gap-1.5 text-xs sm:text-sm"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Wyślij e-mail ponownie
+                    </Button>
+                  )}
 
-                {canReject && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setStatusDialogState({ isOpen: true, targetStatus: 'Rejected' })}
-                    className="text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-1.5 text-xs sm:text-sm"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Odrzuć ofertę
-                  </Button>
-                )}
+                  {canReject && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setStatusDialogState({ isOpen: true, targetStatus: 'Rejected' })
+                      }
+                      className="text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-1.5 text-xs sm:text-sm"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Odrzuć ofertę
+                    </Button>
+                  )}
 
-                {canAccept && (
-                  <Button
-                    type="button"
-                    onClick={() => setStatusDialogState({ isOpen: true, targetStatus: 'Accepted' })}
-                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1.5 text-xs sm:text-sm"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Zaakceptuj ofertę
-                  </Button>
-                )}
+                  {canAccept && (
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        setStatusDialogState({ isOpen: true, targetStatus: 'Accepted' })
+                      }
+                      className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1.5 text-xs sm:text-sm"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Zaakceptuj ofertę
+                    </Button>
+                  )}
 
-                {canExtend && (
-                  <Button
-                    type="button"
-                    onClick={() => setIsExtendModalOpen(true)}
-                    className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2 font-medium text-xs sm:text-sm"
-                  >
-                    <CalendarClock className="w-4 h-4" />
-                    Przedłuż ważność
-                  </Button>
-                )}
-                {canDelete && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    className="text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-1.5 text-xs sm:text-sm"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Usuń ofertę
-                  </Button>
-                )}
+                  {canExtend && (
+                    <Button
+                      type="button"
+                      onClick={() => setIsExtendModalOpen(true)}
+                      className="bg-[#004a8f] text-white hover:bg-[#003870] flex items-center gap-2 font-medium text-xs sm:text-sm"
+                    >
+                      <CalendarClock className="w-4 h-4" />
+                      Przedłuż ważność
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDeleteModalOpen(true)}
+                      className="text-red-600 border-red-200 hover:bg-red-50 flex items-center gap-1.5 text-xs sm:text-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Usuń ofertę
+                    </Button>
+                  )}
+                </div>
               </div>
+
+              {offerId && <OfferClientDetail offerId={offerId} />}
+
+              {offerId && (
+                <OfferProductsTable
+                  offerId={offerId}
+                  canEdit={allowedActions?.canEdit}
+                  onEditProducts={handleOpenEditProducts}
+                />
+              )}
             </div>
-
-            {offerId && <OfferClientDetail offerId={offerId} />}
-
-            {offerId && (
-              <OfferProductsTable
-                offerId={offerId}
-                canEdit={allowedActions?.canEdit}
-                onEditProducts={handleOpenEditProducts}
-              />
-            )}
           </div>
-        </div>
 
-        <ExtendOfferValidityDialog
-          isOpen={isExtendModalOpen}
-          onClose={() => setIsExtendModalOpen(false)}
-          onConfirm={async (newDate) => {
-            await extendValidityMutation.mutateAsync(newDate);
-          }}
-          isLoading={extendValidityMutation.isPending}
-          offerName={basicInfo?.offerName}
-          currentValidUntil={basicInfo?.validUntil}
-        />
+          <ExtendOfferValidityDialog
+            isOpen={isExtendModalOpen}
+            onClose={() => setIsExtendModalOpen(false)}
+            onConfirm={async (newDate) => {
+              await extendValidityMutation.mutateAsync(newDate);
+            }}
+            isLoading={extendValidityMutation.isPending}
+            offerName={basicInfo?.offerName}
+            currentValidUntil={basicInfo?.validUntil}
+          />
 
-        <ChangeOfferStatusDialog
-          isOpen={statusDialogState.isOpen}
-          targetStatus={statusDialogState.targetStatus}
-          onClose={() => setStatusDialogState({ isOpen: false, targetStatus: null })}
-          onConfirm={async (status) => {
-            await changeStatusMutation.mutateAsync(status);
-          }}
-          isLoading={changeStatusMutation.isPending}
-          offerName={basicInfo?.offerName}
-        />
+          <ChangeOfferStatusDialog
+            isOpen={statusDialogState.isOpen}
+            targetStatus={statusDialogState.targetStatus}
+            onClose={() => setStatusDialogState({ isOpen: false, targetStatus: null })}
+            onConfirm={async (status) => {
+              await changeStatusMutation.mutateAsync(status);
+            }}
+            isLoading={changeStatusMutation.isPending}
+            offerName={basicInfo?.offerName}
+          />
 
-        <EditOfferProductsDialog
-          isOpen={isEditProductsOpen}
-          onClose={() => setIsEditProductsOpen(false)}
-          onConfirm={async (items) => {
-            await updateProductsMutation.mutateAsync(items);
-          }}
-          isLoading={updateProductsMutation.isPending}
-          initialProducts={productsToEdit}
-        />
-        <ResendOfferEmailDialog
-          isOpen={isResendModalOpen}
-          onClose={() => setIsResendModalOpen(false)}
-          onConfirm={async (language) => {
-            await resendEmailMutation.mutateAsync(language);
-          }}
-          isLoading={resendEmailMutation.isPending}
-          offerName={basicInfo?.offerName}
-          recipientEmail={basicInfo?.contactEmail}
-          recipientName={`${basicInfo?.contactFirstName ?? ''} ${basicInfo?.contactLastName ?? ''}`.trim()}
-        />
-        <DeleteOfferDialog
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={async () => {
-            await deleteOfferMutation.mutateAsync();
-          }}
-          isLoading={deleteOfferMutation.isPending}
-          offerName={basicInfo?.offerName}
-        />
-      </MainLayout>
+          <EditOfferProductsDialog
+            isOpen={isEditProductsOpen}
+            onClose={() => setIsEditProductsOpen(false)}
+            onConfirm={async (items) => {
+              await updateProductsMutation.mutateAsync(items);
+            }}
+            isLoading={updateProductsMutation.isPending}
+            initialProducts={productsToEdit}
+          />
+          <ResendOfferEmailDialog
+            isOpen={isResendModalOpen}
+            onClose={() => setIsResendModalOpen(false)}
+            onConfirm={async (language) => {
+              await resendEmailMutation.mutateAsync(language);
+            }}
+            isLoading={resendEmailMutation.isPending}
+            offerName={basicInfo?.offerName}
+            recipientEmail={basicInfo?.contactEmail}
+            recipientName={`${basicInfo?.contactFirstName ?? ''} ${basicInfo?.contactLastName ?? ''}`.trim()}
+          />
+          <DeleteOfferDialog
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            onConfirm={async () => {
+              await deleteOfferMutation.mutateAsync();
+            }}
+            isLoading={deleteOfferMutation.isPending}
+            offerName={basicInfo?.offerName}
+          />
+        </MainLayout>
+      </RoleGuard>
     </AuthGuard>
   );
 };

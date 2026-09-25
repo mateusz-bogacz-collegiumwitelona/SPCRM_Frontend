@@ -31,6 +31,7 @@ import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { useAuth } from '~/context/auth-context';
 import { HasRole } from '~/lib/has-role';
 import { AddDealDialog } from '~/components/deal/dialogs/add-deal-dialog';
+import { ROLES, STANDARD_ROLES } from '~/constants/roles';
 
 interface UserSalesResponse {
   id: string;
@@ -105,7 +106,7 @@ const SaleMobileCard = ({ item, isManager }: SaleMobileCardProps) => {
 
 export default function UserSales() {
   const { user } = useAuth();
-  const isManager = user?.roles?.includes('Manager') ?? false;
+  const isManager = user?.roles?.includes(ROLES.MANAGER) ?? false;
 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -336,7 +337,7 @@ export default function UserSales() {
 
   return (
     <AuthGuard>
-      <RoleGuard allowedRoles={['User', 'Manager']}>
+      <RoleGuard allowedRoles={STANDARD_ROLES}>
         <MainLayout>
           <div className="bg-blue-900 p-4 lg:p-6 text-white rounded-t-lg shadow-sm mb-4 lg:mb-6">
             <h1 className="text-lg lg:text-2xl font-semibold">
@@ -475,7 +476,7 @@ export default function UserSales() {
                           </select>
                         </div>
 
-                        <HasRole allowedRoles={['Manager']}>
+                        <HasRole allowedRoles={[ROLES.MANAGER]}>
                           <div className="flex flex-col">
                             <label
                               htmlFor="sales-owner-filter"
