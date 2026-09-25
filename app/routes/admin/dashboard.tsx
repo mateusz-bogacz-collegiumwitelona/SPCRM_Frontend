@@ -32,6 +32,26 @@ interface SimpleUser {
   isActive?: boolean;
 }
 
+const getRoleBadgeClass = (role: string): string => {
+  if (role === ROLES.ADMIN) {
+    return 'bg-purple-50 text-purple-700 border border-purple-200';
+  }
+  if (role === ROLES.MANAGER) {
+    return 'bg-blue-50 text-blue-700 border border-blue-200';
+  }
+  return 'bg-gray-100 text-gray-700';
+};
+
+const getUserDisplayName = (u: SimpleUser): string => {
+  if (u.firstName && u.lastName) {
+    return `${u.firstName} ${u.lastName}`;
+  }
+  if (u.userName) {
+    return u.userName;
+  }
+  return u.email;
+};
+
 export default function AdminDashboard() {
   const { data: metrics, isLoading: isMetricsLoading } = useQuery<AdminMetricsResponse>({
     queryKey: ['admin-system-metrics'],
@@ -58,6 +78,69 @@ export default function AdminDashboard() {
     return [];
   }, [usersResponse]);
 
+  const renderMetricValue = (value: number | undefined) => {
+    if (isMetricsLoading) {
+      return <Loader2 className="w-5 h-5 animate-spin text-gray-400 mt-1" />;
+    }
+    return value ?? 0;
+  };
+
+  let usersContent: React.ReactNode;
+  if (isUsersLoading) {
+    usersContent = (
+      <div className="py-8 flex justify-center items-center">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-900" />
+      </div>
+    );
+  } else if (recentUsers.length === 0) {
+    usersContent = (
+      <p className="text-center py-6 text-gray-400 text-sm">Brak użytkowników do wyświetlenia.</p>
+    );
+  } else {
+    usersContent = (
+      <div className="space-y-2.5">
+        {recentUsers.map((u) => {
+          const displayName = getUserDisplayName(u);
+          const hasRoles = u.roles && u.roles.length > 0;
+
+          return (
+            <div
+              key={u.id}
+              className="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-all flex items-center justify-between gap-3"
+            >
+              <div className="truncate">
+                <Link
+                  to={`/user/${u.id}`}
+                  className="text-sm font-semibold text-blue-900 hover:underline truncate block"
+                >
+                  {displayName}
+                </Link>
+                <p className="text-xs text-gray-500 truncate">{u.email}</p>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {hasRoles ? (
+                  u.roles?.map((role) => (
+                    <span
+                      key={role}
+                      className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${getRoleBadgeClass(role)}`}
+                    >
+                      {role}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                    Użytkownik
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-slate-900 p-6 text-white rounded-lg shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-slate-800">
@@ -70,7 +153,7 @@ export default function AdminDashboard() {
               <h1 className="text-xl lg:text-2xl font-bold">Panel Administracyjny IT</h1>
               <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                System aktywny
+                <span>System aktywny</span>
               </span>
             </div>
             <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
@@ -95,11 +178,7 @@ export default function AdminDashboard() {
           <div>
             <p className="text-xs font-medium text-gray-500">Konta użytkowników</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">
-              {isMetricsLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400 mt-1" />
-              ) : (
-                (metrics?.totalUsers ?? 0)
-              )}
+              {renderMetricValue(metrics?.totalUsers)}
             </p>
           </div>
           <div className="p-3 bg-blue-50 text-blue-900 rounded-lg">
@@ -111,11 +190,7 @@ export default function AdminDashboard() {
           <div>
             <p className="text-xs font-medium text-gray-500">Gatunki stali (Słownik)</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">
-              {isMetricsLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400 mt-1" />
-              ) : (
-                (metrics?.totalSteelGrades ?? 0)
-              )}
+              {renderMetricValue(metrics?.totalSteelGrades)}
             </p>
           </div>
           <div className="p-3 bg-slate-100 text-slate-800 rounded-lg">
@@ -127,11 +202,7 @@ export default function AdminDashboard() {
           <div>
             <p className="text-xs font-medium text-gray-500">Aktywne waluty</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">
-              {isMetricsLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400 mt-1" />
-              ) : (
-                (metrics?.totalCurrencies ?? 0)
-              )}
+              {renderMetricValue(metrics?.totalCurrencies)}
             </p>
           </div>
           <div className="p-3 bg-emerald-50 text-emerald-700 rounded-lg">
@@ -143,11 +214,7 @@ export default function AdminDashboard() {
           <div>
             <p className="text-xs font-medium text-gray-500">Jednostki miary</p>
             <p className="text-2xl font-bold text-gray-900 mt-1">
-              {isMetricsLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400 mt-1" />
-              ) : (
-                (metrics?.totalUnits ?? 0)
-              )}
+              {renderMetricValue(metrics?.totalUnits)}
             </p>
           </div>
           <div className="p-3 bg-amber-50 text-amber-700 rounded-lg">
@@ -241,66 +308,7 @@ export default function AdminDashboard() {
               </Link>
             </div>
 
-            <div className="p-4">
-              {isUsersLoading ? (
-                <div className="py-8 flex justify-center items-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-900" />
-                </div>
-              ) : recentUsers.length === 0 ? (
-                <p className="text-center py-6 text-gray-400 text-sm">
-                  Brak użytkowników do wyświetlenia.
-                </p>
-              ) : (
-                <div className="space-y-2.5">
-                  {recentUsers.map((u) => {
-                    const displayName =
-                      u.firstName && u.lastName
-                        ? `${u.firstName} ${u.lastName}`
-                        : u.userName || u.email;
-
-                    return (
-                      <div
-                        key={u.id}
-                        className="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-all flex items-center justify-between gap-3"
-                      >
-                        <div className="truncate">
-                          <Link
-                            to={`/user/${u.id}`}
-                            className="text-sm font-semibold text-blue-900 hover:underline truncate block"
-                          >
-                            {displayName}
-                          </Link>
-                          <p className="text-xs text-gray-500 truncate">{u.email}</p>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {u.roles && u.roles.length > 0 ? (
-                            u.roles.map((role) => (
-                              <span
-                                key={role}
-                                className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
-                                  role === ROLES.ADMIN
-                                    ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                                    : role === ROLES.MANAGER
-                                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                      : 'bg-gray-100 text-gray-700'
-                                }`}
-                              >
-                                {role}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                              Użytkownik
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <div className="p-4">{usersContent}</div>
           </div>
 
           <div className="p-4 border-t border-gray-100 bg-gray-50/50 rounded-b-lg">

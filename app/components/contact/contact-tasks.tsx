@@ -44,6 +44,122 @@ interface TaskTableMeta {
 
 const columnHelper = createColumnHelper<ContactTaskItem>();
 
+const columns = [
+  columnHelper.accessor('title', {
+    header: 'Zadanie',
+    cell: (info) => {
+      const task = info.row.original;
+      return (
+        <div className="flex flex-col">
+          <Link to={`/task/${task.id}`} className="font-medium text-blue-900 hover:underline">
+            {task.title}
+          </Link>
+          {task.dealId && task.dealName && (
+            <Link
+              to={`/sales/${task.dealId}`}
+              className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-900 hover:underline mt-0.5"
+            >
+              <Briefcase className="w-3 h-3 text-gray-400 shrink-0" />
+              <span>{task.dealName}</span>
+            </Link>
+          )}
+        </div>
+      );
+    },
+  }),
+  columnHelper.accessor('status', {
+    header: 'Status',
+    cell: (info) => {
+      const status = info.getValue();
+      return (
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${getTaskStatusBadgeClass(
+            status,
+          )}`}
+        >
+          {resolveTaskStatusLabel(status)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('priority', {
+    header: 'Priorytet',
+    cell: (info) => {
+      const priority = info.getValue();
+      return (
+        <span
+          className={`px-2 py-0.5 rounded border text-xs font-semibold ${getTaskPriorityBadgeClass(
+            priority,
+          )}`}
+        >
+          {resolveTaskPriorityLabel(priority)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'assignedTo',
+    header: 'Przypisany',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="text-gray-700 text-sm">
+          {row.assignedToFirstName} {row.assignedToLastName}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('dueAt', {
+    header: 'Termin',
+    cell: (info) => {
+      const date = new Date(info.getValue());
+      return <span className="text-gray-500 text-xs">{format(date, 'dd.MM.yyyy HH:mm')}</span>;
+    },
+  }),
+  columnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: (info) => {
+      const meta = info.table.options.meta as TaskTableMeta;
+      const task = info.row.original;
+
+      return (
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/task/${task.id}`}
+            className="text-blue-900 font-medium text-sm hover:underline"
+          >
+            Szczegóły
+          </Link>
+          <button
+            type="button"
+            onClick={() => meta.onEdit(task)}
+            className="text-gray-500 font-medium text-sm hover:text-blue-900 hover:underline"
+          >
+            Edytuj
+          </button>
+          <button
+            type="button"
+            onClick={() => meta.onDelete(task)}
+            className="text-gray-500 font-medium text-sm hover:text-red-600 hover:underline"
+          >
+            Usuń
+          </button>
+        </div>
+      );
+    },
+  }),
+];
+
+const mergeTasks = (
+  existing: ContactTaskItem[],
+  incoming: ContactTaskItem[],
+): ContactTaskItem[] => {
+  const existingIds = new Set(existing.map((item) => item.id));
+  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
+  return [...existing, ...uniqueIncoming];
+};
+
 export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => {
   const queryClient = useQueryClient();
 
@@ -133,15 +249,6 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalCount || desktopTasks.length;
 
-  const mergeTasks = (
-    existing: ContactTaskItem[],
-    incoming: ContactTaskItem[],
-  ): ContactTaskItem[] => {
-    const existingIds = new Set(existing.map((item) => item.id));
-    const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
-    return [...existing, ...uniqueIncoming];
-  };
-
   useEffect(() => {
     const items = data?.items;
     if (!items || items.length === 0) return;
@@ -163,116 +270,6 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
     isMobileAppend.current = false;
     setPageNumber(newPage);
   };
-
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('title', {
-        header: 'Zadanie',
-        cell: (info) => {
-          const task = info.row.original;
-          return (
-            <div className="flex flex-col">
-              <Link to={`/task/${task.id}`} className="font-medium text-blue-900 hover:underline">
-                {task.title}
-              </Link>
-              {task.dealId && task.dealName && (
-                <Link
-                  to={`/sales/${task.dealId}`}
-                  className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-900 hover:underline mt-0.5"
-                >
-                  <Briefcase className="w-3 h-3 text-gray-400 shrink-0" />
-                  <span>{task.dealName}</span>
-                </Link>
-              )}
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: (info) => {
-          const status = info.getValue();
-          return (
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${getTaskStatusBadgeClass(
-                status,
-              )}`}
-            >
-              {resolveTaskStatusLabel(status)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('priority', {
-        header: 'Priorytet',
-        cell: (info) => {
-          const priority = info.getValue();
-          return (
-            <span
-              className={`px-2 py-0.5 rounded border text-xs font-semibold ${getTaskPriorityBadgeClass(
-                priority,
-              )}`}
-            >
-              {resolveTaskPriorityLabel(priority)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'assignedTo',
-        header: 'Przypisany',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="text-gray-700 text-sm">
-              {row.assignedToFirstName} {row.assignedToLastName}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('dueAt', {
-        header: 'Termin',
-        cell: (info) => {
-          const date = new Date(info.getValue());
-          return <span className="text-gray-500 text-xs">{format(date, 'dd.MM.yyyy HH:mm')}</span>;
-        },
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Akcje',
-        cell: (info) => {
-          const meta = info.table.options.meta as TaskTableMeta;
-          const task = info.row.original;
-
-          return (
-            <div className="flex items-center gap-3">
-              <Link
-                to={`/task/${task.id}`}
-                className="text-blue-900 font-medium text-sm hover:underline"
-              >
-                Szczegóły
-              </Link>
-              <button
-                type="button"
-                onClick={() => meta.onEdit(task)}
-                className="text-gray-500 font-medium text-sm hover:text-blue-900 hover:underline"
-              >
-                Edytuj
-              </button>
-              <button
-                type="button"
-                onClick={() => meta.onDelete(task)}
-                className="text-gray-500 font-medium text-sm hover:text-red-600 hover:underline"
-              >
-                Usuń
-              </button>
-            </div>
-          );
-        },
-      }),
-    ],
-    [],
-  );
 
   const table = useReactTable({
     data: desktopTasks,
@@ -308,35 +305,33 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
         }
       : null;
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-900 mb-2" />
-          <p className="text-gray-500 text-sm">Wczytywanie zadań...</p>
-        </div>
-      );
-    }
+  let tableContent: React.ReactNode;
 
-    if (!desktopTasks || desktopTasks.length === 0) {
-      return (
-        <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center gap-3">
-          <CheckSquare className="h-8 w-8 text-gray-300" />
-          <p className="text-gray-500 font-medium text-sm">Brak zadań dla tego kontaktu.</p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAddModalOpen(true)}
-            className="mt-2 text-blue-900 border-gray-300"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Dodaj pierwsze zadanie
-          </Button>
-        </div>
-      );
-    }
-
-    return (
+  if (isLoading) {
+    tableContent = (
+      <div className="flex flex-col items-center justify-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-900 mb-2" />
+        <p className="text-gray-500 text-sm">Wczytywanie zadań...</p>
+      </div>
+    );
+  } else if (!desktopTasks || desktopTasks.length === 0) {
+    tableContent = (
+      <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col items-center gap-3">
+        <CheckSquare className="h-8 w-8 text-gray-300" />
+        <p className="text-gray-500 font-medium text-sm">Brak zadań dla tego kontaktu.</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setIsAddModalOpen(true)}
+          className="mt-2 text-blue-900 border-gray-300"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Dodaj pierwsze zadanie
+        </Button>
+      </div>
+    );
+  } else {
+    tableContent = (
       <>
         <div className="block lg:hidden space-y-4">
           <div className="flex items-center justify-between gap-4 mb-2">
@@ -576,7 +571,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
         </div>
       </>
     );
-  };
+  }
 
   return (
     <>
@@ -589,7 +584,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
               {listError.details && listError.details.length > 0 && (
                 <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                   {listError.details.map((detailErr, idx) => (
-                    <li key={idx}>{detailErr}</li>
+                    <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                   ))}
                 </ul>
               )}
@@ -605,7 +600,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
           </div>
         )}
 
-        {renderContent()}
+        {tableContent}
       </div>
 
       <AddTaskDialog

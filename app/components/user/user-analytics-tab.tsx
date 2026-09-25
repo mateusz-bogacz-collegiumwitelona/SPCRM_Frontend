@@ -93,10 +93,10 @@ export const UserAnalyticsTab = ({ userId }: { userId: string }) => {
       {kpiData && <KpiCards data={kpiData} titlePrefix="pracownika" />}
 
       <RevenueChart
-        data={chartData || []}
+        data={chartData ?? []}
         selectedPeriod={selectedPeriod}
         onPeriodChange={setSelectedPeriod}
-        currencies={currencies || []}
+        currencies={currencies ?? []}
         selectedCurrencyCode={selectedCurrencyCode}
         onCurrencyChange={setSelectedCurrencyCode}
         isLoading={isChartLoading}

@@ -85,8 +85,8 @@ export const ChangeOfferStatusDialog: React.FC<ChangeOfferStatusDialogProps> = (
 
         <div className="py-4 space-y-4">
           <p className="text-sm text-gray-600 text-center leading-relaxed">
-            Czy na pewno chcesz zmienić status oferty{' '}
-            {offerName ? <strong>„{offerName}”</strong> : ''} na{' '}
+            Czy na pewno chcesz zmienić status oferty {offerName && <strong>„{offerName}” </strong>}
+            na{' '}
             <strong className={isAccepting ? 'text-green-700' : 'text-red-700'}>
               {isAccepting ? 'Zaakceptowana' : 'Odrzucona'}
             </strong>
@@ -108,7 +108,7 @@ export const ChangeOfferStatusDialog: React.FC<ChangeOfferStatusDialogProps> = (
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}

@@ -54,7 +54,7 @@ export const AddProductStockDialog: React.FC<AddProductStockDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    if (!quantity || isNaN(parsedQuantity) || parsedQuantity <= 0) {
+    if (!quantity || Number.isNaN(parsedQuantity) || parsedQuantity <= 0) {
       setFormError({
         title: getErrorMessage('VALIDATION_ERROR'),
         details: ['Wprowadzona ilość musi być liczbą całkowitą większą od zera.'],
@@ -110,7 +110,7 @@ export const AddProductStockDialog: React.FC<AddProductStockDialogProps> = ({
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}

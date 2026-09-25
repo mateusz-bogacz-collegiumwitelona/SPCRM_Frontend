@@ -76,7 +76,18 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     };
   }, [isOpen]);
 
-  const activeAddress = addresses.find((a) => a.id === activeAddressId) || addresses[0];
+  const activeAddress =
+    addresses.find((a) => a.id === activeAddressId) ??
+    addresses[0] ??
+    createEmptyAddress('Headquarters');
+
+  const updateAddressCoordinates = (targetId: string, lat: number, lng: number) => {
+    setAddresses((curr) =>
+      curr.map((item) =>
+        item.id === targetId ? { ...item, latitude: lat, longitude: lng } : item,
+      ),
+    );
+  };
 
   const handleAddAddress = () => {
     const newAddr = createEmptyAddress('Branch');
@@ -96,8 +107,10 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     });
 
     if (activeAddressId === idToRemove) {
-      const remaining = addresses.filter((a) => a.id !== idToRemove);
-      setActiveAddressId(remaining[0].id);
+      const remaining = addresses.find((a) => a.id !== idToRemove);
+      if (remaining) {
+        setActiveAddressId(remaining.id);
+      }
     }
   };
 
@@ -126,17 +139,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
           setIsGeocoding(false);
 
           if (geo) {
-            setAddresses((curr) =>
-              curr.map((item) =>
-                item.id === id
-                  ? {
-                      ...item,
-                      latitude: geo.lat,
-                      longitude: geo.lng,
-                    }
-                  : item,
-              ),
-            );
+            updateAddressCoordinates(id, geo.lat, geo.lng);
           }
         }
       }, 700);
@@ -189,10 +192,15 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
   const handleSetHeadquarters = (idToSet: string) => {
     setAddresses((prev) =>
-      prev.map((a) => ({
-        ...a,
-        type: a.id === idToSet ? 'Headquarters' : a.type === 'Headquarters' ? 'Branch' : a.type,
-      })),
+      prev.map((a) => {
+        let type = a.type;
+        if (a.id === idToSet) {
+          type = 'Headquarters';
+        } else if (a.type === 'Headquarters') {
+          type = 'Branch';
+        }
+        return { ...a, type };
+      }),
     );
   };
 
@@ -243,7 +251,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
 
     const payload: AddCompanyRequest = {
       name: name.trim(),
-      nip: nip.replace(/[\s-]/g, ''),
+      nip: nip.replaceAll(/[\s-]/g, ''),
       addresses: addresses.map(({ street, city, zipCode, latitude, longitude, type }) => ({
         street: street.trim(),
         city: city.trim(),
@@ -299,7 +307,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -372,8 +380,8 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                   return (
                     <div
                       key={addr.id}
-                      onClick={() => setActiveAddressId(addr.id)}
-                      className={`p-4 border rounded-lg transition-all cursor-pointer relative ${
+                      onFocusCapture={() => setActiveAddressId(addr.id)}
+                      className={`p-4 border rounded-lg transition-all relative ${
                         isCurrent
                           ? 'border-[#004a8f] bg-blue-50/20 shadow-sm'
                           : 'border-gray-200 bg-white hover:border-gray-300'
@@ -388,10 +396,18 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                           >
                             #{index + 1} {isHq ? 'Siedziba główna' : 'Oddział'}
                           </span>
-                          {isCurrent && (
+                          {isCurrent ? (
                             <span className="text-[11px] text-[#004a8f] font-semibold flex items-center gap-1">
                               <MapPin className="w-3 h-3" /> Wybrany na mapie
                             </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setActiveAddressId(addr.id)}
+                              className="text-[11px] text-gray-500 hover:text-[#004a8f] font-medium flex items-center gap-1 transition-colors"
+                            >
+                              <MapPin className="w-3 h-3" /> Wybierz na mapie
+                            </button>
                           )}
                         </div>
 
@@ -399,10 +415,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                           {!isHq && (
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSetHeadquarters(addr.id);
-                              }}
+                              onClick={() => handleSetHeadquarters(addr.id)}
                               className="text-xs text-blue-800 hover:underline"
                             >
                               Ustaw jako centralę
@@ -411,10 +424,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
                           {addresses.length > 1 && (
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveAddress(addr.id);
-                              }}
+                              onClick={() => handleRemoveAddress(addr.id)}
                               className="text-red-500 hover:text-red-700 p-1"
                               title="Usuń ten adres"
                             >

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
   AlertCircle,
@@ -32,21 +32,166 @@ import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-
 import type { InvoiceListResponse } from '~/interfaces/invoice';
 import { STANDARD_ROLES } from '~/constants/roles';
 
+interface InvoiceTableMeta {
+  onDownloadPdf: (invoice: { id: string; invoiceNumber: string }) => void;
+}
+
 const parseIsOverDueFilter = (filterValue: string): boolean | undefined => {
   if (filterValue === 'true') return true;
   if (filterValue === 'false') return false;
   return undefined;
 };
 
+const renderInvoiceStatusBadge = (item: InvoiceListResponse) => {
+  if (item.remainingAmount <= 0) {
+    return (
+      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+        Opłacona
+      </span>
+    );
+  }
+  if (item.isOverDue) {
+    return (
+      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+        Zaległa
+      </span>
+    );
+  }
+  return (
+    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+      W toku
+    </span>
+  );
+};
+
 const columnHelper = createColumnHelper<InvoiceListResponse>();
 
-const InvoiceMobileCard = ({
-  item,
-  onDownloadPdf,
-}: {
+const columns = [
+  columnHelper.accessor('invoiceNumber', {
+    header: 'Numer faktury',
+    cell: (info) => (
+      <Link
+        to={`/invoice/${info.row.original.id}`}
+        className="font-semibold text-blue-900 hover:underline"
+      >
+        {info.getValue()}
+      </Link>
+    ),
+  }),
+  columnHelper.display({
+    id: 'company',
+    header: 'Kontrahent',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">{row.companyName}</span>
+          <span className="text-xs text-gray-500">NIP: {row.companyNip}</span>
+        </div>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'amounts',
+    header: 'Wartość brutto / Pozostało',
+    cell: (info) => {
+      const row = info.row.original;
+      const total = formatCurrency(row.totalAmount, row.currencyCode, row.decimalPlaces);
+      const remaining = formatCurrency(row.remainingAmount, row.currencyCode, row.decimalPlaces);
+
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">{total}</span>
+          <span
+            className={cn(
+              'text-xs',
+              row.remainingAmount > 0 ? 'text-amber-600 font-semibold' : 'text-gray-500',
+            )}
+          >
+            Pozostało: {remaining}
+          </span>
+        </div>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'dates',
+    header: 'Wystawiono / Termin',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <div className="flex flex-col text-xs text-gray-600">
+          <span>Wystawiona: {format(new Date(row.issueDate), 'dd.MM.yyyy', { locale: pl })}</span>
+          <span className={cn(row.isOverDue && 'text-red-600 font-bold')}>
+            Termin: {format(new Date(row.dueDate), 'dd.MM.yyyy', { locale: pl })}
+          </span>
+        </div>
+      );
+    },
+  }),
+  columnHelper.accessor('isOverDue', {
+    header: 'Status',
+    cell: (info) => {
+      const row = info.row.original;
+      if (row.remainingAmount <= 0) {
+        return (
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700">
+            Opłacona
+          </span>
+        );
+      }
+      if (row.isOverDue) {
+        return (
+          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700">
+            Przeterminowana
+          </span>
+        );
+      }
+      return (
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">
+          Do zapłaty
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: (info) => {
+      const meta = info.table.options.meta as InvoiceTableMeta;
+      return (
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              meta?.onDownloadPdf({
+                id: info.row.original.id,
+                invoiceNumber: info.row.original.invoiceNumber,
+              })
+            }
+            className="p-1 rounded text-gray-500 hover:text-blue-900 hover:bg-gray-100 transition-colors cursor-pointer"
+            title="Pobierz PDF"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <Link
+            to={`/invoice/${info.row.original.id}`}
+            className="font-medium text-blue-900 hover:underline text-xs"
+          >
+            Szczegóły
+          </Link>
+        </div>
+      );
+    },
+  }),
+];
+
+interface InvoiceMobileCardProps {
   readonly item: InvoiceListResponse;
   readonly onDownloadPdf: (invoice: { id: string; invoiceNumber: string }) => void;
-}) => (
+}
+
+const InvoiceMobileCard = ({ item, onDownloadPdf }: InvoiceMobileCardProps) => (
   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
     <div className="mb-2 flex items-start justify-between gap-2">
       <div className="overflow-hidden">
@@ -59,21 +204,7 @@ const InvoiceMobileCard = ({
         <p className="text-xs font-medium text-gray-900 mt-0.5">{item.companyName}</p>
         <p className="text-xs text-gray-500">NIP: {item.companyNip}</p>
       </div>
-      <div>
-        {item.remainingAmount <= 0 ? (
-          <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
-            Opłacona
-          </span>
-        ) : item.isOverDue ? (
-          <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
-            Zaległa
-          </span>
-        ) : (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-            W toku
-          </span>
-        )}
-      </div>
+      <div>{renderInvoiceStatusBadge(item)}</div>
     </div>
 
     <div className="text-xs text-gray-600 border-t border-gray-100 pt-2 mt-2 flex justify-between items-center">
@@ -98,7 +229,7 @@ const InvoiceMobileCard = ({
         <button
           type="button"
           onClick={() => onDownloadPdf({ id: item.id, invoiceNumber: item.invoiceNumber })}
-          className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1"
+          className="text-xs font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" />
           PDF
@@ -257,136 +388,13 @@ export default function InvoicesList() {
     setPageNumber(newPage);
   };
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('invoiceNumber', {
-        header: 'Numer faktury',
-        cell: (info) => (
-          <Link
-            to={`/invoice/${info.row.original.id}`}
-            className="font-semibold text-blue-900 hover:underline"
-          >
-            {info.getValue()}
-          </Link>
-        ),
-      }),
-      columnHelper.display({
-        id: 'company',
-        header: 'Kontrahent',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <div className="flex flex-col">
-              <span className="font-medium text-gray-900">{row.companyName}</span>
-              <span className="text-xs text-gray-500">NIP: {row.companyNip}</span>
-            </div>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'amounts',
-        header: 'Wartość brutto / Pozostało',
-        cell: (info) => {
-          const row = info.row.original;
-          const total = formatCurrency(row.totalAmount, row.currencyCode, row.decimalPlaces);
-          const remaining = formatCurrency(
-            row.remainingAmount,
-            row.currencyCode,
-            row.decimalPlaces,
-          );
-
-          return (
-            <div className="flex flex-col">
-              <span className="font-medium text-gray-900">{total}</span>
-              <span
-                className={cn(
-                  'text-xs',
-                  row.remainingAmount > 0 ? 'text-amber-600 font-semibold' : 'text-gray-500',
-                )}
-              >
-                Pozostało: {remaining}
-              </span>
-            </div>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'dates',
-        header: 'Wystawiono / Termin',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <div className="flex flex-col text-xs text-gray-600">
-              <span>
-                Wystawiona: {format(new Date(row.issueDate), 'dd.MM.yyyy', { locale: pl })}
-              </span>
-              <span className={cn(row.isOverDue && 'text-red-600 font-bold')}>
-                Termin: {format(new Date(row.dueDate), 'dd.MM.yyyy', { locale: pl })}
-              </span>
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('isOverDue', {
-        header: 'Status',
-        cell: (info) => {
-          const row = info.row.original;
-          if (row.remainingAmount <= 0) {
-            return (
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700">
-                Opłacona
-              </span>
-            );
-          }
-          if (row.isOverDue) {
-            return (
-              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-700">
-                Przeterminowana
-              </span>
-            );
-          }
-          return (
-            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">
-              Do zapłaty
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Akcje',
-        cell: (info) => (
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                setSelectedInvoiceForPdf({
-                  id: info.row.original.id,
-                  invoiceNumber: info.row.original.invoiceNumber,
-                })
-              }
-              className="p-1 rounded text-gray-500 hover:text-blue-900 hover:bg-gray-100 transition-colors"
-              title="Pobierz PDF"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <Link
-              to={`/invoice/${info.row.original.id}`}
-              className="font-medium text-blue-900 hover:underline text-xs"
-            >
-              Szczegóły
-            </Link>
-          </div>
-        ),
-      }),
-    ],
-    [],
-  );
-
   const table = useReactTable({
     data: desktopInvoices,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      onDownloadPdf: (inv) => setSelectedInvoiceForPdf(inv),
+    } satisfies InvoiceTableMeta,
   });
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
@@ -399,6 +407,11 @@ export default function InvoicesList() {
     }
   }, [isError, queryError]);
 
+  let errorDetails: string[] | undefined;
+  if (responseData?.errors && responseData.errors.length > 0) {
+    errorDetails = responseData.errors;
+  }
+
   const listError: FormErrorState | null =
     isError && !isErrorDismissed
       ? {
@@ -406,10 +419,7 @@ export default function InvoicesList() {
             responseData?.errorCode,
             responseData?.message || activeError?.message || 'Nie udało się pobrać listy faktur.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: errorDetails,
         }
       : null;
 
@@ -458,7 +468,7 @@ export default function InvoicesList() {
                   type="button"
                   variant="outline"
                   onClick={() => setSortDescending(!sortDescending)}
-                  className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3"
+                  className="shrink-0 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 px-3 cursor-pointer"
                   title={sortDescending ? 'Sortowanie malejąco' : 'Sortowanie rosnąco'}
                 >
                   {sortDescending ? (
@@ -473,7 +483,7 @@ export default function InvoicesList() {
                     type="button"
                     variant="outline"
                     onClick={() => setShowFilters(!showFilters)}
-                    className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    className="w-full sm:w-auto flex items-center gap-2 bg-white text-gray-700 border-gray-300 hover:bg-gray-50 cursor-pointer"
                   >
                     <Filter className="w-4 h-4" />
                     <span>Filtry</span>
@@ -509,12 +519,16 @@ export default function InvoicesList() {
                         </div>
 
                         <div className="flex flex-col">
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <label
+                            htmlFor="invoice-date-filter"
+                            className="block text-xs font-medium text-gray-700 mb-1"
+                          >
                             Data wystawienia
                           </label>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
+                                id="invoice-date-filter"
                                 type="button"
                                 variant="outline"
                                 className={cn(
@@ -577,23 +591,27 @@ export default function InvoicesList() {
                         </div>
 
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                          <span className="block text-xs font-medium text-gray-700 mb-1">
                             Wartość brutto (od - do)
-                          </label>
+                          </span>
                           <div className="flex items-center gap-2">
                             <input
+                              id="amount-from"
                               type="number"
                               min="0"
                               placeholder="Od"
+                              aria-label="Wartość brutto od"
                               value={amountFrom}
                               onChange={(e) => setAmountFrom(e.target.value)}
                               className="w-1/2 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-900"
                             />
                             <span className="text-gray-400">-</span>
                             <input
+                              id="amount-to"
                               type="number"
                               min="0"
                               placeholder="Do"
+                              aria-label="Wartość brutto do"
                               value={amountTo}
                               onChange={(e) => setAmountTo(e.target.value)}
                               className="w-1/2 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-900"
@@ -612,7 +630,7 @@ export default function InvoicesList() {
                               setAmountFrom('');
                               setAmountTo('');
                             }}
-                            className="text-xs text-gray-500 hover:text-gray-900 underline"
+                            className="text-xs text-gray-500 hover:text-gray-900 underline cursor-pointer"
                           >
                             Zresetuj
                           </button>
@@ -620,7 +638,7 @@ export default function InvoicesList() {
                             type="button"
                             size="sm"
                             onClick={() => setShowFilters(false)}
-                            className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs"
+                            className="h-8 px-4 bg-blue-900 text-white hover:bg-blue-800 text-xs cursor-pointer"
                           >
                             Zamknij
                           </Button>
@@ -635,13 +653,13 @@ export default function InvoicesList() {
 
           {listError && (
             <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
                 {listError.details && listError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -652,7 +670,7 @@ export default function InvoicesList() {
                 className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
                 title="Zamknij"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}

@@ -115,7 +115,7 @@ export const NotesSection = ({
             {error.details && error.details.length > 0 && (
               <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                 {error.details.map((detailErr, idx) => (
-                  <li key={idx}>{detailErr}</li>
+                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                 ))}
               </ul>
             )}

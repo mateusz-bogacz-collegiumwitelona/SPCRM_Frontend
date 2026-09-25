@@ -65,6 +65,72 @@ const formatDate = (isoDate: string) => {
 
 const columnHelper = createColumnHelper<UserSalesResponse>();
 
+const columns = [
+  columnHelper.accessor('name', {
+    header: 'Nazwa',
+    cell: (info) => <span className="font-medium text-blue-900">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor('companyName', {
+    header: 'Firma',
+  }),
+  columnHelper.accessor('nip', {
+    header: 'NIP',
+    cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
+  }),
+  columnHelper.display({
+    id: 'owner',
+    header: 'Opiekun',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="text-sm font-medium text-gray-700">
+          {row.ownerFirstName} {row.ownerLastName}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('value', {
+    header: 'Kwota',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="font-medium text-gray-900">
+          {formatCurrency(row.value, row.currency, row.decimalPlace)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('status', {
+    header: 'Status',
+    cell: (info) => {
+      const status = getStatusConfig(info.getValue());
+      return (
+        <span
+          className={`inline-flex items-center rounded-full ${status.bgColor} px-3 py-1 text-xs font-medium ${status.textColor}`}
+        >
+          {status.label}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('closeDate', {
+    header: 'Zakończenie',
+    cell: (info) => <span className="text-gray-500">{formatDate(info.getValue())}</span>,
+  }),
+  columnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: (info) => (
+      <Link
+        to={`/sale/${info.row.original.id}`}
+        className="font-medium text-blue-900 hover:underline"
+      >
+        Szczegóły
+      </Link>
+    ),
+  }),
+];
+
 interface SaleMobileCardProps {
   readonly item: UserSalesResponse;
   readonly isManager: boolean;
@@ -161,7 +227,7 @@ export default function UserSales() {
   });
 
   const handleDealAdded = () => {
-    queryClient.invalidateQueries({ queryKey: ['sales'] });
+    void queryClient.invalidateQueries({ queryKey: ['sales'] });
   };
 
   const teamUsers: TeamUser[] = Array.isArray(usersResponse) ? usersResponse : [];
@@ -230,81 +296,14 @@ export default function UserSales() {
     setPageNumber(newPage);
   };
 
-  const columns = useMemo(() => {
-    return [
-      columnHelper.accessor('name', {
-        header: 'Nazwa',
-        cell: (info) => <span className="font-medium text-blue-900">{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('companyName', {
-        header: 'Firma',
-      }),
-      columnHelper.accessor('nip', {
-        header: 'NIP',
-        cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
-      }),
-      ...(isManager
-        ? [
-            columnHelper.display({
-              id: 'owner',
-              header: 'Opiekun',
-              cell: (info) => {
-                const row = info.row.original;
-                return (
-                  <span className="text-sm font-medium text-gray-700">
-                    {row.ownerFirstName} {row.ownerLastName}
-                  </span>
-                );
-              },
-            }),
-          ]
-        : []),
-      columnHelper.accessor('value', {
-        header: 'Kwota',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="font-medium text-gray-900">
-              {formatCurrency(row.value, row.currency, row.decimalPlace)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: (info) => {
-          const status = getStatusConfig(info.getValue());
-          return (
-            <span
-              className={`inline-flex items-center rounded-full ${status.bgColor} px-3 py-1 text-xs font-medium ${status.textColor}`}
-            >
-              {status.label}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('closeDate', {
-        header: 'Zakończenie',
-        cell: (info) => <span className="text-gray-500">{formatDate(info.getValue())}</span>,
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Akcje',
-        cell: (info) => (
-          <Link
-            to={`/sale/${info.row.original.id}`}
-            className="font-medium text-blue-900 hover:underline"
-          >
-            Szczegóły
-          </Link>
-        ),
-      }),
-    ];
-  }, [isManager]);
-
   const table = useReactTable({
     data: desktopSales,
     columns,
+    state: {
+      columnVisibility: {
+        owner: isManager,
+      },
+    },
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -319,6 +318,11 @@ export default function UserSales() {
     }
   }, [isError, queryError]);
 
+  let errorDetails: string[] | undefined;
+  if (responseData?.errors && responseData.errors.length > 0) {
+    errorDetails = responseData.errors;
+  }
+
   const listError: FormErrorState | null =
     isError && !isErrorDismissed
       ? {
@@ -328,10 +332,7 @@ export default function UserSales() {
               activeError?.message ||
               'Nie udało się pobrać listy sprzedaży.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: errorDetails,
         }
       : null;
 
@@ -532,13 +533,13 @@ export default function UserSales() {
 
           {listError && (
             <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
                 {listError.details && listError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -549,7 +550,7 @@ export default function UserSales() {
                 className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
                 title="Zamknij"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}

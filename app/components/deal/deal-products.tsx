@@ -38,7 +38,115 @@ interface DealProductResponse {
   decimalPlaces: number;
 }
 
+interface ProductTableMeta {
+  onEdit: (product: DealProductResponse) => void;
+  onDelete: (product: DealProductResponse) => void;
+}
+
 const columnHelper = createColumnHelper<DealProductResponse>();
+
+const columns = [
+  columnHelper.display({
+    id: 'productName',
+    header: 'Nazwa produktu',
+    cell: (info) => <span className="font-medium text-gray-900">{info.row.original.name}</span>,
+  }),
+  columnHelper.accessor('steelGrade', {
+    header: 'Gatunek',
+    cell: (info) => (
+      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+        {info.getValue()}
+      </span>
+    ),
+  }),
+  columnHelper.accessor('dimensions', {
+    header: 'Wymiary',
+    cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
+  }),
+  columnHelper.display({
+    id: 'quantity',
+    header: 'Ilość',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="font-medium text-gray-900">
+          {row.quantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'unitPrice',
+    header: 'Cena jedn. netto',
+    cell: (info) => {
+      const row = info.row.original;
+      const isHasDiscount = row.baseUnitPrice > row.unitPrice;
+
+      return (
+        <div className="flex flex-col items-start">
+          {isHasDiscount && (
+            <span className="text-xs text-gray-400 line-through mb-0.5">
+              {formatCurrency(row.baseUnitPrice, row.currencyCode, row.decimalPlaces)}
+            </span>
+          )}
+          <span
+            className={isHasDiscount ? 'text-green-600 font-bold' : 'text-gray-900 font-medium'}
+          >
+            {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
+          </span>
+        </div>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'totalPrice',
+    header: 'Wartość ostateczna',
+    cell: (info) => (
+      <span className="font-bold text-gray-900">
+        {formatCurrency(
+          info.row.original.totalPrice,
+          info.row.original.currencyCode,
+          info.row.original.decimalPlaces,
+        )}
+      </span>
+    ),
+  }),
+  columnHelper.display({
+    id: 'actions',
+    header: 'Akcje',
+    cell: (info) => {
+      const meta = info.table.options.meta as ProductTableMeta;
+      const product = info.row.original;
+
+      return (
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/products/${product.productId}`}
+            className="font-medium text-blue-900 hover:underline text-xs"
+          >
+            Detale
+          </Link>
+          <button
+            type="button"
+            onClick={() => meta.onEdit(product)}
+            className="text-gray-400 hover:text-[#004a8f] transition-colors"
+            title="Edytuj pozycję"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => meta.onDelete(product)}
+            className="text-gray-400 hover:text-red-600 transition-colors"
+            title="Usuń pozycję"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      );
+    },
+  }),
+];
 
 const mergeProducts = (
   existing: DealProductResponse[],
@@ -222,111 +330,14 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
     setPageNumber(newPage);
   };
 
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: 'productName',
-        header: 'Nazwa produktu',
-        cell: (info) => <span className="font-medium text-gray-900">{info.row.original.name}</span>,
-      }),
-      columnHelper.accessor('steelGrade', {
-        header: 'Gatunek',
-        cell: (info) => (
-          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
-            {info.getValue()}
-          </span>
-        ),
-      }),
-      columnHelper.accessor('dimensions', {
-        header: 'Wymiary',
-        cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
-      }),
-      columnHelper.display({
-        id: 'quantity',
-        header: 'Ilość',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="font-medium text-gray-900">
-              {row.quantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'unitPrice',
-        header: 'Cena jedn. netto',
-        cell: (info) => {
-          const row = info.row.original;
-          const isHasDiscount = row.baseUnitPrice > row.unitPrice;
-
-          return (
-            <div className="flex flex-col items-start">
-              {isHasDiscount && (
-                <span className="text-xs text-gray-400 line-through mb-0.5">
-                  {formatCurrency(row.baseUnitPrice, row.currencyCode, row.decimalPlaces)}
-                </span>
-              )}
-              <span
-                className={isHasDiscount ? 'text-green-600 font-bold' : 'text-gray-900 font-medium'}
-              >
-                {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
-              </span>
-            </div>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'totalPrice',
-        header: 'Wartość ostateczna',
-        cell: (info) => (
-          <span className="font-bold text-gray-900">
-            {formatCurrency(
-              info.row.original.totalPrice,
-              info.row.original.currencyCode,
-              info.row.original.decimalPlaces,
-            )}
-          </span>
-        ),
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Akcje',
-        cell: (info) => (
-          <div className="flex items-center gap-3">
-            <Link
-              to={`/products/${info.row.original.productId}`}
-              className="font-medium text-blue-900 hover:underline text-xs"
-            >
-              Detale
-            </Link>
-            <button
-              type="button"
-              onClick={() => setProductToEdit(info.row.original)}
-              className="text-gray-400 hover:text-[#004a8f] transition-colors"
-              title="Edytuj pozycję"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setProductToDelete(info.row.original)}
-              className="text-gray-400 hover:text-red-600 transition-colors"
-              title="Usuń pozycję"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        ),
-      }),
-    ],
-    [],
-  );
-
   const table = useReactTable({
     data: desktopProducts,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      onEdit: (product: DealProductResponse) => setProductToEdit(product),
+      onDelete: (product: DealProductResponse) => setProductToDelete(product),
+    } satisfies ProductTableMeta,
   });
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
@@ -496,7 +507,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}

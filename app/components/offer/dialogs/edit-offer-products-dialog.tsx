@@ -179,18 +179,58 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
         apiError.message ||
         'Wystąpił błąd podczas zapisywania pozycji oferty.';
 
+      let errorDetails: string[] | undefined;
+      if (responseData?.errors && responseData.errors.length > 0) {
+        errorDetails = responseData.errors;
+      }
+
       setFormError({
         title: getErrorMessage(code, fallback),
-        details:
-          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+        details: errorDetails,
       });
     }
   };
 
   const multiplier = Math.pow(10, decimalPlaces + 2);
 
+  let dropdownContent: React.ReactNode;
+  if (searchResults && searchResults.length > 0) {
+    dropdownContent = searchResults.map((prod) => (
+      <button
+        key={prod.id}
+        type="button"
+        onClick={() => handleSelectProduct(prod)}
+        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 flex items-center justify-between text-xs sm:text-sm transition-colors cursor-pointer"
+      >
+        <div>
+          <span className="font-semibold text-gray-900">{prod.name}</span>
+          {prod.steelGrade && (
+            <span className="ml-2 bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-normal">
+              {prod.steelGrade}
+            </span>
+          )}
+        </div>
+        <Plus className="w-4 h-4 text-[#004a8f]" />
+      </button>
+    ));
+  } else if (isSearching) {
+    dropdownContent = null;
+  } else {
+    dropdownContent = (
+      <div className="p-3 text-center text-xs text-gray-500">
+        Brak wyników dla frazy „{debouncedQuery}”.
+      </div>
+    );
+  }
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open && !isLoading) {
+      handleClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && handleClose()}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-175 max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-4 border-b border-gray-100 flex flex-row items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-blue-50 text-[#004a8f] flex items-center justify-center shrink-0">
@@ -215,7 +255,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -252,30 +292,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
 
             {isDropdownOpen && debouncedQuery.length >= 2 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto divide-y">
-                {searchResults && searchResults.length > 0 ? (
-                  searchResults.map((prod) => (
-                    <button
-                      key={prod.id}
-                      type="button"
-                      onClick={() => handleSelectProduct(prod)}
-                      className="w-full text-left px-4 py-2.5 hover:bg-blue-50 flex items-center justify-between text-xs sm:text-sm transition-colors cursor-pointer"
-                    >
-                      <div>
-                        <span className="font-semibold text-gray-900">{prod.name}</span>
-                        {prod.steelGrade && (
-                          <span className="ml-2 bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-normal">
-                            {prod.steelGrade}
-                          </span>
-                        )}
-                      </div>
-                      <Plus className="w-4 h-4 text-[#004a8f]" />
-                    </button>
-                  ))
-                ) : !isSearching ? (
-                  <div className="p-3 text-center text-xs text-gray-500">
-                    Brak wyników dla frazy „{debouncedQuery}”.
-                  </div>
-                ) : null}
+                {dropdownContent}
               </div>
             )}
           </div>

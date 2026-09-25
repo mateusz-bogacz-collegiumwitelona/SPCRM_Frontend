@@ -1,6 +1,3 @@
-import { Box } from 'lucide-react';
-import React from 'react';
-
 export interface AddProductRequest {
   name: string;
   steelGradeId: string;

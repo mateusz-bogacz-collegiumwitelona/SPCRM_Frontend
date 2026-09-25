@@ -198,17 +198,103 @@ export default function MailingCreator() {
       const code = errorData?.errorCode;
       const fallback = errorData?.message || err.message || 'Błąd podczas wysyłania mailingu.';
 
+      let errorDetails: string[] | undefined;
+      if (errorData?.errors && errorData.errors.length > 0) {
+        errorDetails = errorData.errors.map((item) => getErrorMessage(item, item));
+      }
+
       setFormError({
         title: getErrorMessage(code, fallback),
-        details:
-          errorData?.errors && errorData.errors.length > 0
-            ? errorData.errors.map((item) => getErrorMessage(item, item))
-            : undefined,
+        details: errorDetails,
       });
     } finally {
       setIsSending(false);
     }
   };
+
+  let contactsListContent: React.ReactNode;
+  if (isLoadingContacts) {
+    contactsListContent = (
+      <div className="flex h-20 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  } else if (!contactsData || contactsData.length === 0) {
+    contactsListContent = <div className="p-4 text-center text-sm text-gray-500">Brak wyników</div>;
+  } else {
+    contactsListContent = contactsData.map((client: MailingClientResponse) => {
+      const checkboxId = `contact-checkbox-${client.contactId}`;
+      return (
+        <label
+          htmlFor={`contact-${checkboxId}`}
+          key={client.contactId}
+          className="flex cursor-pointer items-start gap-3 border-b border-gray-200 p-3 hover:bg-white last:border-0"
+        >
+          <input
+            id={checkboxId}
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-[#004a8f] focus:ring-[#004a8f]"
+            checked={selectedContacts.includes(client.contactId)}
+            onChange={() => toggleContact(client.contactId)}
+          />
+          <span className="flex flex-col">
+            <span className="text-sm font-medium text-gray-900">{client.companyName}</span>
+            <span className="text-xs text-gray-500">
+              NIP: {client.nip} | {client.contactFirstName} {client.contactLastName}
+            </span>
+          </span>
+        </label>
+      );
+    });
+  }
+
+  let modalProductsListContent: React.ReactNode;
+  if (isLoadingProducts) {
+    modalProductsListContent = (
+      <div className="flex h-20 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  } else if (!productsData || productsData.length === 0) {
+    modalProductsListContent = (
+      <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>
+    );
+  } else {
+    modalProductsListContent = productsData.map((product: MailingProductResponse) => (
+      <button
+        type="button"
+        key={product.productId}
+        onClick={() => addProduct(product)}
+        className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0 cursor-pointer"
+      >
+        <div>
+          <p className="text-sm font-bold text-gray-900">{product.name}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+            <span>{product.dimmension}</span>
+            <span>•</span>
+            {product.promotionalPrice ? (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-400 line-through">
+                  {formatCurrency(product.stockPrice, 'PLN', 2)}
+                </span>
+                <span className="font-bold text-red-600">
+                  {formatCurrency(product.promotionalPrice, 'PLN', 2)}
+                </span>
+                <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                  Promocja
+                </span>
+              </div>
+            ) : (
+              <span className="font-medium text-[#004a8f]">
+                Cena bazowa: {formatCurrency(product.stockPrice, 'PLN', 2)}
+              </span>
+            )}
+          </div>
+        </div>
+        <Plus className="h-5 w-5 text-gray-400" />
+      </button>
+    ));
+  }
 
   return (
     <AuthGuard>
@@ -225,7 +311,7 @@ export default function MailingCreator() {
                   {formError.details && formError.details.length > 0 && (
                     <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                       {formError.details.map((detailErr, idx) => (
-                        <li key={idx}>{detailErr}</li>
+                        <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                       ))}
                     </ul>
                   )}
@@ -263,34 +349,7 @@ export default function MailingCreator() {
                 </div>
 
                 <div className="max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-gray-50">
-                  {isLoadingContacts ? (
-                    <div className="flex h-20 items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                    </div>
-                  ) : contactsData?.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">Brak wyników</div>
-                  ) : (
-                    contactsData.map((client: MailingClientResponse) => (
-                      <label
-                        htmlFor="contact-checkbox"
-                        key={client.contactId}
-                        className="flex cursor-pointer items-start gap-3 border-b border-gray-200 p-3 hover:bg-white last:border-0"
-                      >
-                        <input
-                          type="checkbox"
-                          className="mt-1 h-4 w-4 rounded border-gray-300 text-[#004a8f] focus:ring-[#004a8f]"
-                          checked={selectedContacts.includes(client.contactId)}
-                          onChange={() => toggleContact(client.contactId)}
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{client.companyName}</p>
-                          <p className="text-xs text-gray-500">
-                            NIP: {client.nip} | {client.contactFirstName} {client.contactLastName}
-                          </p>
-                        </div>
-                      </label>
-                    ))
-                  )}
+                  {contactsListContent}
                 </div>
               </div>
             </div>
@@ -308,8 +367,9 @@ export default function MailingCreator() {
                         className="relative rounded-lg border border-gray-200 bg-gray-50 p-4"
                       >
                         <button
+                          type="button"
                           onClick={() => removeProduct(p.productId)}
-                          className="absolute right-3 top-3 text-red-500 hover:text-red-700"
+                          className="absolute right-3 top-3 text-red-500 hover:text-red-700 cursor-pointer"
                         >
                           <X className="h-5 w-5" />
                         </button>
@@ -360,6 +420,7 @@ export default function MailingCreator() {
                 )}
 
                 <Button
+                  type="button"
                   onClick={() => setIsProductModalOpen(true)}
                   className="w-full bg-[#004a8f] hover:bg-[#003870]"
                 >
@@ -380,6 +441,7 @@ export default function MailingCreator() {
                     Wybierz język szablonu
                   </label>
                   <select
+                    id="mailing-lang"
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
@@ -394,6 +456,7 @@ export default function MailingCreator() {
                     Waluta oferty
                   </label>
                   <select
+                    id="mailing-currency"
                     value={currencyCode}
                     onChange={(e) => setCurrencyCode(e.target.value)}
                     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#004a8f]"
@@ -409,6 +472,7 @@ export default function MailingCreator() {
             </div>
 
             <Button
+              type="button"
               onClick={handleSubmit}
               disabled={isSending}
               className="h-12 w-full text-base bg-[#004a8f] hover:bg-[#003870]"
@@ -430,8 +494,9 @@ export default function MailingCreator() {
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-lg font-medium text-[#004a8f]">Wybierz produkt</h3>
                   <button
+                    type="button"
                     onClick={() => setIsProductModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -448,47 +513,7 @@ export default function MailingCreator() {
                   />
                 </div>
                 <div className="max-h-72 overflow-y-auto rounded-md border border-gray-200 bg-gray-50">
-                  {isLoadingProducts ? (
-                    <div className="flex h-20 items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                    </div>
-                  ) : productsData?.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>
-                  ) : (
-                    productsData?.map((product: MailingProductResponse) => (
-                      <button
-                        key={product.productId}
-                        onClick={() => addProduct(product)}
-                        className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0"
-                      >
-                        <div>
-                          <p className="text-sm font-bold text-gray-900">{product.name}</p>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                            <span>{product.dimmension}</span>
-                            <span>•</span>
-                            {product.promotionalPrice ? (
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-gray-400 line-through">
-                                  {formatCurrency(product.stockPrice, 'PLN', 2)}
-                                </span>
-                                <span className="font-bold text-red-600">
-                                  {formatCurrency(product.promotionalPrice, 'PLN', 2)}
-                                </span>
-                                <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                                  Promocja
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="font-medium text-[#004a8f]">
-                                Cena bazowa: {formatCurrency(product.stockPrice, 'PLN', 2)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <Plus className="h-5 w-5 text-gray-400" />
-                      </button>
-                    ))
-                  )}
+                  {modalProductsListContent}
                 </div>
               </div>
             </div>

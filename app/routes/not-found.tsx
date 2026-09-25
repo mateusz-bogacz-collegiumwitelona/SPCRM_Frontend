@@ -53,7 +53,6 @@ export default function NotFound() {
         </Button>
       </div>
 
-      {/* Stopka z linkiem do pomocy */}
       <div className="mt-10 border-t border-gray-100 pt-6">
         <p className="text-xs text-gray-500 flex items-center justify-center gap-1.5">
           <HelpCircle className="w-4 h-4 text-gray-400" />

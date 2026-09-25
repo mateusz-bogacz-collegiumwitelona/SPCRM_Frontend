@@ -15,6 +15,16 @@ interface TeamLeaderboardTableProps {
   onPageSizeChange: (newSize: number) => void;
 }
 
+const getWinRateBadgeClass = (rate: number): string => {
+  if (rate >= 50) {
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+  }
+  if (rate >= 25) {
+    return 'bg-amber-50 text-amber-700 border border-amber-200';
+  }
+  return 'bg-gray-100 text-gray-700';
+};
+
 const RankBadge = ({ rank }: { rank: number }) => {
   if (rank === 1) {
     return (
@@ -207,17 +217,7 @@ export const LeaderboardTable: React.FC<TeamLeaderboardTableProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          winRate >= 50
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : winRate >= 25
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {winRate.toFixed(1)}%
-                      </span>
+                      <span className={getWinRateBadgeClass(winRate)}>{winRate.toFixed(1)}%</span>
                     </td>
                   </tr>
                 );

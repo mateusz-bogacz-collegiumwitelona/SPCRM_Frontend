@@ -165,6 +165,86 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
         }
       : null;
 
+  let taskListContent: React.ReactNode;
+
+  if (isLoading) {
+    taskListContent = <TableLoadingState message="Ładowanie zadań..." />;
+  } else if (tasks.length === 0) {
+    taskListContent = <TableEmptyState message="Brak przypisanych zadań do tej sprzedaży." />;
+  } else {
+    taskListContent = (
+      <div className="space-y-2.5">
+        {tasks.map((task) => (
+          <div
+            key={task.id}
+            className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-xs transition-all bg-white"
+          >
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <Link
+                to={`/task/${task.id}`}
+                className="text-sm font-semibold text-gray-900 hover:text-[#004a8f] hover:underline line-clamp-1 flex-1"
+              >
+                {task.title}
+              </Link>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${getTaskPriorityBadgeClass(task.priority)}`}
+                >
+                  {resolveTaskPriorityLabel(task.priority, getPriorityLabel)}
+                </span>
+
+                <span
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${getTaskStatusBadgeClass(task.status)}`}
+                >
+                  {resolveTaskStatusLabel(task.status, getStatusLabel)}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setTaskToDelete(task)}
+                  className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors"
+                  title="Usuń zadanie"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTaskToEdit(task)}
+                  className="text-gray-400 hover:text-[#004a8f] p-1 rounded transition-colors"
+                  title="Edytuj zadanie"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between text-xs text-gray-500 gap-y-1 mt-2 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <span>{new Date(task.dueAt).toLocaleDateString('pl-PL')}</span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <User className="w-3.5 h-3.5 text-gray-400" />
+                <span className="truncate max-w-30">
+                  {task.assignedToFirstName} {task.assignedToLastName}
+                </span>
+              </div>
+
+              {task.contactFirstName && (
+                <span className="text-[11px] text-gray-400 italic">
+                  Dotyczy: {task.contactFirstName} {task.contactLastName}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
       <div className="p-3.5 border-b border-gray-200 bg-gray-50/60 space-y-2.5">
@@ -306,7 +386,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
             {formError.details && formError.details.length > 0 && (
               <ul className="mt-1 list-disc list-inside space-y-0.5 text-xs text-red-700">
                 {formError.details.map((detailErr, idx) => (
-                  <li key={idx}>{detailErr}</li>
+                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                 ))}
               </ul>
             )}
@@ -323,81 +403,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
       )}
 
       <div className="p-4 space-y-4">
-        {isLoading ? (
-          <TableLoadingState message="Ładowanie zadań..." />
-        ) : tasks.length === 0 ? (
-          <TableEmptyState message="Brak przypisanych zadań do tej sprzedaży." />
-        ) : (
-          <div className="space-y-2.5">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-xs transition-all bg-white"
-              >
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <Link
-                    to={`/task/${task.id}`}
-                    className="text-sm font-semibold text-gray-900 hover:text-[#004a8f] hover:underline line-clamp-1 flex-1"
-                  >
-                    {task.title}
-                  </Link>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span
-                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${getTaskPriorityBadgeClass(task.priority)}`}
-                    >
-                      {resolveTaskPriorityLabel(task.priority, getPriorityLabel)}
-                    </span>
-
-                    <span
-                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${getTaskStatusBadgeClass(task.status)}`}
-                    >
-                      {resolveTaskStatusLabel(task.status, getStatusLabel)}
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() => setTaskToDelete(task)}
-                      className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors"
-                      title="Usuń zadanie"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setTaskToEdit(task)}
-                      className="text-gray-400 hover:text-[#004a8f] p-1 rounded transition-colors"
-                      title="Edytuj zadanie"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between text-xs text-gray-500 gap-y-1 mt-2 pt-2 border-t border-gray-100">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                    <span>{new Date(task.dueAt).toLocaleDateString('pl-PL')}</span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <User className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="truncate max-w-30">
-                      {task.assignedToFirstName} {task.assignedToLastName}
-                    </span>
-                  </div>
-
-                  {task.contactFirstName && (
-                    <span className="text-[11px] text-gray-400 italic">
-                      Dotyczy: {task.contactFirstName} {task.contactLastName}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {taskListContent}
 
         {!isLoading && totalItems > 0 && (
           <TablePagination

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { AlertCircle, Calendar, Hash, Receipt, User, X } from 'lucide-react';
 import { format } from 'date-fns';
@@ -71,6 +71,55 @@ export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string 
         }
       : null;
 
+  let invoicePaymentData: React.ReactNode;
+
+  if (isLoading) {
+    invoicePaymentData = <TableLoadingState message="Ładowanie listy wpłat..." />;
+  } else if (payments.length === 0) {
+    invoicePaymentData = <TableEmptyState message="Brak wpłat do wyświetlenia." />;
+  } else {
+    invoicePaymentData = (
+      <div className="space-y-2.5">
+        {payments.map((p) => (
+          <div
+            key={p.paymentId}
+            className="p-3 border border-gray-200 rounded-lg hover:border-blue-200 hover:shadow-xs transition-all bg-white"
+          >
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-green-700">
+                  +{formatCurrency(p.amount, p.currencyCode, p.decimalPlaces)}
+                </span>
+                {p.referenceNumber && (
+                  <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                    <Hash className="w-3 h-3 text-gray-400" />
+                    {p.referenceNumber}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <span>{format(new Date(p.paymentDate), 'dd.MM.yyyy')}</span>
+              </div>
+            </div>
+
+            {p.note && <p className="text-xs text-gray-700 my-1 italic">{p.note}</p>}
+
+            {(p.createdByFirstName || p.createdByLastName) && (
+              <div className="flex items-center gap-1 text-[11px] text-gray-400 pt-1.5 mt-1 border-t border-gray-100">
+                <User className="w-3 h-3 text-gray-400" />
+                <span>
+                  Zarejestrował: {p.createdByFirstName} {p.createdByLastName}
+                </span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
       <div className="p-4 border-b border-gray-200 bg-gray-50/60 space-y-3">
@@ -103,7 +152,7 @@ export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string 
             {formError.details && formError.details.length > 0 && (
               <ul className="mt-1 list-disc list-inside space-y-0.5 text-xs text-red-700">
                 {formError.details.map((detailErr, idx) => (
-                  <li key={idx}>{detailErr}</li>
+                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                 ))}
               </ul>
             )}
@@ -119,65 +168,20 @@ export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string 
         </div>
       )}
 
-      <div className="p-4 space-y-3">
-        {isLoading ? (
-          <TableLoadingState message="Ładowanie listy wpłat..." />
-        ) : payments.length === 0 ? (
-          <TableEmptyState message="Brak zarejestrowanych wpłat dla tej faktury." />
-        ) : (
-          <div className="space-y-2.5">
-            {payments.map((p) => (
-              <div
-                key={p.paymentId}
-                className="p-3 border border-gray-200 rounded-lg hover:border-blue-200 hover:shadow-xs transition-all bg-white"
-              >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-green-700">
-                      +{formatCurrency(p.amount, p.currencyCode, p.decimalPlaces)}
-                    </span>
-                    {p.referenceNumber && (
-                      <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded font-medium flex items-center gap-1">
-                        <Hash className="w-3 h-3 text-gray-400" />
-                        {p.referenceNumber}
-                      </span>
-                    )}
-                  </div>
+      <div className="p-4 space-y-3">{invoicePaymentData}</div>
 
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                    <span>{format(new Date(p.paymentDate), 'dd.MM.yyyy')}</span>
-                  </div>
-                </div>
-
-                {p.note && <p className="text-xs text-gray-700 my-1 italic">{p.note}</p>}
-
-                {(p.createdByFirstName || p.createdByLastName) && (
-                  <div className="flex items-center gap-1 text-[11px] text-gray-400 pt-1.5 mt-1 border-t border-gray-100">
-                    <User className="w-3 h-3 text-gray-400" />
-                    <span>
-                      Zarejestrował: {p.createdByFirstName} {p.createdByLastName}
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!isLoading && totalItems > 0 && (
-          <TablePagination
-            pageNumber={pageNumber}
-            pageSize={pageSize}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            isFetching={isFetching}
-            onPageChange={setPageNumber}
-            onPageSizeChange={setPageSize}
-            pageSizeOptions={[5, 10, 20]}
-          />
-        )}
-      </div>
+      {!isLoading && totalItems > 0 && (
+        <TablePagination
+          pageNumber={pageNumber}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          isFetching={isFetching}
+          onPageChange={setPageNumber}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={[5, 10, 20]}
+        />
+      )}
     </div>
   );
 };

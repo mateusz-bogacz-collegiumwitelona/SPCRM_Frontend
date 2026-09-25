@@ -68,7 +68,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
         <div className="text-blue-900 font-medium flex items-center justify-between gap-3">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-blue-700" />
-            Przychód:
+            <span>Przychód:</span>
           </span>
           <span className="font-bold">
             {formatCurrency(revenueAmount, selectedCurrency, decimalPlaces)}
@@ -78,7 +78,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
         <div className="text-emerald-700 font-medium flex items-center justify-between gap-3">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            Wygrane:
+            <span>Wygrane:</span>
           </span>
           <span className="font-bold">{dealsWon} szt.</span>
         </div>
@@ -117,6 +117,100 @@ export const RevenueChart: React.FC<TeamRevenueChartProps> = ({
       };
     });
   }, [data, selectedCurrencyCode]);
+
+  const renderChartContent = () => {
+    if (isLoading) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <span className="text-gray-400 text-xs animate-pulse">Ładowanie wykresu...</span>
+        </div>
+      );
+    }
+
+    if (chartData.length === 0) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <span className="text-gray-400 text-xs">Brak danych dla wybranego okresu.</span>
+        </div>
+      );
+    }
+
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <defs>
+            <linearGradient id="teamRevenueGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#1e3a8a" stopOpacity={0.35} />
+              <stop offset="95%" stopColor="#1e3a8a" stopOpacity={0} />
+            </linearGradient>
+
+            <linearGradient id="teamDealsGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+
+          <XAxis
+            dataKey="label"
+            tickLine={false}
+            axisLine={{ stroke: '#e2e8f0' }}
+            tick={{ fill: '#64748b', fontSize: 11 }}
+          />
+
+          <YAxis
+            yAxisId="rev"
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: '#64748b', fontSize: 11 }}
+            tickFormatter={(val) => {
+              const num = val / 10000;
+              return num >= 1000 ? `${(num / 1000).toFixed(0)}k` : `${num}`;
+            }}
+          />
+
+          <YAxis
+            yAxisId="deals"
+            orientation="right"
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: '#10b981', fontSize: 11 }}
+            allowDecimals={false}
+          />
+
+          <Tooltip
+            content={
+              <CustomTooltip
+                selectedCurrency={selectedCurrencyCode}
+                decimalPlaces={currentCurrency.decimalPlace}
+              />
+            }
+          />
+
+          <Area
+            yAxisId="deals"
+            type="monotone"
+            dataKey="dealsWonCount"
+            stroke="#10b981"
+            strokeWidth={2}
+            fillOpacity={1}
+            fill="url(#teamDealsGrad)"
+          />
+
+          <Area
+            yAxisId="rev"
+            type="monotone"
+            dataKey="amount"
+            stroke="#1e3a8a"
+            strokeWidth={2.5}
+            fillOpacity={1}
+            fill="url(#teamRevenueGrad)"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  };
 
   return (
     <div className="bg-white p-4 lg:p-6 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-4">
@@ -185,91 +279,7 @@ export const RevenueChart: React.FC<TeamRevenueChartProps> = ({
         </div>
       </div>
 
-      <div className="h-80 w-full pt-4">
-        {isLoading ? (
-          <div className="h-full flex items-center justify-center">
-            <span className="text-gray-400 text-xs animate-pulse">Ładowanie wykresu...</span>
-          </div>
-        ) : chartData.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
-            <span className="text-gray-400 text-xs">Brak danych dla wybranego okresu.</span>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <defs>
-                <linearGradient id="teamRevenueGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1e3a8a" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#1e3a8a" stopOpacity={0.0} />
-                </linearGradient>
-
-                <linearGradient id="teamDealsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-
-              <XAxis
-                dataKey="label"
-                tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
-                tick={{ fill: '#64748b', fontSize: 11 }}
-              />
-
-              <YAxis
-                yAxisId="rev"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fill: '#64748b', fontSize: 11 }}
-                tickFormatter={(val) => {
-                  const num = val / 10000;
-                  return num >= 1000 ? `${(num / 1000).toFixed(0)}k` : `${num}`;
-                }}
-              />
-
-              <YAxis
-                yAxisId="deals"
-                orientation="right"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fill: '#10b981', fontSize: 11 }}
-                allowDecimals={false}
-              />
-
-              <Tooltip
-                content={
-                  <CustomTooltip
-                    selectedCurrency={selectedCurrencyCode}
-                    decimalPlaces={currentCurrency.decimalPlace}
-                  />
-                }
-              />
-
-              <Area
-                yAxisId="deals"
-                type="monotone"
-                dataKey="dealsWonCount"
-                stroke="#10b981"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#teamDealsGrad)"
-              />
-
-              <Area
-                yAxisId="rev"
-                type="monotone"
-                dataKey="amount"
-                stroke="#1e3a8a"
-                strokeWidth={2.5}
-                fillOpacity={1}
-                fill="url(#teamRevenueGrad)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+      <div className="h-80 w-full pt-4">{renderChartContent()}</div>
 
       <div className="flex items-center justify-center gap-6 pt-2 border-t border-gray-100 text-xs text-gray-600">
         <div className="flex items-center gap-2">

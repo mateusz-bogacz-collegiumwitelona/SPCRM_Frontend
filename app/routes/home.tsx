@@ -167,7 +167,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => navigate('/auth/forgot-password')}
-                  className="hover:underline bg-transparent border-none p-0 text-[#004a8f] cursor-pointer outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none"
+                  className="hover:underline bg-transparent border-none p-0 text-[#004a8f] cursor-pointer outline-none ring-0 shadow-none"
                 >
                   Przypomnij hasło
                 </button>
@@ -181,7 +181,7 @@ export default function Home() {
                     {formError.details && formError.details.length > 0 && (
                       <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-[11px] text-red-700">
                         {formError.details.map((detailErr, idx) => (
-                          <li key={idx}>{detailErr}</li>
+                          <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                         ))}
                       </ul>
                     )}

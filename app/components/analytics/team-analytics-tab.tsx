@@ -30,7 +30,6 @@ export const TeamAnalyticsTab: React.FC = () => {
       const response = await api.get('/currency/simple');
       return response.data?.value || response.data?.data || response.data || [];
     },
-    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -94,9 +93,7 @@ export const TeamAnalyticsTab: React.FC = () => {
   const leaderboardTotalCount: number = pagedResult?.totalCount || leaderboardItems.length;
 
   const handleRefreshAll = () => {
-    refetchKpi();
-    refetchChart();
-    refetchLeaderboard();
+    void Promise.all([refetchKpi(), refetchChart(), refetchLeaderboard()]);
   };
 
   const isGlobalFetching = isKpiFetching || isChartFetching;
@@ -153,7 +150,7 @@ export const TeamAnalyticsTab: React.FC = () => {
             {kpiError.details && (
               <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                 {kpiError.details.map((detailErr, idx) => (
-                  <li key={idx}>{detailErr}</li>
+                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                 ))}
               </ul>
             )}
@@ -178,10 +175,10 @@ export const TeamAnalyticsTab: React.FC = () => {
           {kpiData && <KpiCards data={kpiData} titlePrefix="zespołu" />}
 
           <RevenueChart
-            data={chartData || []}
+            data={chartData ?? []}
             selectedPeriod={selectedPeriod}
             onPeriodChange={setSelectedPeriod}
-            currencies={currencies || []}
+            currencies={currencies ?? []}
             selectedCurrencyCode={selectedCurrencyCode}
             onCurrencyChange={setSelectedCurrencyCode}
             isLoading={isChartLoading}

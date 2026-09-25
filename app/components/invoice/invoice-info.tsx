@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -27,10 +27,74 @@ import { AddInvoicePaymentDialog } from './dialogs/add-invoice-payment-dialog';
 import { DownloadInvoicePdfDialog } from './dialogs/download-invoice-pdf-dialog';
 import type { InvoiceDetailResponse, InvoicePaymentSummaryResponse } from '~/interfaces/invoice';
 
+const InvoiceLoadingSkeleton = () => (
+  <div className="mb-6 animate-pulse">
+    <div className="h-10 bg-gray-200 rounded w-1/3 mb-4" />
+    <div className="h-36 bg-gray-100 rounded-lg" />
+  </div>
+);
+
+interface InvoiceStatusBadgeProps {
+  isFullyPaid: boolean;
+  isOverDue: boolean;
+}
+
+const InvoiceStatusBadge: React.FC<InvoiceStatusBadgeProps> = ({ isFullyPaid, isOverDue }) => {
+  if (isFullyPaid) {
+    return (
+      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-green-100 text-green-700 border border-green-200">
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        Opłacona
+      </span>
+    );
+  }
+
+  if (isOverDue) {
+    return (
+      <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-red-100 text-red-700 border border-red-200">
+        <AlertCircle className="w-3.5 h-3.5" />
+        Przeterminowana
+      </span>
+    );
+  }
+
+  return (
+    <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-amber-100 text-amber-800 border border-amber-200">
+      <CreditCard className="w-3.5 h-3.5" />
+      Do zapłaty
+    </span>
+  );
+};
+
+const resolveInvoiceError = (
+  isInvoiceError: boolean,
+  isInvoiceLoading: boolean,
+  hasInvoice: boolean,
+  isErrorDismissed: boolean,
+  activeError: ApiError | null,
+): FormErrorState | null => {
+  if (isErrorDismissed) return null;
+
+  const hasFailed = isInvoiceError || (!isInvoiceLoading && !hasInvoice);
+  if (!hasFailed) return null;
+
+  const responseData = activeError?.response?.data;
+  const message =
+    responseData?.message || activeError?.message || 'Nie udało się pobrać szczegółów faktury.';
+  const details =
+    responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined;
+
+  return {
+    title: getErrorMessage(responseData?.errorCode, message),
+    details,
+  };
+};
+
 export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
   const [isDownloadPdfOpen, setIsDownloadPdfOpen] = useState(false);
+
   const {
     data: invoice,
     isLoading: isInvoiceLoading,
@@ -53,7 +117,6 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
   });
 
   const activeError = invoiceQueryError as ApiError | null;
-  const responseData = activeError?.response?.data;
 
   useEffect(() => {
     if (isInvoiceError) {
@@ -62,29 +125,16 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
   }, [isInvoiceError, invoiceQueryError]);
 
   if (isInvoiceLoading || isSummaryLoading) {
-    return (
-      <div className="mb-6 animate-pulse">
-        <div className="h-10 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div className="h-36 bg-gray-100 rounded-lg"></div>
-      </div>
-    );
+    return <InvoiceLoadingSkeleton />;
   }
 
-  const formError: FormErrorState | null =
-    (isInvoiceError || (!isInvoiceLoading && !invoice)) && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać szczegółów faktury.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
+  const formError = resolveInvoiceError(
+    isInvoiceError,
+    isInvoiceLoading,
+    Boolean(invoice),
+    isErrorDismissed,
+    activeError,
+  );
 
   if (formError) {
     return (
@@ -92,10 +142,10 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
         <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
         <div className="flex-1 pr-4">
           <p className="font-medium leading-tight">{formError.title}</p>
-          {formError.details && formError.details.length > 0 && (
+          {formError.details && (
             <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
               {formError.details.map((detailErr, idx) => (
-                <li key={idx}>{detailErr}</li>
+                <li key={`${detailErr}-${idx}`}>{detailErr}</li>
               ))}
             </ul>
           )}
@@ -143,22 +193,7 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 ml-8">
-            {isFullyPaid ? (
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-green-100 text-green-700 border border-green-200">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Opłacona
-              </span>
-            ) : isOverDue ? (
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-red-100 text-red-700 border border-red-200">
-                <AlertCircle className="w-3.5 h-3.5" />
-                Przeterminowana
-              </span>
-            ) : (
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-amber-100 text-amber-800 border border-amber-200">
-                <CreditCard className="w-3.5 h-3.5" />
-                Do zapłaty
-              </span>
-            )}
+            <InvoiceStatusBadge isFullyPaid={isFullyPaid} isOverDue={isOverDue} />
 
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
               <Calendar className="w-3.5 h-3.5" />

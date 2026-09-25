@@ -5,14 +5,14 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
 
 interface PageLoaderProps {
-  message?: string;
-  allowedRoles?: readonly string[] | string[];
+  readonly message?: string;
+  readonly allowedRoles?: readonly string[];
 }
 
 export function PageLoader({
   message = 'Wczytywanie danych...',
   allowedRoles = STANDARD_ROLES,
-}: PageLoaderProps) {
+}: Readonly<PageLoaderProps>) {
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={allowedRoles as string[]}>

@@ -33,7 +33,7 @@ function MapViewUpdater({ coords }: { coords?: [number, number] | null }) {
   const prevCoordsRef = useRef<[number, number] | null>(null);
 
   useEffect(() => {
-    if (!coords || !coords[0] || !coords[1]) return;
+    if (!coords?.[0] || !coords[1]) return;
 
     const [lat, lng] = coords;
     const prev = prevCoordsRef.current;

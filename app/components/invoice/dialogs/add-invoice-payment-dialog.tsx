@@ -152,7 +152,7 @@ export const AddInvoicePaymentDialog: React.FC<AddInvoicePaymentDialogProps> = (
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -195,7 +195,10 @@ export const AddInvoicePaymentDialog: React.FC<AddInvoicePaymentDialogProps> = (
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            <label
+              htmlFor="payment-date"
+              className="block text-xs font-semibold text-gray-700 mb-1.5"
+            >
               Data zaksięgowania *
             </label>
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>

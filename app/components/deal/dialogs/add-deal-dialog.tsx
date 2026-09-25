@@ -182,9 +182,12 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
   const handleAddProduct = (product: ProductItemResponse) => {
     if (selectedProducts.some((p) => p.productId === product.productId)) return;
 
-    const initialPrice = product.promotionalPrice
-      ? product.promotionalPrice / 10000
-      : (product.stockPrice ?? 0) / 10000;
+    let initialPrice = 0;
+    if (product.promotionalPrice) {
+      initialPrice = product.promotionalPrice / 10000;
+    } else if (product.stockPrice) {
+      initialPrice = product.stockPrice / 10000;
+    }
 
     setSelectedProducts((prev) => [
       ...prev,
@@ -282,15 +285,106 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
       const fallback =
         responseData?.message || apiError.message || 'Wystąpił błąd podczas dodawania transakcji.';
 
+      let errorDetails: string[] | undefined;
+      if (responseData?.errors && responseData.errors.length > 0) {
+        errorDetails = responseData.errors;
+      }
+
       setFormError({
         title: getErrorMessage(code, fallback),
-        details:
-          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+        details: errorDetails,
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  let contactListContent: React.ReactNode;
+  if (isLoadingContacts && contactPage === 1) {
+    contactListContent = (
+      <div className="flex h-20 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  } else if (accumulatedContacts.length === 0) {
+    contactListContent = <div className="p-4 text-center text-sm text-gray-500">Brak wyników</div>;
+  } else {
+    contactListContent = (
+      <>
+        {accumulatedContacts.map((contact) => (
+          <button
+            type="button"
+            key={contact.contactId}
+            onClick={() => setSelectedContact(contact)}
+            className="w-full text-left p-3 hover:bg-white flex justify-between items-center transition-colors"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-gray-900">
+                  {contact.contactFirstName} {contact.contactLastName}
+                </p>
+                {contact.isPrimary && (
+                  <span className="bg-blue-100 text-[#004a8f] px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                    Główny
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                {contact.companyName} | NIP: {contact.nip}
+              </p>
+            </div>
+            <Plus className="h-4 w-4 text-gray-400 shrink-0" />
+          </button>
+        ))}
+
+        {isFetchingContacts && contactPage > 1 && (
+          <div className="p-2.5 flex justify-center items-center bg-white">
+            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  let productListContent: React.ReactNode;
+  if (isLoadingProducts) {
+    productListContent = (
+      <div className="flex h-20 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  } else if (availableProducts.length === 0) {
+    productListContent = (
+      <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>
+    );
+  } else {
+    productListContent = availableProducts.map((product) => (
+      <button
+        type="button"
+        key={product.productId}
+        onClick={() => handleAddProduct(product)}
+        className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0"
+      >
+        <div>
+          <p className="text-sm font-bold text-gray-900">{product.name}</p>
+          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+            {(product.dimension || product.dimmension) && (
+              <span>{product.dimension || product.dimmension}</span>
+            )}
+            <span>•</span>
+            <span className="font-medium text-[#004a8f]">
+              {formatCurrency(
+                product.promotionalPrice ?? product.stockPrice,
+                selectedCurrency?.code || 'PLN',
+                2,
+              )}
+            </span>
+          </div>
+        </div>
+        <Plus className="h-5 w-5 text-gray-400" />
+      </button>
+    ));
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -310,7 +404,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -327,7 +421,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label htmlFor="contacts" className="block text-xs font-medium text-gray-700 mb-1">
               Kontrahent / Kontakt *
             </label>
             {selectedContact ? (
@@ -373,47 +467,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                   onScroll={handleContactListScroll}
                   className="max-h-56 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 divide-y"
                 >
-                  {isLoadingContacts && contactPage === 1 ? (
-                    <div className="flex h-20 items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                    </div>
-                  ) : accumulatedContacts.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">Brak wyników</div>
-                  ) : (
-                    <>
-                      {accumulatedContacts.map((contact) => (
-                        <button
-                          type="button"
-                          key={contact.contactId}
-                          onClick={() => setSelectedContact(contact)}
-                          className="w-full text-left p-3 hover:bg-white flex justify-between items-center transition-colors"
-                        >
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium text-gray-900">
-                                {contact.contactFirstName} {contact.contactLastName}
-                              </p>
-                              {contact.isPrimary && (
-                                <span className="bg-blue-100 text-[#004a8f] px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                                  Główny
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              {contact.companyName} | NIP: {contact.nip}
-                            </p>
-                          </div>
-                          <Plus className="h-4 w-4 text-gray-400 shrink-0" />
-                        </button>
-                      ))}
-
-                      {isFetchingContacts && contactPage > 1 && (
-                        <div className="p-2.5 flex justify-center items-center bg-white">
-                          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                        </div>
-                      )}
-                    </>
-                  )}
+                  {contactListContent}
                 </div>
               </div>
             )}
@@ -442,7 +496,11 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
             </div>
 
             <div>
-              <label id="close-date-label" className="block text-xs font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="planned-close-date"
+                id="close-date-label"
+                className="block text-xs font-medium text-gray-700 mb-1"
+              >
                 Planowana data zamknięcia *
               </label>
               <Popover>
@@ -471,7 +529,11 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
 
           <div className="space-y-3 pt-2 border-t border-gray-100">
             <div className="flex justify-between items-center">
-              <label id="products-label" className="block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="transaction-position"
+                id="products-label"
+                className="block text-xs font-medium text-gray-700"
+              >
                 Pozycje transakcji *
               </label>
               <Button
@@ -608,40 +670,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
               </div>
 
               <div className="max-h-64 overflow-y-auto rounded-md border border-gray-200 bg-gray-50">
-                {isLoadingProducts ? (
-                  <div className="flex h-20 items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                  </div>
-                ) : availableProducts.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>
-                ) : (
-                  availableProducts.map((product) => (
-                    <button
-                      type="button"
-                      key={product.productId}
-                      onClick={() => handleAddProduct(product)}
-                      className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0"
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-gray-900">{product.name}</p>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                          {(product.dimension || product.dimmension) && (
-                            <span>{product.dimension || product.dimmension}</span>
-                          )}
-                          <span>•</span>
-                          <span className="font-medium text-[#004a8f]">
-                            {formatCurrency(
-                              product.promotionalPrice ?? product.stockPrice,
-                              selectedCurrency?.code || 'PLN',
-                              2,
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                      <Plus className="h-5 w-5 text-gray-400" />
-                    </button>
-                  ))
-                )}
+                {productListContent}
               </div>
             </div>
           </div>

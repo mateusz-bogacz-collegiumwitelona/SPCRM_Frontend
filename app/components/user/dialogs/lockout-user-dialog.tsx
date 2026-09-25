@@ -56,9 +56,7 @@ export function LockoutUserDialog({
     let lockoutEndIso: string | null = null;
 
     if (lockoutType === 'temporary') {
-      if (!selectedDate) {
-        validationErrors.push('Wybierz datę zakończenia blokady z kalendarza.');
-      } else {
+      if (selectedDate) {
         const [hoursStr, minutesStr] = selectedTime.split(':');
         const hours = Number(hoursStr) || 0;
         const minutes = Number(minutesStr) || 0;
@@ -73,6 +71,8 @@ export function LockoutUserDialog({
         } else {
           lockoutEndIso = combinedDate.toISOString();
         }
+      } else {
+        validationErrors.push('Wybierz datę zakończenia blokady z kalendarza.');
       }
     }
 
@@ -98,10 +98,14 @@ export function LockoutUserDialog({
       const fallback =
         responseData?.message || apiError.message || 'Nie udało się zablokować użytkownika.';
 
+      let errorDetails: string[] | undefined;
+      if (responseData?.errors && responseData.errors.length > 0) {
+        errorDetails = responseData.errors;
+      }
+
       setFormError({
         title: getErrorMessage(code, fallback),
-        details:
-          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+        details: errorDetails,
       });
     }
   };
@@ -127,7 +131,7 @@ export function LockoutUserDialog({
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -153,7 +157,9 @@ export function LockoutUserDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="block text-xs font-semibold text-gray-700">Typ blokady</label>
+            <label htmlFor="lockout-type" className="block text-xs font-semibold text-gray-700">
+              Typ blokady
+            </label>
             <div className="grid grid-cols-2 gap-3">
               <label
                 className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer text-xs transition-colors ${
@@ -196,7 +202,10 @@ export function LockoutUserDialog({
           {lockoutType === 'temporary' && (
             <div className="space-y-3 pt-1">
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-gray-700">
+                <label
+                  htmlFor="lockout-end-time"
+                  className="block text-xs font-medium text-gray-700"
+                >
                   Data zakończenia blokady *
                 </label>
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>

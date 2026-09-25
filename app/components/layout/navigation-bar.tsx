@@ -1,32 +1,31 @@
 import React, { useState } from 'react';
 import {
+  ArrowRight,
+  BadgePercent,
+  Briefcase,
   Building2,
   Calendar,
   CirclePlus,
-  Briefcase,
-  Users,
-  LayoutDashboard,
-  Layers,
   Coins,
-  Ruler,
-  Grid,
+  Contact,
   FileSpreadsheet,
   FileText,
-  Package,
-  BadgePercent,
-  MapPinned,
+  Grid,
+  Layers,
+  LayoutDashboard,
   Mail,
-  Contact,
-  X,
-  ArrowRight,
+  MapPinned,
+  Package,
   Plus,
+  Ruler,
+  Users,
+  X,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '~/context/auth-context';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '~/api/api';
 
-// Twoje gotowe modale:
 import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dialog';
 import { AddDealDialog } from '~/components/deal/dialogs/add-deal-dialog';
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
@@ -46,6 +45,16 @@ interface NavigationBarProps {
   readonly desktopClassName?: string;
   readonly desktopWidthClassName?: string;
 }
+
+const getDesktopItemClasses = (isActive: boolean, isHovered: boolean): string => {
+  if (isActive) {
+    return 'bg-white/25 text-white font-bold shadow-xs';
+  }
+  if (isHovered) {
+    return 'bg-white/10 text-white';
+  }
+  return 'text-blue-100 hover:text-white';
+};
 
 export function NavigationBar({
   desktopClassName = '',
@@ -280,13 +289,10 @@ export function NavigationBar({
               onMouseLeave={() => setHoveredItem(null)}
             >
               <div
-                className={`flex items-center gap-3 rounded-lg w-full px-3 py-2.5 text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-white/25 text-white font-bold shadow-xs'
-                    : isHovered
-                      ? 'bg-white/10 text-white'
-                      : 'text-blue-100 hover:text-white'
-                }`}
+                className={`flex items-center gap-3 rounded-lg w-full px-3 py-2.5 text-sm font-medium transition-all ${getDesktopItemClasses(
+                  isActive,
+                  isHovered,
+                )}`}
               >
                 <Icon className="w-5 h-5 shrink-0" />
                 <span className="truncate">{item.label}</span>
@@ -454,8 +460,10 @@ export function NavigationBar({
         isOpen={isAddDealOpen}
         onClose={() => setIsAddDealOpen(false)}
         onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['sales'] });
-          queryClient.invalidateQueries({ queryKey: ['my-recent-sales'] });
+          void Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['sales'] }),
+            queryClient.invalidateQueries({ queryKey: ['my-recent-sales'] }),
+          ]);
         }}
       />
 

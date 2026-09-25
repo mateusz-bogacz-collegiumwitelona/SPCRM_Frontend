@@ -148,6 +148,37 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
 
   const totalValue = (quantity || 0) * (unitPrice || 0);
 
+  let productsListContent: React.ReactNode;
+
+  if (isLoadingProducts) {
+    productsListContent = (
+      <div className="flex h-20 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  } else if (availableProducts.length === 0) {
+    productsListContent = <p className="p-4 text-center text-xs text-gray-500">Brak wyników</p>;
+  } else {
+    productsListContent = availableProducts.map((p) => (
+      <button
+        type="button"
+        key={p.productId}
+        onClick={() => handleSelectProduct(p)}
+        className="w-full text-left p-3 hover:bg-white flex justify-between items-center transition-colors"
+      >
+        <div>
+          <p className="text-sm font-semibold text-gray-900">{p.name}</p>
+          <p className="text-xs text-gray-500">{p.dimension || p.dimmension || 'Standard'}</p>
+        </div>
+        <div className="text-right">
+          <span className="text-xs font-bold text-[#004a8f]">
+            {formatCurrency(p.promotionalPrice ?? p.stockPrice, currencyCode, 2)}
+          </span>
+        </div>
+      </button>
+    ));
+  }
+
   return (
     <Dialog
       open={isOpen}
@@ -170,7 +201,7 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
                 {formError.details && formError.details.length > 0 && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {formError.details.map((detailErr, idx) => (
-                      <li key={idx}>{detailErr}</li>
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
                     ))}
                   </ul>
                 )}
@@ -187,7 +218,12 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Produkt *</label>
+            <label
+              htmlFor="deal-products"
+              className="block text-xs font-semibold text-gray-700 mb-1.5"
+            >
+              Produkt *
+            </label>
             {selectedProduct ? (
               <div className="flex items-center justify-between p-3 border border-gray-300 rounded-md bg-gray-50 text-sm">
                 <div>
@@ -219,35 +255,8 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
                   />
                 </div>
 
-                <div className="max-h-52 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 divide-y divide-gray-200">
-                  {isLoadingProducts ? (
-                    <div className="flex h-20 items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                    </div>
-                  ) : availableProducts.length === 0 ? (
-                    <p className="p-4 text-center text-xs text-gray-500">Brak wyników</p>
-                  ) : (
-                    availableProducts.map((p) => (
-                      <button
-                        type="button"
-                        key={p.productId}
-                        onClick={() => handleSelectProduct(p)}
-                        className="w-full text-left p-3 hover:bg-white flex justify-between items-center transition-colors"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{p.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {p.dimension || p.dimmension || 'Standard'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-bold text-[#004a8f]">
-                            {formatCurrency(p.promotionalPrice ?? p.stockPrice, currencyCode, 2)}
-                          </span>
-                        </div>
-                      </button>
-                    ))
-                  )}
+                <div className="max-h-52 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 divide-y">
+                  {productsListContent}
                 </div>
               </div>
             )}

@@ -1,4 +1,3 @@
-// src/components/layout/main-layout.tsx
 import type { ReactNode } from 'react';
 import { Navbar } from '~/components/layout/logged-navbar';
 import { NavigationBar } from '~/components/layout/navigation-bar';

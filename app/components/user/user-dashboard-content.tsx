@@ -79,6 +79,112 @@ export const UserDashboardContent: React.FC = () => {
     },
   });
 
+  let tasksContent: React.ReactNode;
+  if (isTasksLoading) {
+    tasksContent = (
+      <div className="py-8 flex justify-center items-center">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-900" />
+      </div>
+    );
+  } else if (!upcomingTasks || upcomingTasks.length === 0) {
+    tasksContent = (
+      <div className="py-8 text-center text-gray-400 text-sm flex flex-col items-center">
+        <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" />
+        <p>Brak oczekujących zadań na najbliższe dni.</p>
+      </div>
+    );
+  } else {
+    tasksContent = (
+      <div className="space-y-2.5">
+        {upcomingTasks.map((task) => {
+          const isOverdue = new Date(task.dueAt) < new Date();
+          return (
+            <button
+              type="button"
+              key={task.id}
+              onClick={() => setSelectedTask(task)}
+              className="w-full text-left p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between gap-3"
+            >
+              <div className="truncate">
+                <p className="text-sm font-semibold text-gray-900 truncate">{task.title}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    className={`text-xs font-medium flex items-center gap-1 ${
+                      isOverdue ? 'text-red-600' : 'text-gray-500'
+                    }`}
+                  >
+                    {isOverdue && <AlertCircle className="w-3 h-3" />}
+                    Termin: {format(new Date(task.dueAt), 'dd.MM.yyyy HH:mm')}
+                  </span>
+                </div>
+              </div>
+
+              <span
+                className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${
+                  isOverdue
+                    ? 'bg-red-50 text-red-700 border border-red-200'
+                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+                }`}
+              >
+                {task.priority || task.status}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  let salesContent: React.ReactNode;
+  if (isSalesLoading) {
+    salesContent = (
+      <div className="py-8 flex justify-center items-center">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-900" />
+      </div>
+    );
+  } else if (!recentSales || recentSales.length === 0) {
+    salesContent = (
+      <div className="py-8 text-center text-gray-400 text-sm">
+        Brak zarejestrowanych szans sprzedaży.
+      </div>
+    );
+  } else {
+    salesContent = (
+      <div className="space-y-2.5">
+        {recentSales.map((sale) => {
+          const status = getStatusConfig(sale.status);
+          return (
+            <div
+              key={sale.id}
+              className="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-all flex items-center justify-between gap-3"
+            >
+              <div className="truncate">
+                <Link
+                  to={`/sale/${sale.id}`}
+                  className="text-sm font-semibold text-blue-900 hover:underline truncate block"
+                >
+                  {sale.name}
+                </Link>
+                <p className="text-xs text-gray-500 mt-0.5 truncate">{sale.companyName}</p>
+              </div>
+
+              <div className="text-right shrink-0">
+                <p className="text-sm font-bold text-gray-900">
+                  {formatCurrency(sale.value, sale.currency, sale.decimalPlace)}
+                </p>
+                <span
+                  className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium ${status.bgColor} ${status.textColor}`}
+                >
+                  {status.label}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {isKpiLoading ? (
@@ -91,7 +197,7 @@ export const UserDashboardContent: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col juFstify-between">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col justify-between">
           <div>
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -106,57 +212,7 @@ export const UserDashboardContent: React.FC = () => {
               </Link>
             </div>
 
-            <div className="p-4">
-              {isTasksLoading ? (
-                <div className="py-8 flex justify-center items-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-900" />
-                </div>
-              ) : !upcomingTasks || upcomingTasks.length === 0 ? (
-                <div className="py-8 text-center text-gray-400 text-sm flex flex-col items-center">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" />
-                  <p>Brak oczekujących zadań na najbliższe dni.</p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {upcomingTasks.map((task) => {
-                    const isOverdue = new Date(task.dueAt) < new Date();
-                    return (
-                      <div
-                        key={task.id}
-                        onClick={() => setSelectedTask(task)}
-                        className="p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 cursor-pointer transition-all flex items-center justify-between gap-3"
-                      >
-                        <div className="truncate">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {task.title}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span
-                              className={`text-xs font-medium flex items-center gap-1 ${
-                                isOverdue ? 'text-red-600' : 'text-gray-500'
-                              }`}
-                            >
-                              {isOverdue && <AlertCircle className="w-3 h-3" />}
-                              Termin: {format(new Date(task.dueAt), 'dd.MM.yyyy HH:mm')}
-                            </span>
-                          </div>
-                        </div>
-
-                        <span
-                          className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${
-                            isOverdue
-                              ? 'bg-red-50 text-red-700 border border-red-200'
-                              : 'bg-blue-50 text-blue-700 border border-blue-200'
-                          }`}
-                        >
-                          {task.priority || task.status}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <div className="p-4">{tasksContent}</div>
           </div>
         </div>
 
@@ -175,59 +231,14 @@ export const UserDashboardContent: React.FC = () => {
               </Link>
             </div>
 
-            <div className="p-4">
-              {isSalesLoading ? (
-                <div className="py-8 flex justify-center items-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-900" />
-                </div>
-              ) : !recentSales || recentSales.length === 0 ? (
-                <div className="py-8 text-center text-gray-400 text-sm">
-                  Brak zarejestrowanych szans sprzedaży.
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {recentSales.map((sale) => {
-                    const status = getStatusConfig(sale.status);
-                    return (
-                      <div
-                        key={sale.id}
-                        className="p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-all flex items-center justify-between gap-3"
-                      >
-                        <div className="truncate">
-                          <Link
-                            to={`/sale/${sale.id}`}
-                            className="text-sm font-semibold text-blue-900 hover:underline truncate block"
-                          >
-                            {sale.name}
-                          </Link>
-                          <p className="text-xs text-gray-500 mt-0.5 truncate">
-                            {sale.companyName}
-                          </p>
-                        </div>
-
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-gray-900">
-                            {formatCurrency(sale.value, sale.currency, sale.decimalPlace)}
-                          </p>
-                          <span
-                            className={`inline-block mt-1 text-[11px] px-2 py-0.5 rounded-full font-medium ${status.bgColor} ${status.textColor}`}
-                          >
-                            {status.label}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <div className="p-4">{salesContent}</div>
           </div>
         </div>
       </div>
 
       <TaskDetailDialog
         task={selectedTask}
-        isOpen={!!selectedTask}
+        isOpen={Boolean(selectedTask)}
         onClose={() => setSelectedTask(null)}
       />
     </div>
