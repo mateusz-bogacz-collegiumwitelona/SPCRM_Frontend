@@ -56,4 +56,7 @@ export default [
   // Invoices
   route('invoices', 'routes/invoices.tsx'),
   route('invoice/:invoiceId', 'routes/invoice-detail.tsx'),
+
+  // Not Found
+  route('*', 'routes/not-found.tsx'),
 ] satisfies RouteConfig;
