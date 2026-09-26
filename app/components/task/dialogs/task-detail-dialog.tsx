@@ -8,10 +8,10 @@ import { AlertCircle, Briefcase, Calendar, Clock, Loader2, User, X } from 'lucid
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { api } from '~/api/api';
-import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getTaskPriorityBadgeClass, getTaskStatusBadgeClass } from '~/utils/task-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import { useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface TaskDialogProps {
   task: Task | null;

@@ -14,10 +14,10 @@ import { format, startOfDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
-import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { AddTaskRequestPayload, DictionaryItem } from '~/interfaces/task';
+import { useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface AddTaskDialogProps {
   readonly isOpen: boolean;

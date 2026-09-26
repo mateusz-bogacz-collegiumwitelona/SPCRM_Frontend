@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
-import { format } from 'date-fns';
 import { AlertCircle, Filter, Loader2, Plus, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -13,16 +10,15 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import plLocale from '@fullcalendar/core/locales/pl';
-import { type AddTaskRequestPayload, type Task } from '~/interfaces/task';
+import type { Task } from '~/interfaces/task';
 import { TaskDetailDialog } from '~/components/task/dialogs/task-detail-dialog';
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
+import { useCalendarTasks, useCreateTask, useTaskDictionaries } from '~/hooks/use-tasks';
 
 export default function CalendarPage() {
-  const queryClient = useQueryClient();
-
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -30,6 +26,8 @@ export default function CalendarPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+  const { statuses, priorities } = useTaskDictionaries();
 
   useEffect(() => {
     setIsMounted(true);
@@ -44,50 +42,19 @@ export default function CalendarPage() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'calendar-tasks',
-      dateRange?.start ? format(dateRange.start, 'yyyy-MM-dd') : null,
-      dateRange?.end ? format(dateRange.end, 'yyyy-MM-dd') : null,
-      statusFilter,
-      priorityFilter,
-    ],
-    queryFn: async () => {
-      if (!dateRange) return [];
+  } = useCalendarTasks({ dateRange, statusFilter, priorityFilter });
 
-      const res = await api.get('/tasks/calendar', {
-        params: {
-          DateFrom: format(dateRange.start, 'yyyy-MM-dd'),
-          DateTo: format(dateRange.end, 'yyyy-MM-dd'),
-          TaskStatus: statusFilter || undefined,
-          TaskPriority: priorityFilter || undefined,
-        },
-      });
-      return res.data.data as Task[];
-    },
-    enabled: !!dateRange,
-    placeholderData: keepPreviousData,
+  const addTaskMutation = useCreateTask({
+    onSuccess: () => setIsAddModalOpen(false),
   });
 
-  const addTaskMutation = useMutation({
-    mutationFn: async (payload: AddTaskRequestPayload) => {
-      await api.post('/tasks', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setIsAddModalOpen(false);
-    },
-  });
+  // Obsługa błędów API
+  useEffect(() => {
+    if (isError) setIsErrorDismissed(false);
+  }, [isError, queryError]);
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
 
   const calendarError: FormErrorState | null =
     isError && !isErrorDismissed
@@ -98,40 +65,30 @@ export default function CalendarPage() {
               activeError?.message ||
               'Nie udało się pobrać zadań do kalendarza.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
-  const { data: dictionaries } = useQuery({
-    queryKey: ['task-dictionaries'],
-    queryFn: async () => {
-      const response = await api.get('/tasks/dictionaries');
-      return response.data.data;
-    },
-    staleTime: Infinity,
-  });
+  const calendarEvents = useMemo(() => {
+    return (tasks ?? []).map((task) => {
+      let bgColor = '#3b82f6';
 
-  const calendarEvents = (tasks ?? []).map((task) => {
-    let bgColor = '#3b82f6';
+      if (task.status === 'Complete' || task.status === 'Zakończona') {
+        bgColor = '#22c55e';
+      } else if (new Date(task.dueAt) < new Date()) {
+        bgColor = '#ef4444';
+      }
 
-    if (task.status === 'Complete' || task.status === 'Zakończona') {
-      bgColor = '#22c55e';
-    } else if (new Date(task.dueAt) < new Date()) {
-      bgColor = '#ef4444';
-    }
-
-    return {
-      id: task.id,
-      title: task.title,
-      start: task.dueAt,
-      backgroundColor: bgColor,
-      borderColor: bgColor,
-      extendedProps: { ...task },
-    };
-  });
+      return {
+        id: task.id,
+        title: task.title,
+        start: task.dueAt,
+        backgroundColor: bgColor,
+        borderColor: bgColor,
+        extendedProps: { ...task },
+      };
+    });
+  }, [tasks]);
 
   if (!isMounted) return null;
 
@@ -163,6 +120,7 @@ export default function CalendarPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              {/* 1. STATUS */}
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="calendar-status-filter"
@@ -177,7 +135,7 @@ export default function CalendarPage() {
                   className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
                   <option value="">Wszystkie</option>
-                  {dictionaries?.statuses?.map((s: { value: string; label: string }) => (
+                  {statuses.map((s) => (
                     <option key={s.value} value={s.value}>
                       {s.label}
                     </option>
@@ -199,7 +157,7 @@ export default function CalendarPage() {
                   className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:ring-blue-900 text-gray-700"
                 >
                   <option value="">Wszystkie</option>
-                  {dictionaries?.priorities?.map((p: { value: string; label: string }) => (
+                  {priorities.map((p) => (
                     <option key={p.value} value={p.value}>
                       {p.label}
                     </option>
@@ -214,7 +172,7 @@ export default function CalendarPage() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{calendarError.title}</p>
-                {calendarError.details && calendarError.details.length > 0 && (
+                {calendarError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {calendarError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>

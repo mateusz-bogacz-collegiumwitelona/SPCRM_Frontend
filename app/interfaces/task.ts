@@ -51,3 +51,15 @@ export interface TaskDictionariesData {
   statuses: DictionaryItem[];
   priorities: DictionaryItem[];
 }
+
+export interface CalendarTasksParams {
+  dateFrom: string;
+  dateTo: string;
+  status?: string;
+  priority?: string;
+}
+
+export interface TaskDictionariesResponse {
+  statuses: { value: string; label: string }[];
+  priorities: { value: string; label: string }[];
+}

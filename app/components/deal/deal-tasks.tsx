@@ -18,7 +18,6 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
-import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import {
   getTaskPriorityBadgeClass,
   getTaskStatusBadgeClass,
@@ -29,6 +28,7 @@ import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import type { AddTaskRequestPayload, EditTaskRequestPayload } from '~/interfaces/task';
+import { useTaskDictionaries } from '~/hooks/use-tasks';
 
 export interface SaleTaskResponse {
   id: string;

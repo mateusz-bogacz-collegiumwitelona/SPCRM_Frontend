@@ -8,10 +8,10 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, CheckSquare, Loader2, X } from 'lucide-react';
-import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { ChangeTaskStatusPayload, DictionaryItem } from '~/interfaces/task';
+import { useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface ChangeTaskStatusDialogProps {
   isOpen: boolean;

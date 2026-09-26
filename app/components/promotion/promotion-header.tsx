@@ -11,7 +11,7 @@ import { DeactivatePromotionDialog } from '~/components/promotion/dialogs/deacti
 import { ActivatePromotionDialog } from '~/components/promotion/dialogs/activate-promotion-dialog';
 import { DeletePromotionDialog } from '~/components/promotion/dialogs/delete-promotion-dialog';
 import { EditPromotionDialog } from '~/components/promotion/dialogs/edit-promotion-dialog';
-import type { PromotionDetailResponse, EditPromotionRequest } from '~/interfaces/promotion';
+import type { EditPromotionRequest, PromotionDetailResponse } from '~/interfaces/promotion';
 import { MANAGEMENT_ROLES } from '~/constants/roles';
 
 export const PromotionHeader: React.FC<{ readonly promotion: PromotionDetailResponse }> = ({

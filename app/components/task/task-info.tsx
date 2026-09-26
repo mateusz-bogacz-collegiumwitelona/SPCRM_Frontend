@@ -13,7 +13,6 @@ import {
   UserCheck,
   X,
 } from 'lucide-react';
-import { useTaskDictionaries } from '~/hooks/use-task-dictionaries';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
@@ -30,6 +29,7 @@ import type {
   ExtendTaskDueDatePayload,
 } from '~/interfaces/task';
 import { ROLES } from '~/constants/roles';
+import { useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface TaskCoreDetails {
   id: string;
