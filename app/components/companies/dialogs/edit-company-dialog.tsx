@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +10,8 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { EditCompanyDetailResponse, EditCompanyRequest } from '~/interfaces/company';
+import type { EditCompanyRequest } from '~/interfaces/company';
+import { useCompanyEditDetails } from '~/hooks/use-companies';
 
 interface EditCompanyDialogProps {
   companyId: string | null;
@@ -33,14 +32,10 @@ export const EditCompanyDialog: React.FC<EditCompanyDialogProps> = ({
   const [nip, setNip] = useState('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: companyData, isLoading: isCompanyLoading } = useQuery<EditCompanyDetailResponse>({
-    queryKey: ['company-edit-details', companyId],
-    queryFn: async () => {
-      const res = await api.get(`/company/edit-detail/${companyId}`);
-      return res.data?.data ?? res.data;
-    },
-    enabled: isOpen && !!companyId,
-  });
+  const { data: companyData, isLoading: isCompanyLoading } = useCompanyEditDetails(
+    companyId,
+    isOpen,
+  );
 
   useEffect(() => {
     if (companyData && isOpen) {

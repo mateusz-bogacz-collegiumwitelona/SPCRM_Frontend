@@ -16,10 +16,8 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
@@ -43,12 +41,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import type {
-  AddUserRequestPayload,
-  ChangeUserEmailPayload,
-  ChangeUserRolePayload,
-  DeleteUserPayload,
-  EditUserRequestPayload,
-  SetLockoutPayload,
+  UserListResponse,
   UserToChangeEmail,
   UserToChangeRole,
   UserToDelete,
@@ -57,14 +50,7 @@ import type {
   UserToUnlock,
 } from '~/interfaces/user';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
-
-interface UserListResponse {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  isBlocked: boolean;
-}
+import { useUserMutations, useUserRoles, useUsersList } from '~/hooks/use-users';
 
 interface UserTableMeta {
   onLockout: (user: UserToLockout) => void;
@@ -74,12 +60,6 @@ interface UserTableMeta {
   onChangeEmail: (user: UserToChangeEmail) => void;
   onChangeRole: (user: UserToChangeRole) => void;
 }
-
-const parseIsBlockedFilter = (value: string): boolean | undefined => {
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  return undefined;
-};
 
 const columnHelper = createColumnHelper<UserListResponse>();
 
@@ -425,8 +405,6 @@ const UserMobileCard = ({
 };
 
 export default function UserList() {
-  const queryClient = useQueryClient();
-
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -445,6 +423,7 @@ export default function UserList() {
   const [userToEdit, setUserToEdit] = useState<UserToEdit | null>(null);
   const [userToChangeEmail, setUserToChangeEmail] = useState<UserToChangeEmail | null>(null);
   const [userToChangeRole, setUserToChangeRole] = useState<UserToChangeRole | null>(null);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -462,41 +441,34 @@ export default function UserList() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'users-list',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        roleFilter,
-        isBlockedFilter,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        Role: roleFilter || undefined,
-        IsBlocked: parseIsBlockedFilter(isBlockedFilter),
-      };
-      const response = await api.get('/user', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useUsersList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    roleFilter,
+    isBlockedFilter,
   });
+
+  const { data: roles = [] } = useUserRoles();
+
+  const {
+    addUserMutation,
+    lockoutMutation,
+    unlockMutation,
+    deleteUserMutation,
+    editUserMutation,
+    changeEmailMutation,
+    changeRoleMutation,
+  } = useUserMutations();
 
   const desktopUsers = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopUsers.length;
 
   useEffect(() => {
-    const items: UserListResponse[] = data?.items;
+    const items: UserListResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -517,77 +489,6 @@ export default function UserList() {
     setPageNumber(newPage);
   };
 
-  const addUserMutation = useMutation({
-    mutationFn: async (payload: AddUserRequestPayload) => {
-      return await api.post('/user/create', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      setIsAddUserOpen(false);
-    },
-  });
-
-  const lockoutMutation = useMutation({
-    mutationFn: async (payload: SetLockoutPayload) => {
-      return await api.post('/user/lockout', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      setUserToLockout(null);
-    },
-  });
-
-  const unlockMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      return await api.post(`/user/${userId}/unlock`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      setUserToUnlock(null);
-    },
-  });
-
-  const deleteUserMutation = useMutation({
-    mutationFn: async (payload: DeleteUserPayload) => {
-      return await api.delete('/user', { data: payload });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['users-simple-list'] });
-      setUserToDelete(null);
-    },
-  });
-
-  const editUserMutation = useMutation({
-    mutationFn: async (payload: EditUserRequestPayload) => {
-      return await api.patch('/user', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      setUserToEdit(null);
-    },
-  });
-
-  const changeEmailMutation = useMutation({
-    mutationFn: async (payload: ChangeUserEmailPayload) => {
-      return await api.post('/user/change-email', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      setUserToChangeEmail(null);
-    },
-  });
-
-  const changeRoleMutation = useMutation({
-    mutationFn: async (payload: ChangeUserRolePayload) => {
-      return await api.patch('/user/role', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['users-list'] });
-      setUserToChangeRole(null);
-    },
-  });
-
   const table = useReactTable({
     data: desktopUsers,
     columns,
@@ -602,18 +503,15 @@ export default function UserList() {
     },
   });
 
-  const [isErrorDimmissed, setIsErrorDismissed] = useState(false);
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
-    isError && !isErrorDimmissed
+    isError && !isErrorDismissed
       ? {
           title: getErrorMessage(
             responseData?.errorCode,
@@ -621,24 +519,11 @@ export default function UserList() {
               activeError?.message ||
               'Nie udało się pobrać listy użytkowników.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
   const isAnyFilterActive = Boolean(roleFilter) || isBlockedFilter !== '';
-
-  const { data: rolesData } = useQuery<string[]>({
-    queryKey: ['system-roles'],
-    queryFn: async () => {
-      const response = await api.get('/user/roles');
-      return response.data?.data || response.data?.value || response.data || [];
-    },
-  });
-
-  const roles = rolesData || [];
 
   return (
     <AuthGuard>
@@ -796,7 +681,7 @@ export default function UserList() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -854,6 +739,7 @@ export default function UserList() {
             onClose={() => setIsAddUserOpen(false)}
             onSave={async (payload) => {
               await addUserMutation.mutateAsync(payload);
+              setIsAddUserOpen(false);
             }}
             isLoading={addUserMutation.isPending}
           />
@@ -864,6 +750,7 @@ export default function UserList() {
             onClose={() => setUserToLockout(null)}
             onLockout={async (payload) => {
               await lockoutMutation.mutateAsync(payload);
+              setUserToLockout(null);
             }}
             isLoading={lockoutMutation.isPending}
           />
@@ -874,6 +761,7 @@ export default function UserList() {
             onClose={() => setUserToUnlock(null)}
             onUnlock={async (userId) => {
               await unlockMutation.mutateAsync(userId);
+              setUserToUnlock(null);
             }}
             isLoading={unlockMutation.isPending}
           />
@@ -883,6 +771,7 @@ export default function UserList() {
             onClose={() => setUserToDelete(null)}
             onDelete={async (payload) => {
               await deleteUserMutation.mutateAsync(payload);
+              setUserToDelete(null);
             }}
             isLoading={deleteUserMutation.isPending}
           />
@@ -893,6 +782,7 @@ export default function UserList() {
             onClose={() => setUserToEdit(null)}
             onSave={async (payload) => {
               await editUserMutation.mutateAsync(payload);
+              setUserToEdit(null);
             }}
             isLoading={editUserMutation.isPending}
           />
@@ -903,6 +793,7 @@ export default function UserList() {
             onClose={() => setUserToChangeEmail(null)}
             onSave={async (payload) => {
               await changeEmailMutation.mutateAsync(payload);
+              setUserToChangeEmail(null);
             }}
             isLoading={changeEmailMutation.isPending}
           />
@@ -913,6 +804,7 @@ export default function UserList() {
             onClose={() => setUserToChangeRole(null)}
             onSave={async (payload) => {
               await changeRoleMutation.mutateAsync(payload);
+              setUserToChangeRole(null);
             }}
             isLoading={changeRoleMutation.isPending}
           />

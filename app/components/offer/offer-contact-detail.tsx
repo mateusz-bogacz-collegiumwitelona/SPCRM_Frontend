@@ -1,35 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { AlertCircle, Building2, Contact, ExternalLink, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-interface OfferClientDetailResponse {
-  contactId: string;
-  contactFirstName: string;
-  contactLastName: string;
-  contactJobTitle?: string;
-  companyName: string;
-}
+import { useOfferClientDetail } from '~/hooks/use-offers';
 
 export const OfferClientDetail: React.FC<{ offerId: string }> = ({ offerId }) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  const {
-    data: info,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<OfferClientDetailResponse>({
-    queryKey: ['offer-client-detail', offerId],
-    queryFn: async () => {
-      const res = await api.get(`/offer/client/${offerId}`);
-      return res.data?.data || res.data?.value || res.data;
-    },
-    enabled: Boolean(offerId),
-  });
+  const { data: info, isLoading, isError, error: queryError } = useOfferClientDetail(offerId);
 
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;

@@ -1,9 +1,8 @@
 import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { MapPinned, Pencil, Plus, Trash2 } from 'lucide-react';
-import { api, isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/api/api';
 import { useNavigate, useParams } from 'react-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
 import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
 import { CompanyContactsSection } from '~/components/companies/company-contacts-section';
@@ -18,25 +17,16 @@ import { CompanyAddressDialog } from '~/components/companies/dialogs/company-add
 import { DeleteCompanyDialog } from '~/components/companies/dialogs/delete-company-dialog';
 import { DeleteCompanyAddressDialog } from '~/components/companies/dialogs/delete-company-address-dialog';
 import { ChangeCompanyOwnerDialog } from '~/components/companies/dialogs/change-company-owner-dialog';
-import type ApiError from '~/interfaces/api-error';
+import type { ApiError } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type {
-  AddressItemToEdit,
-  CompanyAddressFormData,
-  EditCompanyRequest,
-} from '~/interfaces/company';
+import type { AddressItemToEdit, CompanyAddress } from '~/interfaces/company';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
-
-interface CompanyAddress {
-  id: string;
-  street: string;
-  city: string;
-  zipCode: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  type: string;
-}
+import {
+  useCompanyAddresses,
+  useCompanyDetailMutations,
+  useCompanyDetails,
+} from '~/hooks/use-companies';
 
 const getDisplayRange = (page: number, size: number, total: number) => {
   if (total === 0) return 'Wyświetlanie 0 do 0 z 0 wyników';
@@ -87,44 +77,33 @@ const renderMapContent = (
 
 export default function CompanyDetails() {
   const { clientId } = useParams<{ clientId: string }>();
+  const navigate = useNavigate();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
-
   const [selectedAddressForDialog, setSelectedAddressForDialog] =
     useState<AddressItemToEdit | null>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-
   const [addressToDelete, setAddressToDelete] = useState<CompanyAddress | null>(null);
-
-  const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
   const [isChangeOwnerModalOpen, setIsChangeOwnerModalOpen] = useState(false);
+
   const {
     data: basicInfo,
     isLoading: isBasicInfoLoading,
     isError,
     error,
-  } = useQuery({
-    queryKey: ['company-details', clientId],
-    queryFn: async () => (await api.get('/company', { params: { companyId: clientId } })).data.data,
-    enabled: !!clientId,
-    retry: false,
-  });
+  } = useCompanyDetails(clientId);
 
-  const { data: addressesData, isLoading: isAddressesLoading } = useQuery({
-    queryKey: ['company-addresses', clientId],
-    queryFn: async () =>
-      (
-        await api.get('/company/addresses', {
-          params: { companyId: clientId, PageNumber: 1, PageSize: 100 },
-        })
-      ).data.data,
-    enabled: !!clientId,
-  });
-
+  const { data: addressesData, isLoading: isAddressesLoading } = useCompanyAddresses(clientId);
   const addresses: CompanyAddress[] = addressesData?.items || [];
+
+  const {
+    editCompanyMutation,
+    saveAddressMutation,
+    deleteAddressMutation,
+    deleteCompanyMutation,
+    changeOwnerMutation,
+  } = useCompanyDetailMutations(clientId);
 
   const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
 
@@ -159,56 +138,6 @@ export default function CompanyDetails() {
       : [51.9194, 19.1451];
   }, [addresses]);
 
-  const editCompanyMutation = useMutation({
-    mutationFn: async (payload: EditCompanyRequest) => {
-      const res = await api.patch('/company', payload);
-      return res.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
-      await queryClient.invalidateQueries({ queryKey: ['company-edit-details', clientId] });
-      await queryClient.invalidateQueries({ queryKey: ['companies'] });
-      setIsEditDialogOpen(false);
-    },
-  });
-
-  const saveAddressMutation = useMutation({
-    mutationFn: async (formData: CompanyAddressFormData) => {
-      if (formData.addressId) {
-        const res = await api.patch('/company/address', formData);
-        return res.data;
-      }
-
-      const res = await api.post(`/company/address/${clientId}`, {
-        street: formData.street,
-        city: formData.city,
-        zipCode: formData.zipCode,
-        longitude: formData.longitude,
-        latitude: formData.latitude,
-        type: formData.type,
-      });
-      return res.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['company-addresses', clientId] });
-      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
-      setIsAddressModalOpen(false);
-      setSelectedAddressForDialog(null);
-    },
-  });
-
-  const deleteAddressMutation = useMutation({
-    mutationFn: async (addressId: string) => {
-      const res = await api.delete(`/company/address/${addressId}`);
-      return res.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['company-addresses', clientId] });
-      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
-      setAddressToDelete(null);
-    },
-  });
-
   const handleOpenAddAddress = () => {
     setSelectedAddressForDialog(null);
     setIsAddressModalOpen(true);
@@ -219,44 +148,30 @@ export default function CompanyDetails() {
     setIsAddressModalOpen(true);
   };
 
-  const deleteCompanyMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api.delete(`/company/${clientId}`);
-      return res.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['companies'] });
+  const handleDeleteCompany = async () => {
+    try {
+      await deleteCompanyMutation.mutateAsync();
       setIsDeleteDialogOpen(false);
       navigate('/companies');
-    },
-    onError: (err: unknown) => {
+    } catch (err: unknown) {
       const apiError = err as ApiError;
       const code = apiError.response?.data?.errorCode;
       const fallback = (err as Error)?.message || 'Nie udało się usunąć firmy.';
       alert(getErrorMessage(code, fallback));
-    },
-  });
+    }
+  };
 
-  const changeOwnerMutation = useMutation({
-    mutationFn: async (newOwnerId: string) => {
-      const res = await api.patch('/company/change-owner', {
-        companyId: clientId,
-        userId: newOwnerId,
-      });
-      return res.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['company-details', clientId] });
-      await queryClient.invalidateQueries({ queryKey: ['companies'] });
+  const handleChangeOwner = async (newOwnerId: string) => {
+    try {
+      await changeOwnerMutation.mutateAsync(newOwnerId);
       setIsChangeOwnerModalOpen(false);
-    },
-    onError: (err: unknown) => {
+    } catch (err: unknown) {
       const apiError = err as ApiError;
       const code = apiError.response?.data?.errorCode;
       const fallback = (err as Error)?.message || 'Nie udało się zmienić opiekuna firmy.';
       alert(getErrorMessage(code, fallback));
-    },
-  });
+    }
+  };
 
   if (!clientId || isNotFoundError(error)) {
     return <NotFound />;
@@ -385,6 +300,7 @@ export default function CompanyDetails() {
           onClose={() => setIsEditDialogOpen(false)}
           onSave={async (data) => {
             await editCompanyMutation.mutateAsync(data);
+            setIsEditDialogOpen(false);
           }}
           isLoading={editCompanyMutation.isPending}
         />
@@ -398,6 +314,8 @@ export default function CompanyDetails() {
           }}
           onSave={async (data) => {
             await saveAddressMutation.mutateAsync(data);
+            setIsAddressModalOpen(false);
+            setSelectedAddressForDialog(null);
           }}
           isLoading={saveAddressMutation.isPending}
         />
@@ -405,20 +323,19 @@ export default function CompanyDetails() {
         <DeleteCompanyDialog
           isOpen={isDeleteDialogOpen}
           onClose={() => setIsDeleteDialogOpen(false)}
-          onConfirm={async () => {
-            await deleteCompanyMutation.mutateAsync();
-          }}
+          onConfirm={handleDeleteCompany}
           companyName={basicInfo?.name}
           isLoading={deleteCompanyMutation.isPending}
         />
 
         <DeleteCompanyAddressDialog
           address={addressToDelete}
-          isOpen={!!addressToDelete}
+          isOpen={Boolean(addressToDelete)}
           onClose={() => setAddressToDelete(null)}
           onConfirm={async () => {
             if (addressToDelete) {
               await deleteAddressMutation.mutateAsync(addressToDelete.id);
+              setAddressToDelete(null);
             }
           }}
           isLoading={deleteAddressMutation.isPending}
@@ -427,9 +344,7 @@ export default function CompanyDetails() {
         <ChangeCompanyOwnerDialog
           isOpen={isChangeOwnerModalOpen}
           onClose={() => setIsChangeOwnerModalOpen(false)}
-          onSave={async (newOwnerId) => {
-            await changeOwnerMutation.mutateAsync(newOwnerId);
-          }}
+          onSave={handleChangeOwner}
           isLoading={changeOwnerMutation.isPending}
         />
       </MainLayout>

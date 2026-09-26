@@ -1,39 +1,23 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import type { Note, NoteEditData } from '~/interfaces/note';
 import { NotesSection } from '~/components/note/notes-section';
-import { useEditNote } from '~/hooks/use-edit-note';
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
-import { useAddNote } from '~/hooks/use-add-note';
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
-import { UseDeleteNote } from '~/hooks/use-delete-note';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import { useTaskNotes, useTaskNotesMutations } from '~/hooks/use-notes';
 
 export const TaskNote = ({ taskId }: { taskId: string }) => {
-  const queryClient = useQueryClient();
-
   const [editingNote, setEditingNote] = useState<NoteEditData | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
-
-  const {
-    data: notes,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<Note[]>({
-    queryKey: ['task-notes', taskId],
-    queryFn: async () => {
-      const response = await api.get(`/tasks/${taskId}/notes`);
-      return response.data.data;
-    },
-  });
-
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
+  const { data: notes, isLoading, isError, error: queryError } = useTaskNotes(taskId);
+
+  const { addNoteMutation, editNoteMutation, deleteNoteMutation } = useTaskNotesMutations(taskId);
 
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
@@ -44,29 +28,11 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
     }
   }, [isError, queryError]);
 
-  const { mutateAsync: editNoteAsync } = useEditNote({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
-      setEditingNote(null);
-    },
-  });
-
-  const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
-      setIsAddModalOpen(false);
-    },
-  });
-
-  const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['task-notes', taskId] });
-      setDeletingNoteId(null);
-    },
-  });
-
   const handleDeleteConfirm = async () => {
-    if (deletingNoteId) await deleteNoteAsync(deletingNoteId);
+    if (deletingNoteId) {
+      await deleteNoteMutation.mutateAsync(deletingNoteId);
+      setDeletingNoteId(null);
+    }
   };
 
   const handleEditClick = (note: Note) => {
@@ -78,12 +44,13 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
   };
 
   const handleSaveNewNote = async (title: string, content: string) => {
-    await addNoteAsync({
-      targetId: taskId,
-      title,
-      content,
-      noteType: 'Task',
-    });
+    await addNoteMutation.mutateAsync({ title, content });
+    setIsAddModalOpen(false);
+  };
+
+  const handleSaveEditedNote = async (data: NoteEditData) => {
+    await editNoteMutation.mutateAsync(data);
+    setEditingNote(null);
   };
 
   const formError: FormErrorState | null =
@@ -104,7 +71,7 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
     <>
       {formError && (
         <div className="mb-4 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
           <div className="flex-1 pr-4">
             <p className="font-medium leading-tight">{formError.title}</p>
             {formError.details && formError.details.length > 0 && (
@@ -121,7 +88,7 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
             className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
             title="Zamknij"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -136,24 +103,24 @@ export const TaskNote = ({ taskId }: { taskId: string }) => {
       />
 
       <EditNoteDialog
-        isOpen={!!editingNote}
+        isOpen={Boolean(editingNote)}
         onClose={() => setEditingNote(null)}
         note={editingNote}
-        onSave={editNoteAsync}
+        onSave={handleSaveEditedNote}
       />
 
       <AddNoteDialog
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewNote}
-        isLoading={isAdding}
+        isLoading={addNoteMutation.isPending}
       />
 
       <DeleteNoteDialog
-        isOpen={!!deletingNoteId}
+        isOpen={Boolean(deletingNoteId)}
         onClose={() => setDeletingNoteId(null)}
         onConfirm={handleDeleteConfirm}
-        isLoading={isDeleting}
+        isLoading={deleteNoteMutation.isPending}
       />
     </>
   );

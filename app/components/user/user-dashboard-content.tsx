@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
 import { KpiCards } from '~/components/analytics/kpi-cards';
-import type { EmployeeKpiSummaryResponse } from '~/interfaces/analytics';
 import type { Task } from '~/interfaces/task';
 import { TaskDetailDialog } from '~/components/task/dialogs/task-detail-dialog';
 import { getStatusConfig } from '~/utils/sale-status';
 import { formatCurrency } from '~/utils/data-formatters';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Link } from 'react-router';
 import {
   AlertCircle,
@@ -18,66 +15,19 @@ import {
   CheckCircle2,
   Loader2,
 } from 'lucide-react';
-
-interface UserSalesResponse {
-  id: string;
-  name: string;
-  nip: string;
-  status: string;
-  closeDate: string;
-  value: number;
-  decimalPlace: number;
-  currency: string;
-  companyName: string;
-}
+import { useMyKpi } from '~/hooks/use-analytics';
+import { useUpcomingTasks } from '~/hooks/use-tasks';
+import { useRecentSales } from '~/hooks/use-deals';
 
 export const UserDashboardContent: React.FC = () => {
   const { user } = useAuth();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const { data: kpiData, isLoading: isKpiLoading } = useQuery<EmployeeKpiSummaryResponse>({
-    queryKey: ['my-kpi-summary', user?.userId],
-    queryFn: async () => {
-      const res = await api.get('/analytics/me/kpi');
-      return res.data?.value || res.data?.data || res.data;
-    },
-    enabled: !!user?.userId,
-  });
+  const { data: kpiData, isLoading: isKpiLoading } = useMyKpi(user?.userId);
 
-  const today = new Date();
-  const nextWeek = addDays(today, 7);
+  const { data: upcomingTasks = [], isLoading: isTasksLoading } = useUpcomingTasks(5);
 
-  const { data: upcomingTasks, isLoading: isTasksLoading } = useQuery<Task[]>({
-    queryKey: ['my-upcoming-tasks'],
-    queryFn: async () => {
-      const res = await api.get('/tasks/calendar', {
-        params: {
-          DateFrom: format(today, 'yyyy-MM-dd'),
-          DateTo: format(nextWeek, 'yyyy-MM-dd'),
-        },
-      });
-      const list = res.data?.value || res.data?.data || res.data || [];
-      return list
-        .filter((t: Task) => t.status !== 'Complete' && t.status !== 'Zakończona')
-        .slice(0, 5);
-    },
-  });
-
-  const { data: recentSales, isLoading: isSalesLoading } = useQuery<UserSalesResponse[]>({
-    queryKey: ['my-recent-sales'],
-    queryFn: async () => {
-      const res = await api.get('/sales', {
-        params: {
-          PageNumber: 1,
-          PageSize: 5,
-          SortBy: 'date',
-          SortDescending: true,
-        },
-      });
-      const payload = res.data?.value || res.data?.data || res.data;
-      return payload?.items || [];
-    },
-  });
+  const { data: recentSales = [], isLoading: isSalesLoading } = useRecentSales(5);
 
   let tasksContent: React.ReactNode;
   if (isTasksLoading) {
@@ -113,7 +63,7 @@ export const UserDashboardContent: React.FC = () => {
                       isOverdue ? 'text-red-600' : 'text-gray-500'
                     }`}
                   >
-                    {isOverdue && <AlertCircle className="w-3 h-3" />}
+                    {isOverdue && <AlertCircle className="w-3 imperial text-red-600" />}
                     Termin: {format(new Date(task.dueAt), 'dd.MM.yyyy HH:mm')}
                   </span>
                 </div>

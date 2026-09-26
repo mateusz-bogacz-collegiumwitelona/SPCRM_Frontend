@@ -23,15 +23,15 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '~/context/auth-context';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dialog';
 import { AddDealDialog } from '~/components/deal/dialogs/add-deal-dialog';
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
-import type { AddCompanyRequest } from '~/interfaces/company';
-import type { AddTaskRequestPayload } from '~/interfaces/task';
 import { ROLES } from '~/constants/roles';
+
+import { useCreateCompany } from '~/hooks/use-companies';
+import { useCreateTask } from '~/hooks/use-tasks';
 
 export type NavItem = {
   id: string;
@@ -76,26 +76,12 @@ export function NavigationBar({
   const isAdmin = roles.includes(ROLES.ADMIN);
   const isManager = roles.includes(ROLES.MANAGER);
 
-  const addCompanyMutation = useMutation({
-    mutationFn: async (payload: AddCompanyRequest) => {
-      const response = await api.post('/company', payload);
-      return response.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['companies'] });
-      setIsAddCompanyOpen(false);
-    },
+  const addCompanyMutation = useCreateCompany({
+    onSuccess: () => setIsAddCompanyOpen(false),
   });
 
-  const addTaskMutation = useMutation({
-    mutationFn: async (payload: AddTaskRequestPayload) => {
-      await api.post('/tasks', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: ['my-upcoming-tasks'] });
-      setIsAddTaskOpen(false);
-    },
+  const addTaskMutation = useCreateTask({
+    onSuccess: () => setIsAddTaskOpen(false),
   });
 
   const getDesktopItems = (): NavItem[] => {

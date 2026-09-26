@@ -1,6 +1,4 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { Link } from 'react-router';
 import {
   ArrowRight,
@@ -15,20 +13,17 @@ import {
 import { Button } from '~/components/ui/button';
 import { ROLES } from '~/constants/roles';
 
-interface AdminMetricsResponse {
-  totalUsers: number;
-  totalSteelGrades: number;
-  totalCurrencies: number;
-  totalUnits: number;
-}
+import { useAdminSystemMetrics } from '~/hooks/use-analytics';
+import { useAdminRecentUsers } from '~/hooks/use-users';
 
 interface SimpleUser {
   id: string;
   firstName?: string;
   lastName?: string;
   userName?: string;
-  email: string;
+  email?: string;
   roles?: string[];
+  role?: string;
   isActive?: boolean;
 }
 
@@ -49,34 +44,13 @@ const getUserDisplayName = (u: SimpleUser): string => {
   if (u.userName) {
     return u.userName;
   }
-  return u.email;
+  return u.email || 'Użytkownik';
 };
 
 export default function AdminDashboard() {
-  const { data: metrics, isLoading: isMetricsLoading } = useQuery<AdminMetricsResponse>({
-    queryKey: ['admin-system-metrics'],
-    queryFn: async () => {
-      const res = await api.get('/analytics/admin/metrics');
-      return res.data?.value || res.data?.data || res.data;
-    },
-  });
+  const { data: metrics, isLoading: isMetricsLoading } = useAdminSystemMetrics();
 
-  const { data: usersResponse, isLoading: isUsersLoading } = useQuery({
-    queryKey: ['admin-recent-users'],
-    queryFn: async () => {
-      const res = await api.get('/user', {
-        params: { PageNumber: 1, PageSize: 5 },
-      });
-      return res.data?.value || res.data?.data || res.data;
-    },
-  });
-
-  const recentUsers: SimpleUser[] = React.useMemo(() => {
-    if (!usersResponse) return [];
-    if (Array.isArray(usersResponse)) return usersResponse.slice(0, 5);
-    if (Array.isArray(usersResponse?.items)) return usersResponse.items.slice(0, 5);
-    return [];
-  }, [usersResponse]);
+  const { data: recentUsers = [], isLoading: isUsersLoading } = useAdminRecentUsers(5);
 
   const renderMetricValue = (value: number | undefined) => {
     if (isMetricsLoading) {
@@ -99,9 +73,9 @@ export default function AdminDashboard() {
   } else {
     usersContent = (
       <div className="space-y-2.5">
-        {recentUsers.map((u) => {
+        {recentUsers.map((u: SimpleUser) => {
           const displayName = getUserDisplayName(u);
-          const hasRoles = u.roles && u.roles.length > 0;
+          const userRole = u.role || (u.roles && u.roles[0]) || 'Użytkownik';
 
           return (
             <div
@@ -115,24 +89,15 @@ export default function AdminDashboard() {
                 >
                   {displayName}
                 </Link>
-                <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                {u.email && <p className="text-xs text-gray-500 truncate">{u.email}</p>}
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                {hasRoles ? (
-                  u.roles?.map((role) => (
-                    <span
-                      key={role}
-                      className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${getRoleBadgeClass(role)}`}
-                    >
-                      {role}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                    Użytkownik
-                  </span>
-                )}
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${getRoleBadgeClass(userRole)}`}
+                >
+                  {userRole}
+                </span>
               </div>
             </div>
           );

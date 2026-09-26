@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -20,23 +18,11 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import type { AddDealPayload, AddDealProductItem, ContactDealResponse } from '~/interfaces/deal';
-
-interface CurrencySimple {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
-interface PagedResult<T> {
-  items: T[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
-}
+import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
+import { useContactsToDeal } from '~/hooks/use-contacts';
+import { useMailingProducts } from '~/hooks/use-mailing';
+import { useCreateDealMutation } from '~/hooks/use-deals';
+import type { CurrencySimple } from '~/interfaces/currency';
 
 interface ProductItemResponse {
   productId: string;
@@ -67,7 +53,6 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
   const [isProductPickerOpen, setIsProductPickerOpen] = useState<boolean>(false);
   const [productSearch, setProductSearch] = useState<string>('');
   const [debouncedProductSearch, setDebouncedProductSearch] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   useEffect(() => {
@@ -85,18 +70,11 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     return () => clearTimeout(handler);
   }, [productSearch]);
 
-  const { data: currencies = [] } = useQuery<CurrencySimple[]>({
-    queryKey: ['currencies-simple'],
-    queryFn: async () => {
-      const res = await api.get('/currency/simple');
-      return res.data?.data || res.data?.value || res.data || [];
-    },
-    enabled: isOpen,
-  });
+  const { data: currencies = [] } = useCurrenciesSimpleList(isOpen);
 
   useEffect(() => {
     if (currencies.length > 0 && !currencyId) {
-      const pln = currencies.find((c) => c.code === 'PLN') || currencies[0];
+      const pln = currencies.find((c: CurrencySimple) => c.code === 'PLN') || currencies[0];
       setCurrencyId(pln.currencyId);
     }
   }, [currencies, currencyId]);
@@ -105,21 +83,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     data: contactsData,
     isLoading: isLoadingContacts,
     isFetching: isFetchingContacts,
-  } = useQuery<PagedResult<ContactDealResponse>>({
-    queryKey: ['contacts-to-deal', contactPage, debouncedContactSearch],
-    queryFn: async () => {
-      const res = await api.get('/contacts/to-deals', {
-        params: {
-          PageNumber: contactPage,
-          PageSize: 20,
-          SearchTerm: debouncedContactSearch || undefined,
-        },
-      });
-      return res.data?.data || res.data?.value || res.data;
-    },
-    placeholderData: keepPreviousData,
-    enabled: isOpen && !selectedContact,
-  });
+  } = useContactsToDeal(contactPage, debouncedContactSearch, isOpen && !selectedContact);
 
   const totalContactPages = contactsData?.totalPages || 1;
 
@@ -133,8 +97,8 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     }
 
     setAccumulatedContacts((prev) => {
-      const existingIds = new Set(prev.map((c) => c.contactId));
-      const newItems = items.filter((c) => !existingIds.has(c.contactId));
+      const existingIds = new Set(prev.map((c: ContactDealResponse) => c.contactId));
+      const newItems = items.filter((c: ContactDealResponse) => !existingIds.has(c.contactId));
       return [...prev, ...newItems];
     });
   }, [contactsData, contactPage]);
@@ -149,17 +113,17 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     }
   };
 
-  const { data: availableProducts = [], isLoading: isLoadingProducts } = useQuery<
-    ProductItemResponse[]
-  >({
-    queryKey: ['deal-products-search', debouncedProductSearch],
-    queryFn: async () => {
-      const res = await api.get('/mailing/products', {
-        params: { SearchTerm: debouncedProductSearch, PageSize: 30 },
-      });
-      return res.data?.data?.items || res.data?.items || [];
+  const { data: availableProducts = [], isLoading: isLoadingProducts } = useMailingProducts(
+    debouncedProductSearch,
+    isProductPickerOpen,
+  );
+
+  const createDealMutation = useCreateDealMutation({
+    onSuccess: () => {
+      resetForm();
+      onSuccess();
+      onClose();
     },
-    enabled: isProductPickerOpen,
   });
 
   const resetForm = () => {
@@ -173,7 +137,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
   };
 
   const handleClose = () => {
-    if (!isLoading) {
+    if (!createDealMutation.isPending) {
       resetForm();
       onClose();
     }
@@ -217,7 +181,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     setSelectedProducts((prev) => prev.filter((p) => p.productId !== productId));
   };
 
-  const selectedCurrency = currencies.find((c) => c.currencyId === currencyId);
+  const selectedCurrency = currencies.find((c: CurrencySimple) => c.currencyId === currencyId);
 
   const totalDealValue = useMemo(
     () => selectedProducts.reduce((acc, p) => acc + (p.quantity || 0) * (p.unitPrice || 0), 0),
@@ -259,8 +223,6 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
       return;
     }
 
-    setIsLoading(true);
-
     const payload: AddDealPayload = {
       companyId: selectedContact!.companyId,
       currencyId: currencyId,
@@ -274,10 +236,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     };
 
     try {
-      await api.post('/sales', payload);
-      resetForm();
-      onSuccess();
-      onClose();
+      await createDealMutation.mutateAsync(payload);
     } catch (err: unknown) {
       const apiError = err as ApiError;
       const responseData = apiError.response?.data;
@@ -294,8 +253,6 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
         title: getErrorMessage(code, fallback),
         details: errorDetails,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -329,9 +286,8 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500">
-                {contact.companyName} | NIP: {contact.nip}
-              </p>
+              <p className="text-xs text-gray-600 font-medium">{contact.companyName}</p>
+              <p className="text-xs text-gray-500">NIP: {contact.nip}</p>
             </div>
             <Plus className="h-4 w-4 text-gray-400 shrink-0" />
           </button>
@@ -358,32 +314,34 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
       <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>
     );
   } else {
-    productListContent = availableProducts.map((product) => (
-      <button
-        type="button"
-        key={product.productId}
-        onClick={() => handleAddProduct(product)}
-        className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0"
-      >
-        <div>
-          <p className="text-sm font-bold text-gray-900">{product.name}</p>
-          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-            {(product.dimension || product.dimmension) && (
-              <span>{product.dimension || product.dimmension}</span>
-            )}
-            <span>•</span>
-            <span className="font-medium text-brand">
-              {formatCurrency(
-                product.promotionalPrice ?? product.stockPrice,
-                selectedCurrency?.code || 'PLN',
-                2,
-              )}
-            </span>
+    productListContent = availableProducts.map((product) => {
+      const displayDimension = product.dimmension || product.dimmension;
+
+      return (
+        <button
+          type="button"
+          key={product.productId}
+          onClick={() => handleAddProduct(product)}
+          className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0"
+        >
+          <div>
+            <p className="text-sm font-bold text-gray-900">{product.name}</p>
+            <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+              {displayDimension && <span>{displayDimension}</span>}
+              <span>•</span>
+              <span className="font-medium text-brand">
+                {formatCurrency(
+                  product.promotionalPrice ?? product.stockPrice,
+                  selectedCurrency?.code || 'PLN',
+                  2,
+                )}
+              </span>
+            </div>
           </div>
-        </div>
-        <Plus className="h-5 w-5 text-gray-400" />
-      </button>
-    ));
+          <Plus className="h-5 w-5 text-gray-400" />
+        </button>
+      );
+    });
   }
 
   return (
@@ -398,7 +356,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
         <form onSubmit={handleSubmit} noValidate className="space-y-5 pt-2">
           {formError && (
             <div className="relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{formError.title}</p>
                 {formError.details && formError.details.length > 0 && (
@@ -415,7 +373,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                 className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
                 title="Zamknij"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -487,7 +445,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
                 onChange={(e) => setCurrencyId(e.target.value)}
                 className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               >
-                {currencies.map((c) => (
+                {currencies.map((c: CurrencySimple) => (
                   <option key={c.currencyId} value={c.currencyId}>
                     {c.name} ({c.code})
                   </option>
@@ -623,17 +581,17 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
               type="button"
               variant="outline"
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={createDealMutation.isPending}
               className="border-gray-300 text-gray-700"
             >
               Anuluj
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={createDealMutation.isPending}
               className="bg-brand text-white hover:bg-brand-hover"
             >
-              {isLoading ? (
+              {createDealMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Zapisywanie...
                 </>

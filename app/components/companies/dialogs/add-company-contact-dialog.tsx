@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +11,7 @@ import { AlertCircle, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { AddContactDetailRequest, AddContactRequest } from '~/interfaces/contact';
+import { useContactTypes } from '~/hooks/use-contacts';
 
 interface FormContactDetail extends AddContactDetailRequest {
   id: string;
@@ -47,14 +46,7 @@ export const AddCompanyContactDialog: React.FC<AddContactDialogProps> = ({
 
   const [details, setDetails] = useState<FormContactDetail[]>([generateDefaultDetail(true)]);
 
-  const { data: contactTypes = [], isLoading: isTypesLoading } = useQuery({
-    queryKey: ['contact-types'],
-    queryFn: async () => {
-      const res = await api.get('/contacts/types');
-      return res.data.data as string[];
-    },
-    enabled: isOpen,
-  });
+  const { data: contactTypes = [], isLoading: isTypesLoading } = useContactTypes(isOpen);
 
   const handleAddDetail = () => {
     setDetails((prev) => [...prev, generateDefaultDetail(false)]);

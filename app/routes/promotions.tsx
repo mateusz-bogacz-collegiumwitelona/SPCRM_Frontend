@@ -1,7 +1,5 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
@@ -29,26 +27,9 @@ import { Link, useNavigate } from 'react-router';
 import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { AddPromotionDialog } from '~/components/promotion/dialogs/add-promotion-dialog';
-import type { AddPromotionRequest } from '~/interfaces/promotion';
 import { MANAGEMENT_ROLES, STANDARD_ROLES } from '~/constants/roles';
-
-interface PromotionResponse {
-  id: string;
-  name: string;
-  discountPercentage?: number | null;
-  promotionalPrice?: number | null;
-  promotionalPriceCode?: string | null;
-  promotionalPriceDecimalPlace?: number | null;
-  startDate?: string | null;
-  endDate?: string | null;
-  isActive: boolean;
-}
-
-const parseIsActiveFilter = (filterValue: string): boolean | undefined => {
-  if (filterValue === 'true') return true;
-  if (filterValue === 'false') return false;
-  return undefined;
-};
+import { useCreatePromotion, usePromotionsList } from '~/hooks/use-promotions';
+import type { PromotionResponse } from '~/interfaces/promotion';
 
 const formatDiscountOrPrice = (promo: PromotionResponse): React.ReactNode => {
   if (typeof promo.discountPercentage === 'number') {
@@ -176,7 +157,6 @@ const PromotionMobileCard = ({ promo }: { readonly promo: PromotionResponse }) =
 export default function PromotionsList() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const canManage = user?.roles.some((role) => MANAGEMENT_ROLES.includes(role));
 
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -218,6 +198,7 @@ export default function PromotionsList() {
     PromotionResponse[]
   >([]);
   const isMobileAppend = useRef(false);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -242,60 +223,18 @@ export default function PromotionsList() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'promotions-list',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        isActiveFilter,
-        debouncedFilters,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        IsActive: parseIsActiveFilter(isActiveFilter),
-        FromDate: debouncedFilters.date?.from
-          ? format(debouncedFilters.date.from, 'yyyy-MM-dd')
-          : undefined,
-        ToDate: debouncedFilters.date?.to
-          ? format(debouncedFilters.date.to, 'yyyy-MM-dd')
-          : undefined,
-        DiscountPercentageFrom: debouncedFilters.discountFrom
-          ? Number(debouncedFilters.discountFrom)
-          : undefined,
-        DiscountPercentageTo: debouncedFilters.discountTo
-          ? Number(debouncedFilters.discountTo)
-          : undefined,
-        PromotionPriceFrom: debouncedFilters.priceFrom
-          ? Number(debouncedFilters.priceFrom) * 10000
-          : undefined,
-        PromotionPriceTo: debouncedFilters.priceTo
-          ? Number(debouncedFilters.priceTo) * 10000
-          : undefined,
-      };
-
-      const response = await api.get(`/promotion`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = usePromotionsList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    isActiveFilter,
+    debouncedFilters,
   });
 
-  const addMutation = useMutation({
-    mutationFn: async (payload: AddPromotionRequest) => {
-      const res = await api.post('/promotion', payload);
-      return res.data?.data;
-    },
-    onSuccess: async (newPromotionId) => {
-      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
+  const addMutation = useCreatePromotion({
+    onSuccess: (newPromotionId) => {
       setIsAddOpen(false);
       if (newPromotionId) {
         navigate(`/promotion/${newPromotionId}`);
@@ -308,7 +247,7 @@ export default function PromotionsList() {
   const totalItems = data?.totalItems || data?.totalCount || desktopPromotions.length;
 
   useEffect(() => {
-    const items: PromotionResponse[] = data?.items;
+    const items: PromotionResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -335,15 +274,11 @@ export default function PromotionsList() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -353,10 +288,7 @@ export default function PromotionsList() {
             responseData?.errorCode,
             responseData?.message || activeError?.message || 'Nie udało się pobrać listy promocji.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -603,7 +535,7 @@ export default function PromotionsList() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>

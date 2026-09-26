@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Loader2, MailCheck } from 'lucide-react';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { api } from '~/api/api';
-import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/interfaces/api-error';
+import { useConfirmEmailChangeMutation } from '~/hooks/use-auth';
 
 export default function ConfirmEmailChangePage() {
   const [searchParams] = useSearchParams();
@@ -20,37 +18,13 @@ export default function ConfirmEmailChangePage() {
   const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const confirmMutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        userId,
-        token,
-      };
-      const response = await api.post('/user/confirm-email-change', payload);
-      return response.data;
-    },
+  const confirmMutation = useConfirmEmailChangeMutation({
     onSuccess: () => {
       setIsSuccess(true);
       setFormError(null);
     },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const errorData = apiError.response?.data;
-
-      let errorDetails: string[] | undefined;
-      if (errorData?.errors && errorData.errors.length > 0) {
-        errorDetails = errorData.errors;
-      }
-
-      setFormError({
-        title: getErrorMessage(
-          errorData?.errorCode,
-          errorData?.message ||
-            apiError.message ||
-            'Wystąpił błąd podczas potwierdzania adresu e-mail.',
-        ),
-        details: errorDetails,
-      });
+    onError: (parsedError) => {
+      setFormError(parsedError);
     },
   });
 
@@ -120,7 +94,7 @@ export default function ConfirmEmailChangePage() {
         )}
 
         <Button
-          onClick={() => confirmMutation.mutate()}
+          onClick={() => confirmMutation.mutate({ userId, token })}
           disabled={confirmMutation.isPending}
           className="bg-brand text-white hover:bg-brand/90 px-8 flex items-center gap-2 mx-auto"
         >

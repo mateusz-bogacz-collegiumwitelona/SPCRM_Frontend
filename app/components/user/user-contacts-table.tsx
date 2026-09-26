@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -20,12 +19,11 @@ import {
   Users,
   X,
 } from 'lucide-react';
-
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { UserContactItem } from '~/interfaces/contact';
+import { useUserContacts } from '~/hooks/use-users';
 
 const PAGE_SIZE = 5;
 
@@ -92,29 +90,15 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'user-contacts',
-      userId,
-      { pageNumber, debouncedSearch, sortBy, sortDescending, companyNameFilter, isPrimaryFilter },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: PAGE_SIZE,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        ComapnyName: companyNameFilter || undefined,
-        IsPrimary:
-          isPrimaryFilter === 'true' ? true : isPrimaryFilter === 'false' ? false : undefined,
-      };
-
-      const response = await api.get(`/user/${userId}/contacts`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
-    enabled: Boolean(userId),
+  } = useUserContacts({
+    userId,
+    pageNumber,
+    pageSize: PAGE_SIZE,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    companyNameFilter,
+    isPrimaryFilter,
   });
 
   const contacts = useMemo(() => data?.items || [], [data]);
@@ -230,6 +214,7 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
                     Nazwa firmy:
                   </label>
                   <input
+                    id="company-name-filter"
                     type="text"
                     value={companyNameFilter}
                     onChange={(e) => setCompanyNameFilter(e.target.value)}
@@ -243,6 +228,7 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
                     Typ kontaktu:
                   </label>
                   <select
+                    id="is-primary-filter"
                     value={isPrimaryFilter}
                     onChange={(e) => setIsPrimaryFilter(e.target.value)}
                     className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-blue-900"

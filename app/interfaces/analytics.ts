@@ -33,3 +33,25 @@ export interface EmployeeKpiSummaryResponse extends TeamKpiSummaryResponse {
   activeDealsPipelineValue?: CurrencyAmountResponse[];
   winRatePercentageThisMonth?: number;
 }
+
+export interface AdminMetricsResponse {
+  totalUsers: number;
+  totalSteelGrades: number;
+  totalCurrencies: number;
+  totalUnits: number;
+}
+
+export type AnalyticsPeriod = 'CurrentMonth' | 'HalfYear' | 'CurrentYear';
+
+export interface CurrencyListResponse {
+  currencyId: string;
+  name: string;
+  code: string;
+  decimalPlace: number;
+}
+
+export interface AnalyticsChartMetricResponse {
+  label: string;
+  revenue: CurrencyAmountResponse[];
+  dealsWonCount: number;
+}

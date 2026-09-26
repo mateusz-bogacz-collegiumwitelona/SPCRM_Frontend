@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   AlertCircle,
   AlignLeft,
@@ -29,48 +27,29 @@ import type {
   ExtendTaskDueDatePayload,
 } from '~/interfaces/task';
 import { ROLES } from '~/constants/roles';
-import { useTaskDictionaries } from '~/hooks/use-tasks';
-
-interface TaskCoreDetails {
-  id: string;
-  title: string;
-  description?: string;
-  priority: string;
-  status: string;
-  dueAt: string;
-  assignedToId?: string;
-}
+import { useTaskDetails, useTaskDictionaries, useTaskInfoMutations } from '~/hooks/use-tasks';
 
 export const TaskInfo = ({ taskId }: { taskId: string }) => {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isExtendOpen, setIsExtendOpen] = useState(false);
-  const [isExtending, setIsExtending] = useState(false);
   const [isAssigneeOpen, setIsAssigneeOpen] = useState(false);
-  const [isAssigning, setIsAssigning] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [isChangingStatus, setIsChangingStatus] = useState(false);
 
-  const {
-    data: task,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<TaskCoreDetails>({
-    queryKey: ['task-core-details', taskId],
-    queryFn: async () => {
-      const res = await api.get(`/tasks/${taskId}`);
-      return res.data?.data || res.data?.value || res.data;
-    },
-  });
+  const { data: task, isLoading, isError, error: queryError } = useTaskDetails(taskId);
 
   const { getStatusLabel, getPriorityLabel } = useTaskDictionaries();
+
+  const {
+    editTaskMutation,
+    deleteTaskMutation,
+    extendDueDateMutation,
+    changeAssigneeMutation,
+    changeStatusMutation,
+  } = useTaskInfoMutations(taskId);
 
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
@@ -81,66 +60,31 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
     }
   }, [isError, queryError]);
 
-  const handleEditTask = async (id: string, payload: EditTaskRequestPayload) => {
-    setIsEditing(true);
-    try {
-      await api.put(`/tasks/${id}`, payload);
-      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setIsEditOpen(false);
-    } finally {
-      setIsEditing(false);
-    }
+  const handleEditTask = async (_id: string, payload: EditTaskRequestPayload) => {
+    await editTaskMutation.mutateAsync(payload);
+    setIsEditOpen(false);
   };
 
   const handleDeleteTaskConfirm = async () => {
-    setIsDeleting(true);
-    try {
-      await api.delete(`/tasks/${taskId}`);
-      await queryClient.invalidateQueries({ queryKey: ['deal-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setIsDeleteOpen(false);
-      navigate('/calendar');
-    } finally {
-      setIsDeleting(false);
-    }
+    await deleteTaskMutation.mutateAsync();
+    setIsDeleteOpen(false);
+    navigate('/calendar');
   };
 
   const handleExtendDueDate = async (payload: ExtendTaskDueDatePayload) => {
-    setIsExtending(true);
-    try {
-      await api.put(`/tasks/${taskId}/extend-due-date`, payload);
-      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setIsExtendOpen(false);
-    } finally {
-      setIsExtending(false);
-    }
+    await extendDueDateMutation.mutateAsync(payload);
+    setIsExtendOpen(false);
   };
 
   const handleChangeAssignee = async (newAssigneeId: string) => {
-    setIsAssigning(true);
-    try {
-      await api.put(`/tasks/${taskId}/change-assigned-user/${newAssigneeId}`);
-      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setIsAssigneeOpen(false);
-      navigate('/calendar');
-    } finally {
-      setIsAssigning(false);
-    }
+    await changeAssigneeMutation.mutateAsync(newAssigneeId);
+    setIsAssigneeOpen(false);
+    navigate('/calendar');
   };
 
   const handleChangeStatus = async (payload: ChangeTaskStatusPayload) => {
-    setIsChangingStatus(true);
-    try {
-      await api.put('/tasks/change-status', payload);
-      await queryClient.invalidateQueries({ queryKey: ['task-core-details', taskId] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setIsStatusOpen(false);
-    } finally {
-      setIsChangingStatus(false);
-    }
+    await changeStatusMutation.mutateAsync(payload);
+    setIsStatusOpen(false);
   };
 
   const formError: FormErrorState | null =
@@ -308,14 +252,14 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
         onClose={() => setIsEditOpen(false)}
         taskId={task.id}
         onSave={handleEditTask}
-        isLoading={isEditing}
+        isLoading={editTaskMutation.isPending}
       />
 
       <DeleteTaskDialog
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleDeleteTaskConfirm}
-        isLoading={isDeleting}
+        isLoading={deleteTaskMutation.isPending}
         taskTitle={task.title}
       />
 
@@ -323,7 +267,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
         isOpen={isExtendOpen}
         onClose={() => setIsExtendOpen(false)}
         onConfirm={handleExtendDueDate}
-        isLoading={isExtending}
+        isLoading={extendDueDateMutation.isPending}
         taskTitle={task.title}
         currentDueAt={task.dueAt}
       />
@@ -332,7 +276,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
         isOpen={isAssigneeOpen}
         onClose={() => setIsAssigneeOpen(false)}
         onSave={handleChangeAssignee}
-        isLoading={isAssigning}
+        isLoading={changeAssigneeMutation.isPending}
         taskTitle={task.title}
         currentAssigneeId={task.assignedToId}
       />
@@ -341,7 +285,7 @@ export const TaskInfo = ({ taskId }: { taskId: string }) => {
         isOpen={isStatusOpen}
         onClose={() => setIsStatusOpen(false)}
         onSave={handleChangeStatus}
-        isLoading={isChangingStatus}
+        isLoading={changeStatusMutation.isPending}
         taskId={task.id}
         taskTitle={task.title}
         currentStatus={task.status}

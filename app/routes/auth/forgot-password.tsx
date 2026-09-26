@@ -1,41 +1,25 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft, CheckCircle2, KeyRound, Loader2, Mail, X } from 'lucide-react';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/interfaces/api-error';
+import { useForgotPasswordMutation } from '~/hooks/use-auth';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const mutation = useMutation({
-    mutationFn: async (userEmail: string) => {
-      const response = await api.post('/auth/forgot-password', { email: userEmail });
-      return response.data;
-    },
+  const mutation = useForgotPasswordMutation({
     onSuccess: () => {
       setIsSuccess(true);
       setFormError(null);
     },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const errorData = apiError.response?.data;
-
-      setFormError({
-        title: getErrorMessage(
-          errorData?.errorCode,
-          errorData?.message ||
-            apiError.message ||
-            'Wystąpił błąd podczas wysyłania linku resetującego.',
-        ),
-        details: errorData?.errors && errorData.errors.length > 0 ? errorData.errors : undefined,
-      });
+    onError: (parsedError) => {
+      setFormError(parsedError);
     },
   });
 

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -7,27 +6,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AlertCircle, X } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-
-interface Debt {
-  id: string;
-  invoiceNumber: string;
-  amountLeft: number;
-  decimalPlaces: number;
-  currencyCode: string;
-  dueDate: string;
-  daysOverdue: number;
-}
-
-interface DebtSummary {
-  currencyCode: string;
-  totalAmount: number;
-  decimalPlace: number;
-}
+import { useCompanyDebts, useCompanyDebtSummary } from '~/hooks/use-companies';
+import type { Debt, DebtSummary } from '~/interfaces/company';
 
 const columnHelper = createColumnHelper<Debt>();
 const columns = [
@@ -82,16 +66,7 @@ export const CompanyDebtsSection: React.FC<{
     isLoading: isSummaryLoading,
     isError: isSummaryError,
     error: summaryError,
-  } = useQuery({
-    queryKey: ['company-debt-summary', clientId],
-    queryFn: async () => {
-      const response = await api.get('/company/debts/summary', {
-        params: { CompanyId: clientId },
-      });
-      return response.data?.data || response.data?.value || [];
-    },
-    enabled: !!clientId,
-  });
+  } = useCompanyDebtSummary(clientId);
 
   const summary = Array.isArray(summaryResponse) ? summaryResponse : [];
 
@@ -100,21 +75,7 @@ export const CompanyDebtsSection: React.FC<{
     isFetching,
     isError: isDebtsError,
     error: debtsError,
-  } = useQuery({
-    queryKey: ['company-debts', { clientId, page, pageSize }],
-    queryFn: async () => {
-      const response = await api.get('/company/debts', {
-        params: {
-          CompanyId: clientId,
-          PageNumber: page,
-          PageSize: pageSize,
-        },
-      });
-      return response.data?.data || response.data?.value || null;
-    },
-    enabled: !!clientId,
-    placeholderData: keepPreviousData,
-  });
+  } = useCompanyDebts(clientId, page, pageSize);
 
   const items = debtsRes?.items || [];
   const totalPages = debtsRes?.totalPages || 1;
@@ -132,7 +93,7 @@ export const CompanyDebtsSection: React.FC<{
   };
 
   useEffect(() => {
-    const newItems: Debt[] = debtsRes?.items;
+    const newItems: Debt[] | undefined = debtsRes?.items;
     if (!newItems) return;
 
     if (page === 1 || !isMobileAppend.current) {

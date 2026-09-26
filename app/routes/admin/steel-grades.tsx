@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import {
   AlertCircle,
@@ -11,8 +10,6 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { Button } from '~/components/ui/button';
@@ -30,15 +27,9 @@ import {
 import { DeleteSteelGradeDialog } from '~/components/steel-grade/dialogs/delete-steel-grade-dialog';
 import { EditSteelGradeDialog } from '~/components/steel-grade/dialogs/edit-steel-grade-dialog';
 import { AddSteelGradeDialog } from '~/components/steel-grade/dialogs/add-steel-grade-dialog';
-import type { AddSteelGradePayload, EditSteelGradePayload } from '~/interfaces/steel-grade';
 import { ROLES } from '~/constants/roles';
-
-interface SteelGradeListResponse {
-  id: string;
-  name: string;
-  standard?: string | null;
-  density: number;
-}
+import { useSteelGradeMutations, useSteelGradesList } from '~/hooks/use-steel-grades';
+import type { SteelGradeListResponse } from '~/interfaces/steel-grade';
 
 interface SteelGradeTableMeta {
   onEdit: (grade: SteelGradeListResponse) => void;
@@ -152,8 +143,6 @@ const SteelGradeMobileCard = ({
 );
 
 export default function SteelGradesList() {
-  const queryClient = useQueryClient();
-
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -169,48 +158,7 @@ export default function SteelGradesList() {
     [],
   );
   const isMobileAppend = useRef(false);
-
-  const deleteMutation = useMutation({
-    mutationFn: async ({
-      id,
-      reassignments,
-    }: {
-      id: string;
-      reassignments: { productId: string; newSteelGradeId: string }[];
-    }) => {
-      await api.delete(`/steel-grade/${id}`, {
-        data: { reassignments },
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
-      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
-      setDeletingGrade(null);
-    },
-  });
-
-  const editMutation = useMutation({
-    mutationFn: async (payload: EditSteelGradePayload) => {
-      await api.patch('/steel-grade', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
-      setEditingGrade(null);
-    },
-  });
-
-  const addMutation = useMutation({
-    mutationFn: async (payload: AddSteelGradePayload) => {
-      await api.post('/steel-grade', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['product-steel-grades'] });
-      setAddingGrade(false);
-    },
-  });
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -228,32 +176,22 @@ export default function SteelGradesList() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'steel-grades-list',
-      { pageNumber, pageSize, debouncedSearch, sortBy, sortDescending },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-      };
-
-      const response = await api.get('/steel-grade', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useSteelGradesList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
   });
+
+  const { addMutation, editMutation, deleteMutation } = useSteelGradeMutations();
 
   const desktopItems = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopItems.length;
 
   useEffect(() => {
-    const items: SteelGradeListResponse[] = data?.items;
+    const items: SteelGradeListResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -284,15 +222,11 @@ export default function SteelGradesList() {
     } satisfies SteelGradeTableMeta,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -304,10 +238,7 @@ export default function SteelGradesList() {
               activeError?.message ||
               'Nie udało się pobrać listy gatunków stali.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -372,7 +303,7 @@ export default function SteelGradesList() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -428,6 +359,7 @@ export default function SteelGradesList() {
                   id: deletingGrade.id,
                   reassignments,
                 });
+                setDeletingGrade(null);
               }
             }}
             isLoading={deleteMutation.isPending}
@@ -439,6 +371,7 @@ export default function SteelGradesList() {
             onClose={() => setEditingGrade(null)}
             onSave={async (data) => {
               await editMutation.mutateAsync(data);
+              setEditingGrade(null);
             }}
             isLoading={editMutation.isPending}
           />
@@ -448,6 +381,7 @@ export default function SteelGradesList() {
             onClose={() => setAddingGrade(false)}
             onSave={async (data) => {
               await addMutation.mutateAsync(data);
+              setAddingGrade(false);
             }}
             isLoading={addMutation.isPending}
           />

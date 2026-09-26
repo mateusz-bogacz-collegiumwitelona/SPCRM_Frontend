@@ -1,11 +1,10 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
 import { type Contact } from '~/interfaces/contact';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AlertCircle, X } from 'lucide-react';
+import { useContactWays } from '~/hooks/use-contacts';
 
 const ContactWayItem = ({ way }: { way: Contact }) => (
   <li className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-800">
@@ -31,18 +30,7 @@ const ContactWayItem = ({ way }: { way: Contact }) => (
 );
 
 export const ContactWays: React.FC<{ contactId: string }> = ({ contactId }) => {
-  const {
-    data: ways,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<Contact[]>({
-    queryKey: ['contact-ways', contactId],
-    queryFn: async () => {
-      const res = await api.get(`/contacts/${contactId}/ways`);
-      return res.data.data;
-    },
-  });
+  const { data: ways, isLoading, isError, error: queryError } = useContactWays(contactId);
 
   const [isErrorDismissed, setIsErrorDismissed] = React.useState(false);
 

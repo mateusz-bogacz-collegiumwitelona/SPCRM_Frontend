@@ -1,5 +1,4 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import {
@@ -14,11 +13,10 @@ import {
   Mail,
   Users,
 } from 'lucide-react';
-import { api } from '~/api/api';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { HasRole } from '~/lib/has-role';
-import type { UserDetailResponse } from '~/interfaces/user';
 import { ROLES } from '~/constants/roles';
+import { useUserDetails } from '~/hooks/use-users';
 
 const formatDate = (dateString?: string | null) => {
   if (!dateString) return '-';
@@ -26,18 +24,7 @@ const formatDate = (dateString?: string | null) => {
 };
 
 export const UserProfileCard: React.FC<{ readonly userId: string }> = ({ userId }) => {
-  const {
-    data: user,
-    isLoading,
-    isError,
-  } = useQuery<UserDetailResponse>({
-    queryKey: ['user-detail', userId],
-    queryFn: async () => {
-      const response = await api.get(`/user/${userId}`);
-      return response.data?.value || response.data?.data || response.data;
-    },
-    enabled: Boolean(userId),
-  });
+  const { data: user, isLoading, isError } = useUserDetails(userId);
 
   if (isLoading) {
     return <TableLoadingState message="Ładowanie profilu użytkownika..." />;

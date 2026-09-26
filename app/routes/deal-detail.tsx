@@ -6,33 +6,24 @@ import { DealNote } from '~/components/deal/deal-note';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { DealTasks } from '~/components/deal/deal-tasks';
-import { useQuery } from '@tanstack/react-query';
-import { api, isNotFoundError } from '~/api/api';
-import type { SaleDetailResponse } from '~/interfaces/deal';
+import { isNotFoundError } from '~/api/api';
 import NotFound from '~/routes/not-found';
 import React from 'react';
 import { PageLoader } from '~/components/layout/page-loader';
 import { STANDARD_ROLES } from '~/constants/roles';
+import { useDealDetails } from '~/hooks/use-deals';
 
 export default function DealDetail() {
   const { dealId } = useParams<{ dealId: string }>();
 
-  const { isLoading, error } = useQuery<SaleDetailResponse>({
-    queryKey: ['deal-info', dealId],
-    queryFn: async () => {
-      const response = await api.get(`/sales/${dealId}`);
-      return response.data?.data || response.data?.value || response.data;
-    },
-    enabled: !!dealId,
-    retry: false,
-  });
+  const { isLoading, error } = useDealDetails(dealId);
 
   if (!dealId || isNotFoundError(error)) {
     return <NotFound />;
   }
 
   if (isLoading) {
-    return <PageLoader message="Wczytywanie szczegółów kontaktu..." />;
+    return <PageLoader message="Wczytywanie szczegółów transakcji..." />;
   }
 
   return (

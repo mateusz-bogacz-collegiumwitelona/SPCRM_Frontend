@@ -1,33 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
-import { AlertCircle, Loader2, Plus, Search, X } from 'lucide-react';
+import { AlertCircle, Loader2, Search, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 import { STANDARD_ROLES } from '~/constants/roles';
-
-interface MailingClientResponse {
-  companyName: string;
-  nip: string;
-  contactFirstName: string;
-  contactLastName: string;
-  contactId: string;
-}
-
-interface MailingProductResponse {
-  productId: string;
-  name: string;
-  dimmension: string;
-  stockQuantity: number;
-  stockPrice: number;
-  promotionalPrice?: number;
-}
+import { useMailingContacts, useMailingCurrencies, useSendMailing } from '~/hooks/use-mailing';
+import { SelectProductDialog } from '~/components/mailing/select-product-dialog';
+import type { MailingProductResponse } from '~/interfaces/mailing';
 
 interface SelectedProduct {
   productId: string;
@@ -38,13 +22,6 @@ interface SelectedProduct {
   stockPrice: number;
 }
 
-interface Currency {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
 export default function MailingCreator() {
   const [contactSearch, setContactSearch] = useState('');
   const [debouncedContactSearch, setDebouncedContactSearch] = useState('');
@@ -52,54 +29,31 @@ export default function MailingCreator() {
 
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [productSearch, setProductSearch] = useState('');
-  const [debouncedProductSearch, setDebouncedProductSearch] = useState('');
 
   const [language, setLanguage] = useState('pl');
-
-  const [isSending, setIsSending] = useState(false);
+  const [currencyCode, setCurrencyCode] = useState('PLN');
   const [successMsg, setSuccessMsg] = useState('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
-
-  const [currencyCode, setCurrencyCode] = useState('PLN');
-
-  const { data: currencies = [] } = useQuery<Currency[]>({
-    queryKey: ['currencies-simple'],
-    queryFn: async () => {
-      const response = await api.get('/currency/simple');
-      return response.data?.data || response.data || [];
-    },
-  });
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedContactSearch(contactSearch), 300);
     return () => clearTimeout(handler);
   }, [contactSearch]);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedProductSearch(productSearch), 300);
-    return () => clearTimeout(handler);
-  }, [productSearch]);
+  const { data: currencies = [] } = useMailingCurrencies();
+  const { data: contactsData = [], isLoading: isLoadingContacts } =
+    useMailingContacts(debouncedContactSearch);
 
-  const { data: contactsData, isLoading: isLoadingContacts } = useQuery({
-    queryKey: ['mailing-contacts', debouncedContactSearch],
-    queryFn: async () => {
-      const response = await api.get('/mailing/contacts', {
-        params: { SearchTerm: debouncedContactSearch, PageSize: 50 },
-      });
-      return response.data?.data?.items || response.data?.items || [];
+  const sendMailingMutation = useSendMailing({
+    onSuccess: () => {
+      setSuccessMsg('Mailing został poprawnie wysłany, a oferty zapisane.');
+      setSelectedContacts([]);
+      setSelectedProducts([]);
+      setLanguage('pl');
     },
-  });
-
-  const { data: productsData, isLoading: isLoadingProducts } = useQuery({
-    queryKey: ['mailing-products', debouncedProductSearch],
-    queryFn: async () => {
-      const response = await api.get('/mailing/products', {
-        params: { SearchTerm: debouncedProductSearch, PageSize: 50 },
-      });
-      return response.data?.data?.items || response.data?.items || [];
+    onError: (parsedError) => {
+      setFormError(parsedError);
     },
-    enabled: isProductModalOpen,
   });
 
   const toggleContact = (contactId: string) => {
@@ -108,7 +62,7 @@ export default function MailingCreator() {
     );
   };
 
-  const addProduct = (product: MailingProductResponse) => {
+  const handleAddProduct = (product: MailingProductResponse) => {
     if (selectedProducts.some((p) => p.productId === product.productId)) return;
 
     const initialPrice = product.promotionalPrice
@@ -143,7 +97,7 @@ export default function MailingCreator() {
     );
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     setFormError(null);
     setSuccessMsg('');
 
@@ -172,129 +126,17 @@ export default function MailingCreator() {
       return;
     }
 
-    setIsSending(true);
-    try {
-      const payload = {
-        to: selectedContacts,
-        language: language,
-        products: selectedProducts.map((p) => ({
-          productId: p.productId,
-          quantity: p.quantity,
-          price: Math.round(p.price * 10000),
-          currencyCode: currencyCode,
-        })),
-      };
-
-      await api.post('/mailing/offert', payload);
-      setSuccessMsg('Mailing został poprawnie wysłany, a oferty zapisane.');
-
-      setSelectedContacts([]);
-      setSelectedProducts([]);
-      setLanguage('pl');
-    } catch (error_: unknown) {
-      const err = error_ as ApiError;
-      const errorData = err.response?.data;
-
-      const code = errorData?.errorCode;
-      const fallback = errorData?.message || err.message || 'Błąd podczas wysyłania mailingu.';
-
-      let errorDetails: string[] | undefined;
-      if (errorData?.errors && errorData.errors.length > 0) {
-        errorDetails = errorData.errors.map((item) => getErrorMessage(item, item));
-      }
-
-      setFormError({
-        title: getErrorMessage(code, fallback),
-        details: errorDetails,
-      });
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  let contactsListContent: React.ReactNode;
-  if (isLoadingContacts) {
-    contactsListContent = (
-      <div className="flex h-20 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-      </div>
-    );
-  } else if (!contactsData || contactsData.length === 0) {
-    contactsListContent = <div className="p-4 text-center text-sm text-gray-500">Brak wyników</div>;
-  } else {
-    contactsListContent = contactsData.map((client: MailingClientResponse) => {
-      const checkboxId = `contact-checkbox-${client.contactId}`;
-      return (
-        <label
-          htmlFor={`contact-${checkboxId}`}
-          key={client.contactId}
-          className="flex cursor-pointer items-start gap-3 border-b border-gray-200 p-3 hover:bg-white last:border-0"
-        >
-          <input
-            id={checkboxId}
-            type="checkbox"
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
-            checked={selectedContacts.includes(client.contactId)}
-            onChange={() => toggleContact(client.contactId)}
-          />
-          <span className="flex flex-col">
-            <span className="text-sm font-medium text-gray-900">{client.companyName}</span>
-            <span className="text-xs text-gray-500">
-              NIP: {client.nip} | {client.contactFirstName} {client.contactLastName}
-            </span>
-          </span>
-        </label>
-      );
+    sendMailingMutation.mutate({
+      to: selectedContacts,
+      language: language,
+      products: selectedProducts.map((p) => ({
+        productId: p.productId,
+        quantity: p.quantity,
+        price: Math.round(p.price * 10000),
+        currencyCode: currencyCode,
+      })),
     });
-  }
-
-  let modalProductsListContent: React.ReactNode;
-  if (isLoadingProducts) {
-    modalProductsListContent = (
-      <div className="flex h-20 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-      </div>
-    );
-  } else if (!productsData || productsData.length === 0) {
-    modalProductsListContent = (
-      <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>
-    );
-  } else {
-    modalProductsListContent = productsData.map((product: MailingProductResponse) => (
-      <button
-        type="button"
-        key={product.productId}
-        onClick={() => addProduct(product)}
-        className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0 cursor-pointer"
-      >
-        <div>
-          <p className="text-sm font-bold text-gray-900">{product.name}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-            <span>{product.dimmension}</span>
-            <span>•</span>
-            {product.promotionalPrice ? (
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-400 line-through">
-                  {formatCurrency(product.stockPrice, 'PLN', 2)}
-                </span>
-                <span className="font-bold text-red-600">
-                  {formatCurrency(product.promotionalPrice, 'PLN', 2)}
-                </span>
-                <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                  Promocja
-                </span>
-              </div>
-            ) : (
-              <span className="font-medium text-brand">
-                Cena bazowa: {formatCurrency(product.stockPrice, 'PLN', 2)}
-              </span>
-            )}
-          </div>
-        </div>
-        <Plus className="h-5 w-5 text-gray-400" />
-      </button>
-    ));
-  }
+  };
 
   return (
     <AuthGuard>
@@ -308,7 +150,7 @@ export default function MailingCreator() {
                 <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                 <div className="flex-1 pr-4">
                   <p className="font-medium leading-tight">{formError.title}</p>
-                  {formError.details && formError.details.length > 0 && (
+                  {formError.details && (
                     <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                       {formError.details.map((detailErr, idx) => (
                         <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -326,6 +168,7 @@ export default function MailingCreator() {
                 </button>
               </div>
             )}
+
             {successMsg && (
               <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
                 {successMsg}
@@ -349,7 +192,40 @@ export default function MailingCreator() {
                 </div>
 
                 <div className="max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-gray-50">
-                  {contactsListContent}
+                  {isLoadingContacts ? (
+                    <div className="flex h-20 items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                    </div>
+                  ) : contactsData.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500">Brak wyników</div>
+                  ) : (
+                    contactsData.map((client) => {
+                      const checkboxId = `contact-checkbox-${client.contactId}`;
+                      return (
+                        <label
+                          htmlFor={checkboxId}
+                          key={client.contactId}
+                          className="flex cursor-pointer items-start gap-3 border-b border-gray-200 p-3 hover:bg-white last:border-0"
+                        >
+                          <input
+                            id={checkboxId}
+                            type="checkbox"
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-brand focus:ring-brand"
+                            checked={selectedContacts.includes(client.contactId)}
+                            onChange={() => toggleContact(client.contactId)}
+                          />
+                          <span className="flex flex-col">
+                            <span className="text-sm font-medium text-gray-900">
+                              {client.companyName}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              NIP: {client.nip} | {client.contactFirstName} {client.contactLastName}
+                            </span>
+                          </span>
+                        </label>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
@@ -474,12 +350,12 @@ export default function MailingCreator() {
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={isSending}
-              className="h-12 w-full text-base bg-brand hover:bg-brand-hover"
+              disabled={sendMailingMutation.isPending}
+              className="h-12 w-full text-base bg-brand hover:bg-brand-hover flex items-center justify-center gap-2"
             >
-              {isSending ? (
+              {sendMailingMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   Wysyłanie...
                 </>
               ) : (
@@ -488,36 +364,11 @@ export default function MailingCreator() {
             </Button>
           </div>
 
-          {isProductModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-brand">Wybierz produkt</h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsProductModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 cursor-pointer"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="Wyszukaj produkt..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    className="pl-9 h-10 w-full"
-                  />
-                </div>
-                <div className="max-h-72 overflow-y-auto rounded-md border border-gray-200 bg-gray-50">
-                  {modalProductsListContent}
-                </div>
-              </div>
-            </div>
-          )}
+          <SelectProductDialog
+            isOpen={isProductModalOpen}
+            onClose={() => setIsProductModalOpen(false)}
+            onSelectProduct={handleAddProduct}
+          />
         </MainLayout>
       </RoleGuard>
     </AuthGuard>

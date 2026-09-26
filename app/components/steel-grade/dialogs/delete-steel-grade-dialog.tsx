@@ -1,18 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { SteelGradeOption } from '~/interfaces/steel-grade';
-
-interface ProductItem {
-  id: string;
-  name: string;
-  category: string;
-}
+import { useSteelGradeProducts } from '~/hooks/use-steel-grades';
+import { useProductSteelGrades } from '~/hooks/use-products';
 
 interface DeleteSteelGradeDialogProps {
   isOpen: boolean;
@@ -48,22 +41,12 @@ export const DeleteSteelGradeDialog: React.FC<DeleteSteelGradeDialogProps> = ({
     onClose();
   };
 
-  const { data: associatedProducts = [], isLoading: isLoadingProducts } = useQuery<ProductItem[]>({
-    queryKey: ['steel-grade-products', steelGradeId],
-    queryFn: async () => {
-      const res = await api.get(`/steel-grade/${steelGradeId}/products`);
-      return (res.data?.value || res.data?.data || res.data || []) as ProductItem[];
-    },
-    enabled: isOpen && !!steelGradeId,
-  });
-  const { data: steelGrades = [] } = useQuery<SteelGradeOption[]>({
-    queryKey: ['product-steel-grades'],
-    queryFn: async () => {
-      const res = await api.get('/products/steel-grades');
-      return (res.data?.value || res.data?.data || res.data || []) as SteelGradeOption[];
-    },
-    enabled: isOpen,
-  });
+  const { data: associatedProducts = [], isLoading: isLoadingProducts } = useSteelGradeProducts(
+    steelGradeId,
+    isOpen,
+  );
+
+  const { data: steelGrades = [] } = useProductSteelGrades();
 
   const availableReplacements = steelGrades.filter((g) => g.id !== steelGradeId);
 

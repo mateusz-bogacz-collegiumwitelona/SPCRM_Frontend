@@ -14,24 +14,15 @@ import { UserTasksTable } from '~/components/user/user-tasks-table';
 import { UserAnalyticsTab } from '~/components/user/user-analytics-tab';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 import NotFound from '~/routes/not-found';
-import { useQuery } from '@tanstack/react-query';
-import type { UserDetailResponse } from '~/interfaces/user';
-import { api, isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/api/api';
 import { PageLoader } from '~/components/layout/page-loader';
+import { useUserDetails } from '~/hooks/use-users';
 
 export default function UserDetailPage() {
   const { userId } = useParams<{ userId: string }>();
   const [activeTab, setActiveTab] = useState<'overview' | 'analytics'>('overview');
 
-  const { isLoading, error } = useQuery<UserDetailResponse>({
-    queryKey: ['user-detail', userId],
-    queryFn: async () => {
-      const response = await api.get(`/user/${userId}`);
-      return response.data?.value || response.data?.data || response.data;
-    },
-    enabled: Boolean(userId),
-    retry: false,
-  });
+  const { isLoading, error } = useUserDetails(userId);
 
   if (!userId || isNotFoundError(error)) {
     return <NotFound />;

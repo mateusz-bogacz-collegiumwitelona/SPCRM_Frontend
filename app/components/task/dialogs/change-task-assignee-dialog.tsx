@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -14,13 +12,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { translateRole } from '~/utils/role-translator';
 import { useAuth } from '~/context/auth-context';
-
-interface AssigneeResponse {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-}
+import { useAvailableOwners } from '~/hooks/use-contacts';
 
 interface ChangeTaskAssigneeDialogProps {
   isOpen: boolean;
@@ -47,14 +39,7 @@ export const ChangeTaskAssigneeDialog: React.FC<ChangeTaskAssigneeDialogProps> =
     data: rawAssignees = [],
     isLoading: isAssigneesLoading,
     isError: isAssigneesError,
-  } = useQuery({
-    queryKey: ['available-assignees'],
-    queryFn: async () => {
-      const res = await api.get('/contacts/available-owners');
-      return (res.data?.data || res.data?.value || res.data) as AssigneeResponse[];
-    },
-    enabled: isOpen,
-  });
+  } = useAvailableOwners(isOpen);
 
   const currentLoggedInUserId = user?.userId;
   const assignees = rawAssignees.filter((assignee) => assignee.id !== currentLoggedInUserId);
@@ -176,7 +161,7 @@ export const ChangeTaskAssigneeDialog: React.FC<ChangeTaskAssigneeDialogProps> =
             </option>
             {assignees.map((assignee) => (
               <option key={assignee.id} value={assignee.id}>
-                {assignee.firstName} {assignee.lastName} ({translateRole(assignee.role)})
+                {assignee.firstName} {assignee.lastName} ({translateRole(assignee.role || '')})
                 {assignee.id === currentAssigneeId ? ' — (obecnie przypisany)' : ''}
               </option>
             ))}

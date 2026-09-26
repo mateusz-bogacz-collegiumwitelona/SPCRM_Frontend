@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import {
   Dialog,
@@ -14,7 +12,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { DictionaryItem, EditTaskRequestPayload } from '~/interfaces/task';
-import { useTaskDictionaries } from '~/hooks/use-tasks';
+import { useTaskDetails, useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface EditTaskDialogProps {
   readonly isOpen: boolean;
@@ -22,13 +20,6 @@ interface EditTaskDialogProps {
   readonly taskId: string | null;
   readonly onSave: (taskId: string, payload: EditTaskRequestPayload) => Promise<void>;
   readonly isLoading?: boolean;
-}
-
-interface TaskDetailData {
-  id: string;
-  title: string;
-  description?: string;
-  priority: string;
 }
 
 export function EditTaskDialog({
@@ -45,14 +36,7 @@ export function EditTaskDialog({
   const [priority, setPriority] = useState('Medium');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: taskDetail, isLoading: isTaskLoading } = useQuery<TaskDetailData>({
-    queryKey: ['task-detail', taskId],
-    queryFn: async () => {
-      const res = await api.get(`/tasks/${taskId}`);
-      return res.data?.data || res.data?.value || res.data;
-    },
-    enabled: isOpen && Boolean(taskId),
-  });
+  const { data: taskDetail, isLoading: isTaskLoading } = useTaskDetails(taskId, isOpen);
 
   useEffect(() => {
     if (taskDetail) {

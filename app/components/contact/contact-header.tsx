@@ -1,54 +1,28 @@
 import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
-import { api } from '~/api/api';
 import { Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
 import { DeleteContactDialog } from './dialogs/delete-contact-dialog';
 import { Button } from '~/components/ui/button';
 import { MANAGEMENT_ROLES } from '~/constants/roles';
-
-interface ContactBasicInfo {
-  id: string;
-  firstName: string;
-  lastName: string;
-  jobTitle?: string;
-  companyName: string;
-  ownerFirstName?: string;
-  ownerLastName?: string;
-  isPrimary: boolean;
-}
+import { useContactDetails, useContactMutations } from '~/hooks/use-contacts';
 
 export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { user } = useAuth();
   const canDelete = user?.roles.some((role) => MANAGEMENT_ROLES.includes(role));
 
-  const {
-    data: info,
-    isLoading,
-    isError,
-  } = useQuery<ContactBasicInfo>({
-    queryKey: ['contact-details', contactId],
-    queryFn: async () => {
-      const res = await api.get(`/contacts/${contactId}`);
-      return res.data.data;
-    },
-  });
+  const { data: info, isLoading, isError } = useContactDetails(contactId);
 
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      return await api.delete(`/contacts/${contactId}`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      await queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
-      navigate('/contacts');
-    },
-  });
+  const { deleteContactMutation } = useContactMutations(contactId);
+
+  const handleDelete = async () => {
+    await deleteContactMutation.mutateAsync();
+    setIsDeleteDialogOpen(false);
+    navigate('/contacts');
+  };
 
   if (isLoading) {
     return (
@@ -120,11 +94,8 @@ export const ContactHeader: React.FC<{ contactId: string }> = ({ contactId }) =>
       <DeleteContactDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={async () => {
-          await deleteMutation.mutateAsync();
-          setIsDeleteDialogOpen(false);
-        }}
-        isLoading={deleteMutation.isPending}
+        onConfirm={handleDelete}
+        isLoading={deleteContactMutation.isPending}
       />
     </>
   );

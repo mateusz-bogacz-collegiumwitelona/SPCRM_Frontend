@@ -11,10 +11,8 @@ import {
   UserCog,
   X,
 } from 'lucide-react';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
@@ -32,38 +30,16 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { ChangeContactOwnerDialog } from '~/components/contact/dialogs/change-contact-owner-dialog';
 import { useAuth } from '~/context/auth-context';
-import type { EditContactRequest } from '~/interfaces/contact';
 import { MANAGEMENT_ROLES, STANDARD_ROLES } from '~/constants/roles';
 
-interface ContactResponse {
-  id: string;
-  firstName: string;
-  lastName: string;
-  jobTitle: string;
-  companyName: string;
-  ownerFirstName: string;
-  ownerLastName: string;
-  isPrimary: boolean;
-}
-
-interface OwnerOption {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role?: string;
-}
-
-export interface ContactListTableMeta {
-  onEdit: (id: string) => void;
-  onSetPrimary: (id: string) => void;
-  onChangeOwner: (id: string) => void;
-}
-
-const parseIsPrimaryFilter = (filterValue: string): boolean | undefined => {
-  if (filterValue === 'true') return true;
-  if (filterValue === 'false') return false;
-  return undefined;
-};
+import {
+  useAvailableOwners,
+  useContactCompanies,
+  useContactMutations,
+  useContactsList,
+} from '~/hooks/use-contacts';
+import type { ContactResponse } from '~/interfaces/contact';
+import type { ContactListTableMeta } from '~/interfaces/company';
 
 const columnHelper = createColumnHelper<ContactResponse>();
 
@@ -253,47 +229,17 @@ export default function ContactList() {
   const [showFilters, setShowFilters] = useState(false);
   const [companyFilter, setCompanyFilter] = useState<string>('');
   const [isPrimaryFilter, setIsPrimaryFilter] = useState<string>('');
+  const [ownerFilter, setOwnerFilter] = useState<string>('');
   const [accumulatedMobileContacts, setAccumulatedMobileContacts] = useState<ContactResponse[]>([]);
   const isMobileAppend = useRef(false);
 
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
   const [changingOwnerContactId, setChangingOwnerContactId] = useState<string | null>(null);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  const queryClient = useQueryClient();
-  const [ownerFilter, setOwnerFilter] = useState<string>('');
   const { user } = useAuth();
   const isManagerOrAdmin = user?.roles.some((r) => MANAGEMENT_ROLES.includes(r));
-
-  const editContactMutation = useMutation({
-    mutationFn: async (updatedContact: EditContactRequest) => {
-      return await api.patch('/contacts/edit', updatedContact);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      setEditingContactId(null);
-    },
-  });
-
-  const setPrimaryMutation = useMutation({
-    mutationFn: async (contactId: string) => {
-      return await api.patch(`/contacts/${contactId}/set-primary`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      setSettingPrimaryId(null);
-    },
-  });
-
-  const changeOwnerMutation = useMutation({
-    mutationFn: async (payload: { contactId: string; newOwnerId: string }) => {
-      return await api.patch('/contacts/change-owner', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      setChangingOwnerContactId(null);
-    },
-  });
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 100);
@@ -313,68 +259,35 @@ export default function ContactList() {
     ownerFilter,
   ]);
 
-  const { data: companiesResponse } = useQuery({
-    queryKey: ['contact-companies'],
-    queryFn: async () => {
-      const response = await api.get('/contacts/companies');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-  });
-
-  const { data: availableOwners = [] } = useQuery<OwnerOption[]>({
-    queryKey: ['available-owners'],
-    queryFn: async () => {
-      const res = await api.get('/contacts/available-owners');
-      return res.data?.data || [];
-    },
-    enabled: Boolean(isManagerOrAdmin),
-  });
-
-  const availableCompanies: string[] = Array.isArray(companiesResponse) ? companiesResponse : [];
-
   const {
     data,
     isLoading,
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'contacts',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        companyFilter,
-        isPrimaryFilter,
-        ownerFilter,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        CompanyName: companyFilter || undefined,
-        IsPrimary: parseIsPrimaryFilter(isPrimaryFilter),
-        OwnerId: ownerFilter === 'me' ? user?.userId : ownerFilter || undefined,
-      };
-      const response = await api.get('/contacts', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useContactsList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    companyFilter,
+    isPrimaryFilter,
+    ownerFilter,
+    currentUserId: user?.userId,
   });
+
+  const { data: availableCompanies = [] } = useContactCompanies();
+  const { data: availableOwners = [] } = useAvailableOwners(Boolean(isManagerOrAdmin));
+
+  const { editContactMutation, setPrimaryMutation, changeOwnerMutation } = useContactMutations();
 
   const desktopContacts = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopContacts.length;
 
   useEffect(() => {
-    const items: ContactResponse[] = data?.items;
+    const items: ContactResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -406,15 +319,11 @@ export default function ContactList() {
     } satisfies ContactListTableMeta,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -426,10 +335,7 @@ export default function ContactList() {
               activeError?.message ||
               'Nie udało się pobrać listy kontaktów.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -603,7 +509,7 @@ export default function ContactList() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -659,6 +565,7 @@ export default function ContactList() {
             onClose={() => setEditingContactId(null)}
             onSave={async (editData) => {
               await editContactMutation.mutateAsync(editData);
+              setEditingContactId(null);
             }}
             isLoading={editContactMutation.isPending}
           />
@@ -669,6 +576,7 @@ export default function ContactList() {
             onConfirm={async () => {
               if (settingPrimaryId) {
                 await setPrimaryMutation.mutateAsync(settingPrimaryId);
+                setSettingPrimaryId(null);
               }
             }}
             isLoading={setPrimaryMutation.isPending}
@@ -683,6 +591,7 @@ export default function ContactList() {
                   contactId: changingOwnerContactId,
                   newOwnerId,
                 });
+                setChangingOwnerContactId(null);
               }
             }}
             isLoading={changeOwnerMutation.isPending}

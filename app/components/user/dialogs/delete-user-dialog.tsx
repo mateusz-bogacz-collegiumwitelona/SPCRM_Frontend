@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +10,8 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { DeleteUserPayload, UserSimpleListResponse, UserToDelete } from '~/interfaces/user';
+import type { DeleteUserPayload, UserToDelete } from '~/interfaces/user';
+import { useUsersSimpleList } from '~/hooks/use-users';
 
 interface DeleteUserDialogProps {
   readonly user: UserToDelete | null;
@@ -32,15 +31,7 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
   const [reassignToUserId, setReassignToUserId] = useState<string>('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: users = [], isLoading: isUsersLoading } = useQuery<UserSimpleListResponse[]>({
-    queryKey: ['users-simple-list'],
-    queryFn: async () => {
-      const res = await api.get('/user/simple');
-      const list = res.data?.data ?? res.data?.value ?? res.data;
-      return Array.isArray(list) ? list : [];
-    },
-    enabled: isOpen,
-  });
+  const { data: users = [], isLoading: isUsersLoading } = useUsersSimpleList(isOpen);
 
   const availableUsers = users.filter((u) => u.id !== user?.id);
 

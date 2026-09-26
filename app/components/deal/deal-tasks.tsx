@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import {
   AlertCircle,
@@ -12,7 +11,6 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
@@ -27,32 +25,18 @@ import {
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
-import type { AddTaskRequestPayload, EditTaskRequestPayload } from '~/interfaces/task';
-import { useTaskDictionaries } from '~/hooks/use-tasks';
-
-export interface SaleTaskResponse {
-  id: string;
-  title: string;
-  dueAt: string;
-  status: string;
-  priority: string;
-  assignedToId: string;
-  assignedToFirstName: string;
-  assignedToLastName: string;
-  contactId?: string | null;
-  contactFirstName?: string | null;
-  contactLastName?: string | null;
-}
+import type {
+  AddTaskRequestPayload,
+  EditTaskRequestPayload,
+  SaleTaskResponse,
+} from '~/interfaces/task';
+import { useDealTaskMutations, useDealTasks, useTaskDictionaries } from '~/hooks/use-tasks';
 
 export const DealTasks = ({ dealId }: { dealId: string }) => {
-  const queryClient = useQueryClient();
-
   const { dictionaries, getStatusLabel, getPriorityLabel } = useTaskDictionaries();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<SaleTaskResponse | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,7 +46,6 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<SaleTaskResponse | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -79,26 +62,16 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'deal-tasks',
-      dealId,
-      { pageNumber, pageSize, debouncedSearch, statusFilter, priorityFilter },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        Status: statusFilter || undefined,
-        Priority: priorityFilter || undefined,
-      };
-
-      const response = await api.get(`/sales/${dealId}/tasks`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useDealTasks(dealId, {
+    pageNumber,
+    pageSize,
+    searchTerm: debouncedSearch,
+    status: statusFilter,
+    priority: priorityFilter,
   });
+
+  const { addDealTaskMutation, editDealTaskMutation, deleteDealTaskMutation } =
+    useDealTaskMutations(dealId);
 
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
@@ -114,39 +87,19 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
   const totalItems = data?.totalItems || data?.totalCount || tasks.length;
 
   const handleSaveTask = async (payload: AddTaskRequestPayload) => {
-    setIsSaving(true);
-    try {
-      await api.post(`/sales/${dealId}/tasks`, payload);
-      await queryClient.invalidateQueries({ queryKey: ['deal-tasks', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-    } finally {
-      setIsSaving(false);
-    }
+    await addDealTaskMutation.mutateAsync(payload);
+    setIsAddModalOpen(false);
   };
 
   const handleDeleteTaskConfirm = async () => {
     if (!taskToDelete) return;
-    setIsDeleting(true);
-    try {
-      await api.delete(`/tasks/${taskToDelete.id}`);
-      await queryClient.invalidateQueries({ queryKey: ['deal-tasks', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setTaskToDelete(null);
-    } finally {
-      setIsDeleting(false);
-    }
+    await deleteDealTaskMutation.mutateAsync(taskToDelete.id);
+    setTaskToDelete(null);
   };
 
   const handleEditTask = async (taskId: string, payload: EditTaskRequestPayload) => {
-    setIsEditing(true);
-    try {
-      await api.put(`/tasks/${taskId}`, payload);
-      await queryClient.invalidateQueries({ queryKey: ['deal-tasks', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setTaskToEdit(null);
-    } finally {
-      setIsEditing(false);
-    }
+    await editDealTaskMutation.mutateAsync({ taskId, payload });
+    setTaskToEdit(null);
   };
 
   const formError: FormErrorState | null =
@@ -379,7 +332,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
       </div>
 
       {formError && (
-        <div className="m-4 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-xs transition-all">
+        <div className="m-4 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
           <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
           <div className="flex-1 pr-4">
             <p className="font-medium leading-tight">{formError.title}</p>
@@ -423,7 +376,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveTask}
-        isLoading={isSaving}
+        isLoading={addDealTaskMutation.isPending}
         dialogTitle="Dodaj zadanie do sprzedaży"
       />
 
@@ -431,7 +384,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
         isOpen={Boolean(taskToDelete)}
         onClose={() => setTaskToDelete(null)}
         onConfirm={handleDeleteTaskConfirm}
-        isLoading={isDeleting}
+        isLoading={deleteDealTaskMutation.isPending}
         taskTitle={taskToDelete?.title}
       />
 
@@ -440,7 +393,7 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
         onClose={() => setTaskToEdit(null)}
         taskId={taskToEdit?.id ?? null}
         onSave={handleEditTask}
-        isLoading={isEditing}
+        isLoading={editDealTaskMutation.isPending}
       />
     </div>
   );

@@ -8,7 +8,7 @@ interface ClientHeaderProps {
   basicInfo?: {
     name: string;
     nip: string;
-    isYour: boolean;
+    isYour?: boolean;
   };
   onEditClick?: () => void;
   onDeleteClick?: () => void;

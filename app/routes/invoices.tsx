@@ -9,10 +9,8 @@ import {
   Filter,
   X,
 } from 'lucide-react';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
@@ -31,16 +29,11 @@ import { DataTable } from '~/components/table/data-table';
 import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-invoice-pdf-dialog';
 import type { InvoiceListResponse } from '~/interfaces/invoice';
 import { STANDARD_ROLES } from '~/constants/roles';
+import { useInvoicesList } from '~/hooks/use-invoices';
 
 interface InvoiceTableMeta {
   onDownloadPdf: (invoice: { id: string; invoiceNumber: string }) => void;
 }
-
-const parseIsOverDueFilter = (filterValue: string): boolean | undefined => {
-  if (filterValue === 'true') return true;
-  if (filterValue === 'false') return false;
-  return undefined;
-};
 
 const renderInvoiceStatusBadge = (item: InvoiceListResponse) => {
   if (item.remainingAmount <= 0) {
@@ -272,6 +265,7 @@ export default function InvoicesList() {
   );
   const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -307,59 +301,18 @@ export default function InvoicesList() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'invoices-list',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        date,
-        isOverDueFilter,
-        companyNameFilter,
-        companyNipFilter,
-        amountFrom,
-        amountTo,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        CompanyName: companyNameFilter.trim() || undefined,
-        CompanyNip: companyNipFilter.trim() || undefined,
-        IssueDateFrom: date?.from
-          ? new Date(
-              Date.UTC(date.from.getFullYear(), date.from.getMonth(), date.from.getDate(), 0, 0, 0),
-            ).toISOString()
-          : undefined,
-        IssueDateTo: date?.to
-          ? new Date(
-              Date.UTC(
-                date.to.getFullYear(),
-                date.to.getMonth(),
-                date.to.getDate(),
-                23,
-                59,
-                59,
-                999,
-              ),
-            ).toISOString()
-          : undefined,
-        IsOverDue: parseIsOverDueFilter(isOverDueFilter),
-        TotalAmountFrom: amountFrom ? Number(amountFrom) * 10000 : undefined,
-        TotalAmountTo: amountTo ? Number(amountTo) * 10000 : undefined,
-      };
-
-      const response = await api.get('/invoice', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useInvoicesList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    date,
+    isOverDueFilter,
+    companyNameFilter,
+    companyNipFilter,
+    amountFrom,
+    amountTo,
   });
 
   const desktopInvoices = useMemo(() => data?.items || [], [data]);
@@ -367,7 +320,7 @@ export default function InvoicesList() {
   const totalItems = data?.totalItems || data?.totalCount || desktopInvoices.length;
 
   useEffect(() => {
-    const items: InvoiceListResponse[] = data?.items;
+    const items: InvoiceListResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -397,20 +350,12 @@ export default function InvoicesList() {
     } satisfies InvoiceTableMeta,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
-
-  let errorDetails: string[] | undefined;
-  if (responseData?.errors && responseData.errors.length > 0) {
-    errorDetails = responseData.errors;
-  }
 
   const listError: FormErrorState | null =
     isError && !isErrorDismissed
@@ -419,7 +364,7 @@ export default function InvoicesList() {
             responseData?.errorCode,
             responseData?.message || activeError?.message || 'Nie udało się pobrać listy faktur.',
           ),
-          details: errorDetails,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -653,10 +598,10 @@ export default function InvoicesList() {
 
           {listError && (
             <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -670,7 +615,7 @@ export default function InvoicesList() {
                 className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
                 title="Zamknij"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}

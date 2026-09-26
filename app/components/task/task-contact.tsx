@@ -1,38 +1,16 @@
 import { useEffect, useState } from 'react';
 import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
 import { type Contact } from '~/interfaces/contact';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { AlertCircle, Building2, User, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-interface TaskContactResponse {
-  contactId: string;
-  firstName: string;
-  lastName: string;
-  jobTitle?: string;
-  companyName: string;
-  contactWays: Contact[];
-}
+import { useTaskContact } from '~/hooks/use-tasks';
 
 export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  const {
-    data: contact,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<TaskContactResponse>({
-    queryKey: ['task-contact', taskId],
-    queryFn: async () => {
-      const response = await api.get(`/tasks/${taskId}/contact`);
-      return response.data?.data || response.data?.value || response.data;
-    },
-    retry: false,
-  });
+  const { data: contact, isLoading, isError, error: queryError } = useTaskContact(taskId);
 
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
@@ -79,7 +57,7 @@ export const TaskContactDetails = ({ taskId }: Readonly<{ taskId: string }>) => 
           className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
           title="Zamknij"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
     );

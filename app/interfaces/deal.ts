@@ -66,3 +66,116 @@ export interface SaleDetailResponse {
   isOverdueInvoices: boolean;
   paymentPercentage: number;
 }
+
+export interface UserSalesResponse {
+  id: string;
+  name: string;
+  nip: string;
+  status: string;
+  closeDate: string;
+  value: number;
+  decimalPlace: number;
+  currency: string;
+  companyName: string;
+  ownerId?: string;
+  ownerFirstName?: string;
+  ownerLastName?: string;
+}
+
+export interface TeamUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface SalesListParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+  statusType?: string;
+  ownerId?: string;
+}
+
+export interface PaginatedSalesResponse {
+  items: UserSalesResponse[];
+  totalPages: number;
+  totalItems?: number;
+  totalCount?: number;
+}
+
+export interface CompanySaleItem {
+  id: string;
+  salesmanFirstName: string;
+  salesmanLastName: string;
+  name: string;
+  value: number;
+  decimalPlaces: number;
+  code: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface PaginatedCompanySalesResponse {
+  items: CompanySaleItem[];
+  totalPages: number;
+  totalCount: number;
+}
+
+export interface ChangeDealStatusPayload {
+  targetStatus: string;
+  language?: string;
+  customRecipientEmail?: string;
+}
+
+export interface ChangeStatusResponse {
+  status: string;
+  sentToEmail?: string | null;
+}
+
+export interface ChangeDealStatusPayload {
+  targetStatus: string;
+  language?: string;
+  customRecipientEmail?: string;
+}
+
+export interface ChangeStatusResponse {
+  status: string;
+  sentToEmail?: string | null;
+}
+
+export interface DealProductResponse {
+  dealProductId: string;
+  productId: string;
+  name: string;
+  steelGrade: string;
+  dimensions: string;
+  quantity: number;
+  unitSymbol: string;
+  baseUnitPrice: number;
+  unitPrice: number;
+  totalPrice: number;
+  currencyCode: string;
+  decimalPlaces: number;
+}
+
+export interface DealProductsParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  productCategory?: string;
+  steelGrade?: string;
+}
+
+export interface PaginatedDealProductsResponse {
+  items: DealProductResponse[];
+  totalPages: number;
+  totalCount?: number;
+  totalItems?: number;
+}

@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus, X } from 'lucide-react';
-import { api } from '~/api/api';
 import { mergeById } from '~/utils/table-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
@@ -13,15 +11,9 @@ import { RoleGuard } from '~/lib/role-guard';
 import { Button } from '~/components/ui/button';
 import { DataTable } from '~/components/table/data-table';
 import { MainLayout } from '~/components/layout/main-layout';
-import type { AddUnitRequestPayload, EditUnitRequestPayload } from '~/interfaces/unit';
 import { ROLES } from '~/constants/roles';
-
-interface UnitListResponse {
-  id: string;
-  name: string;
-  symbol: string;
-  baseMultiplier: number;
-}
+import { useUnitMutations, useUnitsList } from '~/hooks/use-units';
+import type { UnitListResponse } from '~/interfaces/unit';
 
 interface UnitTableMeta {
   onEdit: (unit: UnitListResponse) => void;
@@ -105,8 +97,6 @@ const UnitMobileCard = ({
 );
 
 export default function UnitList() {
-  const queryClient = useQueryClient();
-
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,6 +109,7 @@ export default function UnitList() {
 
   const [accumulatedMobileUnits, setAccumulatedMobileUnits] = useState<UnitListResponse[]>([]);
   const isMobileAppend = useRef(false);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -136,62 +127,22 @@ export default function UnitList() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'units-of-measure',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-      };
-
-      const response = await api.get('/unit', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useUnitsList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
-  const addMutation = useMutation({
-    mutationFn: async (payload: AddUnitRequestPayload) => {
-      await api.post('/unit', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['units-of-measure'] });
-      await queryClient.invalidateQueries({ queryKey: ['units-of-measure-simple'] });
-      setIsAddOpen(false);
-    },
-  });
-
-  const editMutation = useMutation({
-    mutationFn: async (payload: EditUnitRequestPayload) => {
-      await api.put('/unit', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['units-of-measure'] });
-      await queryClient.invalidateQueries({ queryKey: ['units-of-measure-simple'] });
-      setEditUnit(null);
-    },
-  });
+  const { addMutation, editMutation } = useUnitMutations();
 
   const desktopUnits = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopUnits.length;
 
   useEffect(() => {
-    const items: UnitListResponse[] = data?.items;
+    const items: UnitListResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -225,9 +176,7 @@ export default function UnitList() {
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -239,10 +188,7 @@ export default function UnitList() {
               activeError?.message ||
               'Nie udało się pobrać listy jednostek miary.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -305,7 +251,7 @@ export default function UnitList() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -323,6 +269,7 @@ export default function UnitList() {
               </button>
             </div>
           )}
+
           <DataTable
             table={table}
             isLoading={isLoading}
@@ -352,6 +299,7 @@ export default function UnitList() {
             onClose={() => setIsAddOpen(false)}
             onSave={async (payload) => {
               await addMutation.mutateAsync(payload);
+              setIsAddOpen(false);
             }}
             isLoading={addMutation.isPending}
           />
@@ -362,6 +310,7 @@ export default function UnitList() {
             onClose={() => setEditUnit(null)}
             onSave={async (payload) => {
               await editMutation.mutateAsync(payload);
+              setEditUnit(null);
             }}
             isLoading={editMutation.isPending}
           />

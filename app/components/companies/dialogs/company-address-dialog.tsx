@@ -11,11 +11,10 @@ import { AlertCircle, Loader2, MapPinned, X } from 'lucide-react';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { AddressItemToEdit, CompanyAddressFormData } from '~/interfaces/company';
+import { useCompanyAddressTypes } from '~/hooks/use-companies';
 
 interface EditCompanyAddressDialogProps {
   readonly address: AddressItemToEdit | null;
@@ -65,16 +64,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
     };
   }, [isOpen]);
 
-  const { data: addressTypes = [], isLoading: isTypesLoading } = useQuery<string[]>({
-    queryKey: ['company-address-types'],
-    queryFn: async () => {
-      const res = await api.get('/company/address/types');
-      const list = res.data?.data ?? res.data?.value ?? res.data;
-      return Array.isArray(list) ? list : [];
-    },
-    enabled: isOpen,
-    staleTime: 1000 * 60 * 10,
-  });
+  const { data: addressTypes = [], isLoading: isTypesLoading } = useCompanyAddressTypes(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;

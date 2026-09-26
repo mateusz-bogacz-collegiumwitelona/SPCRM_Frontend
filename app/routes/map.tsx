@@ -1,8 +1,6 @@
 import { type ComponentType, type SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { AlertCircle, MapPinned, Search, X } from 'lucide-react';
-
-import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
@@ -11,14 +9,7 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 import type { CompanyMapData } from '~/interfaces/map';
 import { STANDARD_ROLES } from '~/constants/roles';
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: CompanyMapData[];
-  errorCode?: string;
-  errors?: string[];
-}
+import { useMapCompanies } from '~/hooks/use-map';
 
 type OSMMapClientProps = {
   center: [number, number];
@@ -30,65 +21,17 @@ type OSMMapClientProps = {
 export default function MapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-
-  const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
-  const [companies, setCompanies] = useState<CompanyMapData[]>([]);
-  const [formError, setFormError] = useState<FormErrorState | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
   const searchTerm = searchParams.get('searchTerm') || '';
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      setIsLoading(true);
-      setFormError(null);
+  const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-      try {
-        const endpoint = searchTerm
-          ? `company/map?searchTerm=${encodeURIComponent(searchTerm)}`
-          : `company/map`;
-
-        const response = await api.get<ApiResponse>(endpoint);
-
-        if (response.data.success) {
-          setCompanies(response.data.data);
-        } else {
-          setCompanies([]);
-          setFormError({
-            title: getErrorMessage(
-              response.data.errorCode,
-              response.data.message || 'Nie udało się załadować danych',
-            ),
-            details:
-              response.data.errors && response.data.errors.length > 0
-                ? response.data.errors
-                : undefined,
-          });
-        }
-      } catch (error_: unknown) {
-        const err = error_ as ApiError;
-        const errorData = err.response?.data;
-
-        const code = errorData?.errorCode;
-        const fallback = errorData?.message || err.message || 'Wystąpił nieznany błąd.';
-
-        setFormError({
-          title: getErrorMessage(code, fallback),
-          details:
-            errorData?.errors && errorData.errors.length > 0
-              ? errorData.errors.map((item) => getErrorMessage(item, item))
-              : undefined,
-        });
-        setCompanies([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (user) {
-      void fetchCompanies();
-    }
-  }, [searchTerm, user]);
+  const {
+    data: companies = [],
+    isLoading,
+    isError,
+    error: queryError,
+  } = useMapCompanies(searchTerm, Boolean(user));
 
   useEffect(() => {
     let isMounted = true;
@@ -105,7 +48,7 @@ export default function MapPage() {
   const handleSearch = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const term = formData.get('searchTerm') as string;
+    const term = (formData.get('searchTerm') as string)?.trim();
 
     if (term) {
       setSearchParams({ searchTerm: term });
@@ -113,6 +56,26 @@ export default function MapPage() {
       setSearchParams({});
     }
   };
+
+  useEffect(() => {
+    if (isError) setIsErrorDismissed(false);
+  }, [isError, queryError]);
+
+  const activeError = queryError as ApiError | null;
+  const responseData = activeError?.response?.data;
+
+  const formError: FormErrorState | null =
+    isError && !isErrorDismissed
+      ? {
+          title: getErrorMessage(
+            responseData?.errorCode,
+            responseData?.message || activeError?.message || 'Nie udało się załadować danych mapy.',
+          ),
+          details: responseData?.errors?.length
+            ? responseData.errors.map((item) => getErrorMessage(item, item))
+            : undefined,
+        }
+      : null;
 
   const renderMapArea = () => {
     if (isLoading) {
@@ -183,7 +146,7 @@ export default function MapPage() {
                 <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                 <div className="flex-1 pr-3">
                   <p className="font-medium leading-tight">{formError.title}</p>
-                  {formError.details && formError.details.length > 0 && (
+                  {formError.details && (
                     <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-[11px] text-red-700">
                       {formError.details.map((detailErr, idx) => (
                         <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -193,7 +156,7 @@ export default function MapPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setFormError(null)}
+                  onClick={() => setIsErrorDismissed(true)}
                   className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
                   title="Zamknij"
                 >

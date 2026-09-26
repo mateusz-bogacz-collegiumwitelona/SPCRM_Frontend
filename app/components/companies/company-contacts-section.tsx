@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -9,14 +8,14 @@ import {
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, ChevronLeft, ChevronRight, UserPlus, X } from 'lucide-react';
-import { api } from '~/api/api';
 import { AddCompanyContactDialog } from './dialogs/add-company-contact-dialog';
 import { Link } from 'react-router';
 import { EditContactDialog } from '~/components/contact/dialogs/edit-contact-dialog';
 import { SetCompanyPrimaryContactDialog } from '~/components/companies/dialogs/set-company-primary-contact-dialog';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { AddContactRequest, EditContactRequest } from '~/interfaces/contact';
+import type { AddContactRequest } from '~/interfaces/contact';
+import { useCompanyContactSectionMutations, useCompanyContacts } from '~/hooks/use-companies';
 
 interface Contact {
   id: string;
@@ -141,50 +140,30 @@ export const CompanyContactsSection: React.FC<{
   const [mobileContacts, setMobileContacts] = useState<Contact[]>([]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const queryClient = useQueryClient();
-
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [sectionError, setSectionError] = useState<FormErrorState | null>(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['company-contacts', clientId, page, pageSize],
-    queryFn: async () => {
-      const res = await api.get('/company/contacts', {
-        params: { companyId: clientId, PageNumber: page, PageSize: pageSize },
-      });
-      return res.data.data;
-    },
-    enabled: !!clientId,
-    placeholderData: keepPreviousData,
-  });
-  const addContactMutation = useMutation({
-    mutationFn: async (newContact: AddContactRequest) => {
-      return await api.post('/contacts', newContact);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
-    },
-  });
+  const { data, isLoading } = useCompanyContacts(clientId, page, pageSize);
 
-  const editContactMutation = useMutation({
-    mutationFn: async (updatedContact: EditContactRequest) => {
-      return await api.patch('/contacts/edit', updatedContact);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
-    },
-  });
+  const { addContactMutation, editContactMutation, setPrimaryMutation } =
+    useCompanyContactSectionMutations(clientId);
 
-  const setPrimaryMutation = useMutation({
-    mutationFn: async (contactId: string) => {
-      return await api.patch(`/contacts/${contactId}/set-primary`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['company-contacts', clientId] });
+  const handleSaveContact = async (contactData: Omit<AddContactRequest, 'companyId'>) => {
+    if (!clientId) return;
+
+    await addContactMutation.mutateAsync({
+      ...contactData,
+      companyId: clientId,
+    });
+  };
+
+  const handleSetPrimary = async (contactId: string) => {
+    try {
+      setSectionError(null);
+      await setPrimaryMutation.mutateAsync(contactId);
       setSettingPrimaryId(null);
-    },
-    onError: (error: unknown) => {
+    } catch (error: unknown) {
       const apiError = error as ApiError;
       const responseData = apiError.response?.data;
       const code = responseData?.errorCode;
@@ -196,16 +175,7 @@ export const CompanyContactsSection: React.FC<{
         details:
           responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
       });
-    },
-  });
-
-  const handleSaveContact = async (contactData: Omit<AddContactRequest, 'companyId'>) => {
-    if (!clientId) return;
-
-    await addContactMutation.mutateAsync({
-      ...contactData,
-      companyId: clientId,
-    });
+    }
   };
 
   const items: Contact[] = data?.items || [];
@@ -434,10 +404,9 @@ export const CompanyContactsSection: React.FC<{
           setSettingPrimaryId(null);
           setSectionError(null);
         }}
-        onConfirm={async () => {
+        onConfirm={() => {
           if (settingPrimaryId) {
-            setSectionError(null);
-            await setPrimaryMutation.mutateAsync(settingPrimaryId);
+            handleSetPrimary(settingPrimaryId);
           }
         }}
         isLoading={setPrimaryMutation.isPending}

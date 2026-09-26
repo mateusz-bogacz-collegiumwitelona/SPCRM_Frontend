@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from 'react-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/api/api';
 import { AuthGuard } from '~/lib/auth-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import React, { useState } from 'react';
@@ -19,18 +18,15 @@ import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
 import { RoleGuard } from '~/lib/role-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
-
-interface OfferAllowedActionsResponse {
-  canEdit: boolean;
-  canDelete: boolean;
-  canResendEmail: boolean;
-  canExtendValidity: boolean;
-  allowedStatusTransitions: string[];
-}
+import {
+  useOfferAllowedActions,
+  useOfferDetailMutations,
+  useOfferDetails,
+} from '~/hooks/use-offers';
 
 const OfferDetail: React.FC = () => {
   const { offerId } = useParams<{ offerId: string }>();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [statusDialogState, setStatusDialogState] = useState<{
@@ -42,24 +38,26 @@ const OfferDetail: React.FC = () => {
   });
 
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
-
-  const navigate = useNavigate();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditProductsOpen, setIsEditProductsOpen] = useState(false);
+  const [productsToEdit, setProductsToEdit] = useState<EditableProductItem[]>([]);
 
-  const updateProductsMutation = useMutation({
-    mutationFn: async (items: { productId: string; quantity: number; quotedPrice: number }[]) => {
-      await api.put('/offer/products', {
-        offerId,
-        items,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['offer-products'] });
-      await queryClient.invalidateQueries({ queryKey: ['offer-detail', offerId] });
-      await queryClient.invalidateQueries({ queryKey: ['offer-allowed-actions', offerId] });
-      setIsEditProductsOpen(false);
-    },
-  });
+  const {
+    data: basicInfo,
+    isLoading: isBasicInfoLoading,
+    isError,
+    error,
+  } = useOfferDetails(offerId);
+
+  const { data: allowedActions } = useOfferAllowedActions(offerId);
+
+  const {
+    updateProductsMutation,
+    extendValidityMutation,
+    changeStatusMutation,
+    resendEmailMutation,
+    deleteOfferMutation,
+  } = useOfferDetailMutations(offerId);
 
   const handleOpenEditProducts = (currentProducts: OfferProductResponse[]) => {
     setProductsToEdit(
@@ -74,87 +72,10 @@ const OfferDetail: React.FC = () => {
     setIsEditProductsOpen(true);
   };
 
-  const [isEditProductsOpen, setIsEditProductsOpen] = useState(false);
-  const [productsToEdit, setProductsToEdit] = useState<EditableProductItem[]>([]);
-
-  const {
-    data: basicInfo,
-    isLoading: isBasicInfoLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['offer-detail', offerId],
-    queryFn: async () => (await api.get(`offer/detail/${offerId}`)).data.data,
-    enabled: Boolean(offerId),
-    retry: false,
-  });
-
-  const { data: allowedActions } = useQuery<OfferAllowedActionsResponse>({
-    queryKey: ['offer-allowed-actions', offerId],
-    queryFn: async () => {
-      const res = await api.get(`/offer/${offerId}/allowed-actions`);
-      return res.data?.data || res.data?.value || res.data;
-    },
-    enabled: Boolean(offerId),
-  });
-  const extendValidityMutation = useMutation({
-    mutationFn: async (newDate?: Date) => {
-      await api.patch('/offer/extend', {
-        offerId,
-        newValidUntil: newDate ? newDate.toISOString() : undefined,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['offer-detail', offerId] });
-      await queryClient.invalidateQueries({ queryKey: ['offer-allowed-actions', offerId] });
-      await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
-      setIsExtendModalOpen(false);
-    },
-  });
-
-  const changeStatusMutation = useMutation({
-    mutationFn: async (newStatus: 'Accepted' | 'Rejected') => {
-      await api.patch('/offer/change-status', {
-        offerId,
-        newStatus,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['offer-detail', offerId] });
-      await queryClient.invalidateQueries({ queryKey: ['offer-allowed-actions', offerId] });
-      await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
-      setStatusDialogState({ isOpen: false, targetStatus: null });
-    },
-  });
-
   const canAccept = allowedActions?.allowedStatusTransitions?.includes('Accepted');
   const canReject = allowedActions?.allowedStatusTransitions?.includes('Rejected');
   const canExtend = allowedActions?.canExtendValidity;
-
-  const resendEmailMutation = useMutation({
-    mutationFn: async (language: string) => {
-      await api.post('/offer/resend-email', {
-        offerId,
-        language,
-      });
-    },
-    onSuccess: () => {
-      setIsResendModalOpen(false);
-    },
-  });
-
   const canResendEmail = allowedActions?.canResendEmail;
-
-  const deleteOfferMutation = useMutation({
-    mutationFn: async () => {
-      await api.delete(`/offer/${offerId}`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
-      navigate('/offers');
-    },
-  });
-
   const canDelete = allowedActions?.canDelete;
 
   if (!offerId || isNotFoundError(error)) {
@@ -228,6 +149,7 @@ const OfferDetail: React.FC = () => {
                       Przedłuż ważność
                     </Button>
                   )}
+
                   {canDelete && (
                     <Button
                       type="button"
@@ -259,6 +181,7 @@ const OfferDetail: React.FC = () => {
             onClose={() => setIsExtendModalOpen(false)}
             onConfirm={async (newDate) => {
               await extendValidityMutation.mutateAsync(newDate);
+              setIsExtendModalOpen(false);
             }}
             isLoading={extendValidityMutation.isPending}
             offerName={basicInfo?.offerName}
@@ -271,6 +194,7 @@ const OfferDetail: React.FC = () => {
             onClose={() => setStatusDialogState({ isOpen: false, targetStatus: null })}
             onConfirm={async (status) => {
               await changeStatusMutation.mutateAsync(status);
+              setStatusDialogState({ isOpen: false, targetStatus: null });
             }}
             isLoading={changeStatusMutation.isPending}
             offerName={basicInfo?.offerName}
@@ -281,26 +205,32 @@ const OfferDetail: React.FC = () => {
             onClose={() => setIsEditProductsOpen(false)}
             onConfirm={async (items) => {
               await updateProductsMutation.mutateAsync(items);
+              setIsEditProductsOpen(false);
             }}
             isLoading={updateProductsMutation.isPending}
             initialProducts={productsToEdit}
           />
+
           <ResendOfferEmailDialog
             isOpen={isResendModalOpen}
             onClose={() => setIsResendModalOpen(false)}
             onConfirm={async (language) => {
               await resendEmailMutation.mutateAsync(language);
+              setIsResendModalOpen(false);
             }}
             isLoading={resendEmailMutation.isPending}
             offerName={basicInfo?.offerName}
             recipientEmail={basicInfo?.contactEmail}
             recipientName={`${basicInfo?.contactFirstName ?? ''} ${basicInfo?.contactLastName ?? ''}`.trim()}
           />
+
           <DeleteOfferDialog
             isOpen={isDeleteModalOpen}
             onClose={() => setIsDeleteModalOpen(false)}
             onConfirm={async () => {
               await deleteOfferMutation.mutateAsync();
+              setIsDeleteModalOpen(false);
+              navigate('/offers');
             }}
             isLoading={deleteOfferMutation.isPending}
             offerName={basicInfo?.offerName}

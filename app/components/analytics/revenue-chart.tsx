@@ -9,22 +9,8 @@ import {
   YAxis,
 } from 'recharts';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { CurrencyAmountResponse } from '~/interfaces/analytics';
-
-export type AnalyticsPeriod = 'CurrentMonth' | 'HalfYear' | 'CurrentYear';
-
-export interface CurrencyListResponse {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
-export interface AnalyticsChartMetricResponse {
-  label: string;
-  revenue: CurrencyAmountResponse[];
-  dealsWonCount: number;
-}
+import type { AnalyticsChartMetricResponse, AnalyticsPeriod } from '~/interfaces/analytics';
+import type { CurrencyListResponse } from '~/interfaces/currency';
 
 interface TeamRevenueChartProps {
   data: AnalyticsChartMetricResponse[];

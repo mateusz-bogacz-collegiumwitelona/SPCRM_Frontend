@@ -1,0 +1,147 @@
+import { api } from '~/api/api';
+import type {
+  AddCompanyRequest,
+  CompanyAddressFormData,
+  CompanyDetailResponse,
+  CompanyListParams,
+  DebtSummary,
+  EditCompanyDetailResponse,
+  EditCompanyRequest,
+  PaginatedAddressesResponse,
+  PaginatedCompaniesResponse,
+  PaginatedDebtsResponse,
+} from '~/interfaces/company';
+import type { PaginatedCompanySalesResponse } from '~/interfaces/deal';
+
+export const companyApi = {
+  getList: async (params: CompanyListParams): Promise<PaginatedCompaniesResponse> => {
+    const response = await api.get('/company/list', {
+      params: {
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        SearchTerm: params.searchTerm || undefined,
+        SortBy: params.sortBy,
+        SortDescending: params.sortDescending,
+        CreatedAtFrom: params.createdAtFrom || undefined,
+        CreatedAtTo: params.createdAtTo || undefined,
+        IsYour: params.isYour,
+      },
+    });
+    return response.data?.value || response.data?.data || response.data;
+  },
+
+  create: async (payload: AddCompanyRequest) => {
+    const response = await api.post('/company', payload);
+    return response.data;
+  },
+
+  getDetails: async (companyId: string): Promise<CompanyDetailResponse> => {
+    const response = await api.get('/company', { params: { companyId } });
+    return response.data.data;
+  },
+
+  getEditDetails: async (companyId: string): Promise<EditCompanyDetailResponse> => {
+    const response = await api.get(`/company/edit-detail/${companyId}`);
+    return response.data?.data ?? response.data;
+  },
+
+  getAddresses: async (companyId: string): Promise<PaginatedAddressesResponse> => {
+    const response = await api.get('/company/addresses', {
+      params: { companyId, PageNumber: 1, PageSize: 100 },
+    });
+    return response.data.data;
+  },
+
+  getAddressTypes: async (): Promise<string[]> => {
+    const response = await api.get('/company/address/types');
+    return (response.data?.data || response.data?.value || []) as string[];
+  },
+
+  edit: async (payload: EditCompanyRequest) => {
+    const response = await api.patch('/company', payload);
+    return response.data;
+  },
+
+  saveAddress: async (companyId: string, formData: CompanyAddressFormData) => {
+    if (formData.addressId) {
+      const response = await api.patch('/company/address', formData);
+      return response.data;
+    }
+
+    const response = await api.post(`/company/address/${companyId}`, {
+      street: formData.street,
+      city: formData.city,
+      zipCode: formData.zipCode,
+      longitude: formData.longitude,
+      latitude: formData.latitude,
+      type: formData.type,
+    });
+    return response.data;
+  },
+
+  deleteAddress: async (addressId: string) => {
+    const response = await api.delete(`/company/address/${addressId}`);
+    return response.data;
+  },
+
+  deleteCompany: async (companyId: string) => {
+    const response = await api.delete(`/company/${companyId}`);
+    return response.data;
+  },
+
+  changeOwner: async (companyId: string, newOwnerId: string) => {
+    const response = await api.patch('/company/change-owner', {
+      companyId,
+      userId: newOwnerId,
+    });
+    return response.data;
+  },
+
+  getContacts: async (params: { companyId: string; pageNumber: number; pageSize: number }) => {
+    const response = await api.get('/company/contacts', {
+      params: {
+        companyId: params.companyId,
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+      },
+    });
+    return response.data?.data || response.data;
+  },
+
+  getDebtSummary: async (companyId: string): Promise<DebtSummary[]> => {
+    const response = await api.get('/company/debts/summary', {
+      params: { CompanyId: companyId },
+    });
+    return response.data?.data || response.data?.value || [];
+  },
+
+  getDebts: async (params: {
+    companyId: string;
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<PaginatedDebtsResponse | null> => {
+    const response = await api.get('/company/debts', {
+      params: {
+        CompanyId: params.companyId,
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+      },
+    });
+    return response.data?.data || response.data?.value || null;
+  },
+
+  getSales: async (params: {
+    companyId: string;
+    pageNumber: number;
+    pageSize: number;
+  }): Promise<PaginatedCompanySalesResponse> => {
+    const response = await api.get('/company/sales', {
+      params: {
+        companyId: params.companyId,
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+      },
+    });
+    return response.data?.data || response.data;
+  },
+};

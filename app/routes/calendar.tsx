@@ -48,7 +48,6 @@ export default function CalendarPage() {
     onSuccess: () => setIsAddModalOpen(false),
   });
 
-  // Obsługa błędów API
   useEffect(() => {
     if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
@@ -120,7 +119,6 @@ export default function CalendarPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              {/* 1. STATUS */}
               <div className="flex items-center gap-2">
                 <label
                   htmlFor="calendar-status-filter"

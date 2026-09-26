@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -20,20 +19,11 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-export interface UserCompanyItem {
-  id: string;
-  name: string;
-  nip: string;
-  city: string;
-  street: string;
-  createdAt: string;
-}
+import { useUserCompanies } from '~/hooks/use-users';
+import type { UserCompanyItem } from '~/interfaces/user';
 
 const PAGE_SIZE = 5;
 
@@ -104,28 +94,15 @@ export const UserCompaniesTable = ({ userId }: { readonly userId: string }) => {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'user-companies',
-      userId,
-      { pageNumber, debouncedSearch, sortBy, sortDescending, createdAtFrom, createdAtTo },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: PAGE_SIZE,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        CreatedAtFrom: createdAtFrom ? new Date(createdAtFrom).toISOString() : undefined,
-        CreatedAtTo: createdAtTo ? new Date(createdAtTo).toISOString() : undefined,
-      };
-
-      const response = await api.get(`/user/${userId}/companies`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
-    enabled: Boolean(userId),
+  } = useUserCompanies({
+    userId,
+    pageNumber,
+    pageSize: PAGE_SIZE,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    createdAtFrom,
+    createdAtTo,
   });
 
   const companies = useMemo(() => data?.items || [], [data]);
@@ -238,7 +215,9 @@ export const UserCompaniesTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Od daty:</label>
+                  <label htmlFor="create-date-from" className="block text-gray-500 mb-1">
+                    Od daty:
+                  </label>
                   <input
                     type="date"
                     value={createdAtFrom}
@@ -248,7 +227,9 @@ export const UserCompaniesTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Do daty:</label>
+                  <label htmlFor="create-at-to" className="block text-gray-500 mb-1">
+                    Do daty:
+                  </label>
                   <input
                     type="date"
                     value={createdAtTo}

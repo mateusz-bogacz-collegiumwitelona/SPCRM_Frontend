@@ -112,3 +112,57 @@ export interface ProductDetailResponse {
   weight: number;
   activePromotion?: ActivePromotionResponse;
 }
+
+export interface ProductResponse {
+  id: string;
+  name: string;
+  steelGrade: string;
+  category: string;
+  dimensions: string;
+  stockQuantity: number;
+  unitSymbol: string;
+  isActivePromotion: boolean;
+}
+
+export interface SteelGradeResponse {
+  id: string;
+  name: string;
+}
+
+export interface ProductListParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  category?: string;
+  steelGrade?: string;
+  hasActivePromotion?: boolean;
+}
+
+export interface PaginatedProductsResponse {
+  items: ProductResponse[];
+  totalPages: number;
+  totalItems?: number;
+  totalCount?: number;
+}
+
+export interface ProductSearchResult {
+  id: string;
+  name: string;
+  steelGrade?: string;
+  pricePerUnit: number;
+}
+
+export interface ProductInvoicesParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+}
+
+export interface PaginatedProductInvoicesResponse {
+  items: ProductInvoiceItemResponse[];
+  totalPages: number;
+  totalCount?: number;
+  totalItems?: number;
+}

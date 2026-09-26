@@ -1,80 +1,41 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
-import type { Note, NoteEditData } from '~/interfaces/note';
+import { useEffect, useState } from 'react';
+import type { NoteEditData } from '~/interfaces/note';
 import { NotesSection } from '~/components/note/notes-section';
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
-import { UseDeleteNote } from '~/hooks/use-delete-note';
-import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import { useDealNotes, useDealNotesMutations } from '~/hooks/use-notes';
 
 export const DealNote = ({ dealId }: { dealId: string }) => {
-  const queryClient = useQueryClient();
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<NoteEditData | null>(null);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  const {
-    data: notes,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<Note[]>({
-    queryKey: ['deal-notes', dealId],
-    queryFn: async () => {
-      const response = await api.get(`/sales/${dealId}/notes`);
-      return response.data?.data || response.data?.value || response.data || [];
-    },
-  });
+  const { data: notes, isLoading, isError, error: queryError } = useDealNotes(dealId);
 
-  const addNoteMutation = useMutation({
-    mutationFn: async ({ title, content }: { title: string; content: string }) => {
-      return await api.post(`/sales/${dealId}/notes`, { title, content });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
-      setIsAddModalOpen(false);
-    },
-  });
-
-  const editNoteMutation = useMutation({
-    mutationFn: async (data: NoteEditData) => {
-      return await api.patch('/note/edit', {
-        id: data.id,
-        title: data.title,
-        content: data.content,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
-      setEditingNote(null);
-    },
-  });
-
-  const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-notes', dealId] });
-      setDeletingNoteId(null);
-    },
-  });
+  const { addNoteMutation, editNoteMutation, deleteNoteMutation } = useDealNotesMutations(dealId);
 
   const handleDeleteConfirm = async () => {
-    if (deletingNoteId) await deleteNoteAsync(deletingNoteId);
+    if (deletingNoteId) {
+      await deleteNoteMutation.mutateAsync(deletingNoteId);
+      setDeletingNoteId(null);
+    }
   };
 
   const handleSaveNewNote = async (title: string, content: string) => {
     await addNoteMutation.mutateAsync({ title, content });
+    setIsAddModalOpen(false);
   };
 
   const handleSaveEditedNote = async (data: NoteEditData) => {
     await editNoteMutation.mutateAsync(data);
+    setEditingNote(null);
   };
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
@@ -157,7 +118,7 @@ export const DealNote = ({ dealId }: { dealId: string }) => {
         isOpen={Boolean(deletingNoteId)}
         onClose={() => setDeletingNoteId(null)}
         onConfirm={handleDeleteConfirm}
-        isLoading={isDeleting}
+        isLoading={deleteNoteMutation.isPending}
       />
     </>
   );

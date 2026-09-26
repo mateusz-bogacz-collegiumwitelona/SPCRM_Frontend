@@ -1,35 +1,22 @@
 import React from 'react';
 import { useParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
-import { api, isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
-import type { PromotionDetailResponse } from '~/interfaces/promotion';
 import { PromotionHeader } from '~/components/promotion/promotion-header';
 import { PromotionPricingCard } from '~/components/promotion/promotion-pricing-card';
 import { PromotionTermsCard } from '~/components/promotion/promotion-terms-card';
 import { PromotionProductSidebar } from '~/components/promotion/promotion-product-sidebar';
+import { usePromotionDetails } from '~/hooks/use-promotions';
 
 export default function PromotionDetails() {
   const { promotionId } = useParams<{ promotionId: string }>();
 
-  const {
-    data: promotion,
-    isLoading,
-    error: queryError,
-  } = useQuery<PromotionDetailResponse>({
-    queryKey: ['promotion-details', promotionId],
-    queryFn: async () => {
-      const response = await api.get(`/promotion/${promotionId}`);
-      return response.data?.data || response.data?.value || response.data;
-    },
-    enabled: Boolean(promotionId),
-    retry: false,
-  });
+  const { data: promotion, isLoading, error: queryError } = usePromotionDetails(promotionId);
 
   if (!promotionId || isNotFoundError(queryError)) {
     return <NotFound />;
@@ -38,6 +25,7 @@ export default function PromotionDetails() {
   if (isLoading) {
     return <PageLoader message="Wczytywanie szczegółów promocji..." />;
   }
+
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={STANDARD_ROLES}>

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
-import { api, isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/api/api';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
@@ -13,23 +12,13 @@ import { ProductPricingInfo } from '~/components/products/product-pricing';
 import { ProductDeals } from '~/components/products/product-deals';
 import { ProductInvoices } from '~/components/products/product-invoices';
 import { ProductHeader } from '~/components/products/product-header';
+import { useProductDetails } from '~/hooks/use-products';
 
 export default function ProductDetails() {
   const { productId } = useParams<{ productId: string }>();
 
-  const {
-    data: product,
-    isLoading,
-    error: queryError,
-  } = useQuery({
-    queryKey: ['product-details', productId],
-    queryFn: async () => {
-      const response = await api.get(`/products/${productId}`);
-      return response.data?.value || response.data?.data || response.data;
-    },
-    enabled: Boolean(productId),
-    retry: false,
-  });
+  const { data: product, isLoading, error: queryError } = useProductDetails(productId);
+
   if (!productId || isNotFoundError(queryError)) {
     return <NotFound />;
   }

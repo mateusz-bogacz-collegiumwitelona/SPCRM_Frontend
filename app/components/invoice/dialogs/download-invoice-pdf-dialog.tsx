@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { AlertCircle, Download, Globe, Loader2, X } from 'lucide-react';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -9,10 +8,9 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { downloadBase64Pdf } from '~/utils/pdf-downloader';
+import { useDownloadInvoicePdfMutation } from '~/hooks/use-invoices';
 
 interface DownloadInvoicePdfDialogProps {
   readonly invoiceId: string;
@@ -28,30 +26,26 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
   onClose,
 }) => {
   const [language, setLanguage] = useState<'pl' | 'en'>('pl');
-  const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
+  const downloadMutation = useDownloadInvoicePdfMutation();
+
   const handleClose = () => {
-    if (isLoading) return;
+    if (downloadMutation.isPending) return;
     setLanguage('pl');
     setFormError(null);
     onClose();
   };
 
   const handleDownload = async () => {
-    setIsLoading(true);
     setFormError(null);
-
     try {
-      const response = await api.get(`/invoice/${invoiceId}/pdf`, {
-        params: { language },
+      await downloadMutation.mutateAsync({
+        invoiceId,
+        invoiceNumber,
+        language,
       });
-
-      const payload = response.data?.value || response.data?.data || response.data;
-      downloadBase64Pdf(
-        payload,
-        `${language === 'en' ? 'Invoice' : 'Faktura'}_${invoiceNumber}.pdf`,
-      );
+      handleClose();
     } catch (err: unknown) {
       const apiError = err as ApiError;
       const responseData = apiError.response?.data;
@@ -64,8 +58,6 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
         details:
           responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -163,7 +155,7 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={isLoading}
+            disabled={downloadMutation.isPending}
             className="border-gray-300 text-gray-700"
           >
             Anuluj
@@ -171,10 +163,10 @@ export const DownloadInvoicePdfDialog: React.FC<DownloadInvoicePdfDialogProps> =
           <Button
             type="button"
             onClick={handleDownload}
-            disabled={isLoading}
+            disabled={downloadMutation.isPending}
             className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-2"
           >
-            {isLoading ? (
+            {downloadMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" /> Pobieranie...
               </>

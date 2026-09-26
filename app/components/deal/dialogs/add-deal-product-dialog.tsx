@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -14,15 +12,9 @@ import { AlertCircle, Loader2, Package, Search, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
-
-interface ProductItemResponse {
-  productId: string;
-  name: string;
-  dimension?: string;
-  dimmension?: string;
-  stockPrice: number;
-  promotionalPrice?: number;
-}
+import { useMailingProducts } from '~/hooks/use-mailing';
+import { useAddProductToDealMutation } from '~/hooks/use-deals';
+import type { MailingProductResponse } from '~/interfaces/mailing';
 
 interface AddDealProductDialogProps {
   readonly isOpen: boolean;
@@ -37,15 +29,12 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
   dealId,
   currencyCode = 'PLN',
 }) => {
-  const queryClient = useQueryClient();
-
   const [productSearch, setProductSearch] = useState('');
   const [debouncedProductSearch, setDebouncedProductSearch] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<ProductItemResponse | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<MailingProductResponse | null>(null);
 
   const [quantity, setQuantity] = useState<number>(1);
   const [unitPrice, setUnitPrice] = useState<number>(0);
-
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
   useEffect(() => {
@@ -53,18 +42,10 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
     return () => clearTimeout(handler);
   }, [productSearch]);
 
-  const { data: availableProducts = [], isLoading: isLoadingProducts } = useQuery<
-    ProductItemResponse[]
-  >({
-    queryKey: ['deal-products-search', debouncedProductSearch],
-    queryFn: async () => {
-      const res = await api.get('/mailing/products', {
-        params: { SearchTerm: debouncedProductSearch || undefined, PageSize: 30 },
-      });
-      return res.data?.data?.items || res.data?.items || [];
-    },
-    enabled: isOpen && !selectedProduct,
-  });
+  const { data: availableProducts = [], isLoading: isLoadingProducts } = useMailingProducts(
+    debouncedProductSearch,
+    isOpen && !selectedProduct,
+  );
 
   const resetForm = () => {
     setSelectedProduct(null);
@@ -79,7 +60,7 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
     onClose();
   };
 
-  const handleSelectProduct = (product: ProductItemResponse) => {
+  const handleSelectProduct = (product: MailingProductResponse) => {
     setSelectedProduct(product);
     const initialPrice = product.promotionalPrice
       ? product.promotionalPrice / 10000
@@ -89,38 +70,11 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
     setFormError(null);
   };
 
-  const addProductMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedProduct) return;
-      const payload = {
-        productId: selectedProduct.productId,
-        quantity: Number(quantity),
-        unitPrice: Math.round(Number(unitPrice) * 10000),
-      };
-      return await api.put(`/sales/${dealId}/products`, payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-products', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
-      handleClose();
-    },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const responseData = apiError.response?.data;
-      const code = responseData?.errorCode;
-      const fallback =
-        responseData?.message || apiError.message || 'Nie udało się dodać produktu do transakcji.';
-
-      setFormError({
-        title: getErrorMessage(code, fallback),
-        details:
-          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
-      });
-    },
+  const addProductMutation = useAddProductToDealMutation(dealId, {
+    onSuccess: handleClose,
   });
 
-  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
 
@@ -143,7 +97,25 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
       return;
     }
 
-    addProductMutation.mutate();
+    try {
+      await addProductMutation.mutateAsync({
+        productId: selectedProduct!.productId,
+        quantity: Number(quantity),
+        unitPrice: Math.round(Number(unitPrice) * 10000),
+      });
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się dodać produktu do transakcji.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   const totalValue = (quantity || 0) * (unitPrice || 0);
@@ -168,7 +140,7 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
       >
         <div>
           <p className="text-sm font-semibold text-gray-900">{p.name}</p>
-          <p className="text-xs text-gray-500">{p.dimension || p.dimmension || 'Standard'}</p>
+          <p className="text-xs text-gray-500">{p.dimmension || 'Standard'}</p>
         </div>
         <div className="text-right">
           <span className="text-xs font-bold text-brand">
@@ -229,7 +201,7 @@ export const AddDealProductDialog: React.FC<AddDealProductDialogProps> = ({
                 <div>
                   <p className="font-bold text-gray-900">{selectedProduct.name}</p>
                   <p className="text-xs text-gray-500">
-                    {selectedProduct.dimension || selectedProduct.dimmension || 'Brak wymiaru'}
+                    {selectedProduct.dimmension || 'Brak wymiaru'}
                   </p>
                 </div>
                 <Button

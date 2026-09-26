@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import {
   AlertCircle,
@@ -22,6 +20,8 @@ import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { OfferProductResponse } from '~/interfaces/offer';
+import { useOfferProducts } from '~/hooks/use-offers';
+import { mergeById } from '~/utils/table-helpers';
 
 export interface OfferProductsTableProps {
   offerId: string;
@@ -106,19 +106,11 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: ['offer-products', { offerId, pageNumber, pageSize, debouncedSearch }],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-      };
-      const response = await api.get(`/offer/product/${offerId}`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    enabled: Boolean(offerId),
-    placeholderData: keepPreviousData,
+  } = useOfferProducts({
+    offerId,
+    pageNumber,
+    pageSize,
+    debouncedSearch,
   });
 
   const desktopProducts = useMemo(() => data?.items || [], [data]);
@@ -126,7 +118,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
   const totalItems = data?.totalCount || desktopProducts.length;
 
   useEffect(() => {
-    const items: OfferProductResponse[] = data?.items;
+    const items: OfferProductResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -134,11 +126,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
       return;
     }
 
-    setAccumulatedMobileProducts((prev) => {
-      const existingIds = new Set(prev.map((item) => item.productId));
-      const uniqueIncoming = items.filter((item) => !existingIds.has(item.productId));
-      return [...prev, ...uniqueIncoming];
-    });
+    setAccumulatedMobileProducts((prev) => mergeById(prev, items, (item) => item.productId));
   }, [data, pageNumber]);
 
   const handleMobileLoadMore = () => {

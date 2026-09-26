@@ -9,14 +9,10 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
-import { format } from 'date-fns';
-import { pl } from 'date-fns/locale';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
@@ -32,28 +28,14 @@ import { useAuth } from '~/context/auth-context';
 import { HasRole } from '~/lib/has-role';
 import { AddDealDialog } from '~/components/deal/dialogs/add-deal-dialog';
 import { ROLES, STANDARD_ROLES } from '~/constants/roles';
-
-interface UserSalesResponse {
-  id: string;
-  name: string;
-  nip: string;
-  status: string;
-  closeDate: string;
-  value: number;
-  decimalPlace: number;
-  currency: string;
-  companyName: string;
-  ownerId?: string;
-  ownerFirstName?: string;
-  ownerLastName?: string;
-}
-
-interface TeamUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+import {
+  useInvalidateSales,
+  useSalesList,
+  useSalesStatuses,
+  useSalesTeamUsers,
+} from '~/hooks/use-deals';
+import type { UserSalesResponse } from '~/interfaces/deal';
+import { pl } from 'date-fns/locale';
 
 const formatDate = (isoDate: string) => {
   return new Date(isoDate).toLocaleDateString('pl-PL', {
@@ -188,7 +170,9 @@ export default function UserSales() {
   const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
   const [isAddDealOpen, setIsAddDealOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
+
+  const invalidateSales = useInvalidateSales();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -207,75 +191,33 @@ export default function UserSales() {
     setPageNumber(1);
   }, [debouncedSearch, sortBy, sortDescending, pageSize, date, statusFilter, ownerFilter]);
 
-  const { data: statusesResponse } = useQuery({
-    queryKey: ['sales-statuses'],
-    queryFn: async () => {
-      const response = await api.get('/sales/statuses');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-  });
-
-  const availableStatuses: string[] = Array.isArray(statusesResponse) ? statusesResponse : [];
-
-  const { data: usersResponse } = useQuery({
-    queryKey: ['sales-team-users'],
-    queryFn: async () => {
-      const response = await api.get('/users');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-    enabled: isManager,
-  });
-
-  const handleDealAdded = () => {
-    void queryClient.invalidateQueries({ queryKey: ['sales'] });
-  };
-
-  const teamUsers: TeamUser[] = Array.isArray(usersResponse) ? usersResponse : [];
-
   const {
     data,
     isLoading,
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'sales',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        date,
-        statusFilter,
-        ownerFilter,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        DateFrom: date?.from ? format(date.from, 'yyyy-MM-dd') : undefined,
-        DateTo: date?.to ? format(date.to, 'yyyy-MM-dd') : undefined,
-        StatusType: statusFilter || undefined,
-        OwnerId: isManager && ownerFilter ? ownerFilter : undefined,
-      };
-      const response = await api.get('/sales', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useSalesList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    date,
+    statusFilter,
+    ownerFilter,
+    isManager,
   });
+
+  const { data: availableStatuses = [] } = useSalesStatuses();
+  const { data: teamUsers = [] } = useSalesTeamUsers(isManager);
 
   const desktopSales = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopSales.length;
 
   useEffect(() => {
-    const items: UserSalesResponse[] = data?.items;
+    const items: UserSalesResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -307,21 +249,12 @@ export default function UserSales() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
-
-  let errorDetails: string[] | undefined;
-  if (responseData?.errors && responseData.errors.length > 0) {
-    errorDetails = responseData.errors;
-  }
 
   const listError: FormErrorState | null =
     isError && !isErrorDismissed
@@ -332,7 +265,7 @@ export default function UserSales() {
               activeError?.message ||
               'Nie udało się pobrać listy sprzedaży.',
           ),
-          details: errorDetails,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -536,7 +469,7 @@ export default function UserSales() {
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -550,7 +483,7 @@ export default function UserSales() {
                 className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
                 title="Zamknij"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           )}
@@ -582,7 +515,7 @@ export default function UserSales() {
           <AddDealDialog
             isOpen={isAddDealOpen}
             onClose={() => setIsAddDealOpen(false)}
-            onSuccess={handleDealAdded}
+            onSuccess={() => void invalidateSales()}
           />
         </MainLayout>
       </RoleGuard>

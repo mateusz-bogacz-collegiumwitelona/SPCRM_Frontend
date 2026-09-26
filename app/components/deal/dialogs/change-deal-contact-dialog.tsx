@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +10,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, UserCheck, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { DealAssignableContactResponse } from '~/interfaces/deal';
+import { useDealAssignableContacts } from '~/hooks/use-deals';
 
 interface ChangeDealContactDialogProps {
   isOpen: boolean;
@@ -36,14 +34,7 @@ export const ChangeDealContactDialog: React.FC<ChangeDealContactDialogProps> = (
     data: contacts = [],
     isLoading: isContactsLoading,
     isError: isContactsError,
-  } = useQuery({
-    queryKey: ['deal-assignable-contacts', dealId],
-    queryFn: async () => {
-      const res = await api.get(`/sales/${dealId}/assignable-contacts`);
-      return res.data.data as DealAssignableContactResponse[];
-    },
-    enabled: isOpen && Boolean(dealId),
-  });
+  } = useDealAssignableContacts(dealId, isOpen);
 
   useEffect(() => {
     if (!isOpen) {

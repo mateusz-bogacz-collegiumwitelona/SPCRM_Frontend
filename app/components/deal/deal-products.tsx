@@ -2,8 +2,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
@@ -22,21 +21,8 @@ import { DataTable } from '~/components/table/data-table';
 import { AddDealProductDialog } from '~/components/deal/dialogs/add-deal-product-dialog';
 import { DeleteDealProductDialog } from '~/components/deal/dialogs/delete-deal-product-dialog';
 import { EditDealProductDialog } from '~/components/deal/dialogs/edit-deal-product-dialog';
-
-interface DealProductResponse {
-  dealProductId: string;
-  productId: string;
-  name: string;
-  steelGrade: string;
-  dimensions: string;
-  quantity: number;
-  unitSymbol: string;
-  baseUnitPrice: number;
-  unitPrice: number;
-  totalPrice: number;
-  currencyCode: string;
-  decimalPlaces: number;
-}
+import { useDealProducts, useDeleteDealProductMutation } from '~/hooks/use-deals';
+import type { DealProductResponse } from '~/interfaces/deal';
 
 interface ProductTableMeta {
   onEdit: (product: DealProductResponse) => void;
@@ -258,47 +244,18 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'deal-products',
-      dealId,
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        productFilter,
-        steelGradeFilter,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        ProductCategory: productFilter || undefined,
-        SteelGrade: steelGradeFilter || undefined,
-      };
-
-      const response = await api.get(`/sales/${dealId}/products`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useDealProducts(dealId, {
+    pageNumber,
+    pageSize,
+    searchTerm: debouncedSearch,
+    sortBy,
+    sortDescending,
+    productCategory: productFilter,
+    steelGrade: steelGradeFilter,
   });
 
-  const deleteProductMutation = useMutation({
-    mutationFn: async (dealProductId: string) => {
-      return await api.delete(`/sales/${dealId}/products/${dealProductId}`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-products', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
-      setProductToDelete(null);
-    },
+  const deleteProductMutation = useDeleteDealProductMutation(dealId, {
+    onSuccess: () => setProductToDelete(null),
   });
 
   const desktopProducts = useMemo(() => data?.items || [], [data]);
@@ -309,7 +266,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const currentCurrency = dealCache?.currencyCode || desktopProducts[0]?.currencyCode || 'PLN';
 
   useEffect(() => {
-    const items: DealProductResponse[] = data?.items;
+    const items: DealProductResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {

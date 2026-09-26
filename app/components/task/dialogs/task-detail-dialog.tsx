@@ -1,17 +1,15 @@
 import type { DictionaryItem, Task } from '~/interfaces/task';
 import React, { useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { Link } from 'react-router';
 import { AlertCircle, Briefcase, Calendar, Clock, Loader2, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { api } from '~/api/api';
 import { getTaskPriorityBadgeClass, getTaskStatusBadgeClass } from '~/utils/task-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { useTaskDictionaries } from '~/hooks/use-tasks';
+import { useChangeTaskStatusMutation, useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface TaskDialogProps {
   task: Task | null;
@@ -20,7 +18,6 @@ interface TaskDialogProps {
 }
 
 export const TaskDetailDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onClose }) => {
-  const queryClient = useQueryClient();
   const {
     statuses,
     getStatusLabel,
@@ -41,34 +38,10 @@ export const TaskDetailDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onCl
     }
   }, [task, isOpen]);
 
-  const statusMutation = useMutation({
-    mutationFn: async (newStatus: string) => {
-      if (!task) return;
-      await api.put('/tasks/change-status', {
-        taskId: task.id,
-        status: newStatus,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
+  const statusMutation = useChangeTaskStatusMutation({
+    onSuccess: () => {
       setFormError(null);
       onClose();
-    },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback =
-        apiError.response?.data?.message ||
-        apiError.message ||
-        'Nie udało się zmienić statusu zadania.';
-
-      setFormError({
-        title: getErrorMessage(code, fallback),
-        details:
-          apiError.response?.data?.errors && apiError.response.data.errors.length > 0
-            ? apiError.response.data.errors
-            : undefined,
-      });
     },
   });
 
@@ -98,7 +71,27 @@ export const TaskDetailDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onCl
       return;
     }
 
-    await statusMutation.mutateAsync(selectedStatus);
+    try {
+      await statusMutation.mutateAsync({
+        taskId: task.id,
+        status: selectedStatus,
+      });
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const code = apiError.response?.data?.errorCode;
+      const fallback =
+        apiError.response?.data?.message ||
+        apiError.message ||
+        'Nie udało się zmienić statusu zadania.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          apiError.response?.data?.errors && apiError.response.data.errors.length > 0
+            ? apiError.response.data.errors
+            : undefined,
+      });
+    }
   };
 
   const isFinalStatusSelected = selectedStatus === 'Complete' || selectedStatus === 'Break';

@@ -20,18 +20,16 @@ import {
 } from 'lucide-react';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 
-import { useEditNote } from '~/hooks/use-edit-note';
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { ContactNoteDialog } from './dialogs/contact-note-dialog';
 
-import { useAddNote } from '~/hooks/use-add-note';
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { ActionGuard } from '~/lib/action-guard';
-import { UseDeleteNote } from '~/hooks/use-delete-note';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ContactNote } from '~/interfaces/contact';
+import { useAddNote, UseDeleteNote, useEditNote } from '~/hooks/use-notes';
 
 interface NoteTableMeta {
   onSelect: (note: ContactNote) => void;

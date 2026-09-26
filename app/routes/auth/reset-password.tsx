@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Lock, X } from 'lucide-react';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/interfaces/api-error';
+import { useResetPasswordMutation } from '~/hooks/use-auth';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -25,32 +24,13 @@ export default function ResetPasswordPage() {
 
   const isLinkInvalid = !userId.trim() || !token.trim();
 
-  const resetMutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        userId,
-        token,
-        password,
-        confirmPassword,
-      };
-      const response = await api.post('/auth/reset-password', payload);
-      return response.data;
-    },
+  const resetMutation = useResetPasswordMutation({
     onSuccess: () => {
       setIsSuccess(true);
       setFormError(null);
     },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const errorData = apiError.response?.data;
-
-      setFormError({
-        title: getErrorMessage(
-          errorData?.errorCode,
-          errorData?.message || apiError.message || 'Wystąpił błąd podczas resetowania hasła.',
-        ),
-        details: errorData?.errors && errorData.errors.length > 0 ? errorData.errors : undefined,
-      });
+    onError: (parsedError) => {
+      setFormError(parsedError);
     },
   });
 
@@ -80,7 +60,12 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    resetMutation.mutate();
+    resetMutation.mutate({
+      userId,
+      token,
+      password,
+      confirmPassword,
+    });
   };
 
   return (
@@ -246,7 +231,7 @@ export default function ResetPasswordPage() {
                 <div className="mt-6 border-t border-gray-100 pt-4 text-center">
                   <Link
                     to="/"
-                    className="text-xs font-medium text-gray-600  hover:text-brand transition-colors"
+                    className="text-xs font-medium text-gray-600 hover:text-brand transition-colors"
                   >
                     Powrót do logowania
                   </Link>

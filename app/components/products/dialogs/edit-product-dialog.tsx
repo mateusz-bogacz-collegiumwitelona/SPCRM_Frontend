@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -16,11 +14,8 @@ import {
   ProductFormFields,
   useProductFormDictionaries,
 } from '~/components/products/dialogs/product-form-fields';
-import type {
-  EditProductDetailResponse,
-  EditProductRequest,
-  ProductFormData,
-} from '~/interfaces/product';
+import type { EditProductRequest, ProductFormData } from '~/interfaces/product';
+import { useProductEditDetails } from '~/hooks/use-products';
 
 interface EditProductDialogProps {
   readonly productId: string | null;
@@ -54,14 +49,10 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
   const [formData, setFormData] = useState<ProductFormData>(defaultFormData);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: productData, isLoading: isFetchingProduct } = useQuery<EditProductDetailResponse>({
-    queryKey: ['product-for-edit', productId],
-    queryFn: async () => {
-      const res = await api.get(`/products/edit/${productId}`);
-      return (res.data?.value || res.data?.data || res.data) as EditProductDetailResponse;
-    },
-    enabled: isOpen && Boolean(productId),
-  });
+  const { data: productData, isLoading: isFetchingProduct } = useProductEditDetails(
+    productId,
+    isOpen,
+  );
 
   const { categories, steelGrades, units, currencies } = useProductFormDictionaries(isOpen);
 

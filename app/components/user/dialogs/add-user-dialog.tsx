@@ -8,12 +8,11 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getRoleConfig } from '~/utils/role-translator';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { AddUserRequestPayload } from '~/interfaces/user';
+import { useUserRoles } from '~/hooks/use-users';
 
 interface AddUserDialogProps {
   readonly isOpen: boolean;
@@ -29,14 +28,7 @@ export function AddUserDialog({ isOpen, onClose, onSave, isLoading }: AddUserDia
   const [role, setRole] = useState('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: roles = [] } = useQuery<string[]>({
-    queryKey: ['system-roles'],
-    queryFn: async () => {
-      const response = await api.get('/user/roles');
-      return response.data?.data || response.data?.value || response.data || [];
-    },
-    enabled: isOpen,
-  });
+  const { data: roles = [] } = useUserRoles();
 
   const handleClose = () => {
     setFirstName('');

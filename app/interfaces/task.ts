@@ -1,3 +1,5 @@
+import type { Contact } from '~/interfaces/contact';
+
 export interface Task {
   id: string;
   title: string;
@@ -62,4 +64,67 @@ export interface CalendarTasksParams {
 export interface TaskDictionariesResponse {
   statuses: { value: string; label: string }[];
   priorities: { value: string; label: string }[];
+}
+
+export interface SaleTaskResponse {
+  id: string;
+  title: string;
+  dueAt: string;
+  status: string;
+  priority: string;
+  assignedToId: string;
+  assignedToFirstName: string;
+  assignedToLastName: string;
+  contactId?: string | null;
+  contactFirstName?: string | null;
+  contactLastName?: string | null;
+}
+
+export interface DealTasksParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  status?: string;
+  priority?: string;
+}
+
+export interface SaleTaskResponse {
+  id: string;
+  title: string;
+  dueAt: string;
+  status: string;
+  priority: string;
+  assignedToId: string;
+  assignedToFirstName: string;
+  assignedToLastName: string;
+  contactId?: string | null;
+  contactFirstName?: string | null;
+  contactLastName?: string | null;
+}
+
+export interface DealTasksParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  status?: string;
+  priority?: string;
+}
+
+export interface TaskContactResponse {
+  contactId: string;
+  firstName: string;
+  lastName: string;
+  jobTitle?: string;
+  companyName: string;
+  contactWays: Contact[];
+}
+
+export interface TaskDealResponse {
+  dealId: string;
+  name: string;
+  value: number;
+  status: string;
+  closeDate: string;
+  currencyCode: string;
+  decimalPlaces: number;
 }

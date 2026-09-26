@@ -1,32 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
-
 import { FileText, Loader2, TrendingUp } from 'lucide-react';
 import {
-  type AnalyticsChartMetricResponse,
   type AnalyticsPeriod,
   type CurrencyListResponse,
   RevenueChart,
 } from '~/components/analytics/revenue-chart';
-import type { EmployeeKpiSummaryResponse } from '~/interfaces/analytics';
 import { KpiCards } from '~/components/analytics/kpi-cards';
 import { Button } from '~/components/ui/button';
 import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
+import { useEmployeeChart, useEmployeeKpi } from '~/hooks/use-analytics';
+import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 
 export const UserAnalyticsTab = ({ userId }: { userId: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('CurrentMonth');
   const [selectedCurrencyCode, setSelectedCurrencyCode] = useState<string>('PLN');
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
-  const { data: currencies } = useQuery<CurrencyListResponse[]>({
-    queryKey: ['currencies-simple'],
-    queryFn: async () => {
-      const response = await api.get('/currency/simple');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-    staleTime: Infinity,
-  });
+  const { data: currencies = [] } = useCurrenciesSimpleList();
 
   useEffect(() => {
     if (currencies && currencies.length > 0) {
@@ -35,25 +25,12 @@ export const UserAnalyticsTab = ({ userId }: { userId: string }) => {
     }
   }, [currencies]);
 
-  const { data: kpiData, isLoading: isKpiLoading } = useQuery<EmployeeKpiSummaryResponse>({
-    queryKey: ['employee-kpi', userId],
-    queryFn: async () => {
-      const response = await api.get(`/analytics/employees/${userId}/kpi`);
-      return response.data?.value || response.data?.data || response.data;
-    },
-    enabled: Boolean(userId),
-  });
+  const { data: kpiData, isLoading: isKpiLoading } = useEmployeeKpi(userId);
 
-  const { data: chartData, isLoading: isChartLoading } = useQuery<AnalyticsChartMetricResponse[]>({
-    queryKey: ['employee-chart', userId, selectedPeriod],
-    queryFn: async () => {
-      const response = await api.get(`/analytics/employees/${userId}/chart`, {
-        params: { Period: selectedPeriod },
-      });
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-    enabled: Boolean(userId),
-  });
+  const { data: chartData = [], isLoading: isChartLoading } = useEmployeeChart(
+    userId,
+    selectedPeriod,
+  );
 
   if (isKpiLoading) {
     return (
@@ -93,10 +70,10 @@ export const UserAnalyticsTab = ({ userId }: { userId: string }) => {
       {kpiData && <KpiCards data={kpiData} titlePrefix="pracownika" />}
 
       <RevenueChart
-        data={chartData ?? []}
+        data={chartData}
         selectedPeriod={selectedPeriod}
         onPeriodChange={setSelectedPeriod}
-        currencies={currencies ?? []}
+        currencies={currencies as unknown as CurrencyListResponse[]}
         selectedCurrencyCode={selectedCurrencyCode}
         onCurrencyChange={setSelectedCurrencyCode}
         isLoading={isChartLoading}

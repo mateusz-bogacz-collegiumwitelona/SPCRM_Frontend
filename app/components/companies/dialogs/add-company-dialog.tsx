@@ -14,9 +14,8 @@ import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
 
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import type { AddCompanyAddressRequest, AddCompanyRequest } from '~/interfaces/company';
+import { useCompanyAddressTypes } from '~/hooks/use-companies';
 
 interface FormAddressItem extends AddCompanyAddressRequest {
   id: string;
@@ -280,14 +279,7 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
     }
   };
 
-  const { data: addressTypes = [], isLoading: isTypesLoading } = useQuery({
-    queryKey: ['company-address-types'],
-    queryFn: async () => {
-      const res = await api.get('/company/address/types');
-      return (res.data?.data || res.data?.value || []) as string[];
-    },
-    enabled: isOpen,
-  });
+  const { data: addressTypes = [], isLoading: isTypesLoading } = useCompanyAddressTypes(isOpen);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>

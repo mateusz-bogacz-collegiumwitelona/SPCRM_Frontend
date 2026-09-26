@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -8,7 +7,6 @@ import {
 } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { format } from 'date-fns';
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import {
   AlertCircle,
@@ -35,7 +33,7 @@ import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import type { ContactTaskItem } from '~/interfaces/contact';
-import type { AddTaskRequestPayload, EditTaskRequestPayload } from '~/interfaces/task';
+import { useContactTaskMutations, useContactTasks } from '~/hooks/use-tasks';
 
 interface TaskTableMeta {
   onEdit: (task: ContactTaskItem) => void;
@@ -161,8 +159,6 @@ const mergeTasks = (
 };
 
 export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => {
-  const queryClient = useQueryClient();
-
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
@@ -191,59 +187,15 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: ['contact-tasks', { contactId, pageNumber, pageSize, debouncedSearch }],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-      };
-      const response = await api.get(`/contacts/${contactId}/tasks`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    enabled: !!contactId,
-    placeholderData: keepPreviousData,
+  } = useContactTasks({
+    contactId,
+    pageNumber,
+    pageSize,
+    debouncedSearch,
   });
 
-  const addTaskMutation = useMutation({
-    mutationFn: async (payload: AddTaskRequestPayload) => {
-      await api.post(`/contacts/${contactId}/tasks`, payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setIsAddModalOpen(false);
-    },
-  });
-
-  const editTaskMutation = useMutation({
-    mutationFn: async ({
-      taskId,
-      payload,
-    }: {
-      taskId: string;
-      payload: EditTaskRequestPayload;
-    }) => {
-      await api.put(`/tasks/${taskId}`, payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setEditingTask(null);
-    },
-  });
-
-  const deleteTaskMutation = useMutation({
-    mutationFn: async (taskId: string) => {
-      await api.delete(`/tasks/${taskId}`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      setDeletingTask(null);
-    },
-  });
+  const { addTaskMutation, editTaskMutation, deleteTaskMutation } =
+    useContactTaskMutations(contactId);
 
   const desktopTasks: ContactTaskItem[] = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
@@ -608,6 +560,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
         onClose={() => setIsAddModalOpen(false)}
         onSave={async (payload) => {
           await addTaskMutation.mutateAsync(payload);
+          setIsAddModalOpen(false);
         }}
         isLoading={addTaskMutation.isPending}
         dialogTitle="Dodaj zadanie do kontaktu"
@@ -619,6 +572,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
         onClose={() => setEditingTask(null)}
         onSave={async (taskId, payload) => {
           await editTaskMutation.mutateAsync({ taskId, payload });
+          setEditingTask(null);
         }}
         isLoading={editTaskMutation.isPending}
       />
@@ -630,6 +584,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
         onConfirm={async () => {
           if (deletingTask) {
             await deleteTaskMutation.mutateAsync(deletingTask.id);
+            setDeletingTask(null);
           }
         }}
         isLoading={deleteTaskMutation.isPending}

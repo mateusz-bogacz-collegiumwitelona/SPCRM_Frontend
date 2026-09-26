@@ -7,21 +7,16 @@ import { ContactNotes } from '~/components/contact/contact-notes';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
 import { ContactTasks } from '~/components/contact/contact-tasks';
-import { api, isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/api/api';
 import NotFound from '~/routes/not-found';
-import { useQuery } from '@tanstack/react-query';
 import { PageLoader } from '~/components/layout/page-loader';
 import { STANDARD_ROLES } from '~/constants/roles';
+import { useContactDetails } from '~/hooks/use-contacts';
 
 export default function ContactDetails() {
   const { contactId } = useParams<{ contactId: string }>();
 
-  const { isLoading, error } = useQuery({
-    queryKey: ['contact-details', contactId],
-    queryFn: async () => (await api.get(`/contacts/${contactId}`)).data.data,
-    enabled: !!contactId,
-    retry: false,
-  });
+  const { isLoading, error } = useContactDetails(contactId);
 
   if (!contactId || isNotFoundError(error)) {
     return <NotFound />;

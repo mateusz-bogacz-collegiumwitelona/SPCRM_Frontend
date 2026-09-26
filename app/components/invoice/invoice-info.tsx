@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
 import {
   AlertCircle,
   ArrowLeft,
@@ -18,14 +17,13 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AddInvoicePaymentDialog } from './dialogs/add-invoice-payment-dialog';
 import { DownloadInvoicePdfDialog } from './dialogs/download-invoice-pdf-dialog';
-import type { InvoiceDetailResponse, InvoicePaymentSummaryResponse } from '~/interfaces/invoice';
+import { useInvoiceDetails, useInvoicePaymentSummary } from '~/hooks/use-invoices';
 
 const InvoiceLoadingSkeleton = () => (
   <div className="mb-6 animate-pulse">
@@ -100,21 +98,9 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
     isLoading: isInvoiceLoading,
     isError: isInvoiceError,
     error: invoiceQueryError,
-  } = useQuery<InvoiceDetailResponse>({
-    queryKey: ['invoice-detail', invoiceId],
-    queryFn: async () => {
-      const response = await api.get(`/invoice/${invoiceId}`);
-      return response.data?.data || response.data?.value || response.data;
-    },
-  });
+  } = useInvoiceDetails(invoiceId);
 
-  const { data: summary, isLoading: isSummaryLoading } = useQuery<InvoicePaymentSummaryResponse>({
-    queryKey: ['invoice-payment-summary', invoiceId],
-    queryFn: async () => {
-      const response = await api.get(`/invoice/${invoiceId}/payment/summary`);
-      return response.data?.data || response.data?.value || response.data;
-    },
-  });
+  const { data: summary, isLoading: isSummaryLoading } = useInvoicePaymentSummary(invoiceId);
 
   const activeError = invoiceQueryError as ApiError | null;
 

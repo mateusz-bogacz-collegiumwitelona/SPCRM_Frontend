@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { AlertCircle, Calendar, Hash, Receipt, User, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { InvoicePaymentListResponse } from '~/interfaces/invoice';
+import { useInvoicePayments } from '~/hooks/use-invoices';
 
 export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
@@ -32,19 +31,11 @@ export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string 
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: ['invoice-payments', invoiceId, { pageNumber, pageSize, debouncedSearch }],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-      };
-
-      const response = await api.get(`/invoice/${invoiceId}/payment`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useInvoicePayments({
+    invoiceId,
+    pageNumber,
+    pageSize,
+    debouncedSearch,
   });
 
   const payments: InvoicePaymentListResponse[] = useMemo(() => data?.items || [], [data]);

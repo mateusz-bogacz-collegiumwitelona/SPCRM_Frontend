@@ -1,3 +1,7 @@
+import type { UserContactItem } from '~/interfaces/contact';
+import type { UserDealItem } from '~/interfaces/deal';
+import type { UserTaskItem } from '~/interfaces/task';
+
 export interface AddUserRequestPayload {
   firstName: string;
   lastName: string;
@@ -93,4 +97,107 @@ export interface RoleConfig {
   bgColor: string;
   textColor: string;
   iconColor: string;
+}
+
+export interface UserListResponse {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  isBlocked: boolean;
+}
+
+export interface UserListParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  role?: string;
+  isBlocked?: boolean;
+}
+
+export interface PaginatedUsersResponse {
+  items: UserListResponse[];
+  totalPages: number;
+  totalItems?: number;
+  totalCount?: number;
+}
+
+export interface UserCompanyItem {
+  id: string;
+  name: string;
+  nip: string;
+  city: string;
+  street: string;
+  createdAt: string;
+}
+
+export interface UserCompaniesParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  createdAtFrom?: string;
+  createdAtTo?: string;
+}
+
+export interface PaginatedUserCompaniesResponse {
+  items: UserCompanyItem[];
+  totalPages: number;
+  totalCount?: number;
+  totalItems?: number;
+}
+
+export interface UserContactsParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  companyName?: string;
+  isPrimary?: boolean;
+}
+
+export interface PaginatedUserContactsResponse {
+  items: UserContactItem[];
+  totalPages: number;
+  totalCount?: number;
+  totalItems?: number;
+}
+
+export interface UserSalesParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  statusType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface PaginatedUserSalesResponse {
+  items: UserDealItem[];
+  totalPages: number;
+  totalCount?: number;
+  totalItems?: number;
+}
+
+export interface UserTasksParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  status?: string;
+  priority?: string;
+}
+
+export interface PaginatedUserTasksResponse {
+  items: UserTaskItem[];
+  totalPages: number;
+  totalCount?: number;
+  totalItems?: number;
 }

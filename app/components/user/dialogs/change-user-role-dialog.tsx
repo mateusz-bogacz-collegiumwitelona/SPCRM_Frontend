@@ -8,12 +8,11 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, ShieldCheck, X } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getRoleConfig } from '~/utils/role-translator';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { ChangeUserRolePayload, UserToChangeRole } from '~/interfaces/user';
+import { useUserRoles } from '~/hooks/use-users';
 
 interface ChangeUserRoleDialogProps {
   readonly user: UserToChangeRole | null;
@@ -33,14 +32,7 @@ export function ChangeUserRoleDialog({
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: roles = [], isLoading: isRolesLoading } = useQuery<string[]>({
-    queryKey: ['system-roles'],
-    queryFn: async () => {
-      const response = await api.get('/user/roles');
-      return response.data?.data || response.data?.value || response.data || [];
-    },
-    enabled: isOpen,
-  });
+  const { data: roles = [], isLoading: isRolesLoading } = useUserRoles();
 
   useEffect(() => {
     if (isOpen && user) {

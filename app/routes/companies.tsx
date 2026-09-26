@@ -9,10 +9,8 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
@@ -27,22 +25,9 @@ import { AuthGuard } from '~/lib/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dialog';
-import type { AddCompanyRequest } from '~/interfaces/company';
 import { STANDARD_ROLES } from '~/constants/roles';
-
-interface GetCompanyResponse {
-  id: string;
-  name: string;
-  nip: string;
-  lastDealDate?: string | null;
-  isYour: boolean;
-  ownerFistName?: string | null;
-  ownerLastName?: string | null;
-  city: string;
-  street: string;
-  zipCode: string;
-  createdAt: string;
-}
+import { useCompaniesList, useCreateCompany } from '~/hooks/use-companies';
+import type { GetCompanyResponse } from '~/interfaces/company';
 
 const formatDate = (isoDate: string) => {
   return new Date(isoDate).toLocaleDateString('pl-PL', {
@@ -50,12 +35,6 @@ const formatDate = (isoDate: string) => {
     month: '2-digit',
     year: 'numeric',
   });
-};
-
-const parseIsYourFilter = (filterValue: string): boolean | undefined => {
-  if (filterValue === 'true') return true;
-  if (filterValue === 'false') return false;
-  return undefined;
 };
 
 const columnHelper = createColumnHelper<GetCompanyResponse>();
@@ -174,12 +153,10 @@ export default function Companies() {
   const [accumulatedMobileCompanies, setAccumulatedMobileCompanies] = useState<
     GetCompanyResponse[]
   >([]);
-
   const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
-
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -204,34 +181,18 @@ export default function Companies() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'companies',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        date,
-        isYourFilter,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        CreatedAtFrom: date?.from ? format(date.from, 'yyyy-MM-dd') : undefined,
-        CreatedAtTo: date?.to ? format(date.to, 'yyyy-MM-dd') : undefined,
-        IsYour: parseIsYourFilter(isYourFilter),
-      };
-      const response = await api.get('/company/list', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useCompaniesList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    date,
+    isYourFilter,
+  });
+
+  const addCompanyMutation = useCreateCompany({
+    onSuccess: () => setIsAddCompanyOpen(false),
   });
 
   const desktopCompanies = useMemo(() => data?.items || [], [data]);
@@ -239,7 +200,7 @@ export default function Companies() {
   const totalItems = data?.totalItems || data?.totalCount || desktopCompanies.length;
 
   useEffect(() => {
-    const items: GetCompanyResponse[] = data?.items;
+    const items: GetCompanyResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -266,15 +227,11 @@ export default function Companies() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -284,23 +241,9 @@ export default function Companies() {
             responseData?.errorCode,
             responseData?.message || activeError?.message || 'Nie udało się pobrać listy firm.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
-
-  const addCompanyMutation = useMutation({
-    mutationFn: async (payload: AddCompanyRequest) => {
-      const response = await api.post('/company', payload);
-      return response.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['companies'] });
-      setIsAddCompanyOpen(false);
-    },
-  });
 
   return (
     <AuthGuard>

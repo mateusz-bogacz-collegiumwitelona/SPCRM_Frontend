@@ -6,24 +6,17 @@ import { TaskDeals } from '~/components/task/task-deals';
 import { TaskInfo } from '~/components/task/task-info';
 import { RoleGuard } from '~/lib/role-guard';
 import { AuthGuard } from '~/lib/auth-guard';
-import { useQuery } from '@tanstack/react-query';
-import { api, isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/api/api';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
 import { STANDARD_ROLES } from '~/constants/roles';
+import React from 'react';
+import { useTaskDetails } from '~/hooks/use-tasks';
 
 const TaskDetails: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
 
-  const { error, isLoading } = useQuery({
-    queryKey: ['task-core-details', taskId],
-    queryFn: async () => {
-      const res = await api.get(`/tasks/${taskId}`);
-      return res.data?.data || res.data?.value || res.data;
-    },
-    enabled: !!taskId,
-    retry: false,
-  });
+  const { error, isLoading } = useTaskDetails(taskId);
 
   if (!taskId || isNotFoundError(error)) {
     return <NotFound />;

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +12,7 @@ import { AlertCircle, FileText, Loader2, RefreshCw, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getStatusConfig } from '~/utils/sale-status';
+import { useChangeDealStatusMutation, useSalesStatuses } from '~/hooks/use-deals';
 
 interface ChangeDealStatusDialogProps {
   readonly isOpen: boolean;
@@ -23,11 +22,6 @@ interface ChangeDealStatusDialogProps {
   readonly onSuccess: (newStatus: string, sentToEmail?: string | null) => void;
 }
 
-interface ChangeStatusResponse {
-  status: string;
-  sentToEmail?: string | null;
-}
-
 export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
   isOpen,
   onClose,
@@ -35,21 +29,12 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
   currentStatus,
   onSuccess,
 }) => {
-  const queryClient = useQueryClient();
-
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [language, setLanguage] = useState<string>('pl');
   const [customEmail, setCustomEmail] = useState<string>('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: availableStatuses = [], isLoading: isLoadingStatuses } = useQuery<string[]>({
-    queryKey: ['deal-statuses'],
-    queryFn: async () => {
-      const res = await api.get('/sales/statuses');
-      return res.data?.data || res.data?.value || res.data || [];
-    },
-    enabled: isOpen,
-  });
+  const { data: availableStatuses = [], isLoading: isLoadingStatuses } = useSalesStatuses();
 
   useEffect(() => {
     if (isOpen) {
@@ -68,40 +53,14 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
   const isTransitionToComplete =
     selectedStatus.toLowerCase() === 'complete' || selectedStatus.toLowerCase() === 'completed';
 
-  const changeStatusMutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        targetStatus: selectedStatus,
-        language: isTransitionToComplete ? language : undefined,
-        customRecipientEmail:
-          isTransitionToComplete && customEmail.trim() ? customEmail.trim() : undefined,
-      };
-
-      const res = await api.put(`/sales/${dealId}/status`, payload);
-      return (res.data?.data || res.data?.value || res.data) as ChangeStatusResponse;
-    },
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
+  const changeStatusMutation = useChangeDealStatusMutation(dealId, {
+    onSuccess: (data) => {
       handleClose();
       onSuccess(data?.status || selectedStatus, data?.sentToEmail);
     },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const responseData = apiError.response?.data;
-      const code = responseData?.errorCode;
-      const fallback =
-        responseData?.message || apiError.message || 'Nie udało się zmienić statusu transakcji.';
-
-      setFormError({
-        title: getErrorMessage(code, fallback),
-        details:
-          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
-      });
-    },
   });
 
-  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
 
@@ -121,7 +80,26 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
       return;
     }
 
-    changeStatusMutation.mutate();
+    try {
+      await changeStatusMutation.mutateAsync({
+        targetStatus: selectedStatus,
+        language: isTransitionToComplete ? language : undefined,
+        customRecipientEmail:
+          isTransitionToComplete && customEmail.trim() ? customEmail.trim() : undefined,
+      });
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się zmienić statusu transakcji.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   return (
@@ -161,13 +139,14 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
               </button>
             </div>
           )}
-          W{' '}
+
           <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex items-center justify-between">
             <span className="text-xs text-gray-500 font-medium">Obecny status:</span>
             <span className="text-xs font-bold uppercase tracking-wider text-gray-800">
               {getStatusConfig(currentStatus).label}
             </span>
           </div>
+
           <div>
             <label
               htmlFor="deal-status-select"
@@ -197,6 +176,7 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
               </select>
             )}
           </div>
+
           {isTransitionToComplete && (
             <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
               <div className="flex items-start gap-2 text-blue-900 text-xs">
@@ -246,6 +226,7 @@ export const ChangeDealStatusDialog: React.FC<ChangeDealStatusDialogProps> = ({
               </div>
             </div>
           )}
+
           <DialogFooter className="pt-3 border-t border-gray-100">
             <Button
               type="button"

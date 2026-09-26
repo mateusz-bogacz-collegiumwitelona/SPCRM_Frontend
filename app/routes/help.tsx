@@ -1,19 +1,13 @@
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { api } from '~/api/api';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { AlertCircle, X } from 'lucide-react';
-
-interface SupportFormData {
-  email: string;
-  title: string;
-  message: string;
-}
+import { useSendSupportMessage } from '~/hooks/use-support';
+import type { SupportFormData } from '~/interfaces/support';
 
 export default function Help() {
   const [formData, setFormData] = useState<SupportFormData>({
@@ -25,31 +19,15 @@ export default function Help() {
   const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: async (payload: SupportFormData) => {
-      const response = await api.post('mailing/support', payload);
-      return response.data;
-    },
+  const { mutate, isPending } = useSendSupportMessage({
     onSuccess: () => {
       setSuccessMessage('Wiadomość została wysłana pomyślnie. Skontaktujemy się z Tobą wkrótce.');
       setFormError(null);
       setFormData({ email: '', title: '', message: '' });
     },
-    onError: (error: unknown) => {
+    onError: (parsedError) => {
       setSuccessMessage(null);
-      const err = error as ApiError;
-      const errorData = err.response?.data;
-
-      const code = errorData?.errorCode;
-      const fallback = errorData?.message || err.message || 'Wystąpił nieznany błąd.';
-
-      setFormError({
-        title: getErrorMessage(code, fallback),
-        details:
-          errorData?.errors && errorData.errors.length > 0
-            ? errorData.errors.map((item) => getErrorMessage(item, item))
-            : undefined,
-      });
+      setFormError(parsedError);
     },
   });
 

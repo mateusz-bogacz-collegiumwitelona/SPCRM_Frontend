@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -21,8 +20,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import {
   FALLBACK_TASK_PRIORITY_LABELS,
@@ -36,6 +33,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { DictionaryItem, UserTaskItem } from '~/interfaces/task';
 import { useTaskDictionaries } from '~/hooks/use-tasks';
+import { useUserTasks } from '~/hooks/use-users';
 
 const PAGE_SIZE = 5;
 
@@ -44,7 +42,82 @@ const formatDate = (dateString?: string | null) => {
   return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: pl });
 };
 
+interface UserTasksTableMeta {
+  getStatusLabel?: (val: string) => string;
+  getPriorityLabel?: (val: string) => string;
+}
+
 const columnHelper = createColumnHelper<UserTaskItem>();
+
+const columns = [
+  columnHelper.accessor('title', {
+    header: 'Tytuł zadania',
+    cell: (info) => {
+      const row = info.row.original;
+      const isOverdue = new Date(row.dueAt) < new Date() && row.status.toLowerCase() !== 'complete';
+      return (
+        <div className="leading-tight py-0.5">
+          <span className="font-semibold text-blue-900 text-sm truncate max-w-47.5 sm:max-w-xs block">
+            {row.title}
+          </span>
+          <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-0.5">
+            <Calendar className="w-3 h-3 text-gray-400" />
+            <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
+              {formatDate(row.dueAt)} {isOverdue && '(Po terminie)'}
+            </span>
+          </div>
+        </div>
+      );
+    },
+  }),
+  columnHelper.accessor('priority', {
+    header: 'Priorytet',
+    cell: (info) => {
+      const raw = info.getValue();
+      const meta = info.table.options.meta as UserTasksTableMeta;
+      return (
+        <span
+          className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap ${getTaskPriorityBadgeClass(
+            raw,
+          )}`}
+        >
+          {resolveTaskPriorityLabel(raw, meta?.getPriorityLabel)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('status', {
+    header: 'Status',
+    cell: (info) => {
+      const raw = info.getValue();
+      const meta = info.table.options.meta as UserTasksTableMeta;
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${getTaskStatusBadgeClass(
+            raw,
+          )}`}
+        >
+          {resolveTaskStatusLabel(raw, meta?.getStatusLabel)}
+        </span>
+      );
+    },
+  }),
+];
+
+const statusTranslate = (value: string): string => {
+  const statuses: Record<string, string> = {
+    todo: 'ToDo',
+    inprogress: 'InProgress',
+    complete: 'Complete',
+  };
+  return statuses[value] ?? 'Break';
+};
+
+const mapFallbackPriority = (value: string): string => {
+  if (value === 'low') return 'Low';
+  if (value === 'medium') return 'Medium';
+  return 'High';
+};
 
 export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
@@ -69,91 +142,21 @@ export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
     setPageNumber(1);
   }, [debouncedSearch, sortBy, sortDescending, statusFilter, priorityFilter]);
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('title', {
-        header: 'Tytuł zadania',
-        cell: (info) => {
-          const row = info.row.original;
-          const isOverdue =
-            new Date(row.dueAt) < new Date() && row.status.toLowerCase() !== 'complete';
-          return (
-            <div className="leading-tight py-0.5">
-              <span className="font-semibold text-blue-900 text-sm truncate max-w-47.5 sm:max-w-xs block">
-                {row.title}
-              </span>
-              <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-0.5">
-                <Calendar className="w-3 h-3 text-gray-400" />
-                <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
-                  {formatDate(row.dueAt)} {isOverdue && '(Po terminie)'}
-                </span>
-              </div>
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('priority', {
-        header: 'Priorytet',
-        cell: (info) => {
-          const raw = info.getValue();
-          return (
-            <span
-              className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap ${getTaskPriorityBadgeClass(
-                raw,
-              )}`}
-            >
-              {resolveTaskPriorityLabel(raw, getPriorityLabel)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: (info) => {
-          const raw = info.getValue();
-          return (
-            <span
-              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${getTaskStatusBadgeClass(
-                raw,
-              )}`}
-            >
-              {resolveTaskStatusLabel(raw, getStatusLabel)}
-            </span>
-          );
-        },
-      }),
-    ],
-    [getStatusLabel, getPriorityLabel],
-  );
-
   const {
     data,
     isLoading,
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'user-tasks',
-      userId,
-      { pageNumber, debouncedSearch, sortBy, sortDescending, statusFilter, priorityFilter },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: PAGE_SIZE,
-        SearchTerm: debouncedSearch.trim() || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        Status: statusFilter || undefined,
-        Priority: priorityFilter || undefined,
-      };
-
-      const response = await api.get(`/user/${userId}/tasks`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
-    enabled: Boolean(userId),
+  } = useUserTasks({
+    userId,
+    pageNumber,
+    pageSize: PAGE_SIZE,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    statusFilter,
+    priorityFilter,
   });
 
   const tasks = useMemo(() => data?.items || [], [data]);
@@ -164,6 +167,10 @@ export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
     data: tasks,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      getStatusLabel,
+      getPriorityLabel,
+    } satisfies UserTasksTableMeta,
   });
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
@@ -187,30 +194,26 @@ export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
       : null;
 
   const isFilterActive = Boolean(statusFilter || priorityFilter);
-  const statusTranslate = (value: string): string => {
-    const statuses: Record<string, string> = {
-      todo: 'ToDo',
-      inprogress: 'InProgress',
-      complete: 'Complete',
-    };
 
-    return statuses[value] ?? 'Break';
-  };
-  const statusOptions =
-    dictionaries?.statuses && dictionaries.statuses.length > 0
-      ? dictionaries.statuses
-      : Object.entries(FALLBACK_TASK_STATUS_LABELS).map(([value, label]) => ({
-          value: statusTranslate(value),
-          label,
-        }));
+  const statusOptions: DictionaryItem[] = useMemo(() => {
+    if (dictionaries?.statuses && dictionaries.statuses.length > 0) {
+      return dictionaries.statuses;
+    }
+    return Object.entries(FALLBACK_TASK_STATUS_LABELS).map(([value, label]) => ({
+      value: statusTranslate(value),
+      label,
+    }));
+  }, [dictionaries]);
 
-  const priorityOptions =
-    dictionaries?.priorities && dictionaries.priorities.length > 0
-      ? dictionaries.priorities
-      : Object.entries(FALLBACK_TASK_PRIORITY_LABELS).map(([value, label]) => ({
-          value: value === 'low' ? 'Low' : value === 'medium' ? 'Medium' : 'High',
-          label,
-        }));
+  const priorityOptions: DictionaryItem[] = useMemo(() => {
+    if (dictionaries?.priorities && dictionaries.priorities.length > 0) {
+      return dictionaries.priorities;
+    }
+    return Object.entries(FALLBACK_TASK_PRIORITY_LABELS).map(([value, label]) => ({
+      value: mapFallbackPriority(value),
+      label,
+    }));
+  }, [dictionaries]);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
@@ -290,14 +293,17 @@ export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Status:</label>
+                  <label htmlFor="user-tasks-filter-status" className="block text-gray-500 mb-1">
+                    Status:
+                  </label>
                   <select
+                    id="user-tasks-filter-status"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-blue-900"
                   >
                     <option value="">Wszystkie statusy</option>
-                    {statusOptions.map((s: DictionaryItem) => (
+                    {statusOptions.map((s) => (
                       <option key={s.value} value={s.value}>
                         {s.label}
                       </option>
@@ -306,14 +312,17 @@ export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
                 </div>
 
                 <div>
-                  <label className="block text-gray-500 mb-1">Priorytet:</label>
+                  <label htmlFor="user-tasks-filter-priority" className="block text-gray-500 mb-1">
+                    Priorytet:
+                  </label>
                   <select
+                    id="user-tasks-filter-priority"
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
                     className="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-blue-900"
                   >
                     <option value="">Wszystkie priorytety</option>
-                    {priorityOptions.map((p: DictionaryItem) => (
+                    {priorityOptions.map((p) => (
                       <option key={p.value} value={p.value}>
                         {p.label}
                       </option>

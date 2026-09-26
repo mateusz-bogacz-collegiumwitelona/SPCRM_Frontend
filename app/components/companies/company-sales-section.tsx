@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -9,23 +8,12 @@ import {
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
-
-interface Sale {
-  id: string;
-  salesmanFirstName: string;
-  salesmanLastName: string;
-  name: string;
-  value: number;
-  decimalPlaces: number;
-  code: string;
-  status: string;
-  createdAt: string;
-}
+import { useCompanySales } from '~/hooks/use-companies';
+import type { CompanySaleItem } from '~/interfaces/deal';
 
 const StatusBadge = ({ status }: { status: string }) => {
   const config = getStatusConfig(status);
@@ -36,7 +24,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const SaleCard = ({ s }: { s: Sale }) => (
+const SaleCard = ({ s }: { s: CompanySaleItem }) => (
   <div className="border border-black rounded-lg p-3 bg-white text-sm">
     <div className="flex justify-between items-start mb-3">
       <div className="text-brand leading-tight">
@@ -54,7 +42,7 @@ const SaleCard = ({ s }: { s: Sale }) => (
   </div>
 );
 
-const TableRow = ({ row }: { row: Row<Sale> }) => (
+const TableRow = ({ row }: { row: Row<CompanySaleItem> }) => (
   <tr className="border-b hover:bg-gray-50 transition-colors">
     {row.getVisibleCells().map((cell) => (
       <td key={cell.id} className="px-6 py-4">
@@ -64,7 +52,7 @@ const TableRow = ({ row }: { row: Row<Sale> }) => (
   </tr>
 );
 
-const columnHelper = createColumnHelper<Sale>();
+const columnHelper = createColumnHelper<CompanySaleItem>();
 const columns = [
   columnHelper.display({
     id: 'salesman',
@@ -120,7 +108,11 @@ const columns = [
   }),
 ];
 
-const renderTableBody = (isLoading: boolean, items: Sale[], rows: Row<Sale>[]) => {
+const renderTableBody = (
+  isLoading: boolean,
+  items: CompanySaleItem[],
+  rows: Row<CompanySaleItem>[],
+) => {
   if (isLoading) {
     return (
       <tr>
@@ -148,26 +140,11 @@ export const CompanySalesSection: React.FC<{
 }> = ({ clientId, getDisplayRange }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(4);
-  const [mobileSales, setMobileSales] = useState<Sale[]>([]);
+  const [mobileSales, setMobileSales] = useState<CompanySaleItem[]>([]);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery({
-    queryKey: ['company-sales', clientId, page, pageSize],
-    queryFn: async () => {
-      const res = await api.get('/company/sales', {
-        params: { companyId: clientId, PageNumber: page, PageSize: pageSize },
-      });
-      return res.data.data;
-    },
-    enabled: !!clientId,
-    placeholderData: (previousData) => previousData,
-  });
+  const { data, isLoading, isError, error: queryError } = useCompanySales(clientId, page, pageSize);
 
-  const items: Sale[] = data?.items || [];
+  const items: CompanySaleItem[] = data?.items || [];
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalCount || 0;
 
@@ -176,7 +153,10 @@ export const CompanySalesSection: React.FC<{
     setMobileSales([]);
   }, [pageSize]);
 
-  const mergeSales = (existing: Sale[], incoming: Sale[]): Sale[] => {
+  const mergeSales = (
+    existing: CompanySaleItem[],
+    incoming: CompanySaleItem[],
+  ): CompanySaleItem[] => {
     const existingIds = new Set(existing.map((s) => s.id));
     const uniqueIncoming = incoming.filter((s) => !existingIds.has(s.id));
     return [...existing, ...uniqueIncoming];

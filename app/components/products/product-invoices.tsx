@@ -1,17 +1,107 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { format } from 'date-fns';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, X } from 'lucide-react';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { DataTable } from '~/components/table/data-table';
 import type { ProductInvoiceItemResponse } from '~/interfaces/product';
+import { useProductInvoices } from '~/hooks/use-products';
+
+interface ProductInvoicesTableMeta {
+  unitSymbol: string;
+}
 
 const columnHelper = createColumnHelper<ProductInvoiceItemResponse>();
+
+const columns = [
+  columnHelper.display({
+    id: 'invoiceNumber',
+    header: 'Numer faktury',
+    cell: (info) => (
+      <Link
+        to={`/invoice/${info.row.original.invoiceId}`}
+        className="font-medium text-blue-900 hover:underline"
+      >
+        {info.row.original.invoiceNumber}
+      </Link>
+    ),
+  }),
+  columnHelper.accessor('companyName', {
+    header: 'Nabywca',
+    cell: (info) => <span className="text-gray-900 font-medium">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor('isPaid', {
+    header: 'Status',
+    cell: (info) => {
+      const isPaid = info.getValue();
+      return (
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 w-fit ${
+            isPaid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+          }`}
+        >
+          {isPaid ? (
+            <>
+              <CheckCircle2 className="w-3.5 h-3.5" /> Opłacona
+            </>
+          ) : (
+            <>
+              <Clock className="w-3.5 h-3.5" /> Oczekuje
+            </>
+          )}
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'quantity',
+    header: 'Ilość',
+    cell: (info) => {
+      const meta = info.table.options.meta as ProductInvoicesTableMeta;
+      return (
+        <span className="font-medium text-gray-900">
+          {info.row.original.quantity}{' '}
+          <span className="text-gray-500 font-normal">{meta?.unitSymbol || 'szt.'}</span>
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'unitPrice',
+    header: 'Cena jedn.',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="text-gray-900 font-medium">
+          {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'totalPrice',
+    header: 'Wartość łączna',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="font-bold text-gray-900">
+          {formatCurrency(row.totalPrice, row.currencyCode, row.decimalPlaces)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('issueDate', {
+    header: 'Data wystawienia',
+    cell: (info) => (
+      <span className="text-gray-500 text-xs">
+        {format(new Date(info.getValue()), 'dd.MM.yyyy')}
+      </span>
+    ),
+  }),
+];
 
 const mergeInvoices = (
   existing: ProductInvoiceItemResponse[],
@@ -51,11 +141,11 @@ const ProductInvoiceMobileCard = ({
       >
         {item.isPaid ? (
           <>
-            <CheckCircle2 className="w-3 h-3" /> Opłacona
+            <CheckCircle2 className="w-3.5 h-3.5" /> Opłacona
           </>
         ) : (
           <>
-            <Clock className="w-3 h-3" /> Oczekuje
+            <Clock className="w-3.5 h-3.5" /> Oczekuje
           </>
         )}
       </span>
@@ -80,7 +170,7 @@ const ProductInvoiceMobileCard = ({
 
     <div className="flex items-center justify-between text-[11px] text-gray-400 mt-2 pt-1.5 border-t border-gray-100">
       <div className="flex items-center gap-1">
-        <Calendar className="w-3 h-3 text-gray-400" />
+        <Calendar className="w-3.5 h-3.5 text-gray-400" />
         <span>Wystawiono: {format(new Date(item.issueDate), 'dd.MM.yyyy')}</span>
       </div>
       <span>Termin: {format(new Date(item.dueDate), 'dd.MM.yyyy')}</span>
@@ -121,19 +211,11 @@ export const ProductInvoices = ({
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: ['product-invoices', productId, { pageNumber, pageSize, debouncedSearch }],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-      };
-
-      const response = await api.get(`/products/${productId}/invoices`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useProductInvoices({
+    productId,
+    pageNumber,
+    pageSize,
+    debouncedSearch,
   });
 
   const desktopInvoices = useMemo(() => data?.items || [], [data]);
@@ -141,7 +223,7 @@ export const ProductInvoices = ({
   const totalItems = data?.totalItems || data?.totalCount || desktopInvoices.length;
 
   useEffect(() => {
-    const items: ProductInvoiceItemResponse[] = data?.items;
+    const items: ProductInvoiceItemResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -162,97 +244,13 @@ export const ProductInvoices = ({
     setPageNumber(newPage);
   };
 
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: 'invoiceNumber',
-        header: 'Numer faktury',
-        cell: (info) => (
-          <Link
-            to={`/invoice/${info.row.original.invoiceId}`}
-            className="font-medium text-blue-900 hover:underline"
-          >
-            {info.row.original.invoiceNumber}
-          </Link>
-        ),
-      }),
-      columnHelper.accessor('companyName', {
-        header: 'Nabywca',
-        cell: (info) => <span className="text-gray-900 font-medium">{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('isPaid', {
-        header: 'Status',
-        cell: (info) => {
-          const isPaid = info.getValue();
-          return (
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 w-fit ${
-                isPaid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-              }`}
-            >
-              {isPaid ? (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Opłacona
-                </>
-              ) : (
-                <>
-                  <Clock className="w-3.5 h-3.5" /> Oczekuje
-                </>
-              )}
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'quantity',
-        header: 'Ilość',
-        cell: (info) => (
-          <span className="font-medium text-gray-900">
-            {info.row.original.quantity}{' '}
-            <span className="text-gray-500 font-normal">{unitSymbol}</span>
-          </span>
-        ),
-      }),
-      columnHelper.display({
-        id: 'unitPrice',
-        header: 'Cena jedn.',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="text-gray-900 font-medium">
-              {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'totalPrice',
-        header: 'Wartość łączna',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="font-bold text-gray-900">
-              {formatCurrency(row.totalPrice, row.currencyCode, row.decimalPlaces)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('issueDate', {
-        header: 'Data wystawienia',
-        cell: (info) => (
-          <span className="text-gray-500 text-xs">
-            {format(new Date(info.getValue()), 'dd.MM.yyyy')}
-          </span>
-        ),
-      }),
-    ],
-    [unitSymbol],
-  );
-
   const table = useReactTable({
     data: desktopInvoices,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      unitSymbol,
+    } satisfies ProductInvoicesTableMeta,
   });
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);

@@ -1,12 +1,6 @@
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '~/api/api';
-
-interface User {
-  userId: string;
-  email: string;
-  userName: string;
-  roles: string[];
-}
+import { authApi } from '~/api/auth.api';
+import type { User } from '~/interfaces/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -23,12 +17,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUser = async () => {
     try {
-      const response = await api.get('/auth/me');
-      if (response.data?.success) {
-        setUser(response.data.data);
-      } else {
-        setUser(null);
-      }
+      const currentUser = await authApi.getMe();
+      setUser(currentUser);
     } catch {
       setUser(null);
     } finally {
@@ -46,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await authApi.logout();
     } catch (error) {
       console.error('Błąd podczas wylogowywania:', error);
     } finally {

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
   ArrowLeft,
@@ -21,17 +20,15 @@ import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { DeleteDealDialog } from '~/components/deal/dialogs/delete-deal-dialog';
 import { ExtendDealDialog } from '~/components/deal/dialogs/extend-deal-dialog';
 import { ChangeDealStatusDialog } from '~/components/deal/dialogs/change-deal-status-dialog';
 import { ChangeDealContactDialog } from '~/components/deal/dialogs/change-deal-contact-dialog';
-import type { SaleDetailResponse } from '~/interfaces/deal';
+import { useDealDetails, useDealInfoMutations } from '~/hooks/use-deals';
 
 export const DealInfo = ({ dealId }: { dealId: string }) => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -47,55 +44,10 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
     }
   }, [successMessage]);
 
-  const {
-    data: deal,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<SaleDetailResponse>({
-    queryKey: ['deal-info', dealId],
-    queryFn: async () => {
-      const response = await api.get(`/sales/${dealId}`);
-      return response.data?.data || response.data?.value || response.data;
-    },
-  });
+  const { data: deal, isLoading, isError, error: queryError } = useDealDetails(dealId);
 
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      return await api.delete(`/sales/${dealId}`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
-      navigate('/sales');
-    },
-  });
-
-  const extendMutation = useMutation({
-    mutationFn: async (newCloseDate: Date) => {
-      return await api.put('/sales/extend-close-date', {
-        dealId: dealId,
-        newCloseDate: newCloseDate.toISOString(),
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
-      setSuccessMessage('Termin transakcji został pomyślnie przedłużony.');
-      setIsExtendOpen(false);
-    },
-  });
-
-  const changeContactMutation = useMutation({
-    mutationFn: async (newContactId: string) => {
-      return await api.put(`/sales/${dealId}/contact?contactId=${newContactId}`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
-      setSuccessMessage('Osoba kontaktowa została pomyślnie zmieniona.');
-      setIsChangeContactOpen(false);
-    },
-  });
+  const { deleteDealMutation, extendDealMutation, changeContactMutation } =
+    useDealInfoMutations(dealId);
 
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
@@ -174,6 +126,23 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         `Status transakcji został zmieniony na: ${getStatusConfig(newStatus).label}.`,
       );
     }
+  };
+
+  const handleDeleteDeal = async () => {
+    await deleteDealMutation.mutateAsync();
+    navigate('/sales');
+  };
+
+  const handleExtendCloseDate = async (newDate: Date) => {
+    await extendDealMutation.mutateAsync(newDate);
+    setSuccessMessage('Termin transakcji został pomyślnie przedłużony.');
+    setIsExtendOpen(false);
+  };
+
+  const handleChangeContact = async (newContactId: string) => {
+    await changeContactMutation.mutateAsync(newContactId);
+    setSuccessMessage('Osoba kontaktowa została pomyślnie zmieniona.');
+    setIsChangeContactOpen(false);
   };
 
   return (
@@ -350,20 +319,16 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
       <DeleteDealDialog
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
-        onConfirm={async () => {
-          await deleteMutation.mutateAsync();
-        }}
-        isLoading={deleteMutation.isPending}
+        onConfirm={handleDeleteDeal}
+        isLoading={deleteDealMutation.isPending}
         dealTitle={deal.name}
       />
 
       <ExtendDealDialog
         isOpen={isExtendOpen}
         onClose={() => setIsExtendOpen(false)}
-        onConfirm={async (newDate) => {
-          await extendMutation.mutateAsync(newDate);
-        }}
-        isLoading={extendMutation.isPending}
+        onConfirm={handleExtendCloseDate}
+        isLoading={extendDealMutation.isPending}
         dealName={deal.name}
         currentCloseDate={deal.closeDate}
       />
@@ -380,9 +345,7 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
         isOpen={isChangeContactOpen}
         dealId={dealId}
         onClose={() => setIsChangeContactOpen(false)}
-        onSave={async (newContactId) => {
-          await changeContactMutation.mutateAsync(newContactId);
-        }}
+        onSave={handleChangeContact}
         isLoading={changeContactMutation.isPending}
       />
     </>

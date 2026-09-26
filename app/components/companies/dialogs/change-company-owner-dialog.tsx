@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +10,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, UserCheck, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { UserSimpleListResponse } from '~/interfaces/user';
+import { useUsersSimpleList } from '~/hooks/use-users';
 
 interface ChangeCompanyOwnerDialogProps {
   readonly isOpen: boolean;
@@ -32,15 +30,7 @@ export const ChangeCompanyOwnerDialog: React.FC<ChangeCompanyOwnerDialogProps> =
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: users = [], isLoading: isUsersLoading } = useQuery<UserSimpleListResponse[]>({
-    queryKey: ['users-simple-list'],
-    queryFn: async () => {
-      const res = await api.get('/user/simple');
-      const list = res.data?.data ?? res.data?.value ?? res.data;
-      return Array.isArray(list) ? list : [];
-    },
-    enabled: isOpen,
-  });
+  const { data: users = [], isLoading: isUsersLoading } = useUsersSimpleList(isOpen);
 
   useEffect(() => {
     if (isOpen) {

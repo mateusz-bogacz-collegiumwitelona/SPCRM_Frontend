@@ -7,12 +7,12 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { AlertCircle, Edit3, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { EditableProductItem } from '~/interfaces/offer';
+import { useProductSearch } from '~/hooks/use-products';
+import type { ProductSearchResult } from '~/interfaces/product';
 
 interface EditOfferProductsDialogProps {
   isOpen: boolean;
@@ -24,13 +24,6 @@ interface EditOfferProductsDialogProps {
   initialProducts: EditableProductItem[];
   currencyCode?: string;
   decimalPlaces?: number;
-}
-
-interface ProductSearchResult {
-  id: string;
-  name: string;
-  steelGrade?: string;
-  pricePerUnit: number;
 }
 
 export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = ({
@@ -60,17 +53,10 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const { data: searchResults, isFetching: isSearching } = useQuery<ProductSearchResult[]>({
-    queryKey: ['products-async-search', debouncedQuery],
-    queryFn: async () => {
-      if (!debouncedQuery) return [];
-      const res = await api.get('/products/search', {
-        params: { Query: debouncedQuery, Limit: 20 },
-      });
-      return res.data?.data || res.data?.value || res.data || [];
-    },
-    enabled: isOpen && debouncedQuery.length >= 2,
-  });
+  const { data: searchResults = [], isFetching: isSearching } = useProductSearch(
+    debouncedQuery,
+    isOpen,
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -194,7 +180,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
   const multiplier = Math.pow(10, decimalPlaces + 2);
 
   let dropdownContent: React.ReactNode;
-  if (searchResults && searchResults.length > 0) {
+  if (searchResults.length > 0) {
     dropdownContent = searchResults.map((prod) => (
       <button
         key={prod.id}
@@ -376,7 +362,7 @@ export const EditOfferProductsDialog: React.FC<EditOfferProductsDialogProps> = (
             Anuluj
           </Button>
           <Button
-            type="button"
+            type="submit"
             onClick={handleSubmit}
             disabled={isLoading || items.length === 0}
             className="bg-brand text-white hover:bg-brand-hover flex items-center gap-2"

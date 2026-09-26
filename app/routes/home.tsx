@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
 import { useAuth } from '~/context/auth-context';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { api } from '~/api/api';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
+import { useLoginMutation } from '~/hooks/use-auth';
 
 export default function Home() {
   const [name, setName] = useState('');
@@ -23,44 +22,13 @@ export default function Home() {
     if (!isLoading && user) navigate('/dashboard', { replace: true });
   }, [isLoading, user, navigate]);
 
-  const loginMutation = useMutation({
-    mutationFn: async () => {
-      const response = await api.post('auth/login', {
-        name: name.trim(),
-        password,
-      });
-      return response.data;
-    },
+  const loginMutation = useLoginMutation({
     onSuccess: async () => {
       setFormError(null);
       await login();
     },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const status = apiError.response?.status;
-      const errorData = apiError.response?.data;
-
-      if (status === 401) {
-        setFormError({
-          title: 'Niepoprawny login lub hasło.',
-          details: [
-            'Upewnij się, że wpisane dane są prawidłowe oraz czy konto ma potwierdzony adres e-mail.',
-          ],
-        });
-        return;
-      }
-
-      if (errorData?.errorCode) {
-        setFormError({
-          title: getErrorMessage(errorData.errorCode, errorData.message),
-          details: errorData.errors && errorData.errors.length > 0 ? errorData.errors : undefined,
-        });
-        return;
-      }
-
-      setFormError({
-        title: apiError.message || 'Wystąpił błąd podczas logowania.',
-      });
+    onError: (parsedError) => {
+      setFormError(parsedError);
     },
   });
 
@@ -80,7 +48,10 @@ export default function Home() {
       return;
     }
 
-    loginMutation.mutate();
+    loginMutation.mutate({
+      name: name.trim(),
+      password,
+    });
   };
 
   if (isLoading) {
@@ -142,7 +113,7 @@ export default function Home() {
                     type="button"
                     onClick={() => setShowPassword((previous) => !previous)}
                     className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-sm p-1 text-count-gray hover:text-button-gray focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
-                    aria-label={showPassword ? 'Ukryj haslo' : 'Pokaz haslo'}
+                    aria-label={showPassword ? 'Ukryj hasło' : 'Pokaz hasło'}
                   >
                     {showPassword ? (
                       <EyeOff className="size-4.5" strokeWidth={2} />

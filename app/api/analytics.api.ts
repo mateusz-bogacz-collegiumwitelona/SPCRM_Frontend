@@ -1,0 +1,34 @@
+import { api } from '~/api/api';
+import type {
+  AdminMetricsResponse,
+  AnalyticsChartMetricResponse,
+  AnalyticsPeriod,
+  EmployeeKpiSummaryResponse,
+} from '~/interfaces/analytics';
+
+export const analyticsApi = {
+  getEmployeeKpi: async (userId: string): Promise<EmployeeKpiSummaryResponse> => {
+    const response = await api.get(`/analytics/employees/${userId}/kpi`);
+    return response.data?.value || response.data?.data || response.data;
+  },
+
+  getEmployeeChart: async (
+    userId: string,
+    period: AnalyticsPeriod,
+  ): Promise<AnalyticsChartMetricResponse[]> => {
+    const response = await api.get(`/analytics/employees/${userId}/chart`, {
+      params: { Period: period },
+    });
+    return response.data?.value || response.data?.data || response.data || [];
+  },
+
+  getMyKpi: async (): Promise<EmployeeKpiSummaryResponse> => {
+    const response = await api.get('/analytics/me/kpi');
+    return response.data?.value || response.data?.data || response.data;
+  },
+
+  getAdminMetrics: async (): Promise<AdminMetricsResponse> => {
+    const response = await api.get('/analytics/admin/metrics');
+    return response.data?.value || response.data?.data || response.data;
+  },
+};

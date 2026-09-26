@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +12,7 @@ import { AlertCircle, Loader2, Pencil, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
+import { useEditDealProductMutation } from '~/hooks/use-deals';
 
 interface DealProductItem {
   dealProductId: string;
@@ -41,8 +40,6 @@ export const EditDealProductDialog: React.FC<EditDealProductDialogProps> = ({
   product,
   currencyCode = 'PLN',
 }) => {
-  const queryClient = useQueryClient();
-
   const [quantity, setQuantity] = useState<number>(1);
   const [unitPrice, setUnitPrice] = useState<number>(0);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
@@ -60,40 +57,15 @@ export const EditDealProductDialog: React.FC<EditDealProductDialogProps> = ({
     onClose();
   };
 
-  const editMutation = useMutation({
-    mutationFn: async () => {
-      if (!product) return;
-      const payload = {
-        dealProductId: product.dealProductId,
-        quantity: Number(quantity),
-        unitPrice: Math.round(Number(unitPrice) * 10000),
-      };
-      return await api.patch(`/sales/${dealId}/products`, payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-products', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deal-info', dealId] });
-      await queryClient.invalidateQueries({ queryKey: ['deals-list'] });
-      handleClose();
-    },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const responseData = apiError.response?.data;
-      const code = responseData?.errorCode;
-      const fallback =
-        responseData?.message || apiError.message || 'Nie udało się zaktualizować pozycji.';
-
-      setFormError({
-        title: getErrorMessage(code, fallback),
-        details:
-          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
-      });
-    },
+  const editMutation = useEditDealProductMutation(dealId, {
+    onSuccess: handleClose,
   });
 
-  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
+
+    if (!product) return;
 
     const validationErrors: string[] = [];
     if (quantity <= 0) {
@@ -111,7 +83,25 @@ export const EditDealProductDialog: React.FC<EditDealProductDialogProps> = ({
       return;
     }
 
-    editMutation.mutate();
+    try {
+      await editMutation.mutateAsync({
+        dealProductId: product.dealProductId,
+        quantity: Number(quantity),
+        unitPrice: Math.round(Number(unitPrice) * 10000),
+      });
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się zaktualizować pozycji.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   if (!product) return null;

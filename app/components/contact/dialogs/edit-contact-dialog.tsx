@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +15,7 @@ import type {
   EditContactDetailRequest,
   EditContactRequest,
 } from '~/interfaces/contact';
+import { useContactEditDetails, useContactTypes } from '~/hooks/use-contacts';
 
 interface EditContactDialogProps {
   contactId: string | null;
@@ -39,23 +38,11 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
   const [details, setDetails] = useState<EditContactDetailRequest[]>([]);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
-  const { data: contactData, isLoading: isFetchingContact } = useQuery({
-    queryKey: ['contact-edit-detail', contactId],
-    queryFn: async () => {
-      const res = await api.get(`/contacts/${contactId}/detail`);
-      return res.data.data;
-    },
-    enabled: isOpen && !!contactId,
-  });
-
-  const { data: contactTypes = [], isLoading: isTypesLoading } = useQuery({
-    queryKey: ['contact-types'],
-    queryFn: async () => {
-      const res = await api.get('/contacts/types');
-      return res.data.data as string[];
-    },
-    enabled: isOpen,
-  });
+  const { data: contactData, isLoading: isFetchingContact } = useContactEditDetails(
+    contactId,
+    isOpen,
+  );
+  const { data: contactTypes = [], isLoading: isTypesLoading } = useContactTypes(isOpen);
 
   useEffect(() => {
     if (contactData && isOpen) {
@@ -233,6 +220,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                     Imię *
                   </label>
                   <input
+                    id="contact-first-name"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
@@ -243,6 +231,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                     Nazwisko *
                   </label>
                   <input
+                    id="contact-last-name"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
@@ -254,6 +243,7 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                   Stanowisko
                 </label>
                 <input
+                  id="contact-job-title"
                   value={jobTitle}
                   onChange={(e) => setJobTitle(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
@@ -283,21 +273,31 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                   <div className="flex flex-col items-center justify-start pt-2 px-1">
                     <input
                       type="radio"
+                      id={`edit-primary-${index}`}
                       name="primaryContactEdit"
                       checked={detail.isPrimary}
                       onChange={() => handleSetPrimary(index)}
                       className="w-4 h-4 text-brand focus:ring-brand cursor-pointer"
                       title="Ustaw jako główny kontakt"
                     />
-                    <span className="text-[10px] text-gray-500 mt-1">Główny</span>
+                    <label
+                      htmlFor={`edit-primary-${index}`}
+                      className="text-[10px] text-gray-500 mt-1 cursor-pointer"
+                    >
+                      Główny
+                    </label>
                   </div>
 
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label htmlFor="contact-type" className="text-xs font-medium text-gray-700">
+                      <label
+                        htmlFor={`edit-type-${index}`}
+                        className="text-xs font-medium text-gray-700"
+                      >
                         Typ *
                       </label>
                       <select
+                        id={`edit-type-${index}`}
                         value={detail.type}
                         onChange={(e) => handleDetailChange(index, 'type', e.target.value)}
                         className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand bg-white"
@@ -314,10 +314,14 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                     </div>
 
                     <div className="space-y-1">
-                      <label htmlFor="contatct-label" className="text-xs font-medium text-gray-700">
+                      <label
+                        htmlFor={`edit-label-${index}`}
+                        className="text-xs font-medium text-gray-700"
+                      >
                         Etykieta *
                       </label>
                       <input
+                        id={`edit-label-${index}`}
                         value={detail.label}
                         onChange={(e) => handleDetailChange(index, 'label', e.target.value)}
                         placeholder="np. Służbowy"
@@ -326,10 +330,14 @@ export const EditContactDialog: React.FC<EditContactDialogProps> = ({
                     </div>
 
                     <div className="space-y-1">
-                      <label htmlFor="contact-value" className="text-xs font-medium text-gray-700">
+                      <label
+                        htmlFor={`edit-value-${index}`}
+                        className="text-xs font-medium text-gray-700"
+                      >
                         Wartość *
                       </label>
                       <input
+                        id={`edit-value-${index}`}
                         value={detail.value}
                         onChange={(e) => handleDetailChange(index, 'value', e.target.value)}
                         placeholder="Email / Telefon"

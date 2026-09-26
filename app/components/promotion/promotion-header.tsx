@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { useAuth } from '~/context/auth-context';
 import { Button } from '~/components/ui/button';
 import { ArrowLeft, Pencil, Play, PowerOff, Trash2 } from 'lucide-react';
@@ -11,15 +9,16 @@ import { DeactivatePromotionDialog } from '~/components/promotion/dialogs/deacti
 import { ActivatePromotionDialog } from '~/components/promotion/dialogs/activate-promotion-dialog';
 import { DeletePromotionDialog } from '~/components/promotion/dialogs/delete-promotion-dialog';
 import { EditPromotionDialog } from '~/components/promotion/dialogs/edit-promotion-dialog';
-import type { EditPromotionRequest, PromotionDetailResponse } from '~/interfaces/promotion';
+import type { PromotionDetailResponse } from '~/interfaces/promotion';
 import { MANAGEMENT_ROLES } from '~/constants/roles';
+import { usePromotionHeaderMutations } from '~/hooks/use-promotions';
 
 export const PromotionHeader: React.FC<{ readonly promotion: PromotionDetailResponse }> = ({
   promotion,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+
   const [isDeactivateOpen, setIsDeactivateOpen] = useState(false);
   const [isActivateOpen, setIsActivateOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -27,41 +26,8 @@ export const PromotionHeader: React.FC<{ readonly promotion: PromotionDetailResp
 
   const canManage = user?.roles.some((role) => MANAGEMENT_ROLES.includes(role));
 
-  const deactivateMutation = useMutation({
-    mutationFn: async () => api.patch(`/promotion/${promotion.id}/deactivate`),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion.id] });
-      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
-      setIsDeactivateOpen(false);
-    },
-  });
-
-  const activateMutation = useMutation({
-    mutationFn: async (endDate: Date) =>
-      api.patch('/promotion/activate', { id: promotion.id, endDate: endDate.toISOString() }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion.id] });
-      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
-      setIsActivateOpen(false);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async () => api.delete(`/promotion/${promotion.id}`),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
-      navigate('/promotions');
-    },
-  });
-
-  const editMutation = useMutation({
-    mutationFn: async (payload: EditPromotionRequest) => api.patch('/promotion/edit', payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['promotion-details', promotion.id] });
-      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
-      setIsEditOpen(false);
-    },
-  });
+  const { deactivateMutation, activateMutation, editMutation, deleteMutation } =
+    usePromotionHeaderMutations(promotion.id);
 
   const isExpired = Boolean(promotion.endDate && new Date(promotion.endDate) < new Date());
 
@@ -85,6 +51,26 @@ export const PromotionHeader: React.FC<{ readonly promotion: PromotionDetailResp
         Zakończona
       </span>
     );
+  };
+
+  const handleDelete = async () => {
+    await deleteMutation.mutateAsync();
+    navigate('/promotions');
+  };
+
+  const handleDeactivate = async () => {
+    await deactivateMutation.mutateAsync();
+    setIsDeactivateOpen(false);
+  };
+
+  const handleActivate = async (endDate: Date) => {
+    await activateMutation.mutateAsync(endDate);
+    setIsActivateOpen(false);
+  };
+
+  const handleEdit = async (payload: Parameters<typeof editMutation.mutateAsync>[0]) => {
+    await editMutation.mutateAsync(payload);
+    setIsEditOpen(false);
   };
 
   return (
@@ -182,36 +168,28 @@ export const PromotionHeader: React.FC<{ readonly promotion: PromotionDetailResp
       <DeactivatePromotionDialog
         isOpen={isDeactivateOpen}
         onClose={() => setIsDeactivateOpen(false)}
-        onConfirm={async () => {
-          await deactivateMutation.mutateAsync();
-        }}
+        onConfirm={handleDeactivate}
         isLoading={deactivateMutation.isPending}
         promotionName={promotion.name}
       />
       <ActivatePromotionDialog
         isOpen={isActivateOpen}
         onClose={() => setIsActivateOpen(false)}
-        onConfirm={async (endDate) => {
-          await activateMutation.mutateAsync(endDate);
-        }}
+        onConfirm={handleActivate}
         isLoading={activateMutation.isPending}
         promotionName={promotion.name}
       />
       <DeletePromotionDialog
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
-        onConfirm={async () => {
-          await deleteMutation.mutateAsync();
-        }}
+        onConfirm={handleDelete}
         isLoading={deleteMutation.isPending}
         promotionName={promotion.name}
       />
       <EditPromotionDialog
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
-        onSave={async (payload) => {
-          await editMutation.mutateAsync(payload);
-        }}
+        onSave={handleEdit}
         isLoading={editMutation.isPending}
         initialData={promotion}
       />

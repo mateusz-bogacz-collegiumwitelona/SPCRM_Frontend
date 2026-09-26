@@ -60,3 +60,54 @@ export interface InvoiceListResponse {
   dueDate: string;
   isOverDue: boolean;
 }
+
+export interface InvoiceListParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  companyName?: string;
+  companyNip?: string;
+  issueDateFrom?: string;
+  issueDateTo?: string;
+  isOverDue?: boolean;
+  totalAmountFrom?: number;
+  totalAmountTo?: number;
+}
+
+export interface PaginatedInvoicesResponse {
+  items: InvoiceListResponse[];
+  totalPages: number;
+  totalItems?: number;
+  totalCount?: number;
+}
+
+export interface InvoiceListParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  companyName?: string;
+  companyNip?: string;
+  issueDateFrom?: string;
+  issueDateTo?: string;
+  isOverDue?: boolean;
+  totalAmountFrom?: number;
+  totalAmountTo?: number;
+}
+
+export interface PaginatedInvoicesResponse {
+  items: InvoiceListResponse[];
+  totalPages: number;
+  totalItems?: number;
+  totalCount?: number;
+}
+
+export interface AddInvoicePaymentPayload {
+  amount: number;
+  paymentDate: string;
+  referenceNumber?: string;
+  note?: string;
+}

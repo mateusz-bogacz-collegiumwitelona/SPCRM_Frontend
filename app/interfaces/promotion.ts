@@ -85,3 +85,37 @@ export interface PromotionDetailResponse {
   createdAt: string;
   updateAt?: string | null;
 }
+
+export interface PromotionResponse {
+  id: string;
+  name: string;
+  discountPercentage?: number | null;
+  promotionalPrice?: number | null;
+  promotionalPriceCode?: string | null;
+  promotionalPriceDecimalPlace?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  isActive: boolean;
+}
+
+export interface PromotionListParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+  sortBy: string;
+  sortDescending: boolean;
+  isActive?: boolean;
+  fromDate?: string;
+  toDate?: string;
+  discountPercentageFrom?: number;
+  discountPercentageTo?: number;
+  promotionPriceFrom?: number;
+  promotionPriceTo?: number;
+}
+
+export interface PaginatedPromotionsResponse {
+  items: PromotionResponse[];
+  totalPages: number;
+  totalItems?: number;
+  totalCount?: number;
+}

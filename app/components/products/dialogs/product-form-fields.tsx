@@ -1,49 +1,24 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import type { SteelGradeOption } from '~/interfaces/steel-grade';
 import type { UnitOption } from '~/interfaces/unit';
 import type { CurrencyOption } from '~/interfaces/currency';
 import type { ProductFormData } from '~/interfaces/product';
+import { useProductCategories, useProductSteelGrades } from '~/hooks/use-products';
+import { useUnitsSimpleList } from '~/hooks/use-units';
+import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 
 export function useProductFormDictionaries(enabled: boolean) {
-  const { data: categories = [] } = useQuery<string[]>({
-    queryKey: ['product-categories'],
-    queryFn: async () => {
-      const res = await api.get('/products/categories');
-      return (res.data?.value || res.data?.data || res.data || []) as string[];
-    },
-    enabled,
-  });
+  const { data: categories = [] } = useProductCategories();
+  const { data: steelGrades = [] } = useProductSteelGrades();
+  const { data: units = [] } = useUnitsSimpleList(enabled);
+  const { data: currencies = [] } = useCurrenciesSimpleList(enabled);
 
-  const { data: steelGrades = [] } = useQuery<SteelGradeOption[]>({
-    queryKey: ['product-steel-grades'],
-    queryFn: async () => {
-      const res = await api.get('/products/steel-grades');
-      return (res.data?.value || res.data?.data || res.data || []) as SteelGradeOption[];
-    },
-    enabled,
-  });
-
-  const { data: units = [] } = useQuery<UnitOption[]>({
-    queryKey: ['units-of-measure-simple'],
-    queryFn: async () => {
-      const res = await api.get('/unit/simple');
-      return (res.data?.value || res.data?.data || res.data || []) as UnitOption[];
-    },
-    enabled,
-  });
-
-  const { data: currencies = [] } = useQuery<CurrencyOption[]>({
-    queryKey: ['currencies-simple'],
-    queryFn: async () => {
-      const res = await api.get('/currency/simple');
-      return (res.data?.value || res.data?.data || res.data || []) as CurrencyOption[];
-    },
-    enabled,
-  });
-
-  return { categories, steelGrades, units, currencies };
+  return {
+    categories,
+    steelGrades: steelGrades as unknown as SteelGradeOption[],
+    units: units as unknown as UnitOption[],
+    currencies: currencies as unknown as CurrencyOption[],
+  };
 }
 
 interface ProductFormFieldsProps {

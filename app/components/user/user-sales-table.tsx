@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
@@ -20,14 +19,14 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import type { UserDealItem } from '~/interfaces/deal';
+import { useUserSales } from '~/hooks/use-users';
+import { useSalesStatuses } from '~/hooks/use-deals';
 
 const PAGE_SIZE = 5;
 
@@ -107,16 +106,7 @@ export const UserSalesTable = ({ userId }: { readonly userId: string }) => {
     setPageNumber(1);
   }, [debouncedSearch, sortBy, sortDescending, statusFilter, dateFrom, dateTo]);
 
-  const { data: statusesResponse } = useQuery<string[]>({
-    queryKey: ['sales-statuses'],
-    queryFn: async () => {
-      const response = await api.get('/sales/statuses');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-    staleTime: 1000 * 60 * 60,
-  });
-
-  const availableStatuses = Array.isArray(statusesResponse) ? statusesResponse : [];
+  const { data: availableStatuses = [] } = useSalesStatuses();
 
   const {
     data,
@@ -124,29 +114,16 @@ export const UserSalesTable = ({ userId }: { readonly userId: string }) => {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'user-sales',
-      userId,
-      { pageNumber, debouncedSearch, sortBy, sortDescending, statusFilter, dateFrom, dateTo },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: PAGE_SIZE,
-        SearchTerm: debouncedSearch.trim() || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        StatusType: statusFilter || undefined,
-        DateFrom: dateFrom ? new Date(dateFrom).toISOString() : undefined,
-        DateTo: dateTo ? new Date(dateTo).toISOString() : undefined,
-      };
-
-      const response = await api.get(`/user/${userId}/sales`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
-    enabled: Boolean(userId),
+  } = useUserSales({
+    userId,
+    pageNumber,
+    pageSize: PAGE_SIZE,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    statusFilter,
+    dateFrom,
+    dateTo,
   });
 
   const sales = useMemo(() => data?.items || [], [data]);

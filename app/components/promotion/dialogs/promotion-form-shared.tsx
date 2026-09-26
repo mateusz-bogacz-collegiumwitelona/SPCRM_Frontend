@@ -1,6 +1,4 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { Button } from '~/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Calendar } from '~/components/ui/calendar';
@@ -15,6 +13,8 @@ import type {
   PromotionPricingPayloadResult,
   PromotionSharedFormData,
 } from '~/interfaces/promotion';
+import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
+import { useMailingContacts } from '~/hooks/use-mailing';
 
 export const defaultPromotionSharedState: PromotionSharedFormData = {
   discountType: 'percentage',
@@ -91,25 +91,13 @@ export const buildBasePromotionPayload = (formData: PromotionSharedFormData) => 
 });
 
 export function usePromotionDictionaries(isOpen: boolean) {
-  const { data: currencies = [] } = useQuery<CurrencyOption[]>({
-    queryKey: ['currencies-simple'],
-    queryFn: async () => {
-      const res = await api.get('/currency/simple');
-      return (res.data?.value || res.data?.data || res.data || []) as CurrencyOption[];
-    },
-    enabled: isOpen,
-  });
+  const { data: currencies = [] } = useCurrenciesSimpleList(isOpen);
+  const { data: contacts = [] } = useMailingContacts('', 100, isOpen);
 
-  const { data: contacts = [] } = useQuery<ContactOption[]>({
-    queryKey: ['mailing-contacts-list'],
-    queryFn: async () => {
-      const res = await api.get('/mailing/contacts', { params: { PageNumber: 1, PageSize: 100 } });
-      return res.data?.data?.items || [];
-    },
-    enabled: isOpen,
-  });
-
-  return { currencies, contacts };
+  return {
+    currencies: currencies as unknown as CurrencyOption[],
+    contacts: contacts as unknown as ContactOption[],
+  };
 }
 
 interface DatePickerFieldProps {
@@ -138,7 +126,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
           onClick={() => onSelect(undefined)}
           className="text-[10px] text-gray-500 hover:text-red-600 flex items-center gap-0.5"
         >
-          <X className="w-3 h-3" /> Wyczyść
+          <X className="w-3.5 h-3.5" /> Wyczyść
         </button>
       )}
     </div>

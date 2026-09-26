@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { useMutation } from '@tanstack/react-query';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, X } from 'lucide-react';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/interfaces/api-error';
+import { useConfirmEmailMutation } from '~/hooks/use-auth';
 
 export default function ConfirmRegistration() {
   const [searchParams] = useSearchParams();
@@ -22,33 +21,13 @@ export default function ConfirmRegistration() {
   const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const confirmMutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        email: email,
-        token: token,
-        password: password,
-        confirmPassword: confirmPassword,
-      };
-
-      const response = await api.post('/user/confirm-email', payload);
-      return response.data;
-    },
+  const confirmMutation = useConfirmEmailMutation({
     onSuccess: () => {
       setIsSuccess(true);
       setFormError(null);
     },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const errorData = apiError.response?.data;
-
-      setFormError({
-        title: getErrorMessage(
-          errorData?.errorCode,
-          errorData?.message || apiError.message || 'Wystąpił błąd podczas aktywacji konta.',
-        ),
-        details: errorData?.errors && errorData.errors.length > 0 ? errorData.errors : undefined,
-      });
+    onError: (parsedError) => {
+      setFormError(parsedError);
     },
   });
 
@@ -75,7 +54,12 @@ export default function ConfirmRegistration() {
       return;
     }
 
-    confirmMutation.mutate();
+    confirmMutation.mutate({
+      email,
+      token,
+      password,
+      confirmPassword,
+    });
   };
 
   const isLinkInvalid = !token.trim() || !email.trim();

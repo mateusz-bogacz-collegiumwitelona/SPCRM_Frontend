@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, CalendarIcon, CreditCard, Loader2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { api } from '~/api/api';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +17,7 @@ import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 import { cn } from '~/utils/utils';
+import { useAddInvoicePaymentMutation } from '~/hooks/use-invoices';
 
 interface AddInvoicePaymentDialogProps {
   readonly invoiceId: string;
@@ -37,8 +36,6 @@ export const AddInvoicePaymentDialog: React.FC<AddInvoicePaymentDialogProps> = (
   isOpen,
   onClose,
 }) => {
-  const queryClient = useQueryClient();
-
   const [amount, setAmount] = useState<string>('');
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -60,40 +57,11 @@ export const AddInvoicePaymentDialog: React.FC<AddInvoicePaymentDialogProps> = (
     onClose();
   };
 
-  const addPaymentMutation = useMutation({
-    mutationFn: async () => {
-      const parsedAmount = Math.round(Number(amount) * 10000);
-      const payload = {
-        amount: parsedAmount,
-        paymentDate: paymentDate!.toISOString(),
-        referenceNumber: referenceNumber.trim() || undefined,
-        note: note.trim() || undefined,
-      };
-      return await api.post(`/invoice/${invoiceId}/payment`, payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['invoice-payments', invoiceId] });
-      await queryClient.invalidateQueries({ queryKey: ['invoice-payment-summary', invoiceId] });
-      await queryClient.invalidateQueries({ queryKey: ['invoice-detail', invoiceId] });
-      await queryClient.invalidateQueries({ queryKey: ['invoices-list'] });
-      handleClose();
-    },
-    onError: (err: unknown) => {
-      const apiError = err as ApiError;
-      const responseData = apiError.response?.data;
-      const code = responseData?.errorCode;
-      const fallback =
-        responseData?.message || apiError.message || 'Nie udało się zarejestrować wpłaty.';
-
-      setFormError({
-        title: getErrorMessage(code, fallback),
-        details:
-          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
-      });
-    },
+  const addPaymentMutation = useAddInvoicePaymentMutation(invoiceId, {
+    onSuccess: handleClose,
   });
 
-  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
 
@@ -123,7 +91,26 @@ export const AddInvoicePaymentDialog: React.FC<AddInvoicePaymentDialogProps> = (
       return;
     }
 
-    addPaymentMutation.mutate();
+    try {
+      await addPaymentMutation.mutateAsync({
+        amount: amountInUnits,
+        paymentDate: paymentDate ? paymentDate.toISOString() : new Date().toISOString(),
+        referenceNumber: referenceNumber.trim() || undefined,
+        note: note.trim() || undefined,
+      });
+    } catch (err: unknown) {
+      const apiError = err as ApiError;
+      const responseData = apiError.response?.data;
+      const code = responseData?.errorCode;
+      const fallback =
+        responseData?.message || apiError.message || 'Nie udało się zarejestrować wpłaty.';
+
+      setFormError({
+        title: getErrorMessage(code, fallback),
+        details:
+          responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
+      });
+    }
   };
 
   const setMaxAmount = () => {

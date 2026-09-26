@@ -1,15 +1,85 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { formatCurrency } from '~/utils/data-formatters';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { AlertCircle, PackageOpen, X } from 'lucide-react';
 import { DataTable } from '~/components/table/data-table';
 import type { InvoiceProductsListResponse } from '~/interfaces/invoice';
+import { useInvoiceProducts } from '~/hooks/use-invoices';
+
+interface InvoiceProductsTableMeta {
+  currencyCode: string;
+  decimalPlaces: number;
+}
 
 const columnHelper = createColumnHelper<InvoiceProductsListResponse>();
+
+const columns = [
+  columnHelper.display({
+    id: 'productName',
+    header: 'Nazwa towaru / usługi',
+    cell: (info) => (
+      <span className="font-medium text-gray-900">{info.row.original.productName}</span>
+    ),
+  }),
+  columnHelper.accessor('steelGrade', {
+    header: 'Gatunek',
+    cell: (info) => {
+      const val = info.getValue();
+      if (!val) return <span className="text-gray-400">-</span>;
+      return (
+        <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-semibold">
+          {val}
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'quantity',
+    header: 'Ilość',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="font-medium text-gray-900">
+          {row.quantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'unitPrice',
+    header: 'Cena jedn. netto',
+    cell: (info) => {
+      const meta = info.table.options.meta as InvoiceProductsTableMeta;
+      return (
+        <span className="text-gray-900 font-medium">
+          {formatCurrency(
+            info.row.original.unitPrice,
+            meta?.currencyCode || 'PLN',
+            meta?.decimalPlaces ?? 2,
+          )}
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'totalPrice',
+    header: 'Wartość łączna',
+    cell: (info) => {
+      const meta = info.table.options.meta as InvoiceProductsTableMeta;
+      return (
+        <span className="font-bold text-gray-900">
+          {formatCurrency(
+            info.row.original.totalPrice,
+            meta?.currencyCode || 'PLN',
+            meta?.decimalPlaces ?? 2,
+          )}
+        </span>
+      );
+    },
+  }),
+];
 
 const mergeProducts = (
   existing: InvoiceProductsListResponse[],
@@ -95,27 +165,11 @@ export const InvoiceProductsTable = ({
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'invoice-products',
-      invoiceId,
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-      };
-
-      const response = await api.get(`/invoice/${invoiceId}/products`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useInvoiceProducts({
+    invoiceId,
+    pageNumber,
+    pageSize,
+    debouncedSearch,
   });
 
   const desktopProducts = useMemo(() => data?.items || [], [data]);
@@ -123,7 +177,7 @@ export const InvoiceProductsTable = ({
   const totalItems = data?.totalItems || data?.totalCount || desktopProducts.length;
 
   useEffect(() => {
-    const items: InvoiceProductsListResponse[] = data?.items;
+    const items: InvoiceProductsListResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -144,65 +198,14 @@ export const InvoiceProductsTable = ({
     setPageNumber(newPage);
   };
 
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: 'productName',
-        header: 'Nazwa towaru / usługi',
-        cell: (info) => (
-          <span className="font-medium text-gray-900">{info.row.original.productName}</span>
-        ),
-      }),
-      columnHelper.accessor('steelGrade', {
-        header: 'Gatunek',
-        cell: (info) => {
-          const val = info.getValue();
-          if (!val) return <span className="text-gray-400">-</span>;
-          return (
-            <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-semibold">
-              {val}
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'quantity',
-        header: 'Ilość',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="font-medium text-gray-900">
-              {row.quantity} <span className="text-gray-500 font-normal">{row.unitSymbol}</span>
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'unitPrice',
-        header: 'Cena jedn. netto',
-        cell: (info) => (
-          <span className="text-gray-900 font-medium">
-            {formatCurrency(info.row.original.unitPrice, currencyCode, decimalPlaces)}
-          </span>
-        ),
-      }),
-      columnHelper.display({
-        id: 'totalPrice',
-        header: 'Wartość łączna',
-        cell: (info) => (
-          <span className="font-bold text-gray-900">
-            {formatCurrency(info.row.original.totalPrice, currencyCode, decimalPlaces)}
-          </span>
-        ),
-      }),
-    ],
-    [currencyCode, decimalPlaces],
-  );
-
   const table = useReactTable({
     data: desktopProducts,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      currencyCode,
+      decimalPlaces,
+    } satisfies InvoiceProductsTableMeta,
   });
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);

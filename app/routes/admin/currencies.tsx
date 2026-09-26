@@ -1,9 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus, X } from 'lucide-react';
-
-import { api } from '~/api/api';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { Button } from '~/components/ui/button';
@@ -14,15 +11,9 @@ import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
 import { AddCurrencyDialog } from '~/components/currency/dialogs/add-currency-dialog';
 import { EditCurrencyDialog } from '~/components/currency/dialogs/edit-currency-dialog';
-import type { AddCurrencyRequestPayload, EditCurrencyRequestPayload } from '~/interfaces/currency';
 import { ROLES } from '~/constants/roles';
-
-interface CurrencyListResponse {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
+import { useCurrenciesList, useCurrencyMutations } from '~/hooks/use-currencies';
+import type { CurrencyListResponse } from '~/interfaces/currency';
 
 interface CurrencyTableMeta {
   onEdit: (currency: { id: string; name: string; code: string; decimalPlace: number }) => void;
@@ -126,8 +117,6 @@ const CurrencyMobileCard = ({
 );
 
 export default function CurrenciesList() {
-  const queryClient = useQueryClient();
-
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,6 +136,7 @@ export default function CurrenciesList() {
     CurrencyListResponse[]
   >([]);
   const isMobileAppend = useRef(false);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -164,56 +154,22 @@ export default function CurrenciesList() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'currencies-list',
-      { pageNumber, pageSize, debouncedSearch, sortBy, sortDescending },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-      };
-
-      const response = await api.get('/currency', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useCurrenciesList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
-  const addMutation = useMutation({
-    mutationFn: async (payload: AddCurrencyRequestPayload) => {
-      await api.post('/currency', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['currencies-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['currencies-simple'] });
-      setIsAddOpen(false);
-    },
-  });
-
-  const editMutation = useMutation({
-    mutationFn: async (payload: EditCurrencyRequestPayload) => {
-      await api.patch('/currency', payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['currencies-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['currencies-simple'] });
-      setEditingCurrency(null);
-    },
-  });
+  const { addMutation, editMutation } = useCurrencyMutations();
 
   const desktopCurrencies = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopCurrencies.length;
 
   useEffect(() => {
-    const items: CurrencyListResponse[] = data?.items;
+    const items: CurrencyListResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -247,9 +203,7 @@ export default function CurrenciesList() {
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -259,10 +213,7 @@ export default function CurrenciesList() {
             responseData?.errorCode,
             responseData?.message || activeError?.message || 'Nie udało się pobrać listy walut.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -325,7 +276,7 @@ export default function CurrenciesList() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -375,6 +326,7 @@ export default function CurrenciesList() {
             onClose={() => setIsAddOpen(false)}
             onSave={async (payload) => {
               await addMutation.mutateAsync(payload);
+              setIsAddOpen(false);
             }}
             isLoading={addMutation.isPending}
           />
@@ -385,6 +337,7 @@ export default function CurrenciesList() {
             onClose={() => setEditingCurrency(null)}
             onSave={async (payload) => {
               await editMutation.mutateAsync(payload);
+              setEditingCurrency(null);
             }}
             isLoading={editMutation.isPending}
           />

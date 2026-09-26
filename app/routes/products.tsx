@@ -1,8 +1,6 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
@@ -35,28 +33,15 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { HasRole } from '~/lib/has-role';
 import { AddProductStockDialog } from '~/components/products/dialogs/add-product-stock-dialog';
-import type {
-  AddProductRequest,
-  AddProductStockRequest,
-  EditProductRequest,
-} from '~/interfaces/product';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 
-interface ProductResponse {
-  id: string;
-  name: string;
-  steelGrade: string;
-  category: string;
-  dimensions: string;
-  stockQuantity: number;
-  unitSymbol: string;
-  isActivePromotion: boolean;
-}
-
-interface SteelGradeResponse {
-  id: string;
-  name: string;
-}
+import type { ProductResponse } from '~/interfaces/product';
+import {
+  useProductCategories,
+  useProductMutations,
+  useProductsList,
+  useProductSteelGrades,
+} from '~/hooks/use-products';
 
 interface ProductTableMeta {
   onEdit: (id: string) => void;
@@ -109,7 +94,7 @@ const columns = [
     header: 'Wymiary',
     cell: (info) => <span className="text-gray-500">{info.getValue()}</span>,
   }),
-  (columnHelper.display({
+  columnHelper.display({
     id: 'quantity',
     header: 'Ilość na stanie',
     cell: (info) => {
@@ -192,7 +177,7 @@ const columns = [
         </div>
       );
     },
-  })),
+  }),
 ];
 
 const ProductMobileCard = ({
@@ -250,6 +235,7 @@ export default function ProductsList() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<{ id: string; name: string } | null>(null);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   const [stockModalProduct, setStockModalProduct] = useState<{
     id: string;
@@ -257,51 +243,6 @@ export default function ProductsList() {
     currentStock: number;
     unitSymbol: string;
   } | null>(null);
-
-  const queryClient = useQueryClient();
-
-  const addProductMutation = useMutation({
-    mutationFn: async (newProduct: AddProductRequest) => {
-      await api.post('/products', newProduct);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
-      setIsAddModalOpen(false);
-    },
-  });
-
-  const editProductMutation = useMutation({
-    mutationFn: async (updatedProduct: EditProductRequest) => {
-      await api.put(`/products/${updatedProduct.productId}`, updatedProduct);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
-      await queryClient.invalidateQueries({ queryKey: ['product-details'] });
-      await queryClient.invalidateQueries({ queryKey: ['product-for-edit'] });
-      setEditingProductId(null);
-    },
-  });
-
-  const deleteProductMutation = useMutation({
-    mutationFn: async (productId: string) => {
-      await api.delete(`/products/${productId}`);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
-      setDeletingProduct(null);
-    },
-  });
-
-  const addStockMutation = useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
-      const payload: AddProductStockRequest = { quantityToAdd: quantity };
-      await api.post(`/products/${productId}/stock`, payload);
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
-      setStockModalProduct(null);
-    },
-  });
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
@@ -313,70 +254,35 @@ export default function ProductsList() {
     setPageNumber(1);
   }, [debouncedSearch, sortBy, sortDescending, pageSize, productFilter, steelGradeFilter]);
 
-  const { data: categoriesResponse } = useQuery({
-    queryKey: ['product-categories'],
-    queryFn: async () => {
-      const response = await api.get('/products/categories');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-  });
-  const availableCategories: string[] = Array.isArray(categoriesResponse) ? categoriesResponse : [];
-
-  const { data: steelGradesResponse } = useQuery<SteelGradeResponse[]>({
-    queryKey: ['product-steel-grades'],
-    queryFn: async () => {
-      const response = await api.get('/products/steel-grades');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-  });
-  const availableSteelGrades: SteelGradeResponse[] = Array.isArray(steelGradesResponse)
-    ? steelGradesResponse
-    : [];
-
   const {
     data,
     isLoading,
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'products-list',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        productFilter,
-        steelGradeFilter,
-        hasActivePromotion,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        ProductCategory: productFilter || undefined,
-        SteelGrade: steelGradeFilter || undefined,
-        HasActivePromotion: hasActivePromotion ? true : undefined,
-      };
-
-      const response = await api.get(`products`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useProductsList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    productFilter,
+    steelGradeFilter,
+    hasActivePromotion,
   });
+
+  const { data: availableCategories = [] } = useProductCategories();
+  const { data: availableSteelGrades = [] } = useProductSteelGrades();
+
+  const { addProductMutation, editProductMutation, deleteProductMutation, addStockMutation } =
+    useProductMutations();
 
   const desktopProducts = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopProducts.length;
 
   useEffect(() => {
-    const items: ProductResponse[] = data?.items;
+    const items: ProductResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -408,15 +314,11 @@ export default function ProductsList() {
     } satisfies ProductTableMeta,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -428,10 +330,7 @@ export default function ProductsList() {
               activeError?.message ||
               'Nie udało się pobrać listy produktów.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -603,7 +502,7 @@ export default function ProductsList() {
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div className="flex-1 pr-4">
               <p className="font-medium leading-tight">{listError.title}</p>
-              {listError.details && listError.details.length > 0 && (
+              {listError.details && (
                 <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                   {listError.details.map((detailErr, idx) => (
                     <li key={`${detailErr}-${idx}`}>{detailErr}</li>
@@ -653,6 +552,7 @@ export default function ProductsList() {
           onClose={() => setIsAddModalOpen(false)}
           onSave={async (newProductData) => {
             await addProductMutation.mutateAsync(newProductData);
+            setIsAddModalOpen(false);
           }}
           isLoading={addProductMutation.isPending}
         />
@@ -663,6 +563,7 @@ export default function ProductsList() {
           onClose={() => setEditingProductId(null)}
           onSave={async (updatedProductData) => {
             await editProductMutation.mutateAsync(updatedProductData);
+            setEditingProductId(null);
           }}
           isLoading={editProductMutation.isPending}
         />
@@ -674,6 +575,7 @@ export default function ProductsList() {
           onConfirm={async () => {
             if (deletingProduct) {
               await deleteProductMutation.mutateAsync(deletingProduct.id);
+              setDeletingProduct(null);
             }
           }}
           isLoading={deleteProductMutation.isPending}
@@ -689,6 +591,7 @@ export default function ProductsList() {
                 productId: stockModalProduct.id,
                 quantity,
               });
+              setStockModalProduct(null);
             }
           }}
           isLoading={addStockMutation.isPending}

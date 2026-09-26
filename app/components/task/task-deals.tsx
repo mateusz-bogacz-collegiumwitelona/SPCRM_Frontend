@@ -1,38 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { AlertCircle, Briefcase, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-
-interface TaskDealResponse {
-  dealId: string;
-  name: string;
-  value: number;
-  status: string;
-  closeDate: string;
-  currencyCode: string;
-  decimalPlaces: number;
-}
+import { useTaskDeal } from '~/hooks/use-tasks';
 
 export const TaskDeals = ({ taskId }: { taskId: string }) => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  const {
-    data: deal,
-    isLoading,
-    isError,
-    error: queryError,
-  } = useQuery<TaskDealResponse>({
-    queryKey: ['task-deal', taskId],
-    queryFn: async () => {
-      const response = await api.get(`/tasks/${taskId}/deal`);
-      return response.data?.data || response.data?.value || response.data;
-    },
-    retry: false,
-  });
+  const { data: deal, isLoading, isError, error: queryError } = useTaskDeal(taskId);
 
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
@@ -96,7 +73,7 @@ export const TaskDeals = ({ taskId }: { taskId: string }) => {
       </h2>
 
       <Link
-        to={`/deals/${deal.dealId}`}
+        to={`/sales/${deal.dealId}`}
         className="text-brand font-medium hover:underline leading-tight block mb-3"
       >
         {deal.name}

@@ -1,8 +1,6 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import {
@@ -28,22 +26,8 @@ import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
 import { formatOfferStatusLabel, getStatusBadge } from '~/utils/offer-status-helper';
 import { STANDARD_ROLES } from '~/constants/roles';
-
-interface OfferListResponse {
-  offerId: string;
-  offerName: string;
-  contactFirstName: string;
-  contactLastName: string;
-  companyName: string;
-  validUntil: string;
-  status: string;
-  isExpired: boolean;
-}
-
-interface CompanySimpleListResponse {
-  id: string;
-  name: string;
-}
+import { useOfferCompaniesSimpleList, useOffersList, useOfferStatuses } from '~/hooks/use-offers';
+import type { OfferListResponse } from '~/interfaces/offer';
 
 const columnHelper = createColumnHelper<OfferListResponse>();
 
@@ -145,16 +129,7 @@ export default function OffersList() {
   const [isMobile, setIsMobile] = useState(false);
   const [accumulatedMobileOffers, setAccumulatedMobileOffers] = useState<OfferListResponse[]>([]);
   const isMobileAppend = useRef(false);
-
-  const { data: statusDictionary } = useQuery<string[]>({
-    queryKey: ['offer-statuses-dictionary'],
-    queryFn: async () => {
-      const res = await api.get('/offer/statuses');
-      return res.data?.data || res.data?.value || res.data || [];
-    },
-  });
-
-  const statuses = statusDictionary ?? ['Sent', 'Accepted', 'Rejected', 'Expired'];
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -188,67 +163,29 @@ export default function OffersList() {
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: [
-      'offers-list',
-      {
-        pageNumber,
-        pageSize,
-        debouncedSearch,
-        sortBy,
-        sortDescending,
-        statusFilter,
-        companyNameFilter,
-        isExpiredFilter,
-        dateRange,
-      },
-    ],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-        SortBy: sortBy,
-        SortDescending: sortDescending,
-        Status: statusFilter || undefined,
-        CompanyName: companyNameFilter || undefined,
-        IsExpired: isExpiredFilter !== '' ? isExpiredFilter === 'true' : undefined,
-        ValidUntilFrom: dateRange?.from
-          ? new Date(
-              Date.UTC(
-                dateRange.from.getFullYear(),
-                dateRange.from.getMonth(),
-                dateRange.from.getDate(),
-              ),
-            ).toISOString()
-          : undefined,
-        ValidUntilTo: dateRange?.to
-          ? new Date(
-              Date.UTC(
-                dateRange.to.getFullYear(),
-                dateRange.to.getMonth(),
-                dateRange.to.getDate(),
-                23,
-                59,
-                59,
-                999,
-              ),
-            ).toISOString()
-          : undefined,
-      };
-
-      const response = await api.get('/offer', { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useOffersList({
+    pageNumber,
+    pageSize,
+    debouncedSearch,
+    sortBy,
+    sortDescending,
+    statusFilter,
+    companyNameFilter,
+    isExpiredFilter,
+    dateRange,
   });
+
+  const { data: statusDictionary } = useOfferStatuses();
+  const statuses = statusDictionary ?? ['Sent', 'Accepted', 'Rejected', 'Expired'];
+
+  const { data: availableCompanies = [] } = useOfferCompaniesSimpleList();
 
   const desktopOffers = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopOffers.length;
 
   useEffect(() => {
-    const items: OfferListResponse[] = data?.items;
+    const items: OfferListResponse[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {
@@ -273,31 +210,17 @@ export default function OffersList() {
     setPageNumber(newPage);
   };
 
-  const { data: companieSimpleList } = useQuery<CompanySimpleListResponse[]>({
-    queryKey: ['companies-simple-list'],
-    queryFn: async () => {
-      const response = await api.get('/company/simple-list');
-      return response.data?.value || response.data?.data || response.data;
-    },
-  });
-
-  const availableCompanies = Array.isArray(companieSimpleList) ? companieSimpleList : [];
-
   const table = useReactTable({
     data: desktopOffers,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const activeError = queryError as ApiError | null;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
+    if (isError) setIsErrorDismissed(false);
   }, [isError, queryError]);
 
   const listError: FormErrorState | null =
@@ -307,10 +230,7 @@ export default function OffersList() {
             responseData?.errorCode,
             responseData?.message || activeError?.message || 'Nie udało się pobrać listy ofert.',
           ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
+          details: responseData?.errors?.length ? responseData.errors : undefined,
         }
       : null;
 
@@ -445,6 +365,7 @@ export default function OffersList() {
                             Nazwa firmy
                           </label>
                           <select
+                            id="offer-company-filter"
                             value={companyNameFilter}
                             onChange={(e) => setCompanyNameFilter(e.target.value)}
                             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:ring-blue-900 text-gray-700"
@@ -531,7 +452,7 @@ export default function OffersList() {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1 pr-4">
                 <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && listError.details.length > 0 && (
+                {listError.details && (
                   <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
                     {listError.details.map((detailErr, idx) => (
                       <li key={`${detailErr}-${idx}`}>{detailErr}</li>
