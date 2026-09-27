@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import {
-  AlertCircle,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
   Building2,
@@ -12,12 +11,11 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { UserContactItem } from '~/types/contact';
 import { useUserContacts } from '~/hooks/use-users';
 import { CompactTable } from '~/components/table/compact-table';
 import { useDebounce } from '~/hooks/use-debounce';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 const PAGE_SIZE = 5;
 
@@ -78,7 +76,6 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
     data,
     isLoading,
     isFetching,
-    isError,
     error: queryError,
   } = useUserContacts({
     userId,
@@ -100,26 +97,6 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
-
-  const formError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message || activeError?.message || 'Błąd pobierania kontaktów.',
-          ),
-        }
-      : null;
 
   const isFilterActive = Boolean(companyNameFilter || isPrimaryFilter);
 
@@ -255,17 +232,11 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
         </div>
       </div>
 
-      {formError && (
-        <div className="m-3 p-2.5 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex justify-between items-center">
-          <div className="flex items-center gap-1.5">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-            <span>{formError.title}</span>
-          </div>
-          <button type="button" onClick={() => setIsErrorDismissed(true)}>
-            <X className="w-3.5 h-3.5 text-red-400 hover:text-red-700" />
-          </button>
-        </div>
-      )}
+      <QueryErrorBanner
+        error={queryError}
+        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        className="mb-6"
+      />
 
       <CompactTable
         table={table}

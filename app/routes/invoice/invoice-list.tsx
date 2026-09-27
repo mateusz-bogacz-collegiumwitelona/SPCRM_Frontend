@@ -1,16 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
-  AlertCircle,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
   CalendarIcon,
   Download,
   Filter,
-  X,
 } from 'lucide-react';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
@@ -32,6 +28,8 @@ import { STANDARD_ROLES } from '~/constants/roles';
 import { useInvoicesList } from '~/hooks/use-invoices';
 import { useDebounce } from '~/hooks/use-debounce';
 import { InvoiceMobileCard } from '~/components/invoice/mobile-card/invoice-mobile-card';
+import { useIsMobile } from '~/hooks/use-is-mobile';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 interface InvoiceTableMeta {
   onDownloadPdf: (invoice: { id: string; invoiceNumber: string }) => void;
@@ -182,16 +180,9 @@ export default function InvoicesList() {
   const [accumulatedMobileInvoices, setAccumulatedMobileInvoices] = useState<InvoiceListResponse[]>(
     [],
   );
-  const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useIsMobile();
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -265,24 +256,6 @@ export default function InvoicesList() {
       onDownloadPdf: (inv) => setSelectedInvoiceForPdf(inv),
     } satisfies InvoiceTableMeta,
   });
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) setIsErrorDismissed(false);
-  }, [isError, queryError]);
-
-  const listError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message || activeError?.message || 'Nie udało się pobrać listy faktur.',
-          ),
-          details: responseData?.errors?.length ? responseData.errors : undefined,
-        }
-      : null;
 
   const isAnyFilterActive =
     Boolean(date?.from) ||
@@ -512,29 +485,11 @@ export default function InvoicesList() {
             </div>
           </div>
 
-          {listError && (
-            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <div className="flex-1 pr-4">
-                <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && (
-                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                    {listError.details.map((detailErr, idx) => (
-                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsErrorDismissed(true)}
-                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                title="Zamknij"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          <QueryErrorBanner
+            error={queryError}
+            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            className="mb-6"
+          />
 
           <DataTable
             table={table}

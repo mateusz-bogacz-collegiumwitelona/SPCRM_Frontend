@@ -17,10 +17,10 @@ import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useCalendarTasks, useCreateTask, useTaskDictionaries } from '~/hooks/use-tasks';
+import { useIsMobile } from '~/hooks/use-is-mobile';
 
 export default function CalendarPage() {
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date } | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -29,12 +29,10 @@ export default function CalendarPage() {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const { statuses, priorities } = useTaskDictionaries();
 
+  const isMobile = useIsMobile();
+
   useEffect(() => {
     setIsMounted(true);
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const {

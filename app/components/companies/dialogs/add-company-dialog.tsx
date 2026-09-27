@@ -15,6 +15,7 @@ import { formatAddressType, getAddressTypeBadgeClass } from '~/constants/address
 import type { AddCompanyAddressRequest, AddCompanyRequest } from '~/types/company';
 import { useCompanyAddressTypes } from '~/hooks/use-companies';
 import { LocationPickerMap } from '~/components/map/location-picker-map';
+
 interface FormAddressItem extends AddCompanyAddressRequest {
   id: string;
 }

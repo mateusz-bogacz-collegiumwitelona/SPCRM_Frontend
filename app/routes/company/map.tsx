@@ -1,15 +1,14 @@
 import { type ComponentType, type SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { AlertCircle, MapPinned, Search, X } from 'lucide-react';
+import { MapPinned, Search } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
-import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/constants/error-mapper';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import type { CompanyMapData } from '~/types/map';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useMapCompanies } from '~/hooks/use-map';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 type OSMMapClientProps = {
   center: [number, number];
@@ -24,12 +23,10 @@ export default function MapPage() {
   const searchTerm = searchParams.get('searchTerm') || '';
 
   const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   const {
     data: companies = [],
     isLoading,
-    isError,
     error: queryError,
   } = useMapCompanies(searchTerm, Boolean(user));
 
@@ -56,26 +53,6 @@ export default function MapPage() {
       setSearchParams({});
     }
   };
-
-  useEffect(() => {
-    if (isError) setIsErrorDismissed(false);
-  }, [isError, queryError]);
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  const formError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message || activeError?.message || 'Nie udało się załadować danych mapy.',
-          ),
-          details: responseData?.errors?.length
-            ? responseData.errors.map((item) => getErrorMessage(item, item))
-            : undefined,
-        }
-      : null;
 
   const renderMapArea = () => {
     if (isLoading) {
@@ -141,29 +118,11 @@ export default function MapPage() {
               </form>
             </div>
 
-            {formError && (
-              <div className="absolute top-20 right-4 z-400 md:right-6 w-72 md:w-96 flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-lg transition-all text-left">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                <div className="flex-1 pr-3">
-                  <p className="font-medium leading-tight">{formError.title}</p>
-                  {formError.details && (
-                    <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-[11px] text-red-700">
-                      {formError.details.map((detailErr, idx) => (
-                        <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsErrorDismissed(true)}
-                  className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                  title="Zamknij"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
+            <QueryErrorBanner
+              error={queryError}
+              fallbackMessage="Nie udało się pobrać listy użytkowników."
+              className="mb-6"
+            />
 
             {renderMapArea()}
           </section>

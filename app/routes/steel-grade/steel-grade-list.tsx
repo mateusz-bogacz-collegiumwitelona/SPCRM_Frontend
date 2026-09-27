@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import {
-  AlertCircle,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
   Edit2,
   MoreHorizontal,
   Plus,
   Trash2,
-  X,
 } from 'lucide-react';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/components/guards/role-guard';
@@ -32,6 +28,7 @@ import { useSteelGradeMutations, useSteelGradesList } from '~/hooks/use-steel-gr
 import type { SteelGradeListResponse } from '~/types/steel-grade';
 import { useDebounce } from '~/hooks/use-debounce';
 import { SteelGradeMobileCard } from '~/components/steel-grade/steel-grade-mobile-card';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 interface SteelGradeTableMeta {
   onEdit: (grade: SteelGradeListResponse) => void;
@@ -127,7 +124,6 @@ export default function SteelGradesList() {
     [],
   );
   const isMobileAppend = useRef(false);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -188,26 +184,6 @@ export default function SteelGradesList() {
     } satisfies SteelGradeTableMeta,
   });
 
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) setIsErrorDismissed(false);
-  }, [isError, queryError]);
-
-  const listError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać listy gatunków stali.',
-          ),
-          details: responseData?.errors?.length ? responseData.errors : undefined,
-        }
-      : null;
-
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={[ROLES.ADMIN]}>
@@ -264,30 +240,11 @@ export default function SteelGradesList() {
             </div>
           </div>
 
-          {listError && (
-            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <div className="flex-1 pr-4">
-                <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && (
-                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                    {listError.details.map((detailErr, idx) => (
-                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsErrorDismissed(true)}
-                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                title="Zamknij"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
+          <QueryErrorBanner
+            error={queryError}
+            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            className="mb-6"
+          />
           <DataTable
             table={table}
             isLoading={isLoading}

@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { client } from '~/lib/client';
 import { RevenueChart } from '~/components/analytics/revenue-chart';
-import { AlertCircle, FileText, Loader2, RefreshCw, X } from 'lucide-react';
+import { FileText, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/constants/error-mapper';
 import type {
   AnalyticsChartMetricResponse,
   AnalyticsPeriod,
@@ -15,23 +13,17 @@ import type {
 import { LeaderboardTable } from '~/components/analytics/leaderboard-table';
 import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
 import { KpiCards } from '~/components/analytics/kpi-cards';
-import type { CurrencySimple } from '~/types/currency';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 
 export const TeamAnalyticsTab: React.FC = () => {
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('CurrentMonth');
   const [selectedCurrencyCode, setSelectedCurrencyCode] = useState<string>('PLN');
   const [leaderboardPage, setLeaderboardPage] = useState(1);
   const [leaderboardPageSize, setLeaderboardPageSize] = useState(5);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
-  const { data: currencies } = useQuery<CurrencySimple[]>({
-    queryKey: ['currencies-simple'],
-    queryFn: async () => {
-      const response = await client.get('/currency/simple');
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-  });
+  const { data: currencies = [] } = useCurrenciesSimpleList();
 
   useEffect(() => {
     if (currencies && currencies.length > 0) {
@@ -44,7 +36,6 @@ export const TeamAnalyticsTab: React.FC = () => {
     data: kpiData,
     isLoading: isKpiLoading,
     isFetching: isKpiFetching,
-    isError: isKpiError,
     error: kpiQueryError,
     refetch: refetchKpi,
   } = useQuery<TeamKpiSummaryResponse>({
@@ -98,25 +89,6 @@ export const TeamAnalyticsTab: React.FC = () => {
   };
 
   const isGlobalFetching = isKpiFetching || isChartFetching;
-  const activeError = kpiQueryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isKpiError) setIsErrorDismissed(false);
-  }, [isKpiError, kpiQueryError]);
-
-  const kpiError: FormErrorState | null =
-    isKpiError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać statystyk KPI zespołu.',
-          ),
-          details: responseData?.errors?.length ? responseData.errors : undefined,
-        }
-      : null;
 
   return (
     <div className="space-y-6">
@@ -143,28 +115,11 @@ export const TeamAnalyticsTab: React.FC = () => {
         </Button>
       </div>
 
-      {kpiError && (
-        <div className="relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-          <div className="flex-1 pr-4">
-            <p className="font-medium leading-tight">{kpiError.title}</p>
-            {kpiError.details && (
-              <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                {kpiError.details.map((detailErr, idx) => (
-                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsErrorDismissed(true)}
-            className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      <QueryErrorBanner
+        error={kpiQueryError}
+        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        className="mb-6"
+      />
 
       {isKpiLoading ? (
         <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg border border-gray-200 shadow-sm">

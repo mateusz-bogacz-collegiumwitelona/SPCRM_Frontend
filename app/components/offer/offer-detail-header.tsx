@@ -1,10 +1,9 @@
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import React, { useEffect, useState } from 'react';
-import { AlertCircle, Building2, Calendar, Clock, User, X } from 'lucide-react';
+import React from 'react';
+import { Building2, Calendar, Clock, User } from 'lucide-react';
 import { getStatusBadge } from '~/components/offer/offer-status-badge';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 interface OfferDetailHeaderProps {
   isLoading: boolean;
@@ -27,31 +26,6 @@ export const OfferDetailHeader: React.FC<OfferDetailHeaderProps> = ({
   error,
   basicInfo,
 }) => {
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, error]);
-
-  const activeError = error as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  const formError: FormErrorState | null =
-    (isError || (!isLoading && !basicInfo)) && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message || activeError?.message || 'Nie udało się pobrać danych oferty.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
-
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm animate-pulse">
@@ -71,29 +45,13 @@ export const OfferDetailHeader: React.FC<OfferDetailHeaderProps> = ({
     );
   }
 
-  if (formError) {
+  if (isError) {
     return (
-      <div className="mb-6 relative flex items-start gap-2.5 p-3.5 text-red-800 bg-red-50 border border-red-200 rounded-xl text-sm shadow-xs transition-all">
-        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div className="flex-1 pr-4">
-          <p className="font-medium leading-tight">{formError.title}</p>
-          {formError.details && formError.details.length > 0 && (
-            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-              {formError.details.map((detailErr, idx) => (
-                <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsErrorDismissed(true)}
-          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-          title="Zamknij"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+      <QueryErrorBanner
+        error={error}
+        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        className="mb-6"
+      />
     );
   }
 

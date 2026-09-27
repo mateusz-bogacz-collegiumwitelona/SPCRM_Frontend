@@ -1,20 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Calendar, Hash, Receipt, User, X } from 'lucide-react';
+import { Calendar, Hash, Receipt, User } from 'lucide-react';
 import { format } from 'date-fns';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { InvoicePaymentListResponse } from '~/types/invoice';
 import { useInvoicePayments } from '~/hooks/use-invoices';
 import { useDebounce } from '~/hooks/use-debounce';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -26,7 +24,6 @@ export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string 
     data,
     isLoading,
     isFetching,
-    isError,
     error: queryError,
   } = useInvoicePayments({
     invoiceId,
@@ -38,26 +35,6 @@ export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string 
   const payments: InvoicePaymentListResponse[] = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || payments.length;
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
-
-  const formError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message || activeError?.message || 'Nie udało się pobrać listy wpłat.',
-          ),
-          details: responseData?.errors,
-        }
-      : null;
 
   let invoicePaymentData: React.ReactNode;
 
@@ -131,33 +108,12 @@ export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string 
           />
         </div>
       </div>
-
-      {formError && (
-        <div className="m-4 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-xs transition-all">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-          <div className="flex-1 pr-4">
-            <p className="font-medium leading-tight">{formError.title}</p>
-            {formError.details && formError.details.length > 0 && (
-              <ul className="mt-1 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                {formError.details.map((detailErr, idx) => (
-                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsErrorDismissed(true)}
-            className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-            title="Zamknij"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
+      <QueryErrorBanner
+        error={queryError}
+        fallbackMessage="Nie udało się pobrać szczegółów faktury."
+        className="mb-6"
+      />
       <div className="p-4 space-y-3">{invoicePaymentData}</div>
-
       {!isLoading && totalItems > 0 && (
         <TablePagination
           pageNumber={pageNumber}

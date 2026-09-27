@@ -1,68 +1,13 @@
-import { useEffect, useState } from 'react';
-import { AlertCircle, Briefcase, X } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
 import { Link } from 'react-router';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useTaskDeal } from '~/hooks/use-tasks';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 export const TaskDeals = ({ taskId }: { taskId: string }) => {
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
-  const { data: deal, isLoading, isError, error: queryError } = useTaskDeal(taskId);
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
-
-  const formError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać danych transakcji.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
+  const { data: deal, isLoading, error: queryError } = useTaskDeal(taskId);
 
   if (isLoading) return <div className="h-32 bg-gray-100 animate-pulse rounded-lg"></div>;
-
-  if (formError) {
-    return (
-      <div className="relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-        <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-        <div className="flex-1 pr-4">
-          <p className="font-medium leading-tight">{formError.title}</p>
-          {formError.details && formError.details.length > 0 && (
-            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-              {formError.details.map((detailErr, idx) => (
-                <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsErrorDismissed(true)}
-          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-          title="Zamknij"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    );
-  }
 
   if (!deal) return null;
 
@@ -71,6 +16,12 @@ export const TaskDeals = ({ taskId }: { taskId: string }) => {
       <h2 className="text-lg font-normal text-gray-800 mb-3 flex items-center gap-2">
         <Briefcase className="text-brand w-5 h-5" /> Transakcja
       </h2>
+
+      <QueryErrorBanner
+        error={queryError}
+        fallbackMessage="Nie udało się pobrać listy użytkowników."
+        className="mb-6"
+      />
 
       <Link
         to={`/sales/${deal.dealId}`}

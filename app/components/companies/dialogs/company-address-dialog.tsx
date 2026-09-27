@@ -15,6 +15,7 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { AddressItemToEdit, CompanyAddressFormData } from '~/types/company';
 import { useCompanyAddressTypes } from '~/hooks/use-companies';
 import { LocationPickerMap } from '~/components/map/location-picker-map';
+
 interface EditCompanyAddressDialogProps {
   readonly address: AddressItemToEdit | null;
   readonly isOpen: boolean;

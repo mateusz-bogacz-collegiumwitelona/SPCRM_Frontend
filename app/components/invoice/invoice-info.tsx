@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router';
 import {
   AlertCircle,
@@ -13,17 +13,15 @@ import {
   Handshake,
   Plus,
   Receipt,
-  X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Button } from '~/components/ui/button';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AddInvoicePaymentDialog } from './dialogs/add-invoice-payment-dialog';
 import { DownloadInvoicePdfDialog } from './dialogs/download-invoice-pdf-dialog';
 import { useInvoiceDetails, useInvoicePaymentSummary } from '~/hooks/use-invoices';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 const InvoiceLoadingSkeleton = () => (
   <div className="mb-6 animate-pulse">
@@ -64,32 +62,7 @@ const InvoiceStatusBadge: React.FC<InvoiceStatusBadgeProps> = ({ isFullyPaid, is
   );
 };
 
-const resolveInvoiceError = (
-  isInvoiceError: boolean,
-  isInvoiceLoading: boolean,
-  hasInvoice: boolean,
-  isErrorDismissed: boolean,
-  activeError: ApiError | null,
-): FormErrorState | null => {
-  if (isErrorDismissed) return null;
-
-  const hasFailed = isInvoiceError || (!isInvoiceLoading && !hasInvoice);
-  if (!hasFailed) return null;
-
-  const responseData = activeError?.response?.data;
-  const message =
-    responseData?.message || activeError?.message || 'Nie udało się pobrać szczegółów faktury.';
-  const details =
-    responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined;
-
-  return {
-    title: getErrorMessage(responseData?.errorCode, message),
-    details,
-  };
-};
-
 export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
   const [isDownloadPdfOpen, setIsDownloadPdfOpen] = useState(false);
 
@@ -102,49 +75,17 @@ export const InvoiceInfo = ({ invoiceId }: { invoiceId: string }) => {
 
   const { data: summary, isLoading: isSummaryLoading } = useInvoicePaymentSummary(invoiceId);
 
-  const activeError = invoiceQueryError as ApiError | null;
-
-  useEffect(() => {
-    if (isInvoiceError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isInvoiceError, invoiceQueryError]);
-
   if (isInvoiceLoading || isSummaryLoading) {
     return <InvoiceLoadingSkeleton />;
   }
 
-  const formError = resolveInvoiceError(
-    isInvoiceError,
-    isInvoiceLoading,
-    Boolean(invoice),
-    isErrorDismissed,
-    activeError,
-  );
-
-  if (formError) {
+  if (isInvoiceError) {
     return (
-      <div className="mb-6 relative flex items-start gap-2.5 p-3.5 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
-        <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-        <div className="flex-1 pr-4">
-          <p className="font-medium leading-tight">{formError.title}</p>
-          {formError.details && (
-            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-              {formError.details.map((detailErr, idx) => (
-                <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsErrorDismissed(true)}
-          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-          title="Zamknij"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      <QueryErrorBanner
+        error={invoiceQueryError}
+        fallbackMessage="Nie udało się pobrać szczegółów faktury."
+        className="mb-6"
+      />
     );
   }
 

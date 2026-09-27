@@ -6,23 +6,13 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Edit3,
-  Loader2,
-  Package,
-  Search,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit3, Loader2, Package, Search } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { OfferProductResponse } from '~/types/offer';
 import { useOfferProducts } from '~/hooks/use-offers';
 import { mergeById } from '~/utils/table-helpers';
 import { useDebounce } from '~/hooks/use-debounce';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 export interface OfferProductsTableProps {
   offerId: string;
@@ -101,7 +91,6 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
     data,
     isLoading,
     isFetching,
-    isError,
     error: queryError,
   } = useOfferProducts({
     offerId,
@@ -141,33 +130,6 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
-
-  const formError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać listy pozycji oferty.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
 
   const renderContent = () => {
     if (isLoading) {
@@ -382,29 +344,11 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
 
   return (
     <div className="flex flex-col gap-4">
-      {formError && (
-        <div className="relative flex items-start gap-2.5 p-3.5 text-red-800 bg-red-50 border border-red-200 rounded-xl text-sm shadow-xs transition-all">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-          <div className="flex-1 pr-4">
-            <p className="font-medium leading-tight">{formError.title}</p>
-            {formError.details && formError.details.length > 0 && (
-              <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                {formError.details.map((detailErr, idx) => (
-                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsErrorDismissed(true)}
-            className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-            title="Zamknij"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      <QueryErrorBanner
+        error={queryError}
+        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        className="mb-6"
+      />
 
       {renderContent()}
     </div>

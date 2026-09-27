@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus, X } from 'lucide-react';
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus } from 'lucide-react';
 import { mergeById } from '~/utils/table-helpers';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AddUnitDialog } from '~/components/unit/dialogs/add-unit-dialog';
 import { EditUnitDialog } from '~/components/unit/dialogs/edit-unit-dialog';
 import { AuthGuard } from '~/components/guards/auth-guard';
@@ -16,6 +14,7 @@ import { useUnitMutations, useUnitsList } from '~/hooks/use-units';
 import type { UnitListResponse } from '~/types/unit';
 import { useDebounce } from '~/hooks/use-debounce';
 import { UnitMobileCard } from '~/components/unit/unit-mobile-card';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 interface UnitTableMeta {
   onEdit: (unit: UnitListResponse) => void;
@@ -75,14 +74,10 @@ export default function UnitList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
-
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editUnit, setEditUnit] = useState<UnitListResponse | null>(null);
-
   const [accumulatedMobileUnits, setAccumulatedMobileUnits] = useState<UnitListResponse[]>([]);
   const isMobileAppend = useRef(false);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
@@ -141,26 +136,6 @@ export default function UnitList() {
     } satisfies UnitTableMeta,
   });
 
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) setIsErrorDismissed(false);
-  }, [isError, queryError]);
-
-  const listError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać listy jednostek miary.',
-          ),
-          details: responseData?.errors?.length ? responseData.errors : undefined,
-        }
-      : null;
-
   return (
     <AuthGuard>
       <RoleGuard allowedRoles={[ROLES.ADMIN]} redirectTo="/dashboard">
@@ -215,29 +190,11 @@ export default function UnitList() {
             </div>
           </div>
 
-          {listError && (
-            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <div className="flex-1 pr-4">
-                <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && (
-                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                    {listError.details.map((detailErr, idx) => (
-                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsErrorDismissed(true)}
-                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                title="Zamknij"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          <QueryErrorBanner
+            error={queryError}
+            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            className="mb-6"
+          />
 
           <DataTable
             table={table}

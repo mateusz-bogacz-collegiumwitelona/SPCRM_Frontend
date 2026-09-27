@@ -1,19 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import {
-  AlertCircle,
-  Calendar,
-  Filter,
-  ListTodo,
-  Pencil,
-  Plus,
-  Trash2,
-  User,
-  X,
-} from 'lucide-react';
+import { Calendar, Filter, ListTodo, Pencil, Plus, Trash2, User } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import {
@@ -28,6 +16,7 @@ import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import type { AddTaskRequestPayload, EditTaskRequestPayload, SaleTaskResponse } from '~/types/task';
 import { useDealTaskMutations, useDealTasks, useTaskDictionaries } from '~/hooks/use-tasks';
 import { useDebounce } from '~/hooks/use-debounce';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 export const DealTasks = ({ dealId }: { dealId: string }) => {
   const { dictionaries, getStatusLabel, getPriorityLabel } = useTaskDictionaries();
@@ -40,7 +29,6 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<SaleTaskResponse | null>(null);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
@@ -53,7 +41,6 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
     data,
     isLoading,
     isFetching,
-    isError,
     error: queryError,
   } = useDealTasks(dealId, {
     pageNumber,
@@ -65,15 +52,6 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
 
   const { addDealTaskMutation, editDealTaskMutation, deleteDealTaskMutation } =
     useDealTaskMutations(dealId);
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
 
   const tasks: SaleTaskResponse[] = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
@@ -94,22 +72,6 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
     await editDealTaskMutation.mutateAsync({ taskId, payload });
     setTaskToEdit(null);
   };
-
-  const formError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać zadań powiązanych ze sprzedażą.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
 
   let taskListContent: React.ReactNode;
 
@@ -323,30 +285,11 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
           </div>
         </div>
       </div>
-
-      {formError && (
-        <div className="m-4 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
-          <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-          <div className="flex-1 pr-4">
-            <p className="font-medium leading-tight">{formError.title}</p>
-            {formError.details && formError.details.length > 0 && (
-              <ul className="mt-1 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                {formError.details.map((detailErr, idx) => (
-                  <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsErrorDismissed(true)}
-            className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-            title="Zamknij"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      <QueryErrorBanner
+        error={queryError}
+        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        className="mb-6"
+      />
 
       <div className="p-4 space-y-4">
         {taskListContent}

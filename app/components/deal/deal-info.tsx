@@ -18,19 +18,17 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/constants/sale-status';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { Button } from '~/components/ui/button';
 import { DeleteDealDialog } from '~/components/deal/dialogs/delete-deal-dialog';
 import { ExtendDealDialog } from '~/components/deal/dialogs/extend-deal-dialog';
 import { ChangeDealStatusDialog } from '~/components/deal/dialogs/change-deal-status-dialog';
 import { ChangeDealContactDialog } from '~/components/deal/dialogs/change-deal-contact-dialog';
 import { useDealDetails, useDealInfoMutations } from '~/hooks/use-deals';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 export const DealInfo = ({ dealId }: { dealId: string }) => {
   const navigate = useNavigate();
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isExtendOpen, setIsExtendOpen] = useState(false);
   const [isChangeStatusOpen, setIsChangeStatusOpen] = useState(false);
@@ -49,15 +47,6 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
   const { deleteDealMutation, extendDealMutation, changeContactMutation } =
     useDealInfoMutations(dealId);
 
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
-
   if (isLoading) {
     return (
       <div className="mb-6 animate-pulse">
@@ -67,45 +56,13 @@ export const DealInfo = ({ dealId }: { dealId: string }) => {
     );
   }
 
-  const formError: FormErrorState | null =
-    (isError || (!isLoading && !deal)) && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać danych zamówienia.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
-
-  if (formError) {
+  if (isError) {
     return (
-      <div className="mb-6 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
-        <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-        <div className="flex-1 pr-4">
-          <p className="font-medium leading-tight">{formError.title}</p>
-          {formError.details && formError.details.length > 0 && (
-            <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-              {formError.details.map((detailErr, idx) => (
-                <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsErrorDismissed(true)}
-          className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-          title="Zamknij"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      <QueryErrorBanner
+        error={queryError}
+        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        className="mb-6"
+      />
     );
   }
 

@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '~/components/ui/button';
-import {
-  AlertCircle,
-  ArrowDownWideNarrow,
-  ArrowUpNarrowWide,
-  CalendarIcon,
-  Filter,
-  Plus,
-  X,
-} from 'lucide-react';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, CalendarIcon, Filter, Plus } from 'lucide-react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { Calendar } from '~/components/ui/calendar';
@@ -38,6 +28,8 @@ import type { UserSalesResponse } from '~/types/deal';
 import { pl } from 'date-fns/locale';
 import { useDebounce } from '~/hooks/use-debounce';
 import { SaleMobileCard } from '~/components/deal/deal-mobile-card';
+import { useIsMobile } from '~/hooks/use-is-mobile';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 const columnHelper = createColumnHelper<UserSalesResponse>();
 
@@ -121,19 +113,12 @@ export default function UserSales() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [ownerFilter, setOwnerFilter] = useState<string>('');
   const [accumulatedMobileSales, setAccumulatedMobileSales] = useState<UserSalesResponse[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   const isMobileAppend = useRef(false);
   const [isAddDealOpen, setIsAddDealOpen] = useState(false);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   const invalidateSales = useInvalidateSales();
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useIsMobile();
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -199,26 +184,6 @@ export default function UserSales() {
     },
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) setIsErrorDismissed(false);
-  }, [isError, queryError]);
-
-  const listError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać listy sprzedaży.',
-          ),
-          details: responseData?.errors?.length ? responseData.errors : undefined,
-        }
-      : null;
 
   return (
     <AuthGuard>
@@ -415,29 +380,11 @@ export default function UserSales() {
             </div>
           </div>
 
-          {listError && (
-            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              <div className="flex-1 pr-4">
-                <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && (
-                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                    {listError.details.map((detailErr, idx) => (
-                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsErrorDismissed(true)}
-                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                title="Zamknij"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          <QueryErrorBanner
+            error={queryError}
+            fallbackMessage="Nie udało się pobrać danych zamówienia."
+            className="mb-6"
+          />
 
           <DataTable
             table={table}

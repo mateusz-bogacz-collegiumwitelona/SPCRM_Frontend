@@ -1,17 +1,7 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getErrorMessage } from '~/constants/error-mapper';
-import type { ApiError, FormErrorState } from '~/types/api-error';
-import {
-  AlertCircle,
-  ArrowDownWideNarrow,
-  ArrowUpNarrowWide,
-  CalendarIcon,
-  Filter,
-  Plus,
-  X,
-} from 'lucide-react';
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, CalendarIcon, Filter, Plus } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/components/guards/role-guard';
@@ -30,6 +20,8 @@ import { useOfferCompaniesSimpleList, useOffersList, useOfferStatuses } from '~/
 import type { OfferListResponse } from '~/types/offer';
 import { useDebounce } from '~/hooks/use-debounce';
 import { OfferMobileCard } from '~/components/offer/offer-mobile-card';
+import { useIsMobile } from '~/hooks/use-is-mobile';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 const columnHelper = createColumnHelper<OfferListResponse>();
 
@@ -93,24 +85,15 @@ export default function OffersList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<string>('validuntil');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
-
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [companyNameFilter, setCompanyNameFilter] = useState<string>('');
   const [isExpiredFilter, setIsExpiredFilter] = useState<string>('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
-  const [isMobile, setIsMobile] = useState(false);
   const [accumulatedMobileOffers, setAccumulatedMobileOffers] = useState<OfferListResponse[]>([]);
   const isMobileAppend = useRef(false);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isMobile = useIsMobile();
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -186,24 +169,6 @@ export default function OffersList() {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) setIsErrorDismissed(false);
-  }, [isError, queryError]);
-
-  const listError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message || activeError?.message || 'Nie udało się pobrać listy ofert.',
-          ),
-          details: responseData?.errors?.length ? responseData.errors : undefined,
-        }
-      : null;
 
   const isAnyFilterActive =
     statusFilter !== '' ||
@@ -418,29 +383,11 @@ export default function OffersList() {
             </div>
           </div>
 
-          {listError && (
-            <div className="mb-6 relative flex items-start gap-2.5 p-4 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all text-left">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-              <div className="flex-1 pr-4">
-                <p className="font-medium leading-tight">{listError.title}</p>
-                {listError.details && (
-                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                    {listError.details.map((detailErr, idx) => (
-                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsErrorDismissed(true)}
-                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                title="Zamknij"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+          <QueryErrorBanner
+            error={queryError}
+            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            className="mb-6"
+          />
 
           <DataTable
             table={table}
