@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
   ArrowDownWideNarrow,
@@ -20,7 +20,6 @@ import { Link } from 'react-router';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
-import { mergeById } from '~/utils/table-helpers';
 import { getRoleConfig } from '~/constants/role-translator';
 import { AddUserDialog } from '~/components/user/dialogs/add-user-dialog';
 import { LockoutUserDialog } from '~/components/user/dialogs/lockout-user-dialog';
@@ -47,6 +46,7 @@ import { useUserMutations, useUserRoles, useUsersList } from '~/hooks/use-users'
 import { useDebounce } from '~/hooks/use-debounce';
 import { UserMobileCard } from '~/components/user/user-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface UserTableMeta {
   onLockout: (user: UserRoleActionData) => void;
@@ -250,15 +250,8 @@ export default function UserList() {
   const [userToChangeEmail, setUserToChangeEmail] = useState<UserBaseActionData | null>(null);
   const [userToChangeRole, setUserToChangeRole] = useState<UserRoleActionData | null>(null);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [accumulatedMobileUsers, setAccumulatedMobileUsers] = useState<UserListResponse[]>([]);
-  const isMobileAppend = useRef(false);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = true;
-    setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize, roleFilter, isBlockedFilter]);
 
   const {
     data,
@@ -292,28 +285,6 @@ export default function UserList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopUsers.length;
 
-  useEffect(() => {
-    const items: UserListResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileUsers(items);
-      return;
-    }
-
-    setAccumulatedMobileUsers((prev) => mergeById(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopUsers,
     columns,
@@ -329,6 +300,24 @@ export default function UserList() {
   });
 
   const isAnyFilterActive = Boolean(roleFilter) || isBlockedFilter !== '';
+
+  const {
+    accumulatedData: accumulatedMobileUsers,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [
+      debouncedSearch,
+      sortBy,
+      sortDescending,
+      pageSize,
+      roleFilter,
+      isBlockedFilter,
+    ],
+  });
 
   return (
     <AuthGuard>

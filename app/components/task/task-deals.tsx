@@ -19,7 +19,7 @@ export const TaskDeals = ({ taskId }: { taskId: string }) => {
 
       <QueryErrorBanner
         error={queryError}
-        fallbackMessage="Nie udało się pobrać listy użytkowników."
+        fallbackMessage="Nie udało się pobrać listy zadań."
         className="mb-6"
       />
 

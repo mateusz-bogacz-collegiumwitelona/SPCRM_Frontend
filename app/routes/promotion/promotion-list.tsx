@@ -452,7 +452,7 @@ export default function PromotionsList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy promocji."
             className="mb-6"
           />
 

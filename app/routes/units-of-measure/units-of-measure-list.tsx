@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus } from 'lucide-react';
-import { mergeById } from '~/utils/table-helpers';
 import { AddUnitDialog } from '~/components/unit/dialogs/add-unit-dialog';
 import { EditUnitDialog } from '~/components/unit/dialogs/edit-unit-dialog';
 import { AuthGuard } from '~/components/guards/auth-guard';
@@ -15,6 +14,7 @@ import type { UnitListResponse } from '~/types/unit';
 import { useDebounce } from '~/hooks/use-debounce';
 import { UnitMobileCard } from '~/components/unit/unit-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface UnitTableMeta {
   onEdit: (unit: UnitListResponse) => void;
@@ -76,14 +76,7 @@ export default function UnitList() {
   const [sortDescending, setSortDescending] = useState<boolean>(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editUnit, setEditUnit] = useState<UnitListResponse | null>(null);
-  const [accumulatedMobileUnits, setAccumulatedMobileUnits] = useState<UnitListResponse[]>([]);
-  const isMobileAppend = useRef(false);
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize]);
 
   const {
     data,
@@ -105,28 +98,6 @@ export default function UnitList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopUnits.length;
 
-  useEffect(() => {
-    const items: UnitListResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileUnits(items);
-      return;
-    }
-
-    setAccumulatedMobileUnits((prev) => mergeById(prev, items, (item) => item.id));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopUnits,
     columns,
@@ -134,6 +105,17 @@ export default function UnitList() {
     meta: {
       onEdit: (unit) => setEditUnit(unit),
     } satisfies UnitTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileUnits,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, sortBy, sortDescending, pageSize],
   });
 
   return (
@@ -192,7 +174,7 @@ export default function UnitList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy miar."
             className="mb-6"
           />
 

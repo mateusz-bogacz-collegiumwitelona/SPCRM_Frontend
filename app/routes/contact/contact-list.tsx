@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
   ArrowDownWideNarrow,
@@ -15,7 +15,6 @@ import { Link } from 'react-router';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
-import { mergeById } from '~/utils/table-helpers';
 import { EditContactDialog } from '~/components/contact/dialogs/edit-contact-dialog';
 import { SetCompanyPrimaryContactDialog } from '~/components/companies/dialogs/set-company-primary-contact-dialog';
 import {
@@ -39,6 +38,7 @@ import type { ContactListTableMeta } from '~/types/company';
 import { useDebounce } from '~/hooks/use-debounce';
 import { ContactMobileCard } from '~/components/contact/contact-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 const columnHelper = createColumnHelper<ContactResponse>();
 
@@ -161,8 +161,6 @@ export default function ContactList() {
   const [companyFilter, setCompanyFilter] = useState<string>('');
   const [isPrimaryFilter, setIsPrimaryFilter] = useState<string>('');
   const [ownerFilter, setOwnerFilter] = useState<string>('');
-  const [accumulatedMobileContacts, setAccumulatedMobileContacts] = useState<ContactResponse[]>([]);
-  const isMobileAppend = useRef(false);
 
   const [editingContactId, setEditingContactId] = useState<string | null>(null);
   const [settingPrimaryId, setSettingPrimaryId] = useState<string | null>(null);
@@ -172,19 +170,6 @@ export default function ContactList() {
   const isManagerOrAdmin = user?.roles.some((r) => MANAGEMENT_ROLES.includes(r));
 
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [
-    debouncedSearch,
-    sortBy,
-    sortDescending,
-    pageSize,
-    companyFilter,
-    isPrimaryFilter,
-    ownerFilter,
-  ]);
 
   const {
     data,
@@ -213,28 +198,6 @@ export default function ContactList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopContacts.length;
 
-  useEffect(() => {
-    const items: ContactResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileContacts(items);
-      return;
-    }
-
-    setAccumulatedMobileContacts((prev) => mergeById(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopContacts,
     columns,
@@ -244,6 +207,25 @@ export default function ContactList() {
       onSetPrimary: (id: string) => setSettingPrimaryId(id),
       onChangeOwner: (id: string) => setChangingOwnerContactId(id),
     } satisfies ContactListTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileContacts,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [
+      debouncedSearch,
+      sortBy,
+      sortDescending,
+      pageSize,
+      companyFilter,
+      isPrimaryFilter,
+      ownerFilter,
+    ],
   });
 
   return (
@@ -413,7 +395,7 @@ export default function ContactList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy kontaktów."
             className="mb-6"
           />
 

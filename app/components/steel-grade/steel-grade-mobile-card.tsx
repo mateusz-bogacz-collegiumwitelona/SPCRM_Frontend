@@ -1,11 +1,13 @@
 import type { SteelGradeListResponse } from '~/types/steel-grade';
-import { Trash2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 
 export const SteelGradeMobileCard = ({
   item,
+  onEdit,
   onDelete,
 }: {
   readonly item: SteelGradeListResponse;
+  readonly onEdit: (grade: SteelGradeListResponse) => void;
   readonly onDelete: (grade: { id: string; name: string }) => void;
 }) => (
   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
@@ -21,11 +23,19 @@ export const SteelGradeMobileCard = ({
       <span>Gęstość:</span>
       <span className="font-semibold text-gray-900">{item.density} g/cm³</span>
     </div>
-    <div className="flex justify-end pt-2 mt-2 border-t border-gray-50">
+    <div className="flex justify-end items-center gap-3 pt-2 mt-2 border-t border-gray-50">
+      <button
+        type="button"
+        onClick={() => onEdit(item)}
+        className="text-xs font-medium text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
+      >
+        <Edit2 className="w-3.5 h-3.5" /> Edytuj
+      </button>
+
       <button
         type="button"
         onClick={() => onDelete({ id: item.id, name: item.name })}
-        className="text-xs font-medium text-red-600 hover:text-red-800 flex items-center gap-1"
+        className="text-xs font-medium text-red-600 hover:text-red-800 flex items-center gap-1 cursor-pointer"
       >
         <Trash2 className="w-3.5 h-3.5" /> Usuń
       </button>

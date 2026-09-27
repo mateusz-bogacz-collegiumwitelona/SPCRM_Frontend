@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, CalendarIcon, Filter, Plus } from 'lucide-react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
@@ -13,7 +13,7 @@ import { Link } from 'react-router';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
-import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
+import { formatDateRangeLabel } from '~/utils/table-helpers';
 import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dialog';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useCompaniesList, useCreateCompany } from '~/hooks/use-companies';
@@ -23,6 +23,7 @@ import { CompanyMobileCard } from '~/components/companies/company-mobile-card';
 import { formatDate } from '~/utils/data-formatters';
 import { useIsMobile } from '~/hooks/use-is-mobile';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 const columnHelper = createColumnHelper<GetCompanyResponse>();
 
@@ -106,20 +107,11 @@ export default function CompanyList() {
   const [showFilters, setShowFilters] = useState(false);
   const [isYourFilter, setIsYourFilter] = useState<string>('');
 
-  const [accumulatedMobileCompanies, setAccumulatedMobileCompanies] = useState<
-    GetCompanyResponse[]
-  >([]);
-  const isMobileAppend = useRef(false);
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
 
   const isMobile = useIsMobile();
 
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize, date, isYourFilter]);
 
   const {
     data,
@@ -145,32 +137,21 @@ export default function CompanyList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopCompanies.length;
 
-  useEffect(() => {
-    const items: GetCompanyResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileCompanies(items);
-      return;
-    }
-
-    setAccumulatedMobileCompanies((prev) => mergeById(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopCompanies,
     columns,
     getCoreRowModel: getCoreRowModel(),
+  });
+
+  const {
+    accumulatedData: accumulatedMobileCompanies,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, sortBy, sortDescending, pageSize, date, isYourFilter],
   });
 
   return (
@@ -336,7 +317,7 @@ export default function CompanyList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy firm."
             className="mb-6"
           />
 

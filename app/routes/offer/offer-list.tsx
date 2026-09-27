@@ -1,6 +1,6 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, CalendarIcon, Filter, Plus } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -22,6 +22,7 @@ import { useDebounce } from '~/hooks/use-debounce';
 import { OfferMobileCard } from '~/components/offer/offer-mobile-card';
 import { useIsMobile } from '~/hooks/use-is-mobile';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 const columnHelper = createColumnHelper<OfferListResponse>();
 
@@ -90,26 +91,10 @@ export default function OffersList() {
   const [companyNameFilter, setCompanyNameFilter] = useState<string>('');
   const [isExpiredFilter, setIsExpiredFilter] = useState<string>('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [accumulatedMobileOffers, setAccumulatedMobileOffers] = useState<OfferListResponse[]>([]);
-  const isMobileAppend = useRef(false);
 
   const isMobile = useIsMobile();
 
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [
-    debouncedSearch,
-    sortBy,
-    sortDescending,
-    pageSize,
-    statusFilter,
-    companyNameFilter,
-    isExpiredFilter,
-    dateRange,
-  ]);
 
   const {
     data,
@@ -138,32 +123,6 @@ export default function OffersList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopOffers.length;
 
-  useEffect(() => {
-    const items: OfferListResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileOffers(items);
-      return;
-    }
-
-    setAccumulatedMobileOffers((prev) => {
-      const existingIds = new Set(prev.map((offer) => offer.offerId));
-      const newItems = items.filter((offer) => !existingIds.has(offer.offerId));
-      return [...prev, ...newItems];
-    });
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopOffers,
     columns,
@@ -176,6 +135,26 @@ export default function OffersList() {
     isExpiredFilter !== '' ||
     Boolean(dateRange?.from) ||
     Boolean(dateRange?.to);
+
+  const {
+    accumulatedData: accumulatedMobileOffers,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [
+      debouncedSearch,
+      sortBy,
+      sortDescending,
+      pageSize,
+      statusFilter,
+      companyNameFilter,
+      isExpiredFilter,
+      dateRange,
+    ],
+  });
 
   return (
     <AuthGuard>
@@ -385,7 +364,7 @@ export default function OffersList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy ofert."
             className="mb-6"
           />
 

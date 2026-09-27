@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
   ArrowDownWideNarrow,
@@ -18,8 +18,7 @@ import type { DateRange } from 'react-day-picker';
 import { Link } from 'react-router';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
-
-import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
+import { formatDateRangeLabel } from '~/utils/table-helpers';
 import { formatCurrency } from '~/utils/data-formatters';
 import { DataTable } from '~/components/table/data-table';
 import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-invoice-pdf-dialog';
@@ -30,6 +29,7 @@ import { useDebounce } from '~/hooks/use-debounce';
 import { InvoiceMobileCard } from '~/components/invoice/mobile-card/invoice-mobile-card';
 import { useIsMobile } from '~/hooks/use-is-mobile';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface InvoiceTableMeta {
   onDownloadPdf: (invoice: { id: string; invoiceNumber: string }) => void;
@@ -163,7 +163,6 @@ export default function InvoicesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<string>('issuedate');
   const [sortDescending, setSortDescending] = useState<boolean>(true);
-
   const [date, setDate] = useState<DateRange | undefined>();
   const [showFilters, setShowFilters] = useState(false);
   const [isOverDueFilter, setIsOverDueFilter] = useState<string>('');
@@ -177,30 +176,9 @@ export default function InvoicesList() {
     invoiceNumber: string;
   } | null>(null);
 
-  const [accumulatedMobileInvoices, setAccumulatedMobileInvoices] = useState<InvoiceListResponse[]>(
-    [],
-  );
-  const isMobileAppend = useRef(false);
-
   const isMobile = useIsMobile();
 
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [
-    debouncedSearch,
-    sortBy,
-    sortDescending,
-    pageSize,
-    date,
-    isOverDueFilter,
-    companyNameFilter,
-    companyNipFilter,
-    amountFrom,
-    amountTo,
-  ]);
 
   const {
     data,
@@ -226,28 +204,6 @@ export default function InvoicesList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopInvoices.length;
 
-  useEffect(() => {
-    const items: InvoiceListResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileInvoices(items);
-      return;
-    }
-
-    setAccumulatedMobileInvoices((prev) => mergeById(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopInvoices,
     columns,
@@ -265,6 +221,28 @@ export default function InvoicesList() {
     companyNipFilter !== '' ||
     Boolean(amountFrom) ||
     Boolean(amountTo);
+
+  const {
+    accumulatedData: accumulatedMobileInvoices,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [
+      debouncedSearch,
+      sortBy,
+      sortDescending,
+      pageSize,
+      date,
+      isOverDueFilter,
+      companyNameFilter,
+      companyNipFilter,
+      amountFrom,
+      amountTo,
+    ],
+  });
 
   return (
     <AuthGuard>
@@ -487,7 +465,7 @@ export default function InvoicesList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy faktór."
             className="mb-6"
           />
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import {
   ArrowDownWideNarrow,
@@ -13,7 +13,6 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
-import { mergeById } from '~/utils/table-helpers';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +28,7 @@ import type { SteelGradeListResponse } from '~/types/steel-grade';
 import { useDebounce } from '~/hooks/use-debounce';
 import { SteelGradeMobileCard } from '~/components/steel-grade/steel-grade-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface SteelGradeTableMeta {
   onEdit: (grade: SteelGradeListResponse) => void;
@@ -120,17 +120,7 @@ export default function SteelGradesList() {
   const [editingGrade, setEditingGrade] = useState<SteelGradeListResponse | null>(null);
   const [addingGrade, setAddingGrade] = useState(false);
 
-  const [accumulatedMobileItems, setAccumulatedMobileItems] = useState<SteelGradeListResponse[]>(
-    [],
-  );
-  const isMobileAppend = useRef(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize]);
 
   const {
     data,
@@ -152,27 +142,16 @@ export default function SteelGradesList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopItems.length;
 
-  useEffect(() => {
-    const items: SteelGradeListResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileItems(items);
-      return;
-    }
-
-    setAccumulatedMobileItems((prev) => mergeById(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
+  const {
+    accumulatedData: accumulatedMobileItems,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, sortBy, sortDescending, pageSize],
+  });
 
   const table = useReactTable({
     data: desktopItems,
@@ -242,7 +221,7 @@ export default function SteelGradesList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy gatunków stali."
             className="mb-6"
           />
           <DataTable
@@ -256,7 +235,11 @@ export default function SteelGradesList() {
             onMobileLoadMore={handleMobileLoadMore}
             mobileCardKeyExtractor={(item) => item.id}
             renderMobileCard={(item) => (
-              <SteelGradeMobileCard item={item} onDelete={setDeletingGrade} />
+              <SteelGradeMobileCard
+                item={item}
+                onDelete={setDeletingGrade}
+                onEdit={setEditingGrade}
+              />
             )}
             emptyMessage="Brak gatunków stali do wyświetlenia."
             loadingMessage="Ładowanie gatunków stali..."

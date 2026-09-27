@@ -33,7 +33,7 @@ import { ROLES } from '~/constants/roles';
 import { useCreateCompany } from '~/hooks/use-companies';
 import { useCreateTask } from '~/hooks/use-tasks';
 
-export type NavItem = {
+type NavItem = {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -84,16 +84,18 @@ export function NavigationBar({
     onSuccess: () => setIsAddTaskOpen(false),
   });
 
+  const adminNavItems: NavItem[] = [
+    { id: 'dashboard', label: 'Pulpit IT', icon: LayoutDashboard, href: '/dashboard' },
+    { id: 'users', label: 'Użytkownicy', icon: Users, href: '/users' },
+    { id: 'products', label: 'Produkty', icon: Package, href: '/products' },
+    { id: 'steel', label: 'Gatunki stali', icon: Layers, href: '/steel-grades' },
+    { id: 'currencies', label: 'Waluty', icon: Coins, href: '/currencies' },
+    { id: 'units', label: 'Jednostki miar', icon: Ruler, href: '/units' },
+  ];
+
   const getDesktopItems = (): NavItem[] => {
     if (isAdmin) {
-      return [
-        { id: 'dashboard', label: 'Pulpit IT', icon: LayoutDashboard, href: '/dashboard' },
-        { id: 'users', label: 'Użytkownicy', icon: Users, href: '/users' },
-        { id: 'products', label: 'Produkty', icon: Package, href: '/products' },
-        { id: 'steel', label: 'Gatunki stali', icon: Layers, href: '/steel-grades' },
-        { id: 'currencies', label: 'Waluty', icon: Coins, href: '/currencies' },
-        { id: 'units', label: 'Jednostki miar', icon: Ruler, href: '/units' },
-      ];
+      return adminNavItems;
     }
 
     const items: NavItem[] = [
@@ -116,7 +118,7 @@ export function NavigationBar({
     return items;
   };
 
-  const moreMobileModules: NavItem[] = [
+  const userMobileModules: NavItem[] = [
     {
       id: 'offers',
       label: 'Oferty handlowe',
@@ -160,13 +162,14 @@ export function NavigationBar({
       : []),
   ];
 
+  const moreMobileModules: NavItem[] = isAdmin ? adminNavItems.slice(4) : userMobileModules;
+
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 md:hidden flex items-center justify-around h-16 px-1 bg-brand z-40 shadow-lg border-t border-blue-900/30">
         {isAdmin ? (
-          getDesktopItems()
-            .slice(0, 5)
-            .map((item) => {
+          <>
+            {adminNavItems.slice(0, 4).map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
               return (
@@ -181,7 +184,19 @@ export function NavigationBar({
                   <span className="text-[10px] mt-0.5">{item.label}</span>
                 </Link>
               );
-            })
+            })}
+
+            <button
+              type="button"
+              onClick={() => setIsMoreOpen(true)}
+              className={`flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer ${
+                isMoreOpen ? 'text-white bg-white/20' : 'text-blue-200'
+              }`}
+            >
+              <Grid className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">Więcej</span>
+            </button>
+          </>
         ) : (
           <>
             <Link
@@ -211,7 +226,7 @@ export function NavigationBar({
             <button
               type="button"
               onClick={() => setIsAddMenuOpen(true)}
-              className="flex flex-col items-center justify-center text-white"
+              className="flex flex-col items-center justify-center text-white cursor-pointer"
             >
               <div className="bg-white text-brand p-2.5 rounded-full shadow-lg -mt-5 border-2 border-brand active:scale-95 transition-transform">
                 <CirclePlus className="w-6 h-6" />
@@ -234,7 +249,7 @@ export function NavigationBar({
             <button
               type="button"
               onClick={() => setIsMoreOpen(true)}
-              className={`flex flex-col items-center justify-center p-2 rounded-lg ${
+              className={`flex flex-col items-center justify-center p-2 rounded-lg cursor-pointer ${
                 isMoreOpen ? 'text-white bg-white/20' : 'text-blue-200'
               }`}
             >
@@ -411,7 +426,7 @@ export function NavigationBar({
                 onClick={() => setIsMoreOpen(false)}
                 className="p-1 rounded-full text-gray-400 hover:text-gray-600 bg-gray-100 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus } from 'lucide-react';
 import { Button } from '~/components/ui/button';
@@ -6,7 +6,6 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { DataTable } from '~/components/table/data-table';
-import { mergeById } from '~/utils/table-helpers';
 import { AddCurrencyDialog } from '~/components/currency/dialogs/add-currency-dialog';
 import { EditCurrencyDialog } from '~/components/currency/dialogs/edit-currency-dialog';
 import { ROLES } from '~/constants/roles';
@@ -15,6 +14,7 @@ import type { CurrencySimple } from '~/types/currency';
 import { useDebounce } from '~/hooks/use-debounce';
 import { CurrencyMobileCard } from '~/components/currency/currency-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface CurrencyTableMeta {
   onEdit: (currency: { id: string; name: string; code: string; decimalPlace: number }) => void;
@@ -90,17 +90,7 @@ export default function CurrenciesList() {
     decimalPlace: number;
   } | null>(null);
 
-  const [accumulatedMobileCurrencies, setAccumulatedMobileCurrencies] = useState<CurrencySimple[]>(
-    [],
-  );
-  const isMobileAppend = useRef(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize]);
 
   const {
     data,
@@ -122,28 +112,6 @@ export default function CurrenciesList() {
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopCurrencies.length;
 
-  useEffect(() => {
-    const items: CurrencySimple[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileCurrencies(items);
-      return;
-    }
-
-    setAccumulatedMobileCurrencies((prev) => mergeById(prev, items, (item) => item.currencyId));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopCurrencies,
     columns,
@@ -151,6 +119,17 @@ export default function CurrenciesList() {
     meta: {
       onEdit: (currency) => setEditingCurrency(currency),
     } satisfies CurrencyTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileCurrencies,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, sortBy, sortDescending, pageSize],
   });
 
   return (
@@ -209,7 +188,7 @@ export default function CurrenciesList() {
 
           <QueryErrorBanner
             error={queryError}
-            fallbackMessage="Nie udało się pobrać listy użytkowników."
+            fallbackMessage="Nie udało się pobrać listy walut."
             className="mb-6"
           />
 

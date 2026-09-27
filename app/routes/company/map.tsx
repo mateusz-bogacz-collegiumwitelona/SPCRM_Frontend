@@ -120,7 +120,7 @@ export default function MapPage() {
 
             <QueryErrorBanner
               error={queryError}
-              fallbackMessage="Nie udało się pobrać listy użytkowników."
+              fallbackMessage="Nie udało się pobrać listy firm."
               className="mb-6"
             />
 
