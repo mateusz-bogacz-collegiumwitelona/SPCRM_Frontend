@@ -8,8 +8,8 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, ShieldCheck, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
-import { getRoleConfig } from '~/utils/role-translator';
+import { getErrorMessage } from '~/constants/error-mapper';
+import { getRoleConfig } from '~/constants/role-translator';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { ChangeUserRolePayload, UserRoleActionData } from '~/types/user';
 import { useUserRoles } from '~/hooks/use-users';

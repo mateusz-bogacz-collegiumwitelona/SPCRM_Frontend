@@ -20,7 +20,7 @@ import {
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useUserCompanies } from '~/hooks/use-users';
 import type { UserCompanyItem } from '~/types/user';

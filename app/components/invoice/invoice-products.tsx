@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AlertCircle, PackageOpen, X } from 'lucide-react';
 import { DataTable } from '~/components/table/data-table';

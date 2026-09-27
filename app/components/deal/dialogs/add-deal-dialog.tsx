@@ -9,7 +9,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { AlertCircle, CalendarIcon, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';

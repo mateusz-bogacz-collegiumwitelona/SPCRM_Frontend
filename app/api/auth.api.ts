@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   ConfirmEmailChangePayload,
   ConfirmEmailPayload,
@@ -9,32 +9,32 @@ import type {
 
 export const authApi = {
   login: async (payload: LoginPayload) => {
-    const response = await axios.post('/auth/login', payload);
+    const response = await client.post('/auth/login', payload);
     return response.data;
   },
 
   resetPassword: async (payload: ResetPasswordPayload) => {
-    const response = await axios.post('/auth/reset-password', payload);
+    const response = await client.post('/auth/reset-password', payload);
     return response.data;
   },
 
   forgotPassword: async (email: string) => {
-    const response = await axios.post('/auth/forgot-password', { email });
+    const response = await client.post('/auth/forgot-password', { email });
     return response.data;
   },
 
   confirmEmail: async (payload: ConfirmEmailPayload) => {
-    const response = await axios.post('/user/confirm-email', payload);
+    const response = await client.post('/user/confirm-email', payload);
     return response.data;
   },
 
   confirmEmailChange: async (payload: ConfirmEmailChangePayload) => {
-    const response = await axios.post('/user/confirm-email-change', payload);
+    const response = await client.post('/user/confirm-email-change', payload);
     return response.data;
   },
 
   getMe: async (): Promise<User | null> => {
-    const response = await axios.get('/auth/me');
+    const response = await client.get('/auth/me');
     if (response.data?.success) {
       return response.data.data;
     }
@@ -42,6 +42,6 @@ export const authApi = {
   },
 
   logout: async (): Promise<void> => {
-    await axios.post('/auth/logout');
+    await client.post('/auth/logout');
   },
 };

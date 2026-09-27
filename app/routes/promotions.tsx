@@ -1,6 +1,6 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   AlertCircle,

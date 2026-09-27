@@ -1,24 +1,24 @@
 import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { MapPinned, Pencil, Plus, Trash2 } from 'lucide-react';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import { useNavigate, useParams } from 'react-router';
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
 import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
 import { CompanyContactsSection } from '~/components/companies/company-contacts-section';
 import { CompanySalesSection } from '~/components/companies/company-sales-section';
 import { CompanyDebtsSection } from '~/components/companies/company-debts-section';
-import type { OSMMapClientProps } from '~/components/osm-map-client';
+import type { OSMMapClientProps } from '~/components/map/osm-map-client';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { EditCompanyDialog } from '~/components/companies/dialogs/edit-company-dialog';
-import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
+import { formatAddressType, getAddressTypeBadgeClass } from '~/constants/address-helpers';
 import { Button } from '~/components/ui/button';
 import { CompanyAddressDialog } from '~/components/companies/dialogs/company-address-dialog';
 import { DeleteCompanyDialog } from '~/components/companies/dialogs/delete-company-dialog';
 import { DeleteCompanyAddressDialog } from '~/components/companies/dialogs/delete-company-address-dialog';
 import { ChangeCompanyOwnerDialog } from '~/components/companies/dialogs/change-company-owner-dialog';
 import type { ApiError } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { AddressItemToEdit, CompanyAddress } from '~/types/company';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
@@ -109,7 +109,7 @@ export default function CompanyDetails() {
 
   useEffect(() => {
     let isMounted = true;
-    import('~/components/osm-map-client').then((module) => {
+    import('~/components/map/osm-map-client').then((module) => {
       if (isMounted) setMapComponent(() => module.default as ComponentType<OSMMapClientProps>);
     });
     return () => {

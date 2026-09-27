@@ -6,7 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import { Button } from '~/components/ui/button';
 import {
   AlertCircle,
@@ -27,7 +27,7 @@ import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { ActionGuard } from '~/components/guards/action-guard';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ContactNote } from '~/types/contact';
 import { useAddNote, useDeleteNote, useEditNote } from '~/hooks/use-notes';
 
@@ -209,7 +209,7 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
         PageSize: pageSize,
         SearchTerm: debouncedSearch || undefined,
       };
-      const response = await axios.get(`/contacts/${contactId}/notes`, { params });
+      const response = await client.get(`/contacts/${contactId}/notes`, { params });
       return response.data?.value || response.data?.data || response.data;
     },
     enabled: !!contactId,

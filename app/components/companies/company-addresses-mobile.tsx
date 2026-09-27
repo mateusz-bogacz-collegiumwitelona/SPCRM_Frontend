@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
+import { formatAddressType, getAddressTypeBadgeClass } from '~/constants/address-helpers';
 import { Navigation, Pencil, Trash2 } from 'lucide-react';
 
 interface Address {

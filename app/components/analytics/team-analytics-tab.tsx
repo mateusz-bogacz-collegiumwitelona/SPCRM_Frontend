@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import { RevenueChart } from '~/components/analytics/revenue-chart';
 import { AlertCircle, FileText, Loader2, RefreshCw, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type {
   AnalyticsChartMetricResponse,
   AnalyticsPeriod,
@@ -28,7 +28,7 @@ export const TeamAnalyticsTab: React.FC = () => {
   const { data: currencies } = useQuery<CurrencySimple[]>({
     queryKey: ['currencies-simple'],
     queryFn: async () => {
-      const response = await axios.get('/currency/simple');
+      const response = await client.get('/currency/simple');
       return response.data?.value || response.data?.data || response.data || [];
     },
   });
@@ -50,7 +50,7 @@ export const TeamAnalyticsTab: React.FC = () => {
   } = useQuery<TeamKpiSummaryResponse>({
     queryKey: ['team-kpi-summary'],
     queryFn: async () => {
-      const response = await axios.get('/analytics/team/kpi');
+      const response = await client.get('/analytics/team/kpi');
       return response.data?.value || response.data?.data || response.data;
     },
   });
@@ -63,7 +63,7 @@ export const TeamAnalyticsTab: React.FC = () => {
   } = useQuery<AnalyticsChartMetricResponse[]>({
     queryKey: ['team-chart', selectedPeriod],
     queryFn: async () => {
-      const response = await axios.get('/analytics/team/chart', {
+      const response = await client.get('/analytics/team/chart', {
         params: { Period: selectedPeriod },
       });
       return response.data?.value || response.data?.data || response.data || [];
@@ -77,7 +77,7 @@ export const TeamAnalyticsTab: React.FC = () => {
   } = useQuery({
     queryKey: ['team-leaderboard', leaderboardPage, leaderboardPageSize],
     queryFn: async () => {
-      const response = await axios.get('/analytics/team/leaderboard', {
+      const response = await client.get('/analytics/team/leaderboard', {
         params: {
           PageNumber: leaderboardPage,
           PageSize: leaderboardPageSize,

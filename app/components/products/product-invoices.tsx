@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { format } from 'date-fns';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { DataTable } from '~/components/table/data-table';

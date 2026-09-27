@@ -9,7 +9,7 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -19,7 +19,7 @@ import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
-import { getStatusConfig } from '~/utils/sale-status';
+import { getStatusConfig } from '~/constants/sale-status';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';

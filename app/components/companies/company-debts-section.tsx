@@ -6,7 +6,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AlertCircle, X } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';

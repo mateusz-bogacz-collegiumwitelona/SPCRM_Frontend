@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Lock, X } fr
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { FormErrorState } from '~/types/api-error';
 import { useResetPasswordMutation } from '~/hooks/use-auth';
 

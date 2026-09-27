@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { mailingApi } from '~/api/mailing.api';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { SendMailingPayload } from '~/types/mailing';
 import { currenciesApi } from '~/api/currency.api';
 

@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type { CompanyMapData } from '~/types/map';
 
 interface MapApiResponse {
@@ -15,7 +15,7 @@ export const mapApi = {
       ? `/company/map?searchTerm=${encodeURIComponent(searchTerm)}`
       : `/company/map`;
 
-    const response = await axios.get<MapApiResponse>(endpoint);
+    const response = await client.get<MapApiResponse>(endpoint);
     return response.data?.data || [];
   },
 };

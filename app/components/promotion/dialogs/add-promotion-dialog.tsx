@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   buildBasePromotionPayload,
@@ -53,7 +53,7 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
   const { data: products = [] } = useQuery<ProductOption[]>({
     queryKey: ['mailing-products-list'],
     queryFn: async () => {
-      const res = await axios.get('/mailing/products', {
+      const res = await client.get('/mailing/products', {
         params: { PageNumber: 1, PageSize: 100 },
       });
       return res.data?.data?.items || [];

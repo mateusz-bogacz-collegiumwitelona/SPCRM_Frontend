@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
+import { getIcon, getTypePrefix } from '~/components/contact/contact-type-helpers';
 import { type Contact } from '~/types/contact';
 import { AlertCircle, Building2, User, X } from 'lucide-react';
 import { Link } from 'react-router';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useTaskContact } from '~/hooks/use-tasks';
 

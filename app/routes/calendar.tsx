@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AlertCircle, Filter, Loader2, Plus, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';

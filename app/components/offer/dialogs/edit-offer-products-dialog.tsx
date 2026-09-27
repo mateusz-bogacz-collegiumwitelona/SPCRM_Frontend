@@ -8,7 +8,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Edit3, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { EditableProductItem } from '~/types/offer';
 import { useProductSearch } from '~/hooks/use-products';

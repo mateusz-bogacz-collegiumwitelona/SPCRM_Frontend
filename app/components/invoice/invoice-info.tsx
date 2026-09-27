@@ -19,7 +19,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Button } from '~/components/ui/button';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AddInvoicePaymentDialog } from './dialogs/add-invoice-payment-dialog';
 import { DownloadInvoicePdfDialog } from './dialogs/download-invoice-pdf-dialog';

@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
@@ -21,7 +21,7 @@ import {
   getTaskStatusBadgeClass,
   resolveTaskPriorityLabel,
   resolveTaskStatusLabel,
-} from '~/utils/task-helpers';
+} from '~/constants/task-helpers';
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';

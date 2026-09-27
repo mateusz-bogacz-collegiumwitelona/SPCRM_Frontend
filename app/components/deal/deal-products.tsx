@@ -3,7 +3,7 @@ import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   AlertCircle,

@@ -13,7 +13,7 @@ import { AlertCircle, CalendarIcon, Clock, Loader2, X } from 'lucide-react';
 import { addDays, endOfDay, format, isBefore, isSameDay, startOfDay } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 
 interface ExtendDealDialogProps {

@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   AddCompanyRequest,
   CompanyAddress,
@@ -16,7 +16,7 @@ import type { CompanySaleItem } from '~/types/deal';
 
 export const companyApi = {
   getList: async (params: CompanyListParams): Promise<PaginatedResponse<GetCompanyResponse>> => {
-    const response = await axios.get('/company/list', {
+    const response = await client.get('/company/list', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -32,44 +32,44 @@ export const companyApi = {
   },
 
   create: async (payload: AddCompanyRequest) => {
-    const response = await axios.post('/company', payload);
+    const response = await client.post('/company', payload);
     return response.data;
   },
 
   getDetails: async (companyId: string): Promise<CompanyDetailResponse> => {
-    const response = await axios.get('/company', { params: { companyId } });
+    const response = await client.get('/company', { params: { companyId } });
     return response.data.data;
   },
 
   getEditDetails: async (companyId: string): Promise<EditCompanyDetailResponse> => {
-    const response = await axios.get(`/company/edit-detail/${companyId}`);
+    const response = await client.get(`/company/edit-detail/${companyId}`);
     return response.data?.data ?? response.data;
   },
 
   getAddresses: async (companyId: string): Promise<PaginatedResponse<CompanyAddress>> => {
-    const response = await axios.get('/company/addresses', {
+    const response = await client.get('/company/addresses', {
       params: { companyId, PageNumber: 1, PageSize: 100 },
     });
     return response.data.data;
   },
 
   getAddressTypes: async (): Promise<string[]> => {
-    const response = await axios.get('/company/address/types');
+    const response = await client.get('/company/address/types');
     return (response.data?.data || response.data?.value || []) as string[];
   },
 
   edit: async (payload: EditCompanyRequest) => {
-    const response = await axios.patch('/company', payload);
+    const response = await client.patch('/company', payload);
     return response.data;
   },
 
   saveAddress: async (companyId: string, formData: CompanyAddressFormData) => {
     if (formData.addressId) {
-      const response = await axios.patch('/company/address', formData);
+      const response = await client.patch('/company/address', formData);
       return response.data;
     }
 
-    const response = await axios.post(`/company/address/${companyId}`, {
+    const response = await client.post(`/company/address/${companyId}`, {
       street: formData.street,
       city: formData.city,
       zipCode: formData.zipCode,
@@ -81,17 +81,17 @@ export const companyApi = {
   },
 
   deleteAddress: async (addressId: string) => {
-    const response = await axios.delete(`/company/address/${addressId}`);
+    const response = await client.delete(`/company/address/${addressId}`);
     return response.data;
   },
 
   deleteCompany: async (companyId: string) => {
-    const response = await axios.delete(`/company/${companyId}`);
+    const response = await client.delete(`/company/${companyId}`);
     return response.data;
   },
 
   changeOwner: async (companyId: string, newOwnerId: string) => {
-    const response = await axios.patch('/company/change-owner', {
+    const response = await client.patch('/company/change-owner', {
       companyId,
       userId: newOwnerId,
     });
@@ -99,7 +99,7 @@ export const companyApi = {
   },
 
   getContacts: async (params: { companyId: string; pageNumber: number; pageSize: number }) => {
-    const response = await axios.get('/company/contacts', {
+    const response = await client.get('/company/contacts', {
       params: {
         companyId: params.companyId,
         PageNumber: params.pageNumber,
@@ -110,7 +110,7 @@ export const companyApi = {
   },
 
   getDebtSummary: async (companyId: string): Promise<DebtSummary[]> => {
-    const response = await axios.get('/company/debts/summary', {
+    const response = await client.get('/company/debts/summary', {
       params: { CompanyId: companyId },
     });
     return response.data?.data || response.data?.value || [];
@@ -121,7 +121,7 @@ export const companyApi = {
     pageNumber: number;
     pageSize: number;
   }): Promise<PaginatedResponse<Debt>> => {
-    const response = await axios.get('/company/debts', {
+    const response = await client.get('/company/debts', {
       params: {
         CompanyId: params.companyId,
         PageNumber: params.pageNumber,
@@ -136,7 +136,7 @@ export const companyApi = {
     pageNumber: number;
     pageSize: number;
   }): Promise<PaginatedResponse<CompanySaleItem>> => {
-    const response = await axios.get('/company/sales', {
+    const response = await client.get('/company/sales', {
       params: {
         companyId: params.companyId,
         PageNumber: params.pageNumber,

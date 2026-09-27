@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   AddDealPayload,
   ChangeDealStatusPayload,
@@ -16,7 +16,7 @@ import type { PaginatedResponse } from '~/types/table';
 
 export const dealsApi = {
   getList: async (params: SalesListParams): Promise<PaginatedResponse<UserSalesResponse>> => {
-    const response = await axios.get('/sales', {
+    const response = await client.get('/sales', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -33,17 +33,17 @@ export const dealsApi = {
   },
 
   getStatuses: async (): Promise<string[]> => {
-    const response = await axios.get('/sales/statuses');
+    const response = await client.get('/sales/statuses');
     return response.data?.value || response.data?.data || response.data || [];
   },
 
   getDetails: async (dealId: string): Promise<SaleDetailResponse> => {
-    const response = await axios.get(`/sales/${dealId}`);
+    const response = await client.get(`/sales/${dealId}`);
     return response.data?.data || response.data?.value || response.data;
   },
 
   create: async (payload: AddDealPayload) => {
-    const response = await axios.post('/sales', payload);
+    const response = await client.post('/sales', payload);
     return response.data;
   },
 
@@ -51,12 +51,12 @@ export const dealsApi = {
     dealId: string,
     payload: { productId: string; quantity: number; unitPrice: number },
   ) => {
-    const response = await axios.put(`/sales/${dealId}/products`, payload);
+    const response = await client.put(`/sales/${dealId}/products`, payload);
     return response.data;
   },
 
   getAssignableContacts: async (dealId: string): Promise<DealAssignableContactResponse[]> => {
-    const response = await axios.get(`/sales/${dealId}/assignable-contacts`);
+    const response = await client.get(`/sales/${dealId}/assignable-contacts`);
     return (response.data?.data || response.data?.value || []) as DealAssignableContactResponse[];
   },
 
@@ -64,7 +64,7 @@ export const dealsApi = {
     dealId: string,
     payload: ChangeDealStatusPayload,
   ): Promise<ChangeStatusResponse> => {
-    const response = await axios.put(`/sales/${dealId}/status`, payload);
+    const response = await client.put(`/sales/${dealId}/status`, payload);
     return (response.data?.data || response.data?.value || response.data) as ChangeStatusResponse;
   },
 
@@ -72,17 +72,17 @@ export const dealsApi = {
     dealId: string,
     payload: { dealProductId: string; quantity: number; unitPrice: number },
   ) => {
-    const response = await axios.patch(`/sales/${dealId}/products`, payload);
+    const response = await client.patch(`/sales/${dealId}/products`, payload);
     return response.data;
   },
 
   delete: async (dealId: string) => {
-    const response = await axios.delete(`/sales/${dealId}`);
+    const response = await client.delete(`/sales/${dealId}`);
     return response.data;
   },
 
   extendCloseDate: async (dealId: string, newCloseDate: string) => {
-    const response = await axios.put('/sales/extend-close-date', {
+    const response = await client.put('/sales/extend-close-date', {
       dealId,
       newCloseDate,
     });
@@ -90,7 +90,7 @@ export const dealsApi = {
   },
 
   changeContact: async (dealId: string, newContactId: string) => {
-    const response = await axios.put(`/sales/${dealId}/contact`, null, {
+    const response = await client.put(`/sales/${dealId}/contact`, null, {
       params: { contactId: newContactId },
     });
     return response.data;
@@ -100,7 +100,7 @@ export const dealsApi = {
     dealId: string,
     params: DealProductsParams,
   ): Promise<PaginatedResponse<DealProductResponse>> => {
-    const response = await axios.get(`/sales/${dealId}/products`, {
+    const response = await client.get(`/sales/${dealId}/products`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -115,12 +115,12 @@ export const dealsApi = {
   },
 
   deleteDealProduct: async (dealId: string, dealProductId: string) => {
-    const response = await axios.delete(`/sales/${dealId}/products/${dealProductId}`);
+    const response = await client.delete(`/sales/${dealId}/products/${dealProductId}`);
     return response.data;
   },
 
   getDealTasks: async (dealId: string, params: DealTasksParams) => {
-    const res = await axios.get(`/sales/${dealId}/tasks`, {
+    const res = await client.get(`/sales/${dealId}/tasks`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -133,17 +133,17 @@ export const dealsApi = {
   },
 
   addDealTask: async (dealId: string, payload: AddTaskRequestPayload) => {
-    const res = await axios.post(`/sales/${dealId}/tasks`, payload);
+    const res = await client.post(`/sales/${dealId}/tasks`, payload);
     return res.data;
   },
 
   getDealNotes: async (dealId: string): Promise<Note[]> => {
-    const response = await axios.get(`/sales/${dealId}/notes`);
+    const response = await client.get(`/sales/${dealId}/notes`);
     return response.data?.data || response.data?.value || response.data || [];
   },
 
   addDealNote: async (dealId: string, payload: { title: string; content: string }) => {
-    const response = await axios.post(`/sales/${dealId}/notes`, payload);
+    const response = await client.post(`/sales/${dealId}/notes`, payload);
     return response.data;
   },
 };

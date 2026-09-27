@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   AddPromotionRequest,
   EditPromotionRequest,
@@ -10,7 +10,7 @@ import type { PaginatedResponse } from '~/types/table';
 
 export const promotionsApi = {
   getList: async (params: PromotionListParams): Promise<PaginatedResponse<PromotionResponse>> => {
-    const response = await axios.get('/promotion', {
+    const response = await client.get('/promotion', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -30,22 +30,22 @@ export const promotionsApi = {
   },
 
   create: async (payload: AddPromotionRequest): Promise<string> => {
-    const response = await axios.post('/promotion', payload);
+    const response = await client.post('/promotion', payload);
     return response.data?.data;
   },
 
   getDetails: async (promotionId: string): Promise<PromotionDetailResponse> => {
-    const response = await axios.get(`/promotion/${promotionId}`);
+    const response = await client.get(`/promotion/${promotionId}`);
     return response.data?.data || response.data?.value || response.data;
   },
 
   deactivate: async (promotionId: string) => {
-    const response = await axios.patch(`/promotion/${promotionId}/deactivate`);
+    const response = await client.patch(`/promotion/${promotionId}/deactivate`);
     return response.data;
   },
 
   activate: async (promotionId: string, endDate: string) => {
-    const response = await axios.patch('/promotion/activate', {
+    const response = await client.patch('/promotion/activate', {
       id: promotionId,
       endDate,
     });
@@ -53,12 +53,12 @@ export const promotionsApi = {
   },
 
   edit: async (payload: EditPromotionRequest) => {
-    const response = await axios.patch('/promotion/edit', payload);
+    const response = await client.patch('/promotion/edit', payload);
     return response.data;
   },
 
   delete: async (promotionId: string) => {
-    const response = await axios.delete(`/promotion/${promotionId}`);
+    const response = await client.delete(`/promotion/${promotionId}`);
     return response.data;
   },
 };

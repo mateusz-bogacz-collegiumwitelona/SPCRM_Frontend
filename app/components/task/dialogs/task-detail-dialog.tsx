@@ -6,8 +6,8 @@ import { Link } from 'react-router';
 import { AlertCircle, Briefcase, Calendar, Clock, Loader2, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { getTaskPriorityBadgeClass, getTaskStatusBadgeClass } from '~/utils/task-helpers';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getTaskPriorityBadgeClass, getTaskStatusBadgeClass } from '~/constants/task-helpers';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useChangeTaskStatusMutation, useTaskDictionaries } from '~/hooks/use-tasks';
 

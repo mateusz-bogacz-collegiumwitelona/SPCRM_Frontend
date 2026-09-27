@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router';
 import { AlertCircle, MapPinned, Search, X } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/components/guards/auth-guard';
@@ -35,7 +35,7 @@ export default function MapPage() {
 
   useEffect(() => {
     let isMounted = true;
-    import('~/components/osm-map-client').then((module) => {
+    import('~/components/map/osm-map-client').then((module) => {
       if (isMounted) setMapComponent(() => module.default);
     });
     return () => {

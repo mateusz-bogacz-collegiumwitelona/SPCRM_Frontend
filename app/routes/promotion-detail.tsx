@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';

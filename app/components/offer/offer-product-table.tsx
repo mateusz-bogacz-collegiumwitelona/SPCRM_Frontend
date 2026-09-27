@@ -17,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { OfferProductResponse } from '~/types/offer';
 import { useOfferProducts } from '~/hooks/use-offers';

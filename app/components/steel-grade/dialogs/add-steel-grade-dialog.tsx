@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import {
   Dialog,
   DialogContent,

@@ -13,7 +13,7 @@ import { AlertCircle, CalendarIcon, Loader2, Play, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 
 interface ActivatePromotionDialogProps {

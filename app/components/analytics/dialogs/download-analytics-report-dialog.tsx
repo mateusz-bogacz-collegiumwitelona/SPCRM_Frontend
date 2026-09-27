@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AlertCircle, Calendar, Download, FileText, Loader2, X } from 'lucide-react';
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { downloadBase64Pdf } from '~/utils/pdf-downloader';
 import type { AnalyticsPeriod } from '~/types/analytics';
@@ -45,7 +45,7 @@ export const DownloadAnalyticsReportDialog: React.FC<DownloadAnalyticsReportDial
     setFormError(null);
 
     try {
-      const response = await axios.get(endpoint, {
+      const response = await client.get(endpoint, {
         params: { Period: period },
       });
 

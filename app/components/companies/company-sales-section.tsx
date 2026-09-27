@@ -8,10 +8,10 @@ import {
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getStatusConfig } from '~/utils/sale-status';
+import { getStatusConfig } from '~/constants/sale-status';
 import { useCompanySales } from '~/hooks/use-companies';
 import type { CompanySaleItem } from '~/types/deal';
 

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, X } from 'lucide-react';
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useTaskNotes, useTaskNotesMutations } from '~/hooks/use-notes';
 

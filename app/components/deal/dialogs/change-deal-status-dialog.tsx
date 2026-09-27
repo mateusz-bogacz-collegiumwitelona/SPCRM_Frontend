@@ -9,9 +9,9 @@ import {
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { AlertCircle, FileText, Loader2, RefreshCw, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getStatusConfig } from '~/utils/sale-status';
+import { getStatusConfig } from '~/constants/sale-status';
 import { useChangeDealStatusMutation, useSalesStatuses } from '~/hooks/use-deals';
 
 interface ChangeDealStatusDialogProps {

@@ -13,7 +13,7 @@ import { Link } from 'react-router';
 import { EditContactDialog } from '~/components/contact/dialogs/edit-contact-dialog';
 import { SetCompanyPrimaryContactDialog } from '~/components/companies/dialogs/set-company-primary-contact-dialog';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { AddContactRequest } from '~/types/contact';
 import { useCompanyContacts, useCompanyContactSectionMutations } from '~/hooks/use-companies';
 

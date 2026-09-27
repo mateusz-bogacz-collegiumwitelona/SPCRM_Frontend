@@ -4,7 +4,7 @@ import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { Navbar } from '~/components/layout/unloged-navbar';
 import type { FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import { AlertCircle, X } from 'lucide-react';
 import { useSendSupportMessage } from '~/hooks/use-support';
 import type { SupportFormData } from '~/types/support';

@@ -4,9 +4,9 @@ import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { AlertCircle, Briefcase, Building2, Calendar, X } from 'lucide-react';
-import { axios } from '~/lib/axios';
-import { getErrorMessage } from '~/utils/error-mapper';
-import { getStatusConfig } from '~/utils/sale-status';
+import { client } from '~/lib/client';
+import { getErrorMessage } from '~/constants/error-mapper';
+import { getStatusConfig } from '~/constants/sale-status';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { DataTable } from '~/components/table/data-table';
@@ -122,7 +122,7 @@ export const ProductDeals = ({
         SearchTerm: debouncedSearch || undefined,
       };
 
-      const response = await axios.get(`/products/${productId}/deals`, { params });
+      const response = await client.get(`/products/${productId}/deals`, { params });
       return response.data?.value || response.data?.data || response.data;
     },
     placeholderData: keepPreviousData,

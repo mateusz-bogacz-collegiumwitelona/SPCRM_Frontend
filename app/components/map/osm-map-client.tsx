@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import { ExternalLink } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
-import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
+import { formatAddressType, getAddressTypeBadgeClass } from '~/constants/address-helpers';
 import type { CompanyMapData } from '~/types/map';
 
 export type OSMMapClientProps = {

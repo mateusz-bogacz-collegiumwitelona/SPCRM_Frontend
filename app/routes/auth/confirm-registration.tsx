@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, X } from 'lucide
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { FormErrorState } from '~/types/api-error';
 import { useConfirmEmailMutation } from '~/hooks/use-auth';
 

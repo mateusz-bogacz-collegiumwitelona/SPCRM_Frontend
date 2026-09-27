@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   AddUnitRequestPayload,
   EditUnitRequestPayload,
@@ -10,7 +10,7 @@ import type { PaginatedResponse } from '~/types/table';
 
 export const unitsApi = {
   getList: async (params: UnitListParams): Promise<PaginatedResponse<UnitListResponse>> => {
-    const response = await axios.get('/unit', {
+    const response = await client.get('/unit', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -23,17 +23,17 @@ export const unitsApi = {
   },
 
   create: async (payload: AddUnitRequestPayload) => {
-    const response = await axios.post('/unit', payload);
+    const response = await client.post('/unit', payload);
     return response.data;
   },
 
   edit: async (payload: EditUnitRequestPayload) => {
-    const response = await axios.put('/unit', payload);
+    const response = await client.put('/unit', payload);
     return response.data;
   },
 
   getSimpleList: async (): Promise<UnitOption[]> => {
-    const res = await axios.get('/unit/simple');
+    const res = await client.get('/unit/simple');
     return (res.data?.value || res.data?.data || res.data || []) as UnitOption[];
   },
 };

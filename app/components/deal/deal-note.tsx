@@ -5,7 +5,7 @@ import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { AlertCircle, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useDealNotes, useDealNotesMutations } from '~/hooks/use-notes';
 

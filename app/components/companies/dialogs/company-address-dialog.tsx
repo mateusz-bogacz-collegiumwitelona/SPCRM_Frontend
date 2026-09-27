@@ -8,10 +8,10 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, MapPinned, X } from 'lucide-react';
-import type { OSMMapClientProps } from '~/components/osm-map-client';
-import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
-import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
-import { getErrorMessage } from '~/utils/error-mapper';
+import type { OSMMapClientProps } from '~/components/map/osm-map-client';
+import { forwardGeocode, reverseGeocode } from '~/api/geocoding.api';
+import { formatAddressType, getAddressTypeBadgeClass } from '~/constants/address-helpers';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { AddressItemToEdit, CompanyAddressFormData } from '~/types/company';
 import { useCompanyAddressTypes } from '~/hooks/use-companies';
@@ -51,7 +51,7 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
   useEffect(() => {
     let isMounted = true;
     if (isOpen) {
-      import('~/components/osm-map-client').then((module) => {
+      import('~/components/map/osm-map-client').then((module) => {
         if (isMounted) setMapComponent(() => module.default as ComponentType<OSMMapClientProps>);
       });
     }

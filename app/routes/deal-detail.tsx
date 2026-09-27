@@ -6,7 +6,7 @@ import { DealNote } from '~/components/deal/deal-note';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { DealTasks } from '~/components/deal/deal-tasks';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import NotFound from '~/routes/not-found';
 import React from 'react';
 import { PageLoader } from '~/components/layout/page-loader';

@@ -1,6 +1,7 @@
 import type ApiError from '~/types/api-error';
+import axios from 'axios';
 
-export const axios = axios.create({
+export const client = axios.create({
   baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',

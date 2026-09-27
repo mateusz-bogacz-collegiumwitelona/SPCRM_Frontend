@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import React, { useState } from 'react';

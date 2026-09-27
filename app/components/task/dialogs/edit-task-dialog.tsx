@@ -8,8 +8,8 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { AlertCircle, Loader2, X } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
-import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
+import { getErrorMessage } from '~/constants/error-mapper';
+import { FALLBACK_TASK_PRIORITY_LABELS } from '~/constants/task-helpers';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { DictionaryItem, EditTaskRequestPayload } from '~/types/task';
 import { useTaskDetails, useTaskDictionaries } from '~/hooks/use-tasks';

@@ -16,7 +16,7 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -25,7 +25,7 @@ import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
-import { getRoleConfig } from '~/utils/role-translator';
+import { getRoleConfig } from '~/constants/role-translator';
 import { AddUserDialog } from '~/components/user/dialogs/add-user-dialog';
 import { LockoutUserDialog } from '~/components/user/dialogs/lockout-user-dialog';
 import { UnlockUserDialog } from '~/components/user/dialogs/unlock-user-dialog';

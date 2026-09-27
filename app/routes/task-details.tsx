@@ -6,7 +6,7 @@ import { TaskDeals } from '~/components/task/task-deals';
 import { TaskInfo } from '~/components/task/task-info';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
 import { STANDARD_ROLES } from '~/constants/roles';

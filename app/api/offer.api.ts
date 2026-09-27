@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   CompanySimpleListResponse,
   OfferAllowedActionsResponse,
@@ -13,7 +13,7 @@ import type { PaginatedResponse } from '~/types/table';
 
 export const offersApi = {
   getList: async (params: OfferListParams): Promise<PaginatedResponse<OfferListResponse>> => {
-    const response = await axios.get('/offer', {
+    const response = await client.get('/offer', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -31,27 +31,27 @@ export const offersApi = {
   },
 
   getStatuses: async (): Promise<string[]> => {
-    const response = await axios.get('/offer/statuses');
+    const response = await client.get('/offer/statuses');
     return response.data?.data || response.data?.value || response.data || [];
   },
 
   getCompaniesSimpleList: async (): Promise<CompanySimpleListResponse[]> => {
-    const response = await axios.get('/company/simple-list');
+    const response = await client.get('/company/simple-list');
     return response.data?.value || response.data?.data || response.data || [];
   },
 
   getDetails: async (offerId: string) => {
-    const response = await axios.get(`/offer/detail/${offerId}`);
+    const response = await client.get(`/offer/detail/${offerId}`);
     return response.data.data;
   },
 
   getAllowedActions: async (offerId: string): Promise<OfferAllowedActionsResponse> => {
-    const response = await axios.get(`/offer/${offerId}/allowed-actions`);
+    const response = await client.get(`/offer/${offerId}/allowed-actions`);
     return response.data?.data || response.data?.value || response.data;
   },
 
   getClientDetail: async (offerId: string): Promise<OfferClientDetailResponse> => {
-    const response = await axios.get(`/offer/client/${offerId}`);
+    const response = await client.get(`/offer/client/${offerId}`);
     return response.data?.data || response.data?.value || response.data;
   },
 
@@ -59,7 +59,7 @@ export const offersApi = {
     offerId: string,
     params: OfferProductsParams,
   ): Promise<PaginatedResponse<OfferProductResponse>> => {
-    const response = await axios.get(`/offer/product/${offerId}`, {
+    const response = await client.get(`/offer/product/${offerId}`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -70,27 +70,27 @@ export const offersApi = {
   },
 
   updateProducts: async (offerId: string, items: UpdateOfferProductItem[]) => {
-    const response = await axios.put('/offer/products', { offerId, items });
+    const response = await client.put('/offer/products', { offerId, items });
     return response.data;
   },
 
   extendValidity: async (offerId: string, newValidUntil?: string) => {
-    const response = await axios.patch('/offer/extend', { offerId, newValidUntil });
+    const response = await client.patch('/offer/extend', { offerId, newValidUntil });
     return response.data;
   },
 
   changeStatus: async (offerId: string, newStatus: 'Accepted' | 'Rejected') => {
-    const response = await axios.patch('/offer/change-status', { offerId, newStatus });
+    const response = await client.patch('/offer/change-status', { offerId, newStatus });
     return response.data;
   },
 
   resendEmail: async (offerId: string, language: string) => {
-    const response = await axios.post('/offer/resend-email', { offerId, language });
+    const response = await client.post('/offer/resend-email', { offerId, language });
     return response.data;
   },
 
   delete: async (offerId: string) => {
-    const response = await axios.delete(`/offer/${offerId}`);
+    const response = await client.delete(`/offer/${offerId}`);
     return response.data;
   },
 };

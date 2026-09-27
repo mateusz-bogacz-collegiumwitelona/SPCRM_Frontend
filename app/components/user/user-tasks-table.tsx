@@ -28,8 +28,8 @@ import {
   getTaskStatusBadgeClass,
   resolveTaskPriorityLabel,
   resolveTaskStatusLabel,
-} from '~/utils/task-helpers';
-import { getErrorMessage } from '~/utils/error-mapper';
+} from '~/constants/task-helpers';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { DictionaryItem, UserTaskItem } from '~/types/task';
 import { useTaskDictionaries } from '~/hooks/use-tasks';

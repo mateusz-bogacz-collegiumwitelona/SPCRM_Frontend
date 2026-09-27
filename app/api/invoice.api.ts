@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   AddInvoicePaymentPayload,
   InvoiceDetailResponse,
@@ -17,7 +17,7 @@ import type {
 
 export const invoiceApi = {
   getList: async (params: InvoiceListParams): Promise<PaginatedResponse<InvoiceListResponse>> => {
-    const response = await axios.get('/invoice', {
+    const response = await client.get('/invoice', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -37,22 +37,22 @@ export const invoiceApi = {
   },
 
   getDetails: async (invoiceId: string): Promise<InvoiceDetailResponse> => {
-    const response = await axios.get(`/invoice/${invoiceId}`);
+    const response = await client.get(`/invoice/${invoiceId}`);
     return response.data?.data || response.data?.value || response.data;
   },
 
   getPaymentSummary: async (invoiceId: string): Promise<InvoicePaymentSummaryResponse> => {
-    const response = await axios.get(`/invoice/${invoiceId}/payment/summary`);
+    const response = await client.get(`/invoice/${invoiceId}/payment/summary`);
     return response.data?.data || response.data?.value || response.data;
   },
 
   addPayment: async (invoiceId: string, payload: AddInvoicePaymentPayload) => {
-    const response = await axios.post(`/invoice/${invoiceId}/payment`, payload);
+    const response = await client.post(`/invoice/${invoiceId}/payment`, payload);
     return response.data;
   },
 
   getInvoicePdf: async (invoiceId: string, language: 'pl' | 'en'): Promise<PdfFilePayload> => {
-    const response = await axios.get(`/invoice/${invoiceId}/pdf`, {
+    const response = await client.get(`/invoice/${invoiceId}/pdf`, {
       params: { language },
     });
     return response.data?.value || response.data?.data || response.data;
@@ -62,7 +62,7 @@ export const invoiceApi = {
     invoiceId: string,
     params: InvoicePaymentsParams,
   ): Promise<PaginatedResponse<InvoicePaymentListResponse>> => {
-    const response = await axios.get(`/invoice/${invoiceId}/payment`, {
+    const response = await client.get(`/invoice/${invoiceId}/payment`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -76,7 +76,7 @@ export const invoiceApi = {
     invoiceId: string,
     params: InvoiceProductsParams,
   ): Promise<PaginatedResponse<InvoiceProductsListResponse>> => {
-    const response = await axios.get(`/invoice/${invoiceId}/products`, {
+    const response = await client.get(`/invoice/${invoiceId}/products`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,

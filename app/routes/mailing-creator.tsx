@@ -6,7 +6,7 @@ import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { RoleGuard } from '~/components/guards/role-guard';
 import type { FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useMailingContacts, useMailingCurrencies, useSendMailing } from '~/hooks/use-mailing';

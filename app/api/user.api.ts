@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   AddUserRequestPayload,
   ChangeUserEmailPayload,
@@ -23,7 +23,7 @@ import type { UserTaskItem } from '~/types/task';
 
 export const usersApi = {
   getList: async (params: UserListParams): Promise<PaginatedResponse<UserListResponse>> => {
-    const response = await axios.get('/user', {
+    const response = await client.get('/user', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -38,17 +38,17 @@ export const usersApi = {
   },
 
   getRoles: async (): Promise<string[]> => {
-    const response = await axios.get('/user/roles');
+    const response = await client.get('/user/roles');
     return response.data?.data || response.data?.value || response.data || [];
   },
 
   getDetails: async (userId: string): Promise<UserDetailResponse> => {
-    const response = await axios.get(`/user/${userId}`);
+    const response = await client.get(`/user/${userId}`);
     return response.data?.value || response.data?.data || response.data;
   },
 
   getSimpleList: async (): Promise<UserSimpleListResponse[]> => {
-    const response = await axios.get('/user/simple');
+    const response = await client.get('/user/simple');
     const list = response.data?.data ?? response.data?.value ?? response.data;
     return Array.isArray(list) ? list : [];
   },
@@ -57,7 +57,7 @@ export const usersApi = {
     userId: string,
     params: UserCompaniesParams,
   ): Promise<PaginatedResponse<UserCompanyItem>> => {
-    const response = await axios.get(`/user/${userId}/companies`, {
+    const response = await client.get(`/user/${userId}/companies`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -72,37 +72,37 @@ export const usersApi = {
   },
 
   create: async (payload: AddUserRequestPayload) => {
-    const response = await axios.post('/user/create', payload);
+    const response = await client.post('/user/create', payload);
     return response.data;
   },
 
   lockout: async (payload: SetLockoutPayload) => {
-    const response = await axios.post('/user/lockout', payload);
+    const response = await client.post('/user/lockout', payload);
     return response.data;
   },
 
   unlock: async (userId: string) => {
-    const response = await axios.post(`/user/${userId}/unlock`);
+    const response = await client.post(`/user/${userId}/unlock`);
     return response.data;
   },
 
   delete: async (payload: DeleteUserPayload) => {
-    const response = await axios.delete('/user', { data: payload });
+    const response = await client.delete('/user', { data: payload });
     return response.data;
   },
 
   edit: async (payload: EditUserRequestPayload) => {
-    const response = await axios.patch('/user', payload);
+    const response = await client.patch('/user', payload);
     return response.data;
   },
 
   changeEmail: async (payload: ChangeUserEmailPayload) => {
-    const response = await axios.post('/user/change-email', payload);
+    const response = await client.post('/user/change-email', payload);
     return response.data;
   },
 
   changeRole: async (payload: ChangeUserRolePayload) => {
-    const response = await axios.patch('/user/role', payload);
+    const response = await client.patch('/user/role', payload);
     return response.data;
   },
 
@@ -110,7 +110,7 @@ export const usersApi = {
     userId: string,
     params: UserContactsParams,
   ): Promise<PaginatedResponse<UserContactItem>> => {
-    const response = await axios.get(`/user/${userId}/contacts`, {
+    const response = await client.get(`/user/${userId}/contacts`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -128,7 +128,7 @@ export const usersApi = {
     userId: string,
     params: UserSalesParams,
   ): Promise<PaginatedResponse<UserDealItem>> => {
-    const response = await axios.get(`/user/${userId}/sales`, {
+    const response = await client.get(`/user/${userId}/sales`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -147,7 +147,7 @@ export const usersApi = {
     userId: string,
     params: UserTasksParams,
   ): Promise<PaginatedResponse<UserTaskItem>> => {
-    const response = await axios.get(`/user/${userId}/tasks`, {
+    const response = await client.get(`/user/${userId}/tasks`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -162,7 +162,7 @@ export const usersApi = {
   },
 
   getTeamUsers: async (): Promise<TeamUser[]> => {
-    const response = await axios.get('/users');
+    const response = await client.get('/users');
     return response.data?.value || response.data?.data || response.data || [];
   },
 };

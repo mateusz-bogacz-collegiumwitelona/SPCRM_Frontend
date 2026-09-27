@@ -17,8 +17,8 @@ import {
   X,
 } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-import { getStatusConfig } from '~/utils/sale-status';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getStatusConfig } from '~/constants/sale-status';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { Button } from '~/components/ui/button';
 import { DeleteDealDialog } from '~/components/deal/dialogs/delete-deal-dialog';

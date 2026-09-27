@@ -20,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { UserContactItem } from '~/types/contact';
 import { useUserContacts } from '~/hooks/use-users';

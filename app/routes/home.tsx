@@ -6,7 +6,7 @@ import { Card, CardContent } from '~/components/ui/card';
 import { useAuth } from '~/context/auth-context';
 import { Navbar } from '~/components/layout/unloged-navbar';
 import type { FormErrorState } from '~/types/api-error';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import { useLoginMutation } from '~/hooks/use-auth';
 
 export default function Home() {

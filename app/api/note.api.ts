@@ -1,14 +1,14 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type { AddNotePayload, NoteEditData } from '~/types/note';
 
 export const notesApi = {
   create: async (payload: AddNotePayload) => {
-    const response = await axios.post('/note', payload);
+    const response = await client.post('/note', payload);
     return response.data;
   },
 
   edit: async (data: NoteEditData) => {
-    const response = await axios.patch('/note/edit', {
+    const response = await client.patch('/note/edit', {
       id: data.id,
       title: data.title,
       content: data.content,
@@ -17,7 +17,7 @@ export const notesApi = {
   },
 
   delete: async (noteId: string) => {
-    const response = await axios.delete('/note', { params: { id: noteId } });
+    const response = await client.delete('/note', { params: { id: noteId } });
     return response.data;
   },
 };

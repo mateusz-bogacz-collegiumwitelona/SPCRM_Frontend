@@ -6,7 +6,7 @@ import { InvoiceInfo } from '~/components/invoice/invoice-info';
 import { InvoiceProductsTable } from '~/components/invoice/invoice-products';
 import { InvoicePaymentsList } from '~/components/invoice/invoice-payments';
 import { STANDARD_ROLES } from '~/constants/roles';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
 import React from 'react';

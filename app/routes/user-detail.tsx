@@ -14,7 +14,7 @@ import { UserTasksTable } from '~/components/user/user-tasks-table';
 import { UserAnalyticsTab } from '~/components/user/user-analytics-tab';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 import NotFound from '~/routes/not-found';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import { PageLoader } from '~/components/layout/page-loader';
 import { useUserDetails } from '~/hooks/use-users';
 

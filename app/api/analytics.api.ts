@@ -1,4 +1,4 @@
-import { axios } from '~/lib/axios';
+import { client } from '~/lib/client';
 import type {
   AdminMetricsResponse,
   AnalyticsChartMetricResponse,
@@ -8,7 +8,7 @@ import type {
 
 export const analyticsApi = {
   getEmployeeKpi: async (userId: string): Promise<EmployeeKpiSummaryResponse> => {
-    const response = await axios.get(`/analytics/employees/${userId}/kpi`);
+    const response = await client.get(`/analytics/employees/${userId}/kpi`);
     return response.data?.value || response.data?.data || response.data;
   },
 
@@ -16,19 +16,19 @@ export const analyticsApi = {
     userId: string,
     period: AnalyticsPeriod,
   ): Promise<AnalyticsChartMetricResponse[]> => {
-    const response = await axios.get(`/analytics/employees/${userId}/chart`, {
+    const response = await client.get(`/analytics/employees/${userId}/chart`, {
       params: { Period: period },
     });
     return response.data?.value || response.data?.data || response.data || [];
   },
 
   getMyKpi: async (): Promise<EmployeeKpiSummaryResponse> => {
-    const response = await axios.get('/analytics/me/kpi');
+    const response = await client.get('/analytics/me/kpi');
     return response.data?.value || response.data?.data || response.data;
   },
 
   getAdminMetrics: async (): Promise<AdminMetricsResponse> => {
-    const response = await axios.get('/analytics/admin/metrics');
+    const response = await client.get('/analytics/admin/metrics');
     return response.data?.value || response.data?.data || response.data;
   },
 };

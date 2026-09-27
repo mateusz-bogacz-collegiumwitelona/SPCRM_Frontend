@@ -7,7 +7,7 @@ import { ContactNotes } from '~/components/contact/contact-notes';
 import { RoleGuard } from '~/components/guards/role-guard';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { ContactTasks } from '~/components/contact/contact-tasks';
-import { isNotFoundError } from '~/lib/axios';
+import { isNotFoundError } from '~/lib/client';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
 import { STANDARD_ROLES } from '~/constants/roles';

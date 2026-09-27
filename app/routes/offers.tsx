@@ -1,7 +1,7 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getErrorMessage } from '~/utils/error-mapper';
+import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   AlertCircle,
@@ -24,7 +24,7 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
-import { formatOfferStatusLabel, getStatusBadge } from '~/utils/offer-status-helper';
+import { formatOfferStatusLabel, getStatusBadge } from '~/components/offer/offer-status-helper';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useOfferCompaniesSimpleList, useOffersList, useOfferStatuses } from '~/hooks/use-offers';
 import type { OfferListResponse } from '~/types/offer';
