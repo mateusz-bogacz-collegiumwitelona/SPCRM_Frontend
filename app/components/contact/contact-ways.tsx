@@ -1,5 +1,5 @@
 import React from 'react';
-import { getIcon, getTypePrefix } from '~/components/contact/contact-type-helpers';
+import { getIcon, getTypePrefix } from '~/components/contact/contact-icon';
 import { type Contact } from '~/types/contact';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';

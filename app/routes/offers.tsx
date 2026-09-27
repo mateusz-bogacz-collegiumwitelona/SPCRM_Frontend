@@ -24,7 +24,7 @@ import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
-import { formatOfferStatusLabel, getStatusBadge } from '~/components/offer/offer-status-helper';
+import { formatOfferStatusLabel, getStatusBadge } from '~/components/offer/offer-status-badge';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useOfferCompaniesSimpleList, useOffersList, useOfferStatuses } from '~/hooks/use-offers';
 import type { OfferListResponse } from '~/types/offer';

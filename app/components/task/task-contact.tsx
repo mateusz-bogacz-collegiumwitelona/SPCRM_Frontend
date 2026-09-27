@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getIcon, getTypePrefix } from '~/components/contact/contact-type-helpers';
+import { getIcon, getTypePrefix } from '~/components/contact/contact-icon';
 import { type Contact } from '~/types/contact';
 import { AlertCircle, Building2, User, X } from 'lucide-react';
 import { Link } from 'react-router';

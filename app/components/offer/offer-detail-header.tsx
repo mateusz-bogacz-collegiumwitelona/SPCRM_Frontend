@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Building2, Calendar, Clock, User, X } from 'lucide-react';
-import { getStatusBadge } from '~/components/offer/offer-status-helper';
+import { getStatusBadge } from '~/components/offer/offer-status-badge';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 
