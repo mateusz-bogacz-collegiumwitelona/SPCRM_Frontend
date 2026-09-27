@@ -41,7 +41,7 @@ export const offersApi = {
   },
 
   getDetails: async (offerId: string) => {
-    const response = await api.get(`offer/detail/${offerId}`);
+    const response = await api.get(`/offer/detail/${offerId}`);
     return response.data.data;
   },
 
