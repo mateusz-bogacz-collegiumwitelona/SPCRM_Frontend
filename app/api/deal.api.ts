@@ -9,8 +9,9 @@ import type {
   PaginatedSalesResponse,
   SaleDetailResponse,
   SalesListParams,
-  TeamUser,
 } from '~/interfaces/deal';
+import type { AddTaskRequestPayload, DealTasksParams } from '~/interfaces/task';
+import type { Note } from '~/interfaces/note';
 
 export const dealsApi = {
   getList: async (params: SalesListParams): Promise<PaginatedSalesResponse> => {
@@ -32,11 +33,6 @@ export const dealsApi = {
 
   getStatuses: async (): Promise<string[]> => {
     const response = await api.get('/sales/statuses');
-    return response.data?.value || response.data?.data || response.data || [];
-  },
-
-  getTeamUsers: async (): Promise<TeamUser[]> => {
-    const response = await api.get('/users');
     return response.data?.value || response.data?.data || response.data || [];
   },
 
@@ -119,6 +115,34 @@ export const dealsApi = {
 
   deleteDealProduct: async (dealId: string, dealProductId: string) => {
     const response = await api.delete(`/sales/${dealId}/products/${dealProductId}`);
+    return response.data;
+  },
+
+  getDealTasks: async (dealId: string, params: DealTasksParams) => {
+    const res = await api.get(`/sales/${dealId}/tasks`, {
+      params: {
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        SearchTerm: params.searchTerm || undefined,
+        Status: params.status || undefined,
+        Priority: params.priority || undefined,
+      },
+    });
+    return res.data?.value || res.data?.data || res.data;
+  },
+
+  addDealTask: async (dealId: string, payload: AddTaskRequestPayload) => {
+    const res = await api.post(`/sales/${dealId}/tasks`, payload);
+    return res.data;
+  },
+
+  getDealNotes: async (dealId: string): Promise<Note[]> => {
+    const response = await api.get(`/sales/${dealId}/notes`);
+    return response.data?.data || response.data?.value || response.data || [];
+  },
+
+  addDealNote: async (dealId: string, payload: { title: string; content: string }) => {
+    const response = await api.post(`/sales/${dealId}/notes`, payload);
     return response.data;
   },
 };

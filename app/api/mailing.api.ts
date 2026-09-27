@@ -1,17 +1,11 @@
 import { api } from '~/api/api';
 import type {
-  Currency,
   MailingClientResponse,
   MailingProductResponse,
   SendMailingPayload,
 } from '~/interfaces/mailing';
 
 export const mailingApi = {
-  getCurrencies: async (): Promise<Currency[]> => {
-    const response = await api.get('/currency/simple');
-    return response.data?.data || response.data || [];
-  },
-
   getContacts: async (
     searchTermOrParams?: string | { searchTerm?: string; pageSize?: number },
   ): Promise<MailingClientResponse[]> => {

@@ -1,4 +1,3 @@
-import { api } from '~/api/api';
 import type {
   AddContactRequest,
   Contact,
@@ -8,6 +7,8 @@ import type {
   PagedContactsToDealResult,
   PaginatedContactsResponse,
 } from '~/interfaces/contact';
+import type { AddTaskRequestPayload } from '~/interfaces/task';
+import { api } from '~/api/api';
 
 export const contactsApi = {
   getList: async (params: ContactListParams): Promise<PaginatedContactsResponse> => {
@@ -94,5 +95,24 @@ export const contactsApi = {
       },
     });
     return res.data?.data || res.data?.value || res.data;
+  },
+
+  getContactTasks: async (
+    contactId: string,
+    params: { pageNumber: number; pageSize: number; searchTerm?: string },
+  ) => {
+    const res = await api.get(`/contacts/${contactId}/tasks`, {
+      params: {
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        SearchTerm: params.searchTerm || undefined,
+      },
+    });
+    return res.data?.value || res.data?.data || res.data;
+  },
+
+  addContactTask: async (contactId: string, payload: AddTaskRequestPayload) => {
+    const res = await api.post(`/contacts/${contactId}/tasks`, payload);
+    return res.data;
   },
 };

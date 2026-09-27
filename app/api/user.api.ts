@@ -19,6 +19,7 @@ import type {
   UserSimpleListResponse,
   UserTasksParams,
 } from '~/interfaces/user';
+import type { TeamUser } from '~/interfaces/deal';
 
 export const usersApi = {
   getList: async (params: UserListParams): Promise<PaginatedUsersResponse> => {
@@ -158,5 +159,10 @@ export const usersApi = {
       },
     });
     return response.data?.value || response.data?.data || response.data;
+  },
+
+  getTeamUsers: async (): Promise<TeamUser[]> => {
+    const response = await api.get('/users');
+    return response.data?.value || response.data?.data || response.data || [];
   },
 };

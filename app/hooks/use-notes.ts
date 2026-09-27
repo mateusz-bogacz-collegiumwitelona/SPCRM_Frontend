@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '~/api/note.api';
 import type { AddNotePayload, NoteEditData } from '~/interfaces/note';
+import { dealsApi } from '~/api/deal.api';
+import { tasksApi } from '~/api/task.api';
 
 export const noteKeys = {
   all: ['notes'] as const,
@@ -12,7 +14,7 @@ export const noteKeys = {
 export function useDealNotes(dealId?: string) {
   return useQuery({
     queryKey: noteKeys.dealNotes(dealId),
-    queryFn: () => notesApi.getDealNotes(dealId || ''),
+    queryFn: () => dealsApi.getDealNotes(dealId || ''),
     enabled: Boolean(dealId),
   });
 }
@@ -26,7 +28,7 @@ export function useDealNotesMutations(dealId: string) {
 
   const addNoteMutation = useMutation({
     mutationFn: (payload: { title: string; content: string }) =>
-      notesApi.addDealNote(dealId, payload),
+      dealsApi.addDealNote(dealId, payload),
     onSuccess: invalidateDealNotes,
   });
 
@@ -50,7 +52,7 @@ export function useDealNotesMutations(dealId: string) {
 export function useTaskNotes(taskId?: string) {
   return useQuery({
     queryKey: noteKeys.taskNotes(taskId),
-    queryFn: () => notesApi.getTaskNotes(taskId || ''),
+    queryFn: () => tasksApi.getTaskNotes(taskId || ''),
     enabled: Boolean(taskId),
   });
 }

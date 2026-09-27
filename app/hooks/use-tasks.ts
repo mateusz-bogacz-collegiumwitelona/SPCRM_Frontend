@@ -8,6 +8,8 @@ import type {
   ExtendTaskDueDatePayload,
 } from '~/interfaces/task';
 import { tasksApi } from '~/api/task.api';
+import { contactsApi } from '~/api/contact.api';
+import { dealsApi } from '~/api/deal.api';
 
 export const taskKeys = {
   all: ['tasks'] as const,
@@ -130,7 +132,7 @@ export function useContactTasks({
   return useQuery({
     queryKey: taskKeys.contactTasks(queryParams),
     queryFn: () =>
-      tasksApi.getContactTasks(contactId, {
+      contactsApi.getContactTasks(contactId, {
         pageNumber,
         pageSize,
         searchTerm: debouncedSearch,
@@ -150,7 +152,7 @@ export function useContactTaskMutations(contactId: string) {
   };
 
   const addTaskMutation = useMutation({
-    mutationFn: (payload: AddTaskRequestPayload) => tasksApi.addContactTask(contactId, payload),
+    mutationFn: (payload: AddTaskRequestPayload) => contactsApi.addContactTask(contactId, payload),
     onSuccess: invalidateTasks,
   });
 
@@ -175,7 +177,7 @@ export function useContactTaskMutations(contactId: string) {
 export function useDealTasks(dealId: string, params: DealTasksParams) {
   return useQuery({
     queryKey: taskKeys.dealTasks(dealId, params as unknown as Record<string, unknown>),
-    queryFn: () => tasksApi.getDealTasks(dealId, params),
+    queryFn: () => dealsApi.getDealTasks(dealId, params),
     placeholderData: keepPreviousData,
     enabled: Boolean(dealId),
   });
@@ -191,7 +193,7 @@ export function useDealTaskMutations(dealId: string) {
   };
 
   const addDealTaskMutation = useMutation({
-    mutationFn: (payload: AddTaskRequestPayload) => tasksApi.addDealTask(dealId, payload),
+    mutationFn: (payload: AddTaskRequestPayload) => dealsApi.addDealTask(dealId, payload),
     onSuccess: invalidateTasks,
   });
 

@@ -3,6 +3,7 @@ import { mailingApi } from '~/api/mailing.api';
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { SendMailingPayload } from '~/interfaces/mailing';
+import { currenciesApi } from '~/api/currency.api';
 
 export const mailingKeys = {
   all: ['mailing'] as const,
@@ -14,7 +15,7 @@ export const mailingKeys = {
 export function useMailingCurrencies() {
   return useQuery({
     queryKey: mailingKeys.currencies(),
-    queryFn: mailingApi.getCurrencies,
+    queryFn: currenciesApi.getSimpleList,
     staleTime: Infinity,
   });
 }

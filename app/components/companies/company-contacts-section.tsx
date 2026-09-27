@@ -15,7 +15,7 @@ import { SetCompanyPrimaryContactDialog } from '~/components/companies/dialogs/s
 import type { ApiError, FormErrorState } from '~/interfaces/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { AddContactRequest } from '~/interfaces/contact';
-import { useCompanyContactSectionMutations, useCompanyContacts } from '~/hooks/use-companies';
+import { useCompanyContacts, useCompanyContactSectionMutations } from '~/hooks/use-companies';
 
 interface Contact {
   id: string;

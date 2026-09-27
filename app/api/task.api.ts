@@ -2,7 +2,6 @@ import type {
   AddTaskRequestPayload,
   CalendarTasksParams,
   ChangeTaskStatusPayload,
-  DealTasksParams,
   EditTaskRequestPayload,
   ExtendTaskDueDatePayload,
   Task,
@@ -11,6 +10,7 @@ import type {
   TaskDictionariesResponse,
 } from '~/interfaces/task';
 import { api } from '~/api/api';
+import type { Note } from '~/interfaces/note';
 
 export const tasksApi = {
   getCalendarTasks: async (params: CalendarTasksParams): Promise<Task[]> => {
@@ -37,43 +37,6 @@ export const tasksApi = {
   getDetails: async (taskId: string) => {
     const res = await api.get(`/tasks/${taskId}`);
     return res.data?.data || res.data?.value || res.data;
-  },
-
-  getContactTasks: async (
-    contactId: string,
-    params: { pageNumber: number; pageSize: number; searchTerm?: string },
-  ) => {
-    const res = await api.get(`/contacts/${contactId}/tasks`, {
-      params: {
-        PageNumber: params.pageNumber,
-        PageSize: params.pageSize,
-        SearchTerm: params.searchTerm || undefined,
-      },
-    });
-    return res.data?.value || res.data?.data || res.data;
-  },
-
-  addContactTask: async (contactId: string, payload: AddTaskRequestPayload) => {
-    const res = await api.post(`/contacts/${contactId}/tasks`, payload);
-    return res.data;
-  },
-
-  getDealTasks: async (dealId: string, params: DealTasksParams) => {
-    const res = await api.get(`/sales/${dealId}/tasks`, {
-      params: {
-        PageNumber: params.pageNumber,
-        PageSize: params.pageSize,
-        SearchTerm: params.searchTerm || undefined,
-        Status: params.status || undefined,
-        Priority: params.priority || undefined,
-      },
-    });
-    return res.data?.value || res.data?.data || res.data;
-  },
-
-  addDealTask: async (dealId: string, payload: AddTaskRequestPayload) => {
-    const res = await api.post(`/sales/${dealId}/tasks`, payload);
-    return res.data;
   },
 
   editTask: async (taskId: string, payload: EditTaskRequestPayload) => {
@@ -109,5 +72,10 @@ export const tasksApi = {
   changeAssignee: async (taskId: string, newAssigneeId: string) => {
     const response = await api.put(`/tasks/${taskId}/change-assigned-user/${newAssigneeId}`);
     return response.data;
+  },
+
+  getTaskNotes: async (taskId: string): Promise<Note[]> => {
+    const response = await api.get(`/tasks/${taskId}/notes`);
+    return response.data?.data || response.data?.value || response.data || [];
   },
 };
