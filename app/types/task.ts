@@ -49,11 +49,6 @@ export interface DictionaryItem {
   label: string;
 }
 
-export interface TaskDictionariesData {
-  statuses: DictionaryItem[];
-  priorities: DictionaryItem[];
-}
-
 export interface CalendarTasksParams {
   dateFrom: string;
   dateTo: string;
@@ -64,28 +59,6 @@ export interface CalendarTasksParams {
 export interface TaskDictionariesResponse {
   statuses: { value: string; label: string }[];
   priorities: { value: string; label: string }[];
-}
-
-export interface SaleTaskResponse {
-  id: string;
-  title: string;
-  dueAt: string;
-  status: string;
-  priority: string;
-  assignedToId: string;
-  assignedToFirstName: string;
-  assignedToLastName: string;
-  contactId?: string | null;
-  contactFirstName?: string | null;
-  contactLastName?: string | null;
-}
-
-export interface DealTasksParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  status?: string;
-  priority?: string;
 }
 
 export interface SaleTaskResponse {

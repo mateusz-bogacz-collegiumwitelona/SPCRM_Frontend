@@ -137,17 +137,6 @@ export interface ChangeStatusResponse {
   sentToEmail?: string | null;
 }
 
-export interface ChangeDealStatusPayload {
-  targetStatus: string;
-  language?: string;
-  customRecipientEmail?: string;
-}
-
-export interface ChangeStatusResponse {
-  status: string;
-  sentToEmail?: string | null;
-}
-
 export interface DealProductResponse {
   dealProductId: string;
   productId: string;

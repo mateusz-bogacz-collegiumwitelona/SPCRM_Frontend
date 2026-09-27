@@ -13,16 +13,6 @@ export interface AddCompanyRequest {
   addresses: AddCompanyAddressRequest[];
 }
 
-export interface CompanyAddressFormData {
-  addressId?: string;
-  street: string;
-  city: string;
-  zipCode: string;
-  longitude: number;
-  latitude: number;
-  type: string;
-}
-
 export interface AddressItemToEdit {
   id?: string;
   street?: string;
@@ -31,12 +21,6 @@ export interface AddressItemToEdit {
   latitude?: number | null;
   longitude?: number | null;
   type?: string;
-}
-
-export interface EditCompanyRequest {
-  id: string;
-  name?: string;
-  nip?: string;
 }
 
 export interface EditCompanyDetailResponse {
@@ -57,17 +41,6 @@ export interface GetCompanyResponse {
   street: string;
   zipCode: string;
   createdAt: string;
-}
-
-export interface CompanyListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
-  createdAtFrom?: string;
-  createdAtTo?: string;
-  isYour?: boolean;
 }
 
 export interface PaginatedCompaniesResponse {
@@ -93,21 +66,6 @@ export interface CompanyAddress {
   type: string;
 }
 
-export interface AddCompanyAddressRequest {
-  street: string;
-  city: string;
-  zipCode: string;
-  longitude: number;
-  latitude: number;
-  type: string;
-}
-
-export interface AddCompanyRequest {
-  name: string;
-  nip: string;
-  addresses: AddCompanyAddressRequest[];
-}
-
 export interface CompanyAddressFormData {
   addressId?: string;
   street: string;
@@ -118,26 +76,10 @@ export interface CompanyAddressFormData {
   type: string;
 }
 
-export interface AddressItemToEdit {
-  id?: string;
-  street?: string;
-  city?: string;
-  zipCode?: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  type?: string;
-}
-
 export interface EditCompanyRequest {
   id: string;
   name?: string;
   nip?: string;
-}
-
-export interface EditCompanyDetailResponse {
-  id: string;
-  name: string;
-  nip: string;
 }
 
 export interface CompanyDetailResponse {
@@ -152,20 +94,6 @@ export interface CompanyDetailResponse {
   [key: string]: unknown;
 }
 
-export interface GetCompanyResponse {
-  id: string;
-  name: string;
-  nip: string;
-  lastDealDate?: string | null;
-  isYour: boolean;
-  ownerFistName?: string | null;
-  ownerLastName?: string | null;
-  city: string;
-  street: string;
-  zipCode: string;
-  createdAt: string;
-}
-
 export interface CompanyListParams {
   pageNumber: number;
   pageSize: number;
@@ -175,13 +103,6 @@ export interface CompanyListParams {
   createdAtFrom?: string;
   createdAtTo?: string;
   isYour?: boolean;
-}
-
-export interface PaginatedCompaniesResponse {
-  items: GetCompanyResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }
 
 export interface PaginatedAddressesResponse {
