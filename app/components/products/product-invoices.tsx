@@ -9,6 +9,7 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import { DataTable } from '~/components/table/data-table';
 import type { ProductInvoiceItemResponse } from '~/types/product';
 import { useProductInvoices } from '~/hooks/use-products';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface ProductInvoicesTableMeta {
   unitSymbol: string;
@@ -188,17 +189,13 @@ export const ProductInvoices = ({
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const [accumulatedMobileInvoices, setAccumulatedMobileInvoices] = useState<
     ProductInvoiceItemResponse[]
   >([]);
   const isMobileAppend = useRef(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

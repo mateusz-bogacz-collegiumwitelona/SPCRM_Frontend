@@ -27,6 +27,7 @@ import type { DictionaryItem, UserTaskItem } from '~/types/task';
 import { useTaskDictionaries } from '~/hooks/use-tasks';
 import { useUserTasks } from '~/hooks/use-users';
 import { CompactTable } from '~/components/table/compact-table';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const PAGE_SIZE = 5;
 
@@ -115,21 +116,15 @@ const mapFallbackPriority = (value: string): string => {
 export const UserTasksTable = ({ userId }: { readonly userId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-
   const [sortBy, setSortBy] = useState<string>('dueat');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
-
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
 
   const { dictionaries, getStatusLabel, getPriorityLabel } = useTaskDictionaries();
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 350);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     setPageNumber(1);

@@ -28,6 +28,7 @@ import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dia
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useCompaniesList, useCreateCompany } from '~/hooks/use-companies';
 import type { GetCompanyResponse } from '~/types/company';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const formatDate = (isoDate: string) => {
   return new Date(isoDate).toLocaleDateString('pl-PL', {
@@ -143,7 +144,6 @@ export default function CompanyList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortDescending, setSortDescending] = useState<boolean>(true);
   const [date, setDate] = useState<DateRange | undefined>();
@@ -165,10 +165,7 @@ export default function CompanyList() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

@@ -27,6 +27,7 @@ import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import type { AddTaskRequestPayload, EditTaskRequestPayload, SaleTaskResponse } from '~/types/task';
 import { useDealTaskMutations, useDealTasks, useTaskDictionaries } from '~/hooks/use-tasks';
+import { useDebounce } from '~/hooks/use-debounce';
 
 export const DealTasks = ({ dealId }: { dealId: string }) => {
   const { dictionaries, getStatusLabel, getPriorityLabel } = useTaskDictionaries();
@@ -36,17 +37,13 @@ export const DealTasks = ({ dealId }: { dealId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<SaleTaskResponse | null>(null);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     setPageNumber(1);

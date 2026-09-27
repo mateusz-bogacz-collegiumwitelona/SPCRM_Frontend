@@ -28,6 +28,7 @@ import { formatOfferStatusLabel, getStatusBadge } from '~/components/offer/offer
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useOfferCompaniesSimpleList, useOffersList, useOfferStatuses } from '~/hooks/use-offers';
 import type { OfferListResponse } from '~/types/offer';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const columnHelper = createColumnHelper<OfferListResponse>();
 
@@ -116,7 +117,6 @@ export default function OffersList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('validuntil');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
 
@@ -138,10 +138,7 @@ export default function OffersList() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

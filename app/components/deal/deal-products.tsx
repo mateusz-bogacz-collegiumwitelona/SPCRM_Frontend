@@ -23,6 +23,7 @@ import { DeleteDealProductDialog } from '~/components/deal/dialogs/delete-deal-p
 import { EditDealProductDialog } from '~/components/deal/dialogs/edit-deal-product-dialog';
 import { useDealProducts, useDeleteDealProductMutation } from '~/hooks/use-deals';
 import type { DealProductResponse } from '~/types/deal';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface ProductTableMeta {
   onEdit: (product: DealProductResponse) => void;
@@ -211,14 +212,11 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<DealProductResponse | null>(null);
   const [productToDelete, setProductToDelete] = useState<DealProductResponse | null>(null);
-
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
-
   const [showFilters, setShowFilters] = useState(false);
   const [productFilter, setProductFilter] = useState<string>('');
   const [steelGradeFilter, setSteelGradeFilter] = useState<string>('');
@@ -228,10 +226,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   );
   const isMobileAppend = useRef(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

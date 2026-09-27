@@ -34,6 +34,7 @@ import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import type { ContactTaskItem } from '~/types/contact';
 import { useContactTaskMutations, useContactTasks } from '~/hooks/use-tasks';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface TaskTableMeta {
   onEdit: (task: ContactTaskItem) => void;
@@ -162,7 +163,6 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const [accumulatedMobileTasks, setAccumulatedMobileTasks] = useState<ContactTaskItem[]>([]);
   const isMobileAppend = useRef(false);
@@ -171,10 +171,7 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [editingTask, setEditingTask] = useState<ContactTaskItem | null>(null);
   const [deletingTask, setDeletingTask] = useState<ContactTaskItem | null>(null);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

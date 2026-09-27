@@ -48,6 +48,7 @@ import type {
 } from '~/types/user';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 import { useUserMutations, useUserRoles, useUsersList } from '~/hooks/use-users';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface UserTableMeta {
   onLockout: (user: UserRoleActionData) => void;
@@ -405,7 +406,6 @@ export default function UserList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('lastname');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
   const [roleFilter, setRoleFilter] = useState<string>('');
@@ -422,10 +422,7 @@ export default function UserList() {
   const [accumulatedMobileUsers, setAccumulatedMobileUsers] = useState<UserListResponse[]>([]);
   const isMobileAppend = useRef(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = true;

@@ -40,6 +40,7 @@ import {
 } from '~/hooks/use-contacts';
 import type { ContactResponse } from '~/types/contact';
 import type { ContactListTableMeta } from '~/types/company';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const columnHelper = createColumnHelper<ContactResponse>();
 
@@ -223,7 +224,6 @@ export default function ContactList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('lastName');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -241,10 +241,7 @@ export default function ContactList() {
   const { user } = useAuth();
   const isManagerOrAdmin = user?.roles.some((r) => MANAGEMENT_ROLES.includes(r));
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 100);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

@@ -22,6 +22,7 @@ import { getErrorMessage } from '~/constants/error-mapper';
 import type { ContactNote } from '~/types/contact';
 import { useAddNote, useDeleteNote, useEditNote } from '~/hooks/use-notes';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface NoteTableMeta {
   onSelect: (note: ContactNote) => void;
@@ -113,16 +114,11 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
   const [accumulatedMobileNotes, setAccumulatedMobileNotes] = useState<ContactNote[]>([]);
   const isMobileAppend = useRef(false);
-
   const [selectedNote, setSelectedNote] = useState<ContactNote | null>(null);
   const [editingNote, setEditingNote] = useState<ContactNote | null>(null);
-
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
   const { mutateAsync: editNoteAsync } = useEditNote({
@@ -176,11 +172,7 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
       noteType: 'Contact',
     });
   };
-
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

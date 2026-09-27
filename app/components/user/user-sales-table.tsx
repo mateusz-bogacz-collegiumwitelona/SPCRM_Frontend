@@ -20,6 +20,7 @@ import type { UserDealItem } from '~/types/deal';
 import { useUserSales } from '~/hooks/use-users';
 import { useSalesStatuses } from '~/hooks/use-deals';
 import { CompactTable } from '~/components/table/compact-table';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const PAGE_SIZE = 5;
 
@@ -82,7 +83,6 @@ const columns = [
 export const UserSalesTable = ({ userId }: { readonly userId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('date');
   const [sortDescending, setSortDescending] = useState<boolean>(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -90,11 +90,7 @@ export const UserSalesTable = ({ userId }: { readonly userId: string }) => {
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 350);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
-
+  const debouncedSearch = useDebounce(searchTerm, 300);
   useEffect(() => {
     setPageNumber(1);
   }, [debouncedSearch, sortBy, sortDescending, statusFilter, dateFrom, dateTo]);

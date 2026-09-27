@@ -8,18 +8,15 @@ import { TableEmptyState, TableLoadingState } from '~/components/table/table-sta
 import { formatCurrency } from '~/utils/data-formatters';
 import type { InvoicePaymentListResponse } from '~/types/invoice';
 import { useInvoicePayments } from '~/hooks/use-invoices';
+import { useDebounce } from '~/hooks/use-debounce';
 
 export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     setPageNumber(1);

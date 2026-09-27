@@ -7,6 +7,7 @@ import { AlertCircle, PackageOpen, X } from 'lucide-react';
 import { DataTable } from '~/components/table/data-table';
 import type { InvoiceProductsListResponse } from '~/types/invoice';
 import { useInvoiceProducts } from '~/hooks/use-invoices';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface InvoiceProductsTableMeta {
   currencyCode: string;
@@ -142,17 +143,13 @@ export const InvoiceProductsTable = ({
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<
     InvoiceProductsListResponse[]
   >([]);
   const isMobileAppend = useRef(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

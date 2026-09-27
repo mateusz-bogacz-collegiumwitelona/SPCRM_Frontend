@@ -30,6 +30,7 @@ import { AddSteelGradeDialog } from '~/components/steel-grade/dialogs/add-steel-
 import { ROLES } from '~/constants/roles';
 import { useSteelGradeMutations, useSteelGradesList } from '~/hooks/use-steel-grades';
 import type { SteelGradeListResponse } from '~/types/steel-grade';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface SteelGradeTableMeta {
   onEdit: (grade: SteelGradeListResponse) => void;
@@ -146,7 +147,6 @@ export default function SteelGradesList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
 
@@ -160,10 +160,7 @@ export default function SteelGradesList() {
   const isMobileAppend = useRef(false);
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

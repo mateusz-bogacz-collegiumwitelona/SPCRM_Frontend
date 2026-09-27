@@ -30,6 +30,7 @@ import { AddPromotionDialog } from '~/components/promotion/dialogs/add-promotion
 import { MANAGEMENT_ROLES, STANDARD_ROLES } from '~/constants/roles';
 import { useCreatePromotion, usePromotionsList } from '~/hooks/use-promotions';
 import type { PromotionResponse } from '~/types/promotion';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const formatDiscountOrPrice = (promo: PromotionResponse): React.ReactNode => {
   if (typeof promo.discountPercentage === 'number') {
@@ -164,12 +165,9 @@ export default function PromotionsList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('endDate');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
-
   const [showFilters, setShowFilters] = useState(false);
-
   const [isActiveFilter, setIsActiveFilter] = useState<string>('true');
   const [date, setDate] = useState<DateRange | undefined>();
   const [discountFrom, setDiscountFrom] = useState<string>('');
@@ -207,10 +205,7 @@ export default function PromotionsList() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

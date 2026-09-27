@@ -22,6 +22,7 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { OfferProductResponse } from '~/types/offer';
 import { useOfferProducts } from '~/hooks/use-offers';
 import { mergeById } from '~/utils/table-helpers';
+import { useDebounce } from '~/hooks/use-debounce';
 
 export interface OfferProductsTableProps {
   offerId: string;
@@ -83,17 +84,13 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<
     OfferProductResponse[]
   >([]);
   const isMobileAppend = useRef(false);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

@@ -42,6 +42,7 @@ import {
   useProductsList,
   useProductSteelGrades,
 } from '~/hooks/use-products';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface ProductTableMeta {
   onEdit: (id: string) => void;
@@ -221,7 +222,6 @@ export default function ProductsList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -244,10 +244,7 @@ export default function ProductsList() {
     unitSymbol: string;
   } | null>(null);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;

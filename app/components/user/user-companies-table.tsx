@@ -17,6 +17,7 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useUserCompanies } from '~/hooks/use-users';
 import type { UserCompanyItem } from '~/types/user';
 import { CompactTable } from '~/components/table/compact-table';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const PAGE_SIZE = 5;
 
@@ -65,17 +66,13 @@ const columns = [
 export const UserCompaniesTable = ({ userId }: { readonly userId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState(false);
   const [createdAtFrom, setCreatedAtFrom] = useState<string>('');
   const [createdAtTo, setCreatedAtTo] = useState<string>('');
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 350);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     setPageNumber(1);

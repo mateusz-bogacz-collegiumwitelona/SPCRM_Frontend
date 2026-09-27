@@ -17,6 +17,7 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { UserContactItem } from '~/types/contact';
 import { useUserContacts } from '~/hooks/use-users';
 import { CompactTable } from '~/components/table/compact-table';
+import { useDebounce } from '~/hooks/use-debounce';
 
 const PAGE_SIZE = 5;
 
@@ -61,17 +62,13 @@ const columns = [
 export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('lastname');
   const [sortDescending, setSortDescending] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState(false);
   const [companyNameFilter, setCompanyNameFilter] = useState('');
   const [isPrimaryFilter, setIsPrimaryFilter] = useState<string>('');
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 350);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     setPageNumber(1);

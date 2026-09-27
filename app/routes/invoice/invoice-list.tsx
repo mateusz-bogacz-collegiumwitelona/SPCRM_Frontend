@@ -30,6 +30,7 @@ import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-
 import type { InvoiceListResponse } from '~/types/invoice';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useInvoicesList } from '~/hooks/use-invoices';
+import { useDebounce } from '~/hooks/use-debounce';
 
 interface InvoiceTableMeta {
   onDownloadPdf: (invoice: { id: string; invoiceNumber: string }) => void;
@@ -242,8 +243,6 @@ export default function InvoicesList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-
   const [sortBy, setSortBy] = useState<string>('issuedate');
   const [sortDescending, setSortDescending] = useState<boolean>(true);
 
@@ -274,10 +273,7 @@ export default function InvoicesList() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 300);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
     isMobileAppend.current = false;
