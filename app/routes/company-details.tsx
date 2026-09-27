@@ -1,7 +1,7 @@
 import React, { type ComponentType, useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '~/components/layout/main-layout';
 import { MapPinned, Pencil, Plus, Trash2 } from 'lucide-react';
-import { isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/lib/axios';
 import { useNavigate, useParams } from 'react-router';
 import { CompanyClientHeader } from '~/components/companies/company-client-header';
 import { CompanyAddressesMobile } from '~/components/companies/company-addresses-mobile';
@@ -9,7 +9,7 @@ import { CompanyContactsSection } from '~/components/companies/company-contacts-
 import { CompanySalesSection } from '~/components/companies/company-sales-section';
 import { CompanyDebtsSection } from '~/components/companies/company-debts-section';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
-import { AuthGuard } from '~/lib/auth-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { EditCompanyDialog } from '~/components/companies/dialogs/edit-company-dialog';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 import { Button } from '~/components/ui/button';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import {
   Dialog,
   DialogContent,
@@ -53,7 +53,9 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
   const { data: products = [] } = useQuery<ProductOption[]>({
     queryKey: ['mailing-products-list'],
     queryFn: async () => {
-      const res = await api.get('/mailing/products', { params: { PageNumber: 1, PageSize: 100 } });
+      const res = await axios.get('/mailing/products', {
+        params: { PageNumber: 1, PageSize: 100 },
+      });
       return res.data?.data?.items || [];
     },
     enabled: isOpen,

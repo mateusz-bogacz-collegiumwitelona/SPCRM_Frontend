@@ -7,13 +7,13 @@ import type {
   OwnerOption,
 } from '~/types/contact';
 import type { AddTaskRequestPayload } from '~/types/task';
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import type { PaginatedResponse } from '~/types/table';
 import type { ContactDealResponse } from '~/types/deal';
 
 export const contactsApi = {
   getList: async (params: ContactListParams): Promise<PaginatedResponse<ContactResponse>> => {
-    const response = await api.get('/contacts', {
+    const response = await axios.get('/contacts', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -29,57 +29,57 @@ export const contactsApi = {
   },
 
   getCompanies: async (): Promise<string[]> => {
-    const response = await api.get('/contacts/companies');
+    const response = await axios.get('/contacts/companies');
     return response.data?.value || response.data?.data || response.data || [];
   },
 
   getAvailableOwners: async (): Promise<OwnerOption[]> => {
-    const response = await api.get('/contacts/available-owners');
+    const response = await axios.get('/contacts/available-owners');
     return response.data?.data || [];
   },
 
   getDetails: async (contactId: string) => {
-    const response = await api.get(`/contacts/${contactId}`);
+    const response = await axios.get(`/contacts/${contactId}`);
     return response.data.data;
   },
 
   getEditDetails: async (contactId: string) => {
-    const response = await api.get(`/contacts/${contactId}/detail`);
+    const response = await axios.get(`/contacts/${contactId}/detail`);
     return response.data.data;
   },
 
   getWays: async (contactId: string): Promise<Contact[]> => {
-    const response = await api.get(`/contacts/${contactId}/ways`);
+    const response = await axios.get(`/contacts/${contactId}/ways`);
     return response.data?.data || [];
   },
 
   getTypes: async (): Promise<string[]> => {
-    const response = await api.get('/contacts/types');
+    const response = await axios.get('/contacts/types');
     return response.data?.data || [];
   },
 
   edit: async (payload: EditContactRequest) => {
-    const response = await api.patch('/contacts/edit', payload);
+    const response = await axios.patch('/contacts/edit', payload);
     return response.data;
   },
 
   setPrimary: async (contactId: string) => {
-    const response = await api.patch(`/contacts/${contactId}/set-primary`);
+    const response = await axios.patch(`/contacts/${contactId}/set-primary`);
     return response.data;
   },
 
   changeOwner: async (payload: { contactId: string; newOwnerId: string }) => {
-    const response = await api.patch('/contacts/change-owner', payload);
+    const response = await axios.patch('/contacts/change-owner', payload);
     return response.data;
   },
 
   create: async (payload: AddContactRequest) => {
-    const response = await api.post('/contacts', payload);
+    const response = await axios.post('/contacts', payload);
     return response.data;
   },
 
   delete: async (contactId: string) => {
-    const response = await api.delete(`/contacts/${contactId}`);
+    const response = await axios.delete(`/contacts/${contactId}`);
     return response.data;
   },
 
@@ -88,7 +88,7 @@ export const contactsApi = {
     pageSize: number;
     searchTerm?: string;
   }): Promise<PaginatedResponse<ContactDealResponse>> => {
-    const res = await api.get('/contacts/to-deals', {
+    const res = await axios.get('/contacts/to-deals', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -102,7 +102,7 @@ export const contactsApi = {
     contactId: string,
     params: { pageNumber: number; pageSize: number; searchTerm?: string },
   ) => {
-    const res = await api.get(`/contacts/${contactId}/tasks`, {
+    const res = await axios.get(`/contacts/${contactId}/tasks`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -113,7 +113,7 @@ export const contactsApi = {
   },
 
   addContactTask: async (contactId: string, payload: AddTaskRequestPayload) => {
-    const res = await api.post(`/contacts/${contactId}/tasks`, payload);
+    const res = await axios.post(`/contacts/${contactId}/tasks`, payload);
     return res.data;
   },
 };

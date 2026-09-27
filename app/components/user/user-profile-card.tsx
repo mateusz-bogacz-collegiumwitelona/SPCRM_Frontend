@@ -14,7 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
-import { HasRole } from '~/lib/has-role';
+import { HasRole } from '~/components/guards/has-role';
 import { ROLES } from '~/constants/roles';
 import { useUserDetails } from '~/hooks/use-users';
 

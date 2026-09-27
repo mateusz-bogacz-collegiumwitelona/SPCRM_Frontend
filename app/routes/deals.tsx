@@ -20,12 +20,12 @@ import type { DateRange } from 'react-day-picker';
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
 import { getStatusConfig } from '~/utils/sale-status';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { useAuth } from '~/context/auth-context';
-import { HasRole } from '~/lib/has-role';
+import { HasRole } from '~/components/guards/has-role';
 import { AddDealDialog } from '~/components/deal/dialogs/add-deal-dialog';
 import { ROLES, STANDARD_ROLES } from '~/constants/roles';
 import {

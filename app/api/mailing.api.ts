@@ -1,4 +1,4 @@
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import type {
   MailingClientResponse,
   MailingProductResponse,
@@ -16,21 +16,21 @@ export const mailingApi = {
         ? searchTermOrParams.pageSize
         : 50;
 
-    const response = await api.get('/mailing/contacts', {
+    const response = await axios.get('/mailing/contacts', {
       params: { SearchTerm: searchTerm || undefined, PageSize: pageSize },
     });
     return response.data?.data?.items || response.data?.items || [];
   },
 
   getProducts: async (searchTerm?: string): Promise<MailingProductResponse[]> => {
-    const response = await api.get('/mailing/products', {
+    const response = await axios.get('/mailing/products', {
       params: { SearchTerm: searchTerm || undefined, PageSize: 50 },
     });
     return response.data?.data?.items || response.data?.items || [];
   },
 
   sendMailing: async (payload: SendMailingPayload) => {
-    const response = await api.post('/mailing/offert', payload);
+    const response = await axios.post('/mailing/offert', payload);
     return response.data;
   },
 };

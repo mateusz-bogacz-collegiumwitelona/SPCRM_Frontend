@@ -1,9 +1,9 @@
 import React from 'react';
 import { useParams } from 'react-router';
-import { isNotFoundError } from '~/api/api';
+import { isNotFoundError } from '~/lib/axios';
 import { MainLayout } from '~/components/layout/main-layout';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';

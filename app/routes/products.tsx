@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { mergeById } from '~/utils/table-helpers';
 import { AddProductDialog } from '~/components/products/dialogs/add-product-dialog';
@@ -31,7 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { HasRole } from '~/lib/has-role';
+import { HasRole } from '~/components/guards/has-role';
 import { AddProductStockDialog } from '~/components/products/dialogs/add-product-stock-dialog';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 

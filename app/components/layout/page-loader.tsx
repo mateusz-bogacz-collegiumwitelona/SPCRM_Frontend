@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react';
 import { MainLayout } from '~/components/layout/main-layout';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
 
 interface PageLoaderProps {

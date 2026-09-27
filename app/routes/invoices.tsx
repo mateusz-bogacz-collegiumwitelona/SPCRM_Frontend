@@ -20,8 +20,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover
 import { cn } from '~/utils/utils';
 import type { DateRange } from 'react-day-picker';
 import { Link } from 'react-router';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 
 import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { formatCurrency } from '~/utils/data-formatters';

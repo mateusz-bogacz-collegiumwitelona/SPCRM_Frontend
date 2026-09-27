@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import {
   Dialog,
   DialogContent,
@@ -44,7 +44,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
   } = useQuery({
     queryKey: ['available-owners'],
     queryFn: async () => {
-      const res = await api.get('/contacts/available-owners');
+      const res = await axios.get('/contacts/available-owners');
       return res.data.data as OwnerResponse[];
     },
     enabled: isOpen,

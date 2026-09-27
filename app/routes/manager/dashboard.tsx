@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { BarChart3, Briefcase, Users } from 'lucide-react';
 
 import { TeamAnalyticsTab } from '~/components/analytics/team-analytics-tab';

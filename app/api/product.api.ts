@@ -1,4 +1,4 @@
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import type {
   AddProductRequest,
   AddProductStockRequest,
@@ -15,7 +15,7 @@ import type { PaginatedResponse } from '~/types/table';
 
 export const productsApi = {
   getList: async (params: ProductListParams): Promise<PaginatedResponse<ProductResponse>> => {
-    const response = await api.get('/products', {
+    const response = await axios.get('/products', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -31,51 +31,51 @@ export const productsApi = {
   },
 
   getCategories: async (): Promise<string[]> => {
-    const response = await api.get('/products/categories');
+    const response = await axios.get('/products/categories');
     return response.data?.value || response.data?.data || response.data || [];
   },
 
   getSteelGrades: async (): Promise<SteelGradeResponse[]> => {
-    const response = await api.get('/products/steel-grades');
+    const response = await axios.get('/products/steel-grades');
     return response.data?.value || response.data?.data || response.data || [];
   },
 
   getDetails: async (productId: string) => {
-    const response = await api.get(`/products/${productId}`);
+    const response = await axios.get(`/products/${productId}`);
     return response.data?.value || response.data?.data || response.data;
   },
 
   getEditDetails: async (productId: string): Promise<EditProductDetailResponse> => {
-    const res = await api.get(`/products/edit/${productId}`);
+    const res = await axios.get(`/products/edit/${productId}`);
     return (res.data?.value || res.data?.data || res.data) as EditProductDetailResponse;
   },
 
   search: async (query: string, limit = 20): Promise<ProductSearchResult[]> => {
     if (!query) return [];
-    const response = await api.get('/products/search', {
+    const response = await axios.get('/products/search', {
       params: { Query: query, Limit: limit },
     });
     return response.data?.data || response.data?.value || response.data || [];
   },
 
   create: async (payload: AddProductRequest) => {
-    const response = await api.post('/products', payload);
+    const response = await axios.post('/products', payload);
     return response.data;
   },
 
   edit: async (payload: EditProductRequest) => {
-    const response = await api.put(`/products/${payload.productId}`, payload);
+    const response = await axios.put(`/products/${payload.productId}`, payload);
     return response.data;
   },
 
   delete: async (productId: string) => {
-    const response = await api.delete(`/products/${productId}`);
+    const response = await axios.delete(`/products/${productId}`);
     return response.data;
   },
 
   addStock: async (productId: string, quantityToAdd: number) => {
     const payload: AddProductStockRequest = { quantityToAdd };
-    const response = await api.post(`/products/${productId}/stock`, payload);
+    const response = await axios.post(`/products/${productId}/stock`, payload);
     return response.data;
   },
 
@@ -83,7 +83,7 @@ export const productsApi = {
     productId: string,
     params: ProductInvoicesParams,
   ): Promise<PaginatedResponse<ProductInvoiceItemResponse>> => {
-    const response = await api.get(`/products/${productId}/invoices`, {
+    const response = await axios.get(`/products/${productId}/invoices`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,

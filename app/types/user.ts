@@ -1,6 +1,3 @@
-import type { UserContactItem } from '~/types/contact';
-import type { UserDealItem } from '~/types/deal';
-import type { UserTaskItem } from '~/types/task';
 import type { BasePaginationParams } from '~/types/table';
 
 export interface AddUserRequestPayload {

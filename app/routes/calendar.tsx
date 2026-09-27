@@ -13,8 +13,8 @@ import plLocale from '@fullcalendar/core/locales/pl';
 import type { Task } from '~/types/task';
 import { TaskDetailDialog } from '~/components/task/dialogs/task-detail-dialog';
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useCalendarTasks, useCreateTask, useTaskDictionaries } from '~/hooks/use-tasks';
 

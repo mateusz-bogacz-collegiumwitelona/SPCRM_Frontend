@@ -18,7 +18,7 @@ import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import { ExtendTaskDueDateDialog } from '~/components/task/dialogs/extend-task-due-date-dialog';
 import { ChangeTaskAssigneeDialog } from '~/components/task/dialogs/change-task-assignee-dialog';
 import { ChangeTaskStatusDialog } from '~/components/task/dialogs/change-task-status-dialog';
-import { HasRole } from '~/lib/has-role';
+import { HasRole } from '~/components/guards/has-role';
 import { Button } from '~/components/ui/button';
 import { useNavigate } from 'react-router';
 import type {

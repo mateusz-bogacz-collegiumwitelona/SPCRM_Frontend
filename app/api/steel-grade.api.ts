@@ -1,4 +1,4 @@
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import type {
   AddSteelGradePayload,
   DeleteSteelGradeParams,
@@ -13,7 +13,7 @@ export const steelGradesApi = {
   getList: async (
     params: SteelGradeListParams,
   ): Promise<PaginatedResponse<SteelGradeListResponse>> => {
-    const response = await api.get('/steel-grade', {
+    const response = await axios.get('/steel-grade', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -26,22 +26,22 @@ export const steelGradesApi = {
   },
 
   getProducts: async (steelGradeId: string): Promise<SteelGradeProductItem[]> => {
-    const res = await api.get(`/steel-grade/${steelGradeId}/products`);
+    const res = await axios.get(`/steel-grade/${steelGradeId}/products`);
     return (res.data?.value || res.data?.data || res.data || []) as SteelGradeProductItem[];
   },
 
   create: async (payload: AddSteelGradePayload) => {
-    const response = await api.post('/steel-grade', payload);
+    const response = await axios.post('/steel-grade', payload);
     return response.data;
   },
 
   edit: async (payload: EditSteelGradePayload) => {
-    const response = await api.patch('/steel-grade', payload);
+    const response = await axios.patch('/steel-grade', payload);
     return response.data;
   },
 
   delete: async ({ id, reassignments }: DeleteSteelGradeParams) => {
-    const response = await api.delete(`/steel-grade/${id}`, {
+    const response = await axios.delete(`/steel-grade/${id}`, {
       data: { reassignments },
     });
     return response.data;

@@ -1,4 +1,4 @@
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import type {
   AddCurrencyRequestPayload,
   CurrencyListParams,
@@ -9,7 +9,7 @@ import type { PaginatedResponse } from '~/types/table';
 
 export const currenciesApi = {
   getList: async (params: CurrencyListParams): Promise<PaginatedResponse<CurrencySimple>> => {
-    const response = await api.get('/currency', {
+    const response = await axios.get('/currency', {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,
@@ -22,17 +22,17 @@ export const currenciesApi = {
   },
 
   create: async (payload: AddCurrencyRequestPayload) => {
-    const response = await api.post('/currency', payload);
+    const response = await axios.post('/currency', payload);
     return response.data;
   },
 
   edit: async (payload: EditCurrencyRequestPayload) => {
-    const response = await api.patch('/currency', payload);
+    const response = await axios.patch('/currency', payload);
     return response.data;
   },
 
   getSimpleList: async (): Promise<CurrencySimple[]> => {
-    const res = await api.get('/currency/simple');
+    const res = await axios.get('/currency/simple');
     return res.data?.data || res.data?.value || res.data || [];
   },
 };

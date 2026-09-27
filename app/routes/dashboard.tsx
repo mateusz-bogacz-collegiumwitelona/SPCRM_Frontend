@@ -1,5 +1,5 @@
 import React from 'react';
-import { AuthGuard } from '~/lib/auth-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import { useAuth } from '~/context/auth-context';
 import AdminDashboard from '~/routes/admin/dashboard';

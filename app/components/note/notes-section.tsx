@@ -1,7 +1,7 @@
 import type { Note } from '~/types/note';
 import { AlertCircle, Edit2, MessageSquare, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { ActionGuard } from '~/lib/action-guard';
+import { ActionGuard } from '~/components/guards/action-guard';
 import type { FormErrorState } from '~/types/api-error';
 
 interface NotesSectionProps {

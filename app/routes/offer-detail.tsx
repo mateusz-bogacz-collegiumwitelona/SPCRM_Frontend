@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router';
-import { isNotFoundError } from '~/api/api';
-import { AuthGuard } from '~/lib/auth-guard';
+import { isNotFoundError } from '~/lib/axios';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import React, { useState } from 'react';
 import { OfferDetailHeader } from '~/components/offer/offer-detail-header';
@@ -16,7 +16,7 @@ import { DeleteOfferDialog } from '~/components/offer/dialogs/delete-offer-dialo
 import type { EditableProductItem, OfferProductResponse } from '~/types/offer';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
-import { RoleGuard } from '~/lib/role-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
 import { STANDARD_ROLES } from '~/constants/roles';
 import {
   useOfferAllowedActions,

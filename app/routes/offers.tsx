@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
-import { RoleGuard } from '~/lib/role-guard';
-import { AuthGuard } from '~/lib/auth-guard';
+import { RoleGuard } from '~/components/guards/role-guard';
+import { AuthGuard } from '~/components/guards/auth-guard';
 import { DataTable } from '~/components/table/data-table';
 import { formatDateRangeLabel } from '~/utils/table-helpers';
 import { format } from 'date-fns';

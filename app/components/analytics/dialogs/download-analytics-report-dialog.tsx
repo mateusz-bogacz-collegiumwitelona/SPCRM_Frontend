@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AlertCircle, Calendar, Download, FileText, Loader2, X } from 'lucide-react';
-import { api } from '~/api/api';
+import { axios } from '~/lib/axios';
 import {
   Dialog,
   DialogContent,
@@ -45,7 +45,7 @@ export const DownloadAnalyticsReportDialog: React.FC<DownloadAnalyticsReportDial
     setFormError(null);
 
     try {
-      const response = await api.get(endpoint, {
+      const response = await axios.get(endpoint, {
         params: { Period: period },
       });
 
