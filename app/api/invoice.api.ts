@@ -3,41 +3,20 @@ import type {
   AddInvoicePaymentPayload,
   InvoiceDetailResponse,
   InvoiceListParams,
+  InvoiceListResponse,
   InvoicePaymentListResponse,
   InvoicePaymentSummaryResponse,
   InvoiceProductsListResponse,
-  PaginatedInvoicesResponse,
 } from '~/types/invoice';
 import type { PdfFilePayload } from '~/types/pdf';
-
-export interface InvoicePaymentsParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-}
-
-export interface PaginatedInvoicePaymentsResponse {
-  items: InvoicePaymentListResponse[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
-}
-
-export interface InvoiceProductsParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-}
-
-export interface PaginatedInvoiceProductsResponse {
-  items: InvoiceProductsListResponse[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
-}
+import type {
+  InvoicePaymentsParams,
+  InvoiceProductsParams,
+  PaginatedResponse,
+} from '~/types/table';
 
 export const invoiceApi = {
-  getList: async (params: InvoiceListParams): Promise<PaginatedInvoicesResponse> => {
+  getList: async (params: InvoiceListParams): Promise<PaginatedResponse<InvoiceListResponse>> => {
     const response = await api.get('/invoice', {
       params: {
         PageNumber: params.pageNumber,
@@ -82,7 +61,7 @@ export const invoiceApi = {
   getPayments: async (
     invoiceId: string,
     params: InvoicePaymentsParams,
-  ): Promise<PaginatedInvoicePaymentsResponse> => {
+  ): Promise<PaginatedResponse<InvoicePaymentListResponse>> => {
     const response = await api.get(`/invoice/${invoiceId}/payment`, {
       params: {
         PageNumber: params.pageNumber,
@@ -96,7 +75,7 @@ export const invoiceApi = {
   getProducts: async (
     invoiceId: string,
     params: InvoiceProductsParams,
-  ): Promise<PaginatedInvoiceProductsResponse> => {
+  ): Promise<PaginatedResponse<InvoiceProductsListResponse>> => {
     const response = await api.get(`/invoice/${invoiceId}/products`, {
       params: {
         PageNumber: params.pageNumber,

@@ -3,18 +3,16 @@ import type {
   AddSteelGradePayload,
   DeleteSteelGradeParams,
   EditSteelGradePayload,
-  PaginatedSteelGradesResponse,
   SteelGradeListParams,
+  SteelGradeListResponse,
+  SteelGradeProductItem,
 } from '~/types/steel-grade';
-
-export interface SteelGradeProductItem {
-  id: string;
-  name: string;
-  category: string;
-}
+import type { PaginatedResponse } from '~/types/table';
 
 export const steelGradesApi = {
-  getList: async (params: SteelGradeListParams): Promise<PaginatedSteelGradesResponse> => {
+  getList: async (
+    params: SteelGradeListParams,
+  ): Promise<PaginatedResponse<SteelGradeListResponse>> => {
     const response = await api.get('/steel-grade', {
       params: {
         PageNumber: params.pageNumber,

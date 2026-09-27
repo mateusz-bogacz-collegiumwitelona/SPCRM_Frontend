@@ -2,16 +2,17 @@ import type {
   AddContactRequest,
   Contact,
   ContactListParams,
+  ContactResponse,
   EditContactRequest,
   OwnerOption,
-  PagedContactsToDealResult,
-  PaginatedContactsResponse,
 } from '~/types/contact';
 import type { AddTaskRequestPayload } from '~/types/task';
 import { api } from '~/api/api';
+import type { PaginatedResponse } from '~/types/table';
+import type { ContactDealResponse } from '~/types/deal';
 
 export const contactsApi = {
-  getList: async (params: ContactListParams): Promise<PaginatedContactsResponse> => {
+  getList: async (params: ContactListParams): Promise<PaginatedResponse<ContactResponse>> => {
     const response = await api.get('/contacts', {
       params: {
         PageNumber: params.pageNumber,
@@ -86,7 +87,7 @@ export const contactsApi = {
     pageNumber: number;
     pageSize: number;
     searchTerm?: string;
-  }): Promise<PagedContactsToDealResult> => {
+  }): Promise<PaginatedResponse<ContactDealResponse>> => {
     const res = await api.get('/contacts/to-deals', {
       params: {
         PageNumber: params.pageNumber,

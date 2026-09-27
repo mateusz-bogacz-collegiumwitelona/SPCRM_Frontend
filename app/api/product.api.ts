@@ -4,16 +4,17 @@ import type {
   AddProductStockRequest,
   EditProductDetailResponse,
   EditProductRequest,
-  PaginatedProductInvoicesResponse,
-  PaginatedProductsResponse,
+  ProductInvoiceItemResponse,
   ProductInvoicesParams,
   ProductListParams,
+  ProductResponse,
   ProductSearchResult,
   SteelGradeResponse,
 } from '~/types/product';
+import type { PaginatedResponse } from '~/types/table';
 
 export const productsApi = {
-  getList: async (params: ProductListParams): Promise<PaginatedProductsResponse> => {
+  getList: async (params: ProductListParams): Promise<PaginatedResponse<ProductResponse>> => {
     const response = await api.get('/products', {
       params: {
         PageNumber: params.pageNumber,
@@ -81,7 +82,7 @@ export const productsApi = {
   getInvoices: async (
     productId: string,
     params: ProductInvoicesParams,
-  ): Promise<PaginatedProductInvoicesResponse> => {
+  ): Promise<PaginatedResponse<ProductInvoiceItemResponse>> => {
     const response = await api.get(`/products/${productId}/invoices`, {
       params: {
         PageNumber: params.pageNumber,

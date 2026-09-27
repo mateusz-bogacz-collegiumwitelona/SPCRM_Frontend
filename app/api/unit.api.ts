@@ -2,13 +2,14 @@ import { api } from '~/api/api';
 import type {
   AddUnitRequestPayload,
   EditUnitRequestPayload,
-  PaginatedUnitsResponse,
   UnitListParams,
+  UnitListResponse,
   UnitOption,
 } from '~/types/unit';
+import type { PaginatedResponse } from '~/types/table';
 
 export const unitsApi = {
-  getList: async (params: UnitListParams): Promise<PaginatedUnitsResponse> => {
+  getList: async (params: UnitListParams): Promise<PaginatedResponse<UnitListResponse>> => {
     const response = await api.get('/unit', {
       params: {
         PageNumber: params.pageNumber,

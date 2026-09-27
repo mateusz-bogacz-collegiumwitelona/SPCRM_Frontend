@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface AddDealProductItem {
   productId: string;
   name: string;
@@ -89,23 +91,11 @@ export interface TeamUser {
   email: string;
 }
 
-export interface SalesListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface SalesListParams extends BasePaginationParams {
   dateFrom?: string;
   dateTo?: string;
   statusType?: string;
   ownerId?: string;
-}
-
-export interface PaginatedSalesResponse {
-  items: UserSalesResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }
 
 export interface CompanySaleItem {
@@ -118,12 +108,6 @@ export interface CompanySaleItem {
   code: string;
   status: string;
   createdAt: string;
-}
-
-export interface PaginatedCompanySalesResponse {
-  items: CompanySaleItem[];
-  totalPages: number;
-  totalCount: number;
 }
 
 export interface ChangeDealStatusPayload {
@@ -152,19 +136,7 @@ export interface DealProductResponse {
   decimalPlaces: number;
 }
 
-export interface DealProductsParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface DealProductsParams extends BasePaginationParams {
   productCategory?: string;
   steelGrade?: string;
-}
-
-export interface PaginatedDealProductsResponse {
-  items: DealProductResponse[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
 }

@@ -2,13 +2,14 @@ import { api } from '~/api/api';
 import type {
   AddPromotionRequest,
   EditPromotionRequest,
-  PaginatedPromotionsResponse,
   PromotionDetailResponse,
   PromotionListParams,
+  PromotionResponse,
 } from '~/types/promotion';
+import type { PaginatedResponse } from '~/types/table';
 
 export const promotionsApi = {
-  getList: async (params: PromotionListParams): Promise<PaginatedPromotionsResponse> => {
+  getList: async (params: PromotionListParams): Promise<PaginatedResponse<PromotionResponse>> => {
     const response = await api.get('/promotion', {
       params: {
         PageNumber: params.pageNumber,

@@ -1,4 +1,5 @@
 import type { Contact } from '~/types/contact';
+import type { BasePaginationParams } from '~/types/table';
 
 export interface Task {
   id: string;
@@ -57,8 +58,8 @@ export interface CalendarTasksParams {
 }
 
 export interface TaskDictionariesResponse {
-  statuses: { value: string; label: string }[];
-  priorities: { value: string; label: string }[];
+  statuses: DictionaryItem[];
+  priorities: DictionaryItem[];
 }
 
 export interface SaleTaskResponse {
@@ -75,10 +76,7 @@ export interface SaleTaskResponse {
   contactLastName?: string | null;
 }
 
-export interface DealTasksParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
+export interface DealTasksParams extends BasePaginationParams {
   status?: string;
   priority?: string;
 }

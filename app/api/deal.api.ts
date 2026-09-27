@@ -4,17 +4,18 @@ import type {
   ChangeDealStatusPayload,
   ChangeStatusResponse,
   DealAssignableContactResponse,
+  DealProductResponse,
   DealProductsParams,
-  PaginatedDealProductsResponse,
-  PaginatedSalesResponse,
   SaleDetailResponse,
   SalesListParams,
+  UserSalesResponse,
 } from '~/types/deal';
 import type { AddTaskRequestPayload, DealTasksParams } from '~/types/task';
 import type { Note } from '~/types/note';
+import type { PaginatedResponse } from '~/types/table';
 
 export const dealsApi = {
-  getList: async (params: SalesListParams): Promise<PaginatedSalesResponse> => {
+  getList: async (params: SalesListParams): Promise<PaginatedResponse<UserSalesResponse>> => {
     const response = await api.get('/sales', {
       params: {
         PageNumber: params.pageNumber,
@@ -98,7 +99,7 @@ export const dealsApi = {
   getDealProducts: async (
     dealId: string,
     params: DealProductsParams,
-  ): Promise<PaginatedDealProductsResponse> => {
+  ): Promise<PaginatedResponse<DealProductResponse>> => {
     const response = await api.get(`/sales/${dealId}/products`, {
       params: {
         PageNumber: params.pageNumber,

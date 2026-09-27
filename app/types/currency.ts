@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface AddCurrencyRequestPayload {
   name: string;
   code: string;
@@ -11,20 +13,7 @@ export interface EditCurrencyRequestPayload {
   decimalPlaces?: number;
 }
 
-export interface CurrencyListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
-}
-
-export interface PaginatedCurrenciesResponse {
-  items: CurrencySimple[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
-}
+export type CurrencyListParams = BasePaginationParams;
 
 export interface CurrencySimple {
   currencyId: string;

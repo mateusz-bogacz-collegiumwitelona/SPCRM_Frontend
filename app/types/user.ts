@@ -1,6 +1,7 @@
 import type { UserContactItem } from '~/types/contact';
 import type { UserDealItem } from '~/types/deal';
 import type { UserTaskItem } from '~/types/task';
+import type { BasePaginationParams } from '~/types/table';
 
 export interface AddUserRequestPayload {
   firstName: string;
@@ -79,21 +80,9 @@ export interface UserListResponse {
   isBlocked: boolean;
 }
 
-export interface UserListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface UserListParams extends BasePaginationParams {
   role?: string;
   isBlocked?: boolean;
-}
-
-export interface PaginatedUsersResponse {
-  items: UserListResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }
 
 export interface UserCompanyItem {
@@ -105,73 +94,25 @@ export interface UserCompanyItem {
   createdAt: string;
 }
 
-export interface UserCompaniesParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface UserCompaniesParams extends BasePaginationParams {
   createdAtFrom?: string;
   createdAtTo?: string;
 }
 
-export interface PaginatedUserCompaniesResponse {
-  items: UserCompanyItem[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
-}
-
-export interface UserContactsParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface UserContactsParams extends BasePaginationParams {
   companyName?: string;
   isPrimary?: boolean;
 }
 
-export interface PaginatedUserContactsResponse {
-  items: UserContactItem[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
-}
-
-export interface UserSalesParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface UserSalesParams extends BasePaginationParams {
   statusType?: string;
   dateFrom?: string;
   dateTo?: string;
 }
 
-export interface PaginatedUserSalesResponse {
-  items: UserDealItem[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
-}
-
-export interface UserTasksParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface UserTasksParams extends BasePaginationParams {
   status?: string;
   priority?: string;
-}
-
-export interface PaginatedUserTasksResponse {
-  items: UserTaskItem[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
 }
 
 export interface UserBaseActionData {

@@ -1,12 +1,9 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { DateRange } from 'react-day-picker';
-import {
-  invoiceApi,
-  type InvoicePaymentsParams,
-  type InvoiceProductsParams,
-} from '~/api/invoice.api';
+import { invoiceApi } from '~/api/invoice.api';
 import type { AddInvoicePaymentPayload, InvoiceListParams } from '~/types/invoice';
 import { downloadBase64Pdf } from '~/utils/pdf-downloader';
+import type { InvoicePaymentsParams, InvoiceProductsParams } from '~/types/table';
 
 export const invoiceKeys = {
   all: ['invoices'] as const,

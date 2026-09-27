@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface AddProductRequest {
   name: string;
   steelGradeId: string;
@@ -129,22 +131,10 @@ export interface SteelGradeResponse {
   name: string;
 }
 
-export interface ProductListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface ProductListParams extends BasePaginationParams {
   category?: string;
   steelGrade?: string;
   hasActivePromotion?: boolean;
-}
-
-export interface PaginatedProductsResponse {
-  items: ProductResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }
 
 export interface ProductSearchResult {
@@ -154,15 +144,4 @@ export interface ProductSearchResult {
   pricePerUnit: number;
 }
 
-export interface ProductInvoicesParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-}
-
-export interface PaginatedProductInvoicesResponse {
-  items: ProductInvoiceItemResponse[];
-  totalPages: number;
-  totalCount?: number;
-  totalItems?: number;
-}
+export type ProductInvoicesParams = BasePaginationParams;

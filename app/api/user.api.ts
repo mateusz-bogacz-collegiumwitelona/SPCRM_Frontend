@@ -5,24 +5,24 @@ import type {
   ChangeUserRolePayload,
   DeleteUserPayload,
   EditUserRequestPayload,
-  PaginatedUserCompaniesResponse,
-  PaginatedUserContactsResponse,
-  PaginatedUserSalesResponse,
-  PaginatedUsersResponse,
-  PaginatedUserTasksResponse,
   SetLockoutPayload,
   UserCompaniesParams,
+  UserCompanyItem,
   UserContactsParams,
   UserDetailResponse,
   UserListParams,
+  UserListResponse,
   UserSalesParams,
   UserSimpleListResponse,
   UserTasksParams,
 } from '~/types/user';
-import type { TeamUser } from '~/types/deal';
+import type { TeamUser, UserDealItem } from '~/types/deal';
+import type { PaginatedResponse } from '~/types/table';
+import type { UserContactItem } from '~/types/contact';
+import type { UserTaskItem } from '~/types/task';
 
 export const usersApi = {
-  getList: async (params: UserListParams): Promise<PaginatedUsersResponse> => {
+  getList: async (params: UserListParams): Promise<PaginatedResponse<UserListResponse>> => {
     const response = await api.get('/user', {
       params: {
         PageNumber: params.pageNumber,
@@ -56,7 +56,7 @@ export const usersApi = {
   getUserCompanies: async (
     userId: string,
     params: UserCompaniesParams,
-  ): Promise<PaginatedUserCompaniesResponse> => {
+  ): Promise<PaginatedResponse<UserCompanyItem>> => {
     const response = await api.get(`/user/${userId}/companies`, {
       params: {
         PageNumber: params.pageNumber,
@@ -109,7 +109,7 @@ export const usersApi = {
   getUserContacts: async (
     userId: string,
     params: UserContactsParams,
-  ): Promise<PaginatedUserContactsResponse> => {
+  ): Promise<PaginatedResponse<UserContactItem>> => {
     const response = await api.get(`/user/${userId}/contacts`, {
       params: {
         PageNumber: params.pageNumber,
@@ -127,7 +127,7 @@ export const usersApi = {
   getUserSales: async (
     userId: string,
     params: UserSalesParams,
-  ): Promise<PaginatedUserSalesResponse> => {
+  ): Promise<PaginatedResponse<UserDealItem>> => {
     const response = await api.get(`/user/${userId}/sales`, {
       params: {
         PageNumber: params.pageNumber,
@@ -146,7 +146,7 @@ export const usersApi = {
   getUserTasks: async (
     userId: string,
     params: UserTasksParams,
-  ): Promise<PaginatedUserTasksResponse> => {
+  ): Promise<PaginatedResponse<UserTaskItem>> => {
     const response = await api.get(`/user/${userId}/tasks`, {
       params: {
         PageNumber: params.pageNumber,

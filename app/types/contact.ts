@@ -1,4 +1,4 @@
-import type { ContactDealResponse } from '~/types/deal';
+import type { BasePaginationParams } from '~/types/table';
 
 export interface Contact {
   type: string;
@@ -103,28 +103,8 @@ export interface OwnerOption {
   role?: string;
 }
 
-export interface ContactListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface ContactListParams extends BasePaginationParams {
   companyName?: string;
   isPrimary?: boolean;
   ownerId?: string;
-}
-
-export interface PaginatedContactsResponse {
-  items: ContactResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
-}
-
-export interface PagedContactsToDealResult {
-  items: ContactDealResponse[];
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
 }

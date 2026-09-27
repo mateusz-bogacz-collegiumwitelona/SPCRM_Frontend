@@ -4,14 +4,15 @@ import type {
   OfferAllowedActionsResponse,
   OfferClientDetailResponse,
   OfferListParams,
+  OfferListResponse,
+  OfferProductResponse,
   OfferProductsParams,
-  PaginatedOfferProductsResponse,
-  PaginatedOffersResponse,
   UpdateOfferProductItem,
 } from '~/types/offer';
+import type { PaginatedResponse } from '~/types/table';
 
 export const offersApi = {
-  getList: async (params: OfferListParams): Promise<PaginatedOffersResponse> => {
+  getList: async (params: OfferListParams): Promise<PaginatedResponse<OfferListResponse>> => {
     const response = await api.get('/offer', {
       params: {
         PageNumber: params.pageNumber,
@@ -57,7 +58,7 @@ export const offersApi = {
   getOfferProducts: async (
     offerId: string,
     params: OfferProductsParams,
-  ): Promise<PaginatedOfferProductsResponse> => {
+  ): Promise<PaginatedResponse<OfferProductResponse>> => {
     const response = await api.get(`/offer/product/${offerId}`, {
       params: {
         PageNumber: params.pageNumber,

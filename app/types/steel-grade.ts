@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface SteelGradeOption {
   id: string;
   name: string;
@@ -29,22 +31,15 @@ export interface SteelGradeListResponse {
   density: number;
 }
 
-export interface SteelGradeListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
-}
-
-export interface PaginatedSteelGradesResponse {
-  items: SteelGradeListResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
-}
+export type SteelGradeListParams = BasePaginationParams;
 
 export interface DeleteSteelGradeParams {
   id: string;
   reassignments: { productId: string; newSteelGradeId: string }[];
+}
+
+export interface SteelGradeProductItem {
+  id: string;
+  name: string;
+  category: string;
 }

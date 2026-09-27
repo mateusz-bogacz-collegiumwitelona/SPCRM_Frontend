@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface EditableProductItem {
   productId: string;
   productName: string;
@@ -32,24 +34,12 @@ export interface CompanySimpleListResponse {
   name: string;
 }
 
-export interface OfferListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface OfferListParams extends BasePaginationParams {
   status?: string;
   companyName?: string;
   isExpired?: boolean;
   validUntilFrom?: string;
   validUntilTo?: string;
-}
-
-export interface PaginatedOffersResponse {
-  items: OfferListResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }
 
 export interface OfferAllowedActionsResponse {
@@ -74,14 +64,4 @@ export interface OfferClientDetailResponse {
   companyName: string;
 }
 
-export interface OfferProductsParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-}
-
-export interface PaginatedOfferProductsResponse {
-  items: OfferProductResponse[];
-  totalPages: number;
-  totalCount?: number;
-}
+export type OfferProductsParams = BasePaginationParams;

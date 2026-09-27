@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface AddPromotionRequest {
   name: string;
   productId: string;
@@ -98,12 +100,7 @@ export interface PromotionResponse {
   isActive: boolean;
 }
 
-export interface PromotionListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface PromotionListParams extends BasePaginationParams {
   isActive?: boolean;
   fromDate?: string;
   toDate?: string;
@@ -111,11 +108,4 @@ export interface PromotionListParams {
   discountPercentageTo?: number;
   promotionPriceFrom?: number;
   promotionPriceTo?: number;
-}
-
-export interface PaginatedPromotionsResponse {
-  items: PromotionResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }

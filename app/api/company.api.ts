@@ -1,20 +1,21 @@
 import { api } from '~/api/api';
 import type {
   AddCompanyRequest,
+  CompanyAddress,
   CompanyAddressFormData,
   CompanyDetailResponse,
   CompanyListParams,
+  Debt,
   DebtSummary,
   EditCompanyDetailResponse,
   EditCompanyRequest,
-  PaginatedAddressesResponse,
-  PaginatedCompaniesResponse,
-  PaginatedDebtsResponse,
+  GetCompanyResponse,
 } from '~/types/company';
-import type { PaginatedCompanySalesResponse } from '~/types/deal';
+import type { PaginatedResponse } from '~/types/table';
+import type { CompanySaleItem } from '~/types/deal';
 
 export const companyApi = {
-  getList: async (params: CompanyListParams): Promise<PaginatedCompaniesResponse> => {
+  getList: async (params: CompanyListParams): Promise<PaginatedResponse<GetCompanyResponse>> => {
     const response = await api.get('/company/list', {
       params: {
         PageNumber: params.pageNumber,
@@ -45,7 +46,7 @@ export const companyApi = {
     return response.data?.data ?? response.data;
   },
 
-  getAddresses: async (companyId: string): Promise<PaginatedAddressesResponse> => {
+  getAddresses: async (companyId: string): Promise<PaginatedResponse<CompanyAddress>> => {
     const response = await api.get('/company/addresses', {
       params: { companyId, PageNumber: 1, PageSize: 100 },
     });
@@ -119,7 +120,7 @@ export const companyApi = {
     companyId: string;
     pageNumber: number;
     pageSize: number;
-  }): Promise<PaginatedDebtsResponse | null> => {
+  }): Promise<PaginatedResponse<Debt>> => {
     const response = await api.get('/company/debts', {
       params: {
         CompanyId: params.companyId,
@@ -134,7 +135,7 @@ export const companyApi = {
     companyId: string;
     pageNumber: number;
     pageSize: number;
-  }): Promise<PaginatedCompanySalesResponse> => {
+  }): Promise<PaginatedResponse<CompanySaleItem>> => {
     const response = await api.get('/company/sales', {
       params: {
         companyId: params.companyId,

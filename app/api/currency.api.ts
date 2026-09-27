@@ -4,11 +4,11 @@ import type {
   CurrencyListParams,
   CurrencySimple,
   EditCurrencyRequestPayload,
-  PaginatedCurrenciesResponse,
 } from '~/types/currency';
+import type { PaginatedResponse } from '~/types/table';
 
 export const currenciesApi = {
-  getList: async (params: CurrencyListParams): Promise<PaginatedCurrenciesResponse> => {
+  getList: async (params: CurrencyListParams): Promise<PaginatedResponse<CurrencySimple>> => {
     const response = await api.get('/currency', {
       params: {
         PageNumber: params.pageNumber,

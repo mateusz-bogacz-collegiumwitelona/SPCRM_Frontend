@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface InvoiceDetailResponse {
   invoiceId: string;
   invoiceNumber: string;
@@ -61,12 +63,7 @@ export interface InvoiceListResponse {
   isOverDue: boolean;
 }
 
-export interface InvoiceListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface InvoiceListParams extends BasePaginationParams {
   companyName?: string;
   companyNip?: string;
   issueDateFrom?: string;
@@ -74,13 +71,6 @@ export interface InvoiceListParams {
   isOverDue?: boolean;
   totalAmountFrom?: number;
   totalAmountTo?: number;
-}
-
-export interface PaginatedInvoicesResponse {
-  items: InvoiceListResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }
 
 export interface AddInvoicePaymentPayload {

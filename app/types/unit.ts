@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface UnitOption {
   id: string;
   name: string;
@@ -24,17 +26,4 @@ export interface UnitListResponse {
   baseMultiplier: number;
 }
 
-export interface UnitListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
-}
-
-export interface PaginatedUnitsResponse {
-  items: UnitListResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
-}
+export type UnitListParams = BasePaginationParams;

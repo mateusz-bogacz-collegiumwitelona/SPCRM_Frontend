@@ -1,3 +1,5 @@
+import type { BasePaginationParams } from '~/types/table';
+
 export interface AddCompanyAddressRequest {
   street: string;
   city: string;
@@ -41,13 +43,6 @@ export interface GetCompanyResponse {
   street: string;
   zipCode: string;
   createdAt: string;
-}
-
-export interface PaginatedCompaniesResponse {
-  items: GetCompanyResponse[];
-  totalPages: number;
-  totalItems?: number;
-  totalCount?: number;
 }
 
 export interface ContactListTableMeta {
@@ -94,21 +89,10 @@ export interface CompanyDetailResponse {
   [key: string]: unknown;
 }
 
-export interface CompanyListParams {
-  pageNumber: number;
-  pageSize: number;
-  searchTerm?: string;
-  sortBy: string;
-  sortDescending: boolean;
+export interface CompanyListParams extends BasePaginationParams {
   createdAtFrom?: string;
   createdAtTo?: string;
   isYour?: boolean;
-}
-
-export interface PaginatedAddressesResponse {
-  items: CompanyAddress[];
-  totalPages: number;
-  totalItems?: number;
 }
 
 export interface Debt {
@@ -125,10 +109,4 @@ export interface DebtSummary {
   currencyCode: string;
   totalAmount: number;
   decimalPlace: number;
-}
-
-export interface PaginatedDebtsResponse {
-  items: Debt[];
-  totalPages: number;
-  totalCount: number;
 }
