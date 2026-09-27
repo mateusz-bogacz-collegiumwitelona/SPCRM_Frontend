@@ -21,3 +21,11 @@ export const formatWeight = (grams: number | null | undefined): string => {
     maximumFractionDigits: 3,
   }).format(kg)} kg`;
 };
+
+export const formatDate = (isoDate: string) => {
+  return new Date(isoDate).toLocaleDateString('pl-PL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
