@@ -1,15 +1,15 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { format } from 'date-fns';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, X } from 'lucide-react';
-import { getErrorMessage } from '~/constants/error-mapper';
+import React, { useMemo, useState } from 'react';
+import { Building2, Calendar, CheckCircle2, Clock, FileText } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { ApiError, FormErrorState } from '~/types/api-error';
 import { DataTable } from '~/components/table/data-table';
 import type { ProductInvoiceItemResponse } from '~/types/product';
 import { useProductInvoices } from '~/hooks/use-products';
 import { useDebounce } from '~/hooks/use-debounce';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface ProductInvoicesTableMeta {
   unitSymbol: string;
@@ -104,15 +104,6 @@ const columns = [
   }),
 ];
 
-const mergeInvoices = (
-  existing: ProductInvoiceItemResponse[],
-  incoming: ProductInvoiceItemResponse[],
-): ProductInvoiceItemResponse[] => {
-  const existingIds = new Set(existing.map((item) => item.invoiceId));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.invoiceId));
-  return [...existing, ...uniqueIncoming];
-};
-
 const ProductInvoiceMobileCard = ({
   item,
   unitSymbol,
@@ -189,18 +180,7 @@ export const ProductInvoices = ({
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const [accumulatedMobileInvoices, setAccumulatedMobileInvoices] = useState<
-    ProductInvoiceItemResponse[]
-  >([]);
-  const isMobileAppend = useRef(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, pageSize]);
 
   const {
     data,
@@ -219,28 +199,6 @@ export const ProductInvoices = ({
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopInvoices.length;
 
-  useEffect(() => {
-    const items: ProductInvoiceItemResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileInvoices(items);
-      return;
-    }
-
-    setAccumulatedMobileInvoices((prev) => mergeInvoices(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopInvoices,
     columns,
@@ -250,31 +208,17 @@ export const ProductInvoices = ({
     } satisfies ProductInvoicesTableMeta,
   });
 
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
-
-  const formError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message ||
-              activeError?.message ||
-              'Nie udało się pobrać faktur powiązanych z produktem.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
+  const {
+    accumulatedData: accumulatedMobileInvoices,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList<ProductInvoiceItemResponse>({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, pageSize],
+    idSelector: (item) => item.invoiceId,
+  });
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 w-full min-w-0 max-w-full overflow-hidden">
@@ -301,29 +245,11 @@ export const ProductInvoices = ({
       </div>
 
       <div className="p-4 sm:p-6 min-w-0 w-full overflow-x-auto">
-        {formError && (
-          <div className="mb-6 relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-            <div className="flex-1 pr-4">
-              <p className="font-medium leading-tight">{formError.title}</p>
-              {formError.details && formError.details.length > 0 && (
-                <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                  {formError.details.map((detailErr, idx) => (
-                    <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsErrorDismissed(true)}
-              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-              title="Zamknij"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
+        <QueryErrorBanner
+          error={queryError}
+          fallbackMessage="Nie udało się pobrać danych faktur."
+          className="mb-6"
+        />
 
         <div className="w-full min-w-0 overflow-x-auto">
           <DataTable

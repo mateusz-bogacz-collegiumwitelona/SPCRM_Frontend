@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { formatCurrency } from '~/utils/data-formatters';
 import { PackageOpen } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useInvoiceProducts } from '~/hooks/use-invoices';
 import { useDebounce } from '~/hooks/use-debounce';
 import { InvoiceProductMobileCard } from '~/components/invoice/mobile-card/invoice-product-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface InvoiceProductsTableMeta {
   currencyCode: string;
@@ -82,15 +83,6 @@ const columns = [
   }),
 ];
 
-const mergeProducts = (
-  existing: InvoiceProductsListResponse[],
-  incoming: InvoiceProductsListResponse[],
-): InvoiceProductsListResponse[] => {
-  const existingIds = new Set(existing.map((item) => item.invoiceProductId));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.invoiceProductId));
-  return [...existing, ...uniqueIncoming];
-};
-
 export const InvoiceProductsTable = ({
   invoiceId,
   currencyCode = 'PLN',
@@ -103,18 +95,7 @@ export const InvoiceProductsTable = ({
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<
-    InvoiceProductsListResponse[]
-  >([]);
-  const isMobileAppend = useRef(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, pageSize]);
 
   const {
     data,
@@ -133,28 +114,6 @@ export const InvoiceProductsTable = ({
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopProducts.length;
 
-  useEffect(() => {
-    const items: InvoiceProductsListResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileProducts(items);
-      return;
-    }
-
-    setAccumulatedMobileProducts((prev) => mergeProducts(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopProducts,
     columns,
@@ -163,6 +122,17 @@ export const InvoiceProductsTable = ({
       currencyCode,
       decimalPlaces,
     } satisfies InvoiceProductsTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileProducts,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList<InvoiceProductsListResponse>({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, pageSize],
   });
 
   return (
@@ -192,7 +162,7 @@ export const InvoiceProductsTable = ({
       <div className="p-4 lg:p-6">
         <QueryErrorBanner
           error={queryError}
-          fallbackMessage="Nie udało się pobrać danych zamówienia."
+          fallbackMessage="Nie udało się pobrać danych faktury."
           className="mb-6"
         />
 

@@ -1,7 +1,7 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { format } from 'date-fns';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Briefcase } from 'lucide-react';
 import { client } from '~/lib/client';
@@ -12,6 +12,7 @@ import type { ProductDealItemResponse } from '~/types/product';
 import { useDebounce } from '~/hooks/use-debounce';
 import { ProductDealMobileCard } from '~/components/products/mobile-card/product-deal-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface ProductDealsTableMeta {
   unitSymbol: string;
@@ -95,15 +96,6 @@ const columns = [
   }),
 ];
 
-const mergeDeals = (
-  existing: ProductDealItemResponse[],
-  incoming: ProductDealItemResponse[],
-): ProductDealItemResponse[] => {
-  const existingIds = new Set(existing.map((item) => item.dealId));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.dealId));
-  return [...existing, ...uniqueIncoming];
-};
-
 export const ProductDeals = ({
   productId,
   unitSymbol = 'szt.',
@@ -115,17 +107,7 @@ export const ProductDeals = ({
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [accumulatedMobileDeals, setAccumulatedMobileDeals] = useState<ProductDealItemResponse[]>(
-    [],
-  );
-  const isMobileAppend = useRef(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, pageSize]);
 
   const {
     data,
@@ -152,33 +134,23 @@ export const ProductDeals = ({
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalItems || data?.totalCount || desktopDeals.length;
 
-  useEffect(() => {
-    const items: ProductDealItemResponse[] = data?.items;
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileDeals(items);
-      return;
-    }
-
-    setAccumulatedMobileDeals((prev) => mergeDeals(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopDeals,
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: { unitSymbol } satisfies ProductDealsTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileDeals,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList<ProductDealItemResponse>({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, pageSize],
+    idSelector: (item) => item.dealId,
   });
 
   return (
@@ -208,7 +180,7 @@ export const ProductDeals = ({
       <div className="p-4 lg:p-6">
         <QueryErrorBanner
           error={queryError}
-          fallbackMessage="Nie udało się pobrać danych zamówienia."
+          fallbackMessage="Nie udało się pobrać danych sprzedaży."
           className="mb-6"
         />
 

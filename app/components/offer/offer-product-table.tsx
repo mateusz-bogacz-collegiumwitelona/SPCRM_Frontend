@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   createColumnHelper,
   flexRender,
@@ -10,9 +10,9 @@ import { ChevronLeft, ChevronRight, Edit3, Loader2, Package, Search } from 'luci
 import { formatCurrency } from '~/utils/data-formatters';
 import type { OfferProductResponse } from '~/types/offer';
 import { useOfferProducts } from '~/hooks/use-offers';
-import { mergeById } from '~/utils/table-helpers';
 import { useDebounce } from '~/hooks/use-debounce';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 export interface OfferProductsTableProps {
   offerId: string;
@@ -75,17 +75,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<
-    OfferProductResponse[]
-  >([]);
-  const isMobileAppend = useRef(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, pageSize]);
 
   const {
     data,
@@ -103,32 +93,22 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalCount || desktopProducts.length;
 
-  useEffect(() => {
-    const items: OfferProductResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileProducts(items);
-      return;
-    }
-
-    setAccumulatedMobileProducts((prev) => mergeById(prev, items, (item) => item.productId));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopProducts,
     columns,
     getCoreRowModel: getCoreRowModel(),
+  });
+
+  const {
+    accumulatedData: accumulatedMobileProducts,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList<OfferProductResponse>({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, pageSize],
+    idSelector: (item) => item.productId,
   });
 
   const renderContent = () => {
@@ -346,7 +326,7 @@ export const OfferProductsTable: React.FC<OfferProductsTableProps> = ({
     <div className="flex flex-col gap-4">
       <QueryErrorBanner
         error={queryError}
-        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        fallbackMessage="Nie udało się pobrać danych oferty."
         className="mb-6"
       />
 

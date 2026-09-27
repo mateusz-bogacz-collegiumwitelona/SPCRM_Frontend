@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   createColumnHelper,
   flexRender,
@@ -32,6 +32,7 @@ import type { ContactTaskItem } from '~/types/contact';
 import { useContactTaskMutations, useContactTasks } from '~/hooks/use-tasks';
 import { useDebounce } from '~/hooks/use-debounce';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface TaskTableMeta {
   onEdit: (task: ContactTaskItem) => void;
@@ -147,33 +148,15 @@ const columns = [
   }),
 ];
 
-const mergeTasks = (
-  existing: ContactTaskItem[],
-  incoming: ContactTaskItem[],
-): ContactTaskItem[] => {
-  const existingIds = new Set(existing.map((item) => item.id));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
-  return [...existing, ...uniqueIncoming];
-};
-
 export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
-
-  const [accumulatedMobileTasks, setAccumulatedMobileTasks] = useState<ContactTaskItem[]>([]);
-  const isMobileAppend = useRef(false);
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ContactTaskItem | null>(null);
   const [deletingTask, setDeletingTask] = useState<ContactTaskItem | null>(null);
 
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, pageSize]);
 
   const {
     data,
@@ -194,28 +177,6 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalCount || desktopTasks.length;
 
-  useEffect(() => {
-    const items = data?.items;
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileTasks(items);
-      return;
-    }
-
-    setAccumulatedMobileTasks((prev) => mergeTasks(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopTasks,
     columns,
@@ -224,6 +185,17 @@ export const ContactTasks: React.FC<{ contactId: string }> = ({ contactId }) => 
       onEdit: (task: ContactTaskItem) => setEditingTask(task),
       onDelete: (task: ContactTaskItem) => setDeletingTask(task),
     } satisfies TaskTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileTasks,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList<ContactTaskItem>({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, pageSize],
   });
 
   let tableContent: React.ReactNode;

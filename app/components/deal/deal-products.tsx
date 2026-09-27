@@ -1,7 +1,7 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { formatCurrency } from '~/utils/data-formatters';
 import { Link } from 'react-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDownWideNarrow,
@@ -22,6 +22,7 @@ import type { DealProductResponse } from '~/types/deal';
 import { useDebounce } from '~/hooks/use-debounce';
 import { DealProductMobileCard } from '~/components/deal/dialogs/deal-product-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface ProductTableMeta {
   onEdit: (product: DealProductResponse) => void;
@@ -133,15 +134,6 @@ const columns = [
   }),
 ];
 
-const mergeProducts = (
-  existing: DealProductResponse[],
-  incoming: DealProductResponse[],
-): DealProductResponse[] => {
-  const existingIds = new Set(existing.map((item) => item.dealProductId));
-  const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.dealProductId));
-  return [...existing, ...uniqueIncoming];
-};
-
 export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const queryClient = useQueryClient();
 
@@ -156,18 +148,7 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [productFilter, setProductFilter] = useState<string>('');
   const [steelGradeFilter, setSteelGradeFilter] = useState<string>('');
-
-  const [accumulatedMobileProducts, setAccumulatedMobileProducts] = useState<DealProductResponse[]>(
-    [],
-  );
-  const isMobileAppend = useRef(false);
-
   const debouncedSearch = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, sortBy, sortDescending, pageSize, productFilter, steelGradeFilter]);
 
   const {
     data,
@@ -196,28 +177,6 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
   const dealCache = queryClient.getQueryData<{ currencyCode: string }>(['deal-info', dealId]);
   const currentCurrency = dealCache?.currencyCode || desktopProducts[0]?.currencyCode || 'PLN';
 
-  useEffect(() => {
-    const items: DealProductResponse[] = data?.items || [];
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileProducts(items);
-      return;
-    }
-
-    setAccumulatedMobileProducts((prev) => mergeProducts(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopProducts,
     columns,
@@ -226,6 +185,25 @@ export const SaleProductsTable = ({ dealId }: { dealId: string }) => {
       onEdit: (product: DealProductResponse) => setProductToEdit(product),
       onDelete: (product: DealProductResponse) => setProductToDelete(product),
     } satisfies ProductTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileProducts,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList<DealProductResponse>({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [
+      debouncedSearch,
+      pageSize,
+      sortBy,
+      sortDescending,
+      productFilter,
+      steelGradeFilter,
+    ],
+    idSelector: (item) => item.dealProductId,
   });
 
   return (

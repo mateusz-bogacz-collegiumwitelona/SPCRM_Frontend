@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createColumnHelper,
@@ -10,19 +10,17 @@ import { client } from '~/lib/client';
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2, MessageSquare, Plus, Search } from 'lucide-react';
 import type { ApiError } from '~/types/api-error';
-
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { ContactNoteDialog } from './dialogs/contact-note-dialog';
-
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { ActionGuard } from '~/components/guards/action-guard';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
-
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ContactNote } from '~/types/contact';
 import { useAddNote, useDeleteNote, useEditNote } from '~/hooks/use-notes';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 import { useDebounce } from '~/hooks/use-debounce';
+import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
 
 interface NoteTableMeta {
   onSelect: (note: ContactNote) => void;
@@ -115,8 +113,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [accumulatedMobileNotes, setAccumulatedMobileNotes] = useState<ContactNote[]>([]);
-  const isMobileAppend = useRef(false);
   const [selectedNote, setSelectedNote] = useState<ContactNote | null>(null);
   const [editingNote, setEditingNote] = useState<ContactNote | null>(null);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
@@ -174,11 +170,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   };
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  useEffect(() => {
-    isMobileAppend.current = false;
-    setPageNumber(1);
-  }, [debouncedSearch, pageSize]);
-
   const {
     data,
     isLoading,
@@ -203,34 +194,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   const totalPages = data?.totalPages || 1;
   const totalItems = data?.totalCount || desktopNotes.length;
 
-  const mergeContactNote = (existing: ContactNote[], incoming: ContactNote[]): ContactNote[] => {
-    const existingIds = new Set(existing.map((item) => item.id));
-    const uniqueIncoming = incoming.filter((item) => !existingIds.has(item.id));
-    return [...existing, ...uniqueIncoming];
-  };
-
-  useEffect(() => {
-    const items = data?.items;
-    if (!items || items.length === 0) return;
-
-    if (pageNumber === 1 || !isMobileAppend.current) {
-      setAccumulatedMobileNotes(items);
-      return;
-    }
-
-    setAccumulatedMobileNotes((prev) => mergeContactNote(prev, items));
-  }, [data, pageNumber]);
-
-  const handleMobileLoadMore = () => {
-    isMobileAppend.current = true;
-    setPageNumber((prev) => prev + 1);
-  };
-
-  const handleDesktopPageChange = (newPage: number) => {
-    isMobileAppend.current = false;
-    setPageNumber(newPage);
-  };
-
   const table = useReactTable({
     data: desktopNotes,
     columns,
@@ -240,6 +203,17 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
       onEdit: (note) => setEditingNote(note),
       onDelete: (id) => setDeletingNoteId(id),
     } satisfies NoteTableMeta,
+  });
+
+  const {
+    accumulatedData: accumulatedMobileNotes,
+    handleMobileLoadMore,
+    handleDesktopPageChange,
+  } = useAccumulatedMobileList<ContactNote>({
+    items: data?.items,
+    pageNumber,
+    setPageNumber,
+    resetDependencies: [debouncedSearch, pageSize],
   });
 
   const renderNotesContent = () => {
