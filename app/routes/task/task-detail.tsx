@@ -13,7 +13,7 @@ import { STANDARD_ROLES } from '~/constants/roles';
 import React from 'react';
 import { useTaskDetails } from '~/hooks/use-tasks';
 
-const TaskDetails: React.FC = () => {
+const TaskDetail: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
 
   const { error, isLoading } = useTaskDetails(taskId);
@@ -58,4 +58,4 @@ const TaskDetails: React.FC = () => {
   );
 };
 
-export default TaskDetails;
+export default TaskDetail;

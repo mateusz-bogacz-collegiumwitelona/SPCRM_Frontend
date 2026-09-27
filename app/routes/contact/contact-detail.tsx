@@ -13,7 +13,7 @@ import { PageLoader } from '~/components/layout/page-loader';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useContactDetails } from '~/hooks/use-contacts';
 
-export default function ContactDetails() {
+export default function ContactDetail() {
   const { contactId } = useParams<{ contactId: string }>();
 
   const { isLoading, error } = useContactDetails(contactId);

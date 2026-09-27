@@ -90,7 +90,6 @@ export function NavigationBar({
         { id: 'dashboard', label: 'Pulpit IT', icon: LayoutDashboard, href: '/dashboard' },
         { id: 'users', label: 'Użytkownicy', icon: Users, href: '/users' },
         { id: 'products', label: 'Produkty', icon: Package, href: '/products' },
-        { id: 'offers', label: 'Oferty', icon: FileText, href: '/offers' },
         { id: 'steel', label: 'Gatunki stali', icon: Layers, href: '/steel-grades' },
         { id: 'currencies', label: 'Waluty', icon: Coins, href: '/currencies' },
         { id: 'units', label: 'Jednostki miar', icon: Ruler, href: '/units' },

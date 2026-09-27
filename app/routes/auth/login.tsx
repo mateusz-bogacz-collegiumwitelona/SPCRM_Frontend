@@ -9,7 +9,7 @@ import type { FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/constants/error-mapper';
 import { useLoginMutation } from '~/hooks/use-auth';
 
-export default function Home() {
+export default function Login() {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);

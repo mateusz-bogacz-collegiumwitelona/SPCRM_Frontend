@@ -2,9 +2,9 @@ import React from 'react';
 import { AuthGuard } from '~/components/guards/auth-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import { useAuth } from '~/context/auth-context';
-import AdminDashboard from '~/routes/admin/dashboard';
-import ManagerDashboard from '~/routes/manager/dashboard';
-import UserDashboard from '~/routes/user/dashboard';
+import AdminDashboard from '~/components/dashboard/admin-dashboard';
+import ManagerDashboard from '~/components/dashboard/manger-dashboard';
+import UserDashboard from '~/components/dashboard/user-dashboard';
 import { ROLES } from '~/constants/roles';
 
 export default function DashboardRoute() {

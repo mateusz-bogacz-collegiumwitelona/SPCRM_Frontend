@@ -139,7 +139,7 @@ const CompanyMobileCard = ({ item }: { readonly item: GetCompanyResponse }) => (
   </div>
 );
 
-export default function Companies() {
+export default function CompanyList() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');

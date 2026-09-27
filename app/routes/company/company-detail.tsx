@@ -75,7 +75,7 @@ const renderMapContent = (
   );
 };
 
-export default function CompanyDetails() {
+export default function CompanyDetail() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
 
