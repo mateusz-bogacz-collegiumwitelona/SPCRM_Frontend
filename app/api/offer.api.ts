@@ -8,7 +8,7 @@ import type {
   PaginatedOfferProductsResponse,
   PaginatedOffersResponse,
   UpdateOfferProductItem,
-} from '~/interfaces/offer';
+} from '~/types/offer';
 
 export const offersApi = {
   getList: async (params: OfferListParams): Promise<PaginatedOffersResponse> => {

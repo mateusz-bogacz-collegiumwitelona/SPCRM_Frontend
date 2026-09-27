@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { Calendar } from '~/components/ui/calendar';
@@ -34,7 +34,7 @@ import {
   useSalesStatuses,
   useSalesTeamUsers,
 } from '~/hooks/use-deals';
-import type { UserSalesResponse } from '~/interfaces/deal';
+import type { UserSalesResponse } from '~/types/deal';
 import { pl } from 'date-fns/locale';
 
 const formatDate = (isoDate: string) => {

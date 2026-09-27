@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { EditCompanyRequest } from '~/interfaces/company';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { EditCompanyRequest } from '~/types/company';
 import { useCompanyEditDetails } from '~/hooks/use-companies';
 
 interface EditCompanyDialogProps {

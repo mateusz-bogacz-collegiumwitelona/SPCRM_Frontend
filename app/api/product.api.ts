@@ -10,7 +10,7 @@ import type {
   ProductListParams,
   ProductSearchResult,
   SteelGradeResponse,
-} from '~/interfaces/product';
+} from '~/types/product';
 
 export const productsApi = {
   getList: async (params: ProductListParams): Promise<PaginatedProductsResponse> => {

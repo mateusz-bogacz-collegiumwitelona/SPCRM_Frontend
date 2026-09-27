@@ -10,19 +10,19 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { AlertCircle, CalendarIcon, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { Calendar } from '~/components/ui/calendar';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
-import type { AddDealPayload, AddDealProductItem, ContactDealResponse } from '~/interfaces/deal';
+import type { AddDealPayload, AddDealProductItem, ContactDealResponse } from '~/types/deal';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 import { useContactsToDeal } from '~/hooks/use-contacts';
 import { useMailingProducts } from '~/hooks/use-mailing';
 import { useCreateDealMutation } from '~/hooks/use-deals';
-import type { CurrencySimple } from '~/interfaces/currency';
+import type { CurrencySimple } from '~/types/currency';
 
 interface ProductItemResponse {
   productId: string;

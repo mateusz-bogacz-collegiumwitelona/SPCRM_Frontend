@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
@@ -27,7 +27,7 @@ import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { formatCurrency } from '~/utils/data-formatters';
 import { DataTable } from '~/components/table/data-table';
 import { DownloadInvoicePdfDialog } from '~/components/invoice/dialogs/download-invoice-pdf-dialog';
-import type { InvoiceListResponse } from '~/interfaces/invoice';
+import type { InvoiceListResponse } from '~/types/invoice';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useInvoicesList } from '~/hooks/use-invoices';
 

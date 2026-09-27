@@ -9,9 +9,9 @@ import type {
   PaginatedSalesResponse,
   SaleDetailResponse,
   SalesListParams,
-} from '~/interfaces/deal';
-import type { AddTaskRequestPayload, DealTasksParams } from '~/interfaces/task';
-import type { Note } from '~/interfaces/note';
+} from '~/types/deal';
+import type { AddTaskRequestPayload, DealTasksParams } from '~/types/task';
+import type { Note } from '~/types/note';
 
 export const dealsApi = {
   getList: async (params: SalesListParams): Promise<PaginatedSalesResponse> => {

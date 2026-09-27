@@ -4,7 +4,7 @@ import type {
   AnalyticsChartMetricResponse,
   AnalyticsPeriod,
   EmployeeKpiSummaryResponse,
-} from '~/interfaces/analytics';
+} from '~/types/analytics';
 
 export const analyticsApi = {
   getEmployeeKpi: async (userId: string): Promise<EmployeeKpiSummaryResponse> => {

@@ -9,8 +9,8 @@ import {
   YAxis,
 } from 'recharts';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { AnalyticsChartMetricResponse, AnalyticsPeriod } from '~/interfaces/analytics';
-import type { CurrencyListResponse } from '~/interfaces/currency';
+import type { AnalyticsChartMetricResponse, AnalyticsPeriod } from '~/types/analytics';
+import type { CurrencyListResponse } from '~/types/currency';
 
 interface TeamRevenueChartProps {
   data: AnalyticsChartMetricResponse[];

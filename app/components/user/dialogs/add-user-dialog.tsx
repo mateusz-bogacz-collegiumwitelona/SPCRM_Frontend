@@ -10,8 +10,8 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getRoleConfig } from '~/utils/role-translator';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { AddUserRequestPayload } from '~/interfaces/user';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { AddUserRequestPayload } from '~/types/user';
 import { useUserRoles } from '~/hooks/use-users';
 
 interface AddUserDialogProps {

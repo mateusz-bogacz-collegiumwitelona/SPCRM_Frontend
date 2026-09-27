@@ -9,7 +9,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useDownloadInvoicePdfMutation } from '~/hooks/use-invoices';
 
 interface DownloadInvoicePdfDialogProps {

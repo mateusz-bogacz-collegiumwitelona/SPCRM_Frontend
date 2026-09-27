@@ -1,5 +1,5 @@
 import { api } from '~/api/api';
-import type { AddNotePayload, NoteEditData } from '~/interfaces/note';
+import type { AddNotePayload, NoteEditData } from '~/types/note';
 
 export const notesApi = {
   create: async (payload: AddNotePayload) => {

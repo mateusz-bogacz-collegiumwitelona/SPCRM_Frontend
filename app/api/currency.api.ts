@@ -5,7 +5,7 @@ import type {
   CurrencySimple,
   EditCurrencyRequestPayload,
   PaginatedCurrenciesResponse,
-} from '~/interfaces/currency';
+} from '~/types/currency';
 
 export const currenciesApi = {
   getList: async (params: CurrencyListParams): Promise<PaginatedCurrenciesResponse> => {

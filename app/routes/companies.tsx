@@ -10,7 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { format } from 'date-fns';
@@ -27,7 +27,7 @@ import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { AddCompanyDialog } from '~/components/companies/dialogs/add-company-dialog';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useCompaniesList, useCreateCompany } from '~/hooks/use-companies';
-import type { GetCompanyResponse } from '~/interfaces/company';
+import type { GetCompanyResponse } from '~/types/company';
 
 const formatDate = (isoDate: string) => {
   return new Date(isoDate).toLocaleDateString('pl-PL', {

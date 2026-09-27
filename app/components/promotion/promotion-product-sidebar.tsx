@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router';
 import { Package, Tag, User } from 'lucide-react';
-import type { PromotionDetailResponse } from '~/interfaces/promotion';
+import type { PromotionDetailResponse } from '~/types/promotion';
 
 export const PromotionProductSidebar: React.FC<{ readonly promotion: PromotionDetailResponse }> = ({
   promotion,

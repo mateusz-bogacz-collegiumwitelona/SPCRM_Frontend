@@ -1,6 +1,6 @@
-import type { UserContactItem } from '~/interfaces/contact';
-import type { UserDealItem } from '~/interfaces/deal';
-import type { UserTaskItem } from '~/interfaces/task';
+import type { UserContactItem } from '~/types/contact';
+import type { UserDealItem } from '~/types/deal';
+import type { UserTaskItem } from '~/types/task';
 
 export interface AddUserRequestPayload {
   firstName: string;

@@ -5,7 +5,7 @@ import type {
   LoginPayload,
   ResetPasswordPayload,
   User,
-} from '~/interfaces/auth';
+} from '~/types/auth';
 
 export const authApi = {
   login: async (payload: LoginPayload) => {

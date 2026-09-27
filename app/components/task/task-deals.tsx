@@ -3,7 +3,7 @@ import { AlertCircle, Briefcase, X } from 'lucide-react';
 import { Link } from 'react-router';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useTaskDeal } from '~/hooks/use-tasks';
 
 export const TaskDeals = ({ taskId }: { taskId: string }) => {

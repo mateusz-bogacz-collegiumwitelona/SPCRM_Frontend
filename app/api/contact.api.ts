@@ -6,8 +6,8 @@ import type {
   OwnerOption,
   PagedContactsToDealResult,
   PaginatedContactsResponse,
-} from '~/interfaces/contact';
-import type { AddTaskRequestPayload } from '~/interfaces/task';
+} from '~/types/contact';
+import type { AddTaskRequestPayload } from '~/types/task';
 import { api } from '~/api/api';
 
 export const contactsApi = {

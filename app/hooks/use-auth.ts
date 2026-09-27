@@ -1,13 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { authApi } from '~/api/auth.api';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type {
   ConfirmEmailChangePayload,
   ConfirmEmailPayload,
   LoginPayload,
   ResetPasswordPayload,
-} from '~/interfaces/auth';
+} from '~/types/auth';
 
 interface UseLoginOptions {
   onSuccess?: () => Promise<void> | void;

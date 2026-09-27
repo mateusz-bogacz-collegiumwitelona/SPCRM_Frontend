@@ -9,7 +9,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, UserCheck, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useDealAssignableContacts } from '~/hooks/use-deals';
 
 interface ChangeDealContactDialogProps {

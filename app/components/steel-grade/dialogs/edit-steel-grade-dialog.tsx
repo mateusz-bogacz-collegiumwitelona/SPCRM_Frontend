@@ -9,9 +9,9 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { SteelGradeFormFields } from '~/components/steel-grade/dialogs/steel-grade-form-fields';
-import type { EditSteelGradePayload, SteelGradeFormData } from '~/interfaces/steel-grade';
+import type { EditSteelGradePayload, SteelGradeFormData } from '~/types/steel-grade';
 
 interface EditSteelGradeDialogProps {
   readonly isOpen: boolean;

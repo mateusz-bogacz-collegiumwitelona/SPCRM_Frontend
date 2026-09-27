@@ -14,7 +14,7 @@ import { Input } from '~/components/ui/input';
 import { Calendar } from '~/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 import { cn } from '~/utils/utils';
 import { useAddInvoicePaymentMutation } from '~/hooks/use-invoices';

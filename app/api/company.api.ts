@@ -10,8 +10,8 @@ import type {
   PaginatedAddressesResponse,
   PaginatedCompaniesResponse,
   PaginatedDebtsResponse,
-} from '~/interfaces/company';
-import type { PaginatedCompanySalesResponse } from '~/interfaces/deal';
+} from '~/types/company';
+import type { PaginatedCompanySalesResponse } from '~/types/deal';
 
 export const companyApi = {
   getList: async (params: CompanyListParams): Promise<PaginatedCompaniesResponse> => {

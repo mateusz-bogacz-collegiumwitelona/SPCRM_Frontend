@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar, Layers, Scale } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import type { PromotionDetailResponse } from '~/interfaces/promotion';
+import type { PromotionDetailResponse } from '~/types/promotion';
 
 export const PromotionTermsCard: React.FC<{ readonly promotion: PromotionDetailResponse }> = ({
   promotion,

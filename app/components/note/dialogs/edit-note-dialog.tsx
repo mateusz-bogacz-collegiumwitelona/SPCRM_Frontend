@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { NoteEditData } from '~/interfaces/note';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { NoteEditData } from '~/types/note';
 
 interface NoteEditDialogProps {
   isOpen: boolean;

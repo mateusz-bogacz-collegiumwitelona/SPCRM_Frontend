@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import { ExtendTaskDueDateDialog } from '~/components/task/dialogs/extend-task-due-date-dialog';
@@ -25,7 +25,7 @@ import type {
   ChangeTaskStatusPayload,
   EditTaskRequestPayload,
   ExtendTaskDueDatePayload,
-} from '~/interfaces/task';
+} from '~/types/task';
 import { ROLES } from '~/constants/roles';
 import { useTaskDetails, useTaskDictionaries, useTaskInfoMutations } from '~/hooks/use-tasks';
 

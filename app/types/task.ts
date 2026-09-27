@@ -1,4 +1,4 @@
-import type { Contact } from '~/interfaces/contact';
+import type { Contact } from '~/types/contact';
 
 export interface Task {
   id: string;

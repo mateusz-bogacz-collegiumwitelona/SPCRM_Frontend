@@ -1,4 +1,4 @@
-import type { ProductDetailResponse } from '~/interfaces/product';
+import type { ProductDetailResponse } from '~/types/product';
 import { Banknote, Scale } from 'lucide-react';
 import { formatCurrency, formatWeight } from '~/utils/data-formatters';
 

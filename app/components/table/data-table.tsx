@@ -6,7 +6,7 @@ import {
   TableEmptyState,
   TableLoadingState,
 } from '~/components/table/table-state-views';
-import type { TablePaginationProps } from '~/interfaces/table';
+import type { TablePaginationProps } from '~/types/table';
 
 interface DataTableProps<T> {
   readonly table: ReactTableInstance<T>;

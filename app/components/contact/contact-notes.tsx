@@ -18,7 +18,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { ContactNoteDialog } from './dialogs/contact-note-dialog';
@@ -28,7 +28,7 @@ import { ActionGuard } from '~/lib/action-guard';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ContactNote } from '~/interfaces/contact';
+import type { ContactNote } from '~/types/contact';
 import { useAddNote, UseDeleteNote, useEditNote } from '~/hooks/use-notes';
 
 interface NoteTableMeta {

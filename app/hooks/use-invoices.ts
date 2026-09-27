@@ -5,7 +5,7 @@ import {
   type InvoicePaymentsParams,
   type InvoiceProductsParams,
 } from '~/api/invoice.api';
-import type { AddInvoicePaymentPayload, InvoiceListParams } from '~/interfaces/invoice';
+import type { AddInvoicePaymentPayload, InvoiceListParams } from '~/types/invoice';
 import { downloadBase64Pdf } from '~/utils/pdf-downloader';
 
 export const invoiceKeys = {

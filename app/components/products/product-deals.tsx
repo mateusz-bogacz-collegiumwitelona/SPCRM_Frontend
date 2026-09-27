@@ -8,9 +8,9 @@ import { api } from '~/api/api';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getStatusConfig } from '~/utils/sale-status';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { DataTable } from '~/components/table/data-table';
-import type { ProductDealItemResponse } from '~/interfaces/product';
+import type { ProductDealItemResponse } from '~/types/product';
 
 const columnHelper = createColumnHelper<ProductDealItemResponse>();
 

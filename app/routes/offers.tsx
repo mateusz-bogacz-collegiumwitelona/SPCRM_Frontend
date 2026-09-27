@@ -2,7 +2,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -27,7 +27,7 @@ import type { DateRange } from 'react-day-picker';
 import { formatOfferStatusLabel, getStatusBadge } from '~/utils/offer-status-helper';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useOfferCompaniesSimpleList, useOffersList, useOfferStatuses } from '~/hooks/use-offers';
-import type { OfferListResponse } from '~/interfaces/offer';
+import type { OfferListResponse } from '~/types/offer';
 
 const columnHelper = createColumnHelper<OfferListResponse>();
 

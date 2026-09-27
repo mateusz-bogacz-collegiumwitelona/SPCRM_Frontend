@@ -17,9 +17,9 @@ import { CompanyAddressDialog } from '~/components/companies/dialogs/company-add
 import { DeleteCompanyDialog } from '~/components/companies/dialogs/delete-company-dialog';
 import { DeleteCompanyAddressDialog } from '~/components/companies/dialogs/delete-company-address-dialog';
 import { ChangeCompanyOwnerDialog } from '~/components/companies/dialogs/change-company-owner-dialog';
-import type { ApiError } from '~/interfaces/api-error';
+import type { ApiError } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { AddressItemToEdit, CompanyAddress } from '~/interfaces/company';
+import type { AddressItemToEdit, CompanyAddress } from '~/types/company';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
 import {

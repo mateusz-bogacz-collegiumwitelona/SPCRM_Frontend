@@ -1,8 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { supportApi } from '~/api/support.api';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { SupportFormData } from '~/interfaces/support';
+import type { SupportFormData } from '~/types/support';
 
 interface UseSendSupportOptions {
   onSuccess?: () => void;

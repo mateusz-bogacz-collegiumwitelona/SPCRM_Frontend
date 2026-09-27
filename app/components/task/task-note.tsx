@@ -1,4 +1,4 @@
-import type { Note, NoteEditData } from '~/interfaces/note';
+import type { Note, NoteEditData } from '~/types/note';
 import { NotesSection } from '~/components/note/notes-section';
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { useEffect, useState } from 'react';
@@ -6,7 +6,7 @@ import { AlertCircle, X } from 'lucide-react';
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useTaskNotes, useTaskNotesMutations } from '~/hooks/use-notes';
 
 export const TaskNote = ({ taskId }: { taskId: string }) => {

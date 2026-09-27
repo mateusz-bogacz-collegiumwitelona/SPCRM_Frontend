@@ -5,7 +5,7 @@ import type {
   PaginatedUnitsResponse,
   UnitListParams,
   UnitOption,
-} from '~/interfaces/unit';
+} from '~/types/unit';
 
 export const unitsApi = {
   getList: async (params: UnitListParams): Promise<PaginatedUnitsResponse> => {

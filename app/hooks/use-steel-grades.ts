@@ -5,7 +5,7 @@ import type {
   DeleteSteelGradeParams,
   EditSteelGradePayload,
   SteelGradeListParams,
-} from '~/interfaces/steel-grade';
+} from '~/types/steel-grade';
 
 export const steelGradeKeys = {
   all: ['steel-grades'] as const,

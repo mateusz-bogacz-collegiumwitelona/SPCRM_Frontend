@@ -5,9 +5,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Building2, Calendar, CheckCircle2, Clock, FileText, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { DataTable } from '~/components/table/data-table';
-import type { ProductInvoiceItemResponse } from '~/interfaces/product';
+import type { ProductInvoiceItemResponse } from '~/types/product';
 import { useProductInvoices } from '~/hooks/use-products';
 
 interface ProductInvoicesTableMeta {

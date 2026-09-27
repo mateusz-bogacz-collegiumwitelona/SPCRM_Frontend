@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, CheckSquare, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { ChangeTaskStatusPayload, DictionaryItem } from '~/interfaces/task';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { ChangeTaskStatusPayload, DictionaryItem } from '~/types/task';
 import { useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface ChangeTaskStatusDialogProps {

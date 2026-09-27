@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { AddContactDetailRequest, AddContactRequest } from '~/interfaces/contact';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { AddContactDetailRequest, AddContactRequest } from '~/types/contact';
 import { useContactTypes } from '~/hooks/use-contacts';
 
 interface FormContactDetail extends AddContactDetailRequest {

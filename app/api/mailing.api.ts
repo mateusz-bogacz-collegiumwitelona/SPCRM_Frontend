@@ -3,7 +3,7 @@ import type {
   MailingClientResponse,
   MailingProductResponse,
   SendMailingPayload,
-} from '~/interfaces/mailing';
+} from '~/types/mailing';
 
 export const mailingApi = {
   getContacts: async (

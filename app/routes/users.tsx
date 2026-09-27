@@ -17,7 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
@@ -48,7 +48,7 @@ import type {
   UserToEdit,
   UserToLockout,
   UserToUnlock,
-} from '~/interfaces/user';
+} from '~/types/user';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 import { useUserMutations, useUserRoles, useUsersList } from '~/hooks/use-users';
 

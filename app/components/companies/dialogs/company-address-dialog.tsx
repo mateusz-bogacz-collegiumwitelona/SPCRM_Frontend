@@ -12,8 +12,8 @@ import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { AddressItemToEdit, CompanyAddressFormData } from '~/interfaces/company';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { AddressItemToEdit, CompanyAddressFormData } from '~/types/company';
 import { useCompanyAddressTypes } from '~/hooks/use-companies';
 
 interface EditCompanyAddressDialogProps {

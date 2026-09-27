@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SteelGradeFormData } from '~/interfaces/steel-grade';
+import type { SteelGradeFormData } from '~/types/steel-grade';
 
 interface SteelGradeFormFieldsProps {
   readonly formData: SteelGradeFormData;

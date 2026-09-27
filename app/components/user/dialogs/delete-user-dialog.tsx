@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { DeleteUserPayload, UserToDelete } from '~/interfaces/user';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { DeleteUserPayload, UserToDelete } from '~/types/user';
 import { useUsersSimpleList } from '~/hooks/use-users';
 
 interface DeleteUserDialogProps {

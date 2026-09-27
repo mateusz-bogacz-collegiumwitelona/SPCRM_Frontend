@@ -2,7 +2,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -35,7 +35,7 @@ import { HasRole } from '~/lib/has-role';
 import { AddProductStockDialog } from '~/components/products/dialogs/add-product-stock-dialog';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 
-import type { ProductResponse } from '~/interfaces/product';
+import type { ProductResponse } from '~/types/product';
 import {
   useProductCategories,
   useProductMutations,

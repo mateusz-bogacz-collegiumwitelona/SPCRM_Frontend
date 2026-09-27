@@ -9,7 +9,7 @@ import { DeactivatePromotionDialog } from '~/components/promotion/dialogs/deacti
 import { ActivatePromotionDialog } from '~/components/promotion/dialogs/activate-promotion-dialog';
 import { DeletePromotionDialog } from '~/components/promotion/dialogs/delete-promotion-dialog';
 import { EditPromotionDialog } from '~/components/promotion/dialogs/edit-promotion-dialog';
-import type { PromotionDetailResponse } from '~/interfaces/promotion';
+import type { PromotionDetailResponse } from '~/types/promotion';
 import { MANAGEMENT_ROLES } from '~/constants/roles';
 import { usePromotionHeaderMutations } from '~/hooks/use-promotions';
 

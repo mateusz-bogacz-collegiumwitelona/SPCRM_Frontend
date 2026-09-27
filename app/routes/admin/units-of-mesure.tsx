@@ -3,7 +3,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus, X } from 'lucide-react';
 import { mergeById } from '~/utils/table-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AddUnitDialog } from '~/components/unit/dialogs/add-unit-dialog';
 import { EditUnitDialog } from '~/components/unit/dialogs/edit-unit-dialog';
 import { AuthGuard } from '~/lib/auth-guard';
@@ -13,7 +13,7 @@ import { DataTable } from '~/components/table/data-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { ROLES } from '~/constants/roles';
 import { useUnitMutations, useUnitsList } from '~/hooks/use-units';
-import type { UnitListResponse } from '~/interfaces/unit';
+import type { UnitListResponse } from '~/types/unit';
 
 interface UnitTableMeta {
   onEdit: (unit: UnitListResponse) => void;

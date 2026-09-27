@@ -10,8 +10,8 @@ import {
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { DictionaryItem, EditTaskRequestPayload } from '~/interfaces/task';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { DictionaryItem, EditTaskRequestPayload } from '~/types/task';
 import { useTaskDetails, useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface EditTaskDialogProps {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '~/context/auth-context';
 import { KpiCards } from '~/components/analytics/kpi-cards';
-import type { Task } from '~/interfaces/task';
+import type { Task } from '~/types/task';
 import { TaskDetailDialog } from '~/components/task/dialogs/task-detail-dialog';
 import { getStatusConfig } from '~/utils/sale-status';
 import { formatCurrency } from '~/utils/data-formatters';

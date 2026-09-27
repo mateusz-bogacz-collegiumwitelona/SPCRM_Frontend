@@ -6,7 +6,7 @@ import type {
   DealTasksParams,
   EditTaskRequestPayload,
   ExtendTaskDueDatePayload,
-} from '~/interfaces/task';
+} from '~/types/task';
 import { tasksApi } from '~/api/task.api';
 import { contactsApi } from '~/api/contact.api';
 import { dealsApi } from '~/api/deal.api';

@@ -1,8 +1,8 @@
 import React from 'react';
-import type { SteelGradeOption } from '~/interfaces/steel-grade';
-import type { UnitOption } from '~/interfaces/unit';
-import type { CurrencyOption } from '~/interfaces/currency';
-import type { ProductFormData } from '~/interfaces/product';
+import type { SteelGradeOption } from '~/types/steel-grade';
+import type { UnitOption } from '~/types/unit';
+import type { CurrencyOption } from '~/types/currency';
+import type { ProductFormData } from '~/types/product';
 import { useProductCategories, useProductSteelGrades } from '~/hooks/use-products';
 import { useUnitsSimpleList } from '~/hooks/use-units';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';

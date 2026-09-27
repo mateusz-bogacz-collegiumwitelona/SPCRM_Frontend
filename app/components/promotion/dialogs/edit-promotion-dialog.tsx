@@ -9,7 +9,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   buildBasePromotionPayload,
   mapInitialDataToSharedForm,
@@ -21,7 +21,7 @@ import type {
   EditPromotionInitialData,
   EditPromotionRequest,
   PromotionSharedFormData,
-} from '~/interfaces/promotion';
+} from '~/types/promotion';
 
 interface EditPromotionDialogProps {
   readonly isOpen: boolean;

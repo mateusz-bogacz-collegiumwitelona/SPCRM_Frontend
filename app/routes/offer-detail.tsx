@@ -13,7 +13,7 @@ import { EditOfferProductsDialog } from '~/components/offer/dialogs/edit-offer-p
 import { OfferProductsTable } from '~/components/offer/offer-product-table';
 import { ResendOfferEmailDialog } from '~/components/offer/dialogs/resend-offer-email-dialog';
 import { DeleteOfferDialog } from '~/components/offer/dialogs/delete-offer-dialog';
-import type { EditableProductItem, OfferProductResponse } from '~/interfaces/offer';
+import type { EditableProductItem, OfferProductResponse } from '~/types/offer';
 import NotFound from '~/routes/not-found';
 import { PageLoader } from '~/components/layout/page-loader';
 import { RoleGuard } from '~/lib/role-guard';

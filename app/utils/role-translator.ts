@@ -1,4 +1,4 @@
-import type { RoleConfig } from '~/interfaces/user';
+import type { RoleConfig } from '~/types/user';
 
 export const translateRole = (rawRole?: string | null): string => {
   const role = (rawRole || '').toLowerCase();

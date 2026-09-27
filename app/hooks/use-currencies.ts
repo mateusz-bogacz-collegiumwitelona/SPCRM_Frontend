@@ -4,7 +4,7 @@ import type {
   AddCurrencyRequestPayload,
   CurrencyListParams,
   EditCurrencyRequestPayload,
-} from '~/interfaces/currency';
+} from '~/types/currency';
 
 export const currencyKeys = {
   all: ['currencies'] as const,

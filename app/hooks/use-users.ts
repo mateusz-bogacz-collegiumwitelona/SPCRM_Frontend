@@ -12,7 +12,7 @@ import type {
   UserListParams,
   UserSalesParams,
   UserTasksParams,
-} from '~/interfaces/user';
+} from '~/types/user';
 
 export const userKeys = {
   all: ['users'] as const,

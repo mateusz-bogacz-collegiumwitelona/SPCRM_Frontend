@@ -5,7 +5,7 @@ import type {
   EditSteelGradePayload,
   PaginatedSteelGradesResponse,
   SteelGradeListParams,
-} from '~/interfaces/steel-grade';
+} from '~/types/steel-grade';
 
 export interface SteelGradeProductItem {
   id: string;

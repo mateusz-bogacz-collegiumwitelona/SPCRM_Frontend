@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, CheckCircle2, Loader2, Unlock, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { UserToUnlock } from '~/interfaces/user';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { UserToUnlock } from '~/types/user';
 
 interface UnlockUserDialogProps {
   readonly user: UserToUnlock | null;

@@ -9,8 +9,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, UserCog, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { EditUserRequestPayload, UserToEdit } from '~/interfaces/user';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { EditUserRequestPayload, UserToEdit } from '~/types/user';
 
 interface EditUserDialogProps {
   readonly user: UserToEdit | null;

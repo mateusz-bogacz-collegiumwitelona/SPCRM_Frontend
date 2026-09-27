@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
 import { RoleGuard } from '~/lib/role-guard';
@@ -29,7 +29,7 @@ import { EditSteelGradeDialog } from '~/components/steel-grade/dialogs/edit-stee
 import { AddSteelGradeDialog } from '~/components/steel-grade/dialogs/add-steel-grade-dialog';
 import { ROLES } from '~/constants/roles';
 import { useSteelGradeMutations, useSteelGradesList } from '~/hooks/use-steel-grades';
-import type { SteelGradeListResponse } from '~/interfaces/steel-grade';
+import type { SteelGradeListResponse } from '~/types/steel-grade';
 
 interface SteelGradeTableMeta {
   onEdit: (grade: SteelGradeListResponse) => void;

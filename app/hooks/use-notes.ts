@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '~/api/note.api';
-import type { AddNotePayload, NoteEditData } from '~/interfaces/note';
+import type { AddNotePayload, NoteEditData } from '~/types/note';
 import { dealsApi } from '~/api/deal.api';
 import { tasksApi } from '~/api/task.api';
 

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import {
@@ -25,11 +25,7 @@ import {
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
-import type {
-  AddTaskRequestPayload,
-  EditTaskRequestPayload,
-  SaleTaskResponse,
-} from '~/interfaces/task';
+import type { AddTaskRequestPayload, EditTaskRequestPayload, SaleTaskResponse } from '~/types/task';
 import { useDealTaskMutations, useDealTasks, useTaskDictionaries } from '~/hooks/use-tasks';
 
 export const DealTasks = ({ dealId }: { dealId: string }) => {

@@ -7,8 +7,8 @@ import type {
   InvoicePaymentSummaryResponse,
   InvoiceProductsListResponse,
   PaginatedInvoicesResponse,
-} from '~/interfaces/invoice';
-import type { PdfFilePayload } from '~/interfaces/pdf';
+} from '~/types/invoice';
+import type { PdfFilePayload } from '~/types/pdf';
 
 export interface InvoicePaymentsParams {
   pageNumber: number;

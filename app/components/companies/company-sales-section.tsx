@@ -9,11 +9,11 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
 import { useCompanySales } from '~/hooks/use-companies';
-import type { CompanySaleItem } from '~/interfaces/deal';
+import type { CompanySaleItem } from '~/types/deal';
 
 const StatusBadge = ({ status }: { status: string }) => {
   const config = getStatusConfig(status);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { PromotionDetailResponse } from '~/interfaces/promotion';
+import type { PromotionDetailResponse } from '~/types/promotion';
 
 const getDiscountTypeLabel = (promotion: PromotionDetailResponse): string => {
   if (typeof promotion.discountPercentage === 'number') {

@@ -1,7 +1,7 @@
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -29,7 +29,7 @@ import { formatDateRangeLabel, mergeById } from '~/utils/table-helpers';
 import { AddPromotionDialog } from '~/components/promotion/dialogs/add-promotion-dialog';
 import { MANAGEMENT_ROLES, STANDARD_ROLES } from '~/constants/roles';
 import { useCreatePromotion, usePromotionsList } from '~/hooks/use-promotions';
-import type { PromotionResponse } from '~/interfaces/promotion';
+import type { PromotionResponse } from '~/types/promotion';
 
 const formatDiscountOrPrice = (promo: PromotionResponse): React.ReactNode => {
   if (typeof promo.discountPercentage === 'number') {

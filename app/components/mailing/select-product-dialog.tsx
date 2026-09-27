@@ -3,7 +3,7 @@ import { Loader2, Plus, Search, X } from 'lucide-react';
 import { Input } from '~/components/ui/input';
 import { formatCurrency } from '~/utils/data-formatters';
 import { useMailingProducts } from '~/hooks/use-mailing';
-import type { MailingProductResponse } from '~/interfaces/mailing';
+import type { MailingProductResponse } from '~/types/mailing';
 
 interface SelectProductDialogProps {
   readonly isOpen: boolean;

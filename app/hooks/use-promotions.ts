@@ -6,7 +6,7 @@ import type {
   AddPromotionRequest,
   EditPromotionRequest,
   PromotionListParams,
-} from '~/interfaces/promotion';
+} from '~/types/promotion';
 
 export const promotionKeys = {
   all: ['promotions'] as const,

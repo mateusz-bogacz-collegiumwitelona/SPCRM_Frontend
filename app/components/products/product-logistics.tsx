@@ -1,4 +1,4 @@
-import type { ProductDetailResponse } from '~/interfaces/product';
+import type { ProductDetailResponse } from '~/types/product';
 import { Box } from 'lucide-react';
 import React from 'react';
 

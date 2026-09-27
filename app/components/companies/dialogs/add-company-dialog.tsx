@@ -9,12 +9,12 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, MapPin, MapPinned, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { OSMMapClientProps } from '~/components/osm-map-client';
 import { forwardGeocode, reverseGeocode } from '~/utils/geocoding';
 
 import { formatAddressType, getAddressTypeBadgeClass } from '~/utils/address-helpers';
-import type { AddCompanyAddressRequest, AddCompanyRequest } from '~/interfaces/company';
+import type { AddCompanyAddressRequest, AddCompanyRequest } from '~/types/company';
 import { useCompanyAddressTypes } from '~/hooks/use-companies';
 
 interface FormAddressItem extends AddCompanyAddressRequest {

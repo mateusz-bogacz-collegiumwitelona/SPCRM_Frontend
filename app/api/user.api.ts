@@ -18,8 +18,8 @@ import type {
   UserSalesParams,
   UserSimpleListResponse,
   UserTasksParams,
-} from '~/interfaces/user';
-import type { TeamUser } from '~/interfaces/deal';
+} from '~/types/user';
+import type { TeamUser } from '~/types/deal';
 
 export const usersApi = {
   getList: async (params: UserListParams): Promise<PaginatedUsersResponse> => {

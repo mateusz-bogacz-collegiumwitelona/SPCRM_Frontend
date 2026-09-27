@@ -1,10 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unitsApi } from '~/api/unit.api';
-import type {
-  AddUnitRequestPayload,
-  EditUnitRequestPayload,
-  UnitListParams,
-} from '~/interfaces/unit';
+import type { AddUnitRequestPayload, EditUnitRequestPayload, UnitListParams } from '~/types/unit';
 
 export const unitKeys = {
   all: ['units-of-measure'] as const,

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '~/api/analytics.api';
-import type { AnalyticsPeriod } from '~/interfaces/analytics';
+import type { AnalyticsPeriod } from '~/types/analytics';
 
 export const analyticsKeys = {
   all: ['analytics'] as const,

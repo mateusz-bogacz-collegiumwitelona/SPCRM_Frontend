@@ -1,4 +1,4 @@
-import type { ContactDealResponse } from '~/interfaces/deal';
+import type { ContactDealResponse } from '~/types/deal';
 
 export interface Contact {
   type: string;

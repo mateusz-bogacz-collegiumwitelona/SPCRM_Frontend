@@ -1,5 +1,5 @@
 import { api } from '~/api/api';
-import type { CompanyMapData } from '~/interfaces/map';
+import type { CompanyMapData } from '~/types/map';
 
 interface MapApiResponse {
   success: boolean;

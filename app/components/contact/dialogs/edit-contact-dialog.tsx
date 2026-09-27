@@ -9,12 +9,12 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import type {
   ContactDetailResponse,
   EditContactDetailRequest,
   EditContactRequest,
-} from '~/interfaces/contact';
+} from '~/types/contact';
 import { useContactEditDetails, useContactTypes } from '~/hooks/use-contacts';
 
 interface EditContactDialogProps {

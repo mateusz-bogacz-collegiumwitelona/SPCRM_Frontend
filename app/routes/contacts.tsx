@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { MainLayout } from '~/components/layout/main-layout';
 import { Link } from 'react-router';
@@ -38,8 +38,8 @@ import {
   useContactMutations,
   useContactsList,
 } from '~/hooks/use-contacts';
-import type { ContactResponse } from '~/interfaces/contact';
-import type { ContactListTableMeta } from '~/interfaces/company';
+import type { ContactResponse } from '~/types/contact';
+import type { ContactListTableMeta } from '~/types/company';
 
 const columnHelper = createColumnHelper<ContactResponse>();
 

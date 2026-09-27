@@ -23,8 +23,8 @@ import { Button } from '~/components/ui/button';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getStatusConfig } from '~/utils/sale-status';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { UserDealItem } from '~/interfaces/deal';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { UserDealItem } from '~/types/deal';
 import { useUserSales } from '~/hooks/use-users';
 import { useSalesStatuses } from '~/hooks/use-deals';
 

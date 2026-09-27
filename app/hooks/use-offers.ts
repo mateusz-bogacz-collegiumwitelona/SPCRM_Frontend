@@ -1,11 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { DateRange } from 'react-day-picker';
 import { offersApi } from '~/api/offer.api';
-import type {
-  OfferListParams,
-  OfferProductsParams,
-  UpdateOfferProductItem,
-} from '~/interfaces/offer';
+import type { OfferListParams, OfferProductsParams, UpdateOfferProductItem } from '~/types/offer';
 
 export const offerKeys = {
   all: ['offers'] as const,

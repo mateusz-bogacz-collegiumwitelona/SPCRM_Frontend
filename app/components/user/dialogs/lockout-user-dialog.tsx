@@ -14,8 +14,8 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { SetLockoutPayload, UserToLockout } from '~/interfaces/user';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { SetLockoutPayload, UserToLockout } from '~/types/user';
 
 interface LockoutUserDialogProps {
   readonly user: UserToLockout | null;

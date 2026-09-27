@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle, Building2, Calendar, Clock, User, X } from 'lucide-react';
 import { getStatusBadge } from '~/utils/offer-status-helper';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 
 interface OfferDetailHeaderProps {
   isLoading: boolean;

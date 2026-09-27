@@ -6,8 +6,8 @@ import type {
   AddCompanyRequest,
   CompanyAddressFormData,
   EditCompanyRequest,
-} from '~/interfaces/company';
-import type { AddContactRequest, EditContactRequest } from '~/interfaces/contact';
+} from '~/types/company';
+import type { AddContactRequest, EditContactRequest } from '~/types/contact';
 import { contactsApi } from '~/api/contact.api';
 
 export const companyKeys = {

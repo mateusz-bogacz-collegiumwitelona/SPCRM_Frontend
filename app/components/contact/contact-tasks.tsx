@@ -21,7 +21,7 @@ import {
   User,
   X,
 } from 'lucide-react';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import {
   getTaskPriorityBadgeClass,
@@ -32,7 +32,7 @@ import {
 import { AddTaskDialog } from '~/components/task/dialogs/add-task-dialog';
 import { EditTaskDialog } from '~/components/task/dialogs/edit-task-dialog';
 import { DeleteTaskDialog } from '~/components/task/dialogs/delete-task-dialog';
-import type { ContactTaskItem } from '~/interfaces/contact';
+import type { ContactTaskItem } from '~/types/contact';
 import { useContactTaskMutations, useContactTasks } from '~/hooks/use-tasks';
 
 interface TaskTableMeta {

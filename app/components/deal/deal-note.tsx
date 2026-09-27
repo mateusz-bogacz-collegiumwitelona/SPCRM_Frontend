@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { NoteEditData } from '~/interfaces/note';
+import type { NoteEditData } from '~/types/note';
 import { NotesSection } from '~/components/note/notes-section';
 import { AddNoteDialog } from '~/components/note/dialogs/add-note-dialog';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { AlertCircle, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useDealNotes, useDealNotesMutations } from '~/hooks/use-notes';
 
 export const DealNote = ({ dealId }: { dealId: string }) => {

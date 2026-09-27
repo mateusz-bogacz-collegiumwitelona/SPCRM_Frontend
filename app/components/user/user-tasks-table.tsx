@@ -30,8 +30,8 @@ import {
   resolveTaskStatusLabel,
 } from '~/utils/task-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { DictionaryItem, UserTaskItem } from '~/interfaces/task';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { DictionaryItem, UserTaskItem } from '~/types/task';
 import { useTaskDictionaries } from '~/hooks/use-tasks';
 import { useUserTasks } from '~/hooks/use-users';
 

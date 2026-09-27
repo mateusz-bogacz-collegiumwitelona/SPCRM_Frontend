@@ -1,8 +1,8 @@
 import React from 'react';
 import { getIcon, getTypePrefix } from '~/utils/contact-helpers';
-import { type Contact } from '~/interfaces/contact';
+import { type Contact } from '~/types/contact';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AlertCircle, X } from 'lucide-react';
 import { useContactWays } from '~/hooks/use-contacts';
 

@@ -2,11 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Calendar, Hash, Receipt, User, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { TablePagination } from '~/components/table/table-pagination';
 import { TableEmptyState, TableLoadingState } from '~/components/table/table-state-views';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { InvoicePaymentListResponse } from '~/interfaces/invoice';
+import type { InvoicePaymentListResponse } from '~/types/invoice';
 import { useInvoicePayments } from '~/hooks/use-invoices';
 
 export const InvoicePaymentsList = ({ invoiceId }: { readonly invoiceId: string }) => {

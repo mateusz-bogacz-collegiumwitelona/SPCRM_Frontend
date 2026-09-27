@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
@@ -22,7 +22,7 @@ import { AddDealProductDialog } from '~/components/deal/dialogs/add-deal-product
 import { DeleteDealProductDialog } from '~/components/deal/dialogs/delete-deal-product-dialog';
 import { EditDealProductDialog } from '~/components/deal/dialogs/edit-deal-product-dialog';
 import { useDealProducts, useDeleteDealProductMutation } from '~/hooks/use-deals';
-import type { DealProductResponse } from '~/interfaces/deal';
+import type { DealProductResponse } from '~/types/deal';
 
 interface ProductTableMeta {
   onEdit: (product: DealProductResponse) => void;

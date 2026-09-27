@@ -9,10 +9,10 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Edit3, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { EditableProductItem } from '~/interfaces/offer';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { EditableProductItem } from '~/types/offer';
 import { useProductSearch } from '~/hooks/use-products';
-import type { ProductSearchResult } from '~/interfaces/product';
+import type { ProductSearchResult } from '~/types/product';
 
 interface EditOfferProductsDialogProps {
   isOpen: boolean;

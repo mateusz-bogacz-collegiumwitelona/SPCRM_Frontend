@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import type { ProductDetailResponse } from '~/interfaces/product';
+import type { ProductDetailResponse } from '~/types/product';
 import { Link } from 'react-router';
 
 export const ProductHeader = ({ product }: { product: ProductDetailResponse }) => {

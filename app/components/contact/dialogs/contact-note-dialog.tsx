@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import type { ContactNote } from '~/interfaces/contact';
+import type { ContactNote } from '~/types/contact';
 
 interface ContactNoteDialogProps {
   note: ContactNote | null;

@@ -15,8 +15,8 @@ import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { FALLBACK_TASK_PRIORITY_LABELS } from '~/utils/task-helpers';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { AddTaskRequestPayload, DictionaryItem } from '~/interfaces/task';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { AddTaskRequestPayload, DictionaryItem } from '~/types/task';
 import { useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface AddTaskDialogProps {

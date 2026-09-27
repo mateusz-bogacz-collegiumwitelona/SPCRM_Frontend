@@ -6,13 +6,13 @@ import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
-import type { CurrencyOption } from '~/interfaces/currency';
-import type { ContactOption } from '~/interfaces/contact';
+import type { CurrencyOption } from '~/types/currency';
+import type { ContactOption } from '~/types/contact';
 import type {
   EditPromotionInitialData,
   PromotionPricingPayloadResult,
   PromotionSharedFormData,
-} from '~/interfaces/promotion';
+} from '~/types/promotion';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 import { useMailingContacts } from '~/hooks/use-mailing';
 

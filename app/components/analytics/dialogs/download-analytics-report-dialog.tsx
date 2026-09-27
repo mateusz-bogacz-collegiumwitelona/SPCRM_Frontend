@@ -10,7 +10,7 @@ import {
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { AnalyticsPeriod } from '~/components/analytics/revenue-chart';
 import { downloadBase64Pdf } from '~/utils/pdf-downloader';
 

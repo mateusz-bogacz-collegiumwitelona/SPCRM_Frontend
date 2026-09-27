@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { SteelGradeFormFields } from '~/components/steel-grade/dialogs/steel-grade-form-fields';
-import type { AddSteelGradePayload, SteelGradeFormData } from '~/interfaces/steel-grade';
+import type { AddSteelGradePayload, SteelGradeFormData } from '~/types/steel-grade';
 
 interface AddSteelGradeDialogProps {
   readonly isOpen: boolean;

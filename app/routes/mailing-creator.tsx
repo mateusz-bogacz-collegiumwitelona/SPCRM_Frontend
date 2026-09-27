@@ -5,13 +5,13 @@ import { Input } from '~/components/ui/input';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
 import { RoleGuard } from '~/lib/role-guard';
-import type { FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { formatCurrency } from '~/utils/data-formatters';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useMailingContacts, useMailingCurrencies, useSendMailing } from '~/hooks/use-mailing';
 import { SelectProductDialog } from '~/components/mailing/select-product-dialog';
-import type { MailingProductResponse } from '~/interfaces/mailing';
+import type { MailingProductResponse } from '~/types/mailing';
 
 interface SelectedProduct {
   productId: string;

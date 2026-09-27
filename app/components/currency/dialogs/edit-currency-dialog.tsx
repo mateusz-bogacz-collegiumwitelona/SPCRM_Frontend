@@ -9,8 +9,8 @@ import {
 } from '~/components/ui/dialog';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { EditCurrencyRequestPayload } from '~/interfaces/currency';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { EditCurrencyRequestPayload } from '~/types/currency';
 
 interface EditCurrencyDialogProps {
   readonly currency: {

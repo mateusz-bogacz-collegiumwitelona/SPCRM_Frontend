@@ -5,7 +5,7 @@ import type {
   PaginatedPromotionsResponse,
   PromotionDetailResponse,
   PromotionListParams,
-} from '~/interfaces/promotion';
+} from '~/types/promotion';
 
 export const promotionsApi = {
   getList: async (params: PromotionListParams): Promise<PaginatedPromotionsResponse> => {

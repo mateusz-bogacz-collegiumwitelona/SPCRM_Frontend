@@ -2,10 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AlertCircle, PackageOpen, X } from 'lucide-react';
 import { DataTable } from '~/components/table/data-table';
-import type { InvoiceProductsListResponse } from '~/interfaces/invoice';
+import type { InvoiceProductsListResponse } from '~/types/invoice';
 import { useInvoiceProducts } from '~/hooks/use-invoices';
 
 interface InvoiceProductsTableMeta {

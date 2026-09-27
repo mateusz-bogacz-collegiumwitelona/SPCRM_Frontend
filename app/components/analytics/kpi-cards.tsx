@@ -11,7 +11,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
-import type { CurrencyAmountResponse, EmployeeKpiSummaryResponse } from '~/interfaces/analytics';
+import type { CurrencyAmountResponse, EmployeeKpiSummaryResponse } from '~/types/analytics';
 
 interface KpiSummaryCardsProps {
   data: EmployeeKpiSummaryResponse;

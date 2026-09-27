@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { UserContactItem } from '~/interfaces/contact';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { UserContactItem } from '~/types/contact';
 import { useUserContacts } from '~/hooks/use-users';
 
 const PAGE_SIZE = 5;

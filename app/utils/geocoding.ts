@@ -1,4 +1,4 @@
-import type { GeocodeResult } from '~/interfaces/map';
+import type { GeocodeResult } from '~/types/map';
 
 interface NominatimAddress {
   road?: string;

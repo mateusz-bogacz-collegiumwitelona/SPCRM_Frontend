@@ -4,7 +4,7 @@ import { AlertCircle, CheckCircle2, Loader2, MailCheck } from 'lucide-react';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Navbar } from '~/components/layout/unloged-navbar';
-import type { FormErrorState } from '~/interfaces/api-error';
+import type { FormErrorState } from '~/types/api-error';
 import { useConfirmEmailChangeMutation } from '~/hooks/use-auth';
 
 export default function ConfirmEmailChangePage() {

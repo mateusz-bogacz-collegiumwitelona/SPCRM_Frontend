@@ -9,7 +9,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, AlertTriangle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 
 interface DeactivatePromotionDialogProps {
   isOpen: boolean;

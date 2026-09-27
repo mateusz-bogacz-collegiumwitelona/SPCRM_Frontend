@@ -8,9 +8,9 @@ import type {
   TaskContactResponse,
   TaskDealResponse,
   TaskDictionariesResponse,
-} from '~/interfaces/task';
+} from '~/types/task';
 import { api } from '~/api/api';
-import type { Note } from '~/interfaces/note';
+import type { Note } from '~/types/note';
 
 export const tasksApi = {
   getCalendarTasks: async (params: CalendarTasksParams): Promise<Task[]> => {

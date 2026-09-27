@@ -7,11 +7,11 @@ import {
 } from '@tanstack/react-table';
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { AlertCircle, X } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 import { useCompanyDebts, useCompanyDebtSummary } from '~/hooks/use-companies';
-import type { Debt, DebtSummary } from '~/interfaces/company';
+import type { Debt, DebtSummary } from '~/types/company';
 
 const columnHelper = createColumnHelper<Debt>();
 const columns = [

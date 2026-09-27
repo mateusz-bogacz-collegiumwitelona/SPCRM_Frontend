@@ -10,7 +10,7 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { AlertCircle, FileText, Loader2, RefreshCw, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getStatusConfig } from '~/utils/sale-status';
 import { useChangeDealStatusMutation, useSalesStatuses } from '~/hooks/use-deals';
 

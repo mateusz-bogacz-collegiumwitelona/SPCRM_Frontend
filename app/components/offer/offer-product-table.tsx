@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '~/utils/data-formatters';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { OfferProductResponse } from '~/interfaces/offer';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { OfferProductResponse } from '~/types/offer';
 import { useOfferProducts } from '~/hooks/use-offers';
 import { mergeById } from '~/utils/table-helpers';
 

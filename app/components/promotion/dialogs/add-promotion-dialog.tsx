@@ -11,7 +11,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   buildBasePromotionPayload,
   defaultPromotionSharedState,
@@ -19,7 +19,7 @@ import {
   resolvePromotionPricingPayload,
   usePromotionDictionaries,
 } from '~/components/promotion/dialogs/promotion-form-shared';
-import type { AddPromotionRequest, PromotionSharedFormData } from '~/interfaces/promotion';
+import type { AddPromotionRequest, PromotionSharedFormData } from '~/types/promotion';
 
 interface ProductOption {
   productId: string;

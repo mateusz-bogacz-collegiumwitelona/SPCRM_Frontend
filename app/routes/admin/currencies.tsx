@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { AlertCircle, ArrowDownWideNarrow, ArrowUpNarrowWide, Edit2, Plus, X } from 'lucide-react';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { Button } from '~/components/ui/button';
 import { MainLayout } from '~/components/layout/main-layout';
@@ -13,7 +13,7 @@ import { AddCurrencyDialog } from '~/components/currency/dialogs/add-currency-di
 import { EditCurrencyDialog } from '~/components/currency/dialogs/edit-currency-dialog';
 import { ROLES } from '~/constants/roles';
 import { useCurrenciesList, useCurrencyMutations } from '~/hooks/use-currencies';
-import type { CurrencyListResponse } from '~/interfaces/currency';
+import type { CurrencyListResponse } from '~/types/currency';
 
 interface CurrencyTableMeta {
   onEdit: (currency: { id: string; name: string; code: string; decimalPlace: number }) => void;

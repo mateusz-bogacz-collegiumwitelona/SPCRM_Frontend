@@ -14,8 +14,8 @@ import { addDays, format, isBefore, setHours, setMinutes } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
-import type { ExtendTaskDueDatePayload } from '~/interfaces/task';
+import type { ApiError, FormErrorState } from '~/types/api-error';
+import type { ExtendTaskDueDatePayload } from '~/types/task';
 
 interface ExtendTaskDueDateDialogProps {
   isOpen: boolean;

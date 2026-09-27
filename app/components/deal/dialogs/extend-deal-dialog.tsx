@@ -14,7 +14,7 @@ import { addDays, endOfDay, format, isBefore, isSameDay, startOfDay } from 'date
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 
 interface ExtendDealDialogProps {
   readonly isOpen: boolean;

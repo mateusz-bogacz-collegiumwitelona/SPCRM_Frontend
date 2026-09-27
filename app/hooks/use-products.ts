@@ -5,7 +5,7 @@ import type {
   EditProductRequest,
   ProductInvoicesParams,
   ProductListParams,
-} from '~/interfaces/product';
+} from '~/types/product';
 
 export const productKeys = {
   all: ['products'] as const,

@@ -9,9 +9,9 @@ import {
 } from '~/components/analytics/revenue-chart';
 import { AlertCircle, FileText, Loader2, RefreshCw, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { LeaderboardItemResponse, TeamKpiSummaryResponse } from '~/interfaces/analytics';
+import type { LeaderboardItemResponse, TeamKpiSummaryResponse } from '~/types/analytics';
 import { LeaderboardTable } from '~/components/analytics/leaderboard-table';
 import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
 import { KpiCards } from '~/components/analytics/kpi-cards';

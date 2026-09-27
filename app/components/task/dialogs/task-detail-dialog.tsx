@@ -1,4 +1,4 @@
-import type { DictionaryItem, Task } from '~/interfaces/task';
+import type { DictionaryItem, Task } from '~/types/task';
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { getTaskPriorityBadgeClass, getTaskStatusBadgeClass } from '~/utils/task-helpers';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { useChangeTaskStatusMutation, useTaskDictionaries } from '~/hooks/use-tasks';
 
 interface TaskDialogProps {

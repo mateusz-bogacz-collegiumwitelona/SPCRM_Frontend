@@ -10,11 +10,11 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { AlertCircle, Loader2, Package, Search, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { formatCurrency } from '~/utils/data-formatters';
 import { useMailingProducts } from '~/hooks/use-mailing';
 import { useAddProductToDealMutation } from '~/hooks/use-deals';
-import type { MailingProductResponse } from '~/interfaces/mailing';
+import type { MailingProductResponse } from '~/types/mailing';
 
 interface AddDealProductDialogProps {
   readonly isOpen: boolean;

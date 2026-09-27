@@ -2,12 +2,12 @@ import { type ComponentType, type SyntheticEvent, useEffect, useMemo, useState }
 import { useSearchParams } from 'react-router';
 import { AlertCircle, MapPinned, Search, X } from 'lucide-react';
 import { useAuth } from '~/context/auth-context';
-import type { ApiError, FormErrorState } from '~/interfaces/api-error';
+import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
 import { RoleGuard } from '~/lib/role-guard';
 import { MainLayout } from '~/components/layout/main-layout';
 import { AuthGuard } from '~/lib/auth-guard';
-import type { CompanyMapData } from '~/interfaces/map';
+import type { CompanyMapData } from '~/types/map';
 import { STANDARD_ROLES } from '~/constants/roles';
 import { useMapCompanies } from '~/hooks/use-map';
 

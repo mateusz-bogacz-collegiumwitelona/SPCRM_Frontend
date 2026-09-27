@@ -1,5 +1,5 @@
 import { api } from '~/api/api';
-import type { SupportFormData } from '~/interfaces/support';
+import type { SupportFormData } from '~/types/support';
 
 export const supportApi = {
   sendMessage: async (payload: SupportFormData) => {

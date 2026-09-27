@@ -1,5 +1,5 @@
 import saveAs from 'file-saver';
-import type { PdfFilePayload } from '~/interfaces/pdf';
+import type { PdfFilePayload } from '~/types/pdf';
 
 export function downloadBase64Pdf(payload: PdfFilePayload, fallbackFileName = 'dokument.pdf') {
   if (!payload?.fileContents) {

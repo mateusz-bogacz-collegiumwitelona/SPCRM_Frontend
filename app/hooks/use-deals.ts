@@ -9,7 +9,7 @@ import type {
   ChangeStatusResponse,
   DealProductsParams,
   SalesListParams,
-} from '~/interfaces/deal';
+} from '~/types/deal';
 
 export const dealKeys = {
   all: ['sales'] as const,
