@@ -16,6 +16,33 @@ import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 import { useMailingContacts } from '~/hooks/use-mailing';
 import type { CurrencySimple } from '~/types/currency';
 
+export function validatePromotionForm(
+  name: string,
+  sharedForm: PromotionSharedFormData,
+  options?: { productId?: string },
+): { errors: string[]; pricing?: PromotionPricingPayloadResult } {
+  const errors: string[] = [];
+
+  if (!name.trim()) {
+    errors.push('Nazwa promocji jest wymagana.');
+  }
+
+  if (options && 'productId' in options && !options.productId) {
+    errors.push('Wybierz produkt objęty promocją.');
+  }
+
+  if (sharedForm.startDate && sharedForm.endDate && sharedForm.endDate < sharedForm.startDate) {
+    errors.push('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.');
+  }
+
+  const { pricing, error } = resolvePromotionPricingPayload(sharedForm);
+  if (error || !pricing) {
+    errors.push(error ?? 'Nieprawidłowe warunki cenowe.');
+  }
+
+  return { errors, pricing };
+}
+
 export const defaultPromotionSharedState: PromotionSharedFormData = {
   discountType: 'percentage',
   discountPercentage: '',

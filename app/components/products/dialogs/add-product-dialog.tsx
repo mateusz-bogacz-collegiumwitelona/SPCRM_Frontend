@@ -13,6 +13,7 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   ProductFormFields,
   useProductFormDictionaries,
+  validateProductForm,
 } from '~/components/products/dialogs/product-form-fields';
 import type { AddProductRequest, ProductFormData } from '~/types/product';
 
@@ -66,16 +67,7 @@ export const AddProductDialog: React.FC<AddProductDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    const validationErrors: string[] = [];
-    if (!formData.name.trim()) validationErrors.push('Nazwa produktu jest wymagana.');
-    if (!formData.category) validationErrors.push('Kategoria produktu jest wymagana.');
-    if (!formData.steelGradeId) validationErrors.push('Gatunek stali jest wymagany.');
-    if (!formData.unitId) validationErrors.push('Jednostka miary jest wymagana.');
-    if (!formData.currencyId) validationErrors.push('Waluta jest wymagana.');
-    if (Number(formData.pricePerUnit) < 0)
-      validationErrors.push('Cena jednostkowa nie może być ujemna.');
-    if (Number(formData.stockQuantity) < 0)
-      validationErrors.push('Stan magazynowy nie może być ujemny.');
+    const validationErrors = validateProductForm(formData, { checkStock: true });
 
     if (validationErrors.length > 0) {
       setFormError({

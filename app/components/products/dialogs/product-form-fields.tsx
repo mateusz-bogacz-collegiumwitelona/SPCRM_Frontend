@@ -7,6 +7,34 @@ import { useUnitsSimpleList } from '~/hooks/use-units';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 import type { CurrencySimple } from '~/types/currency';
 
+export function validateProductForm(
+  formData: ProductFormData,
+  options?: { checkStock?: boolean },
+): string[] {
+  const errors: string[] = [];
+
+  if (!formData.name.trim()) errors.push('Nazwa produktu jest wymagana.');
+  if (!formData.category) errors.push('Kategoria produktu jest wymagana.');
+  if (!formData.steelGradeId) errors.push('Gatunek stali jest wymagany.');
+  if (!formData.unitId) errors.push('Jednostka miary jest wymagana.');
+  if (!formData.currencyId) errors.push('Waluta jest wymagana.');
+
+  if (Number(formData.pricePerUnit) < 0) {
+    errors.push('Cena jednostkowa nie może być ujemna.');
+  }
+
+  const isDiameterRequired = formData.category === 'Pipe' || formData.category === 'Wire';
+  if (isDiameterRequired && (formData.diameter === '' || Number(formData.diameter) <= 0)) {
+    errors.push('Średnica jest wymagana dla kategorii Pipe oraz Wire.');
+  }
+
+  if (options?.checkStock && Number(formData.stockQuantity) < 0) {
+    errors.push('Stan magazynowy nie może być ujemny.');
+  }
+
+  return errors;
+}
+
 export function useProductFormDictionaries(enabled: boolean) {
   const { data: categories = [] } = useProductCategories();
   const { data: steelGrades = [] } = useProductSteelGrades();

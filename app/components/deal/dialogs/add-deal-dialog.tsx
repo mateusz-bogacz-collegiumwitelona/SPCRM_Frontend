@@ -315,7 +315,7 @@ export function AddDealDialog({ isOpen, onClose, onSuccess }: AddDealDialogProps
     );
   } else {
     productListContent = availableProducts.map((product) => {
-      const displayDimension = product.dimmension || product.dimmension;
+      const displayDimension = product.dimmension;
 
       return (
         <button

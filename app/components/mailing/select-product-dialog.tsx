@@ -28,6 +28,53 @@ export function SelectProductDialog({
 
   if (!isOpen) return null;
 
+  let content: React.ReactNode;
+
+  if (isLoading) {
+    content = (
+      <div className="flex h-20 items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  } else if (products.length === 0) {
+    content = <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>;
+  } else {
+    content = products.map((product) => (
+      <button
+        type="button"
+        key={product.productId}
+        onClick={() => onSelectProduct(product)}
+        className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0 cursor-pointer"
+      >
+        <div>
+          <p className="text-sm font-bold text-gray-900">{product.name}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+            <span>{product.dimmension}</span>
+            <span>•</span>
+            {product.promotionalPrice ? (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-400 line-through">
+                  {formatCurrency(product.stockPrice, 'PLN', 2)}
+                </span>
+                <span className="font-bold text-red-600">
+                  {formatCurrency(product.promotionalPrice, 'PLN', 2)}
+                </span>
+                <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                  Promocja
+                </span>
+              </div>
+            ) : (
+              <span className="font-medium text-brand">
+                Cena bazowa: {formatCurrency(product.stockPrice, 'PLN', 2)}
+              </span>
+            )}
+          </div>
+        </div>
+        <Plus className="h-5 w-5 text-gray-400" />
+      </button>
+    ));
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
@@ -54,48 +101,7 @@ export function SelectProductDialog({
         </div>
 
         <div className="max-h-72 overflow-y-auto rounded-md border border-gray-200 bg-gray-50">
-          {isLoading ? (
-            <div className="flex h-20 items-center justify-center">
-              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-            </div>
-          ) : products.length === 0 ? (
-            <div className="p-4 text-center text-sm text-gray-500">Brak produktów</div>
-          ) : (
-            products.map((product) => (
-              <button
-                type="button"
-                key={product.productId}
-                onClick={() => onSelectProduct(product)}
-                className="flex w-full items-center justify-between border-b border-gray-200 bg-white p-3 text-left hover:bg-gray-50 last:border-0 cursor-pointer"
-              >
-                <div>
-                  <p className="text-sm font-bold text-gray-900">{product.name}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                    <span>{product.dimmension}</span>
-                    <span>•</span>
-                    {product.promotionalPrice ? (
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-400 line-through">
-                          {formatCurrency(product.stockPrice, 'PLN', 2)}
-                        </span>
-                        <span className="font-bold text-red-600">
-                          {formatCurrency(product.promotionalPrice, 'PLN', 2)}
-                        </span>
-                        <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                          Promocja
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="font-medium text-brand">
-                        Cena bazowa: {formatCurrency(product.stockPrice, 'PLN', 2)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <Plus className="h-5 w-5 text-gray-400" />
-              </button>
-            ))
-          )}
+          {content}
         </div>
       </div>
     </div>

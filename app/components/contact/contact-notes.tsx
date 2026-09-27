@@ -8,17 +8,8 @@ import {
 } from '@tanstack/react-table';
 import { client } from '~/lib/client';
 import { Button } from '~/components/ui/button';
-import {
-  AlertCircle,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  MessageSquare,
-  Plus,
-  Search,
-  X,
-} from 'lucide-react';
-import type { ApiError, FormErrorState } from '~/types/api-error';
+import { ChevronLeft, ChevronRight, Loader2, MessageSquare, Plus, Search } from 'lucide-react';
+import type { ApiError } from '~/types/api-error';
 
 import { EditNoteDialog } from '~/components/note/dialogs/edit-note-dialog';
 import { ContactNoteDialog } from './dialogs/contact-note-dialog';
@@ -30,6 +21,7 @@ import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ContactNote } from '~/types/contact';
 import { useAddNote, useDeleteNote, useEditNote } from '~/hooks/use-notes';
+import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 
 interface NoteTableMeta {
   onSelect: (note: ContactNote) => void;
@@ -199,7 +191,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     data,
     isLoading,
     isFetching,
-    isError,
     error: queryError,
   } = useQuery({
     queryKey: ['contact-notes', { contactId, pageNumber, pageSize, debouncedSearch }],
@@ -258,31 +249,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
       onDelete: (id) => setDeletingNoteId(id),
     } satisfies NoteTableMeta,
   });
-
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
-
-  const activeError = queryError as ApiError | null;
-  const responseData = activeError?.response?.data;
-
-  useEffect(() => {
-    if (isError) {
-      setIsErrorDismissed(false);
-    }
-  }, [isError, queryError]);
-
-  const listError: FormErrorState | null =
-    isError && !isErrorDismissed
-      ? {
-          title: getErrorMessage(
-            responseData?.errorCode,
-            responseData?.message || activeError?.message || 'Nie udało się pobrać listy notatek.',
-          ),
-          details:
-            responseData?.errors && responseData.errors.length > 0
-              ? responseData.errors
-              : undefined,
-        }
-      : null;
 
   const renderNotesContent = () => {
     if (isLoading) {
@@ -521,30 +487,11 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   return (
     <>
       <div className="flex flex-col gap-4">
-        {listError && (
-          <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-sm shadow-xs transition-all">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-            <div className="flex-1 pr-4">
-              <p className="font-medium leading-tight">{listError.title}</p>
-              {listError.details && listError.details.length > 0 && (
-                <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-xs text-red-700">
-                  {listError.details.map((detailErr, idx) => (
-                    <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsErrorDismissed(true)}
-              className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-              title="Zamknij"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
+        <QueryErrorBanner
+          error={queryError}
+          fallbackMessage="Nie udało się pobrać listy notatek."
+          className="mb-4"
+        />
         {renderNotesContent()}
       </div>
 

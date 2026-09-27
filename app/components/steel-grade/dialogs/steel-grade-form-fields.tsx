@@ -10,6 +10,25 @@ interface SteelGradeFormFieldsProps {
   readonly idPrefix?: string;
 }
 
+export function validateSteelGradeForm(
+  formData: SteelGradeFormData,
+  options?: { isDensityRequired?: boolean },
+): string[] {
+  const errors: string[] = [];
+
+  if (!formData.name.trim()) {
+    errors.push('Nazwa jest wymagana.');
+  }
+
+  if (options?.isDensityRequired && formData.density === '') {
+    errors.push('Gęstość jest wymagana.');
+  } else if (formData.density !== '' && Number(formData.density) <= 0) {
+    errors.push('Gęstość musi być większa od zera.');
+  }
+
+  return errors;
+}
+
 export const SteelGradeFormFields: React.FC<SteelGradeFormFieldsProps> = ({
   formData,
   onChange,

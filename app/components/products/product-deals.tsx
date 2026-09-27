@@ -12,7 +12,87 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import { DataTable } from '~/components/table/data-table';
 import type { ProductDealItemResponse } from '~/types/product';
 
+interface ProductDealsTableMeta {
+  unitSymbol: string;
+}
 const columnHelper = createColumnHelper<ProductDealItemResponse>();
+
+const columns = [
+  columnHelper.display({
+    id: 'dealName',
+    header: 'Szansa sprzedaży',
+    cell: (info) => (
+      <Link
+        to={`/sale/${info.row.original.dealId}`}
+        className="font-medium text-blue-900 hover:underline"
+      >
+        {info.row.original.dealName}
+      </Link>
+    ),
+  }),
+  columnHelper.accessor('companyName', {
+    header: 'Klient',
+    cell: (info) => <span className="text-gray-900 font-medium">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor('status', {
+    header: 'Status',
+    cell: (info) => {
+      const statusCfg = getStatusConfig(info.getValue());
+      return (
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${statusCfg.bgColor} ${statusCfg.textColor}`}
+        >
+          {statusCfg.label}
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'quantity',
+    header: 'Ilość',
+    cell: (info) => {
+      const meta = info.table.options.meta as ProductDealsTableMeta;
+      return (
+        <span className="font-medium text-gray-900">
+          {info.row.original.quantity}{' '}
+          <span className="text-gray-500 font-normal">{meta?.unitSymbol || 'szt.'}</span>
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'unitPrice',
+    header: 'Cena jedn.',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="text-gray-900 font-medium">
+          {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.display({
+    id: 'totalPrice',
+    header: 'Wartość łączna',
+    cell: (info) => {
+      const row = info.row.original;
+      return (
+        <span className="font-bold text-gray-900">
+          {formatCurrency(row.totalPrice, row.currencyCode, row.decimalPlaces)}
+        </span>
+      );
+    },
+  }),
+  columnHelper.accessor('closeDate', {
+    header: 'Termin',
+    cell: (info) => (
+      <span className="text-gray-500 text-xs">
+        {format(new Date(info.getValue()), 'dd.MM.yyyy')}
+      </span>
+    ),
+  }),
+];
 
 const mergeDeals = (
   existing: ProductDealItemResponse[],
@@ -154,87 +234,11 @@ export const ProductDeals = ({
     setPageNumber(newPage);
   };
 
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: 'dealName',
-        header: 'Szansa sprzedaży',
-        cell: (info) => (
-          <Link
-            to={`/sale/${info.row.original.dealId}`}
-            className="font-medium text-blue-900 hover:underline"
-          >
-            {info.row.original.dealName}
-          </Link>
-        ),
-      }),
-      columnHelper.accessor('companyName', {
-        header: 'Klient',
-        cell: (info) => <span className="text-gray-900 font-medium">{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: (info) => {
-          const statusCfg = getStatusConfig(info.getValue());
-          return (
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${statusCfg.bgColor} ${statusCfg.textColor}`}
-            >
-              {statusCfg.label}
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'quantity',
-        header: 'Ilość',
-        cell: (info) => (
-          <span className="font-medium text-gray-900">
-            {info.row.original.quantity}{' '}
-            <span className="text-gray-500 font-normal">{unitSymbol}</span>
-          </span>
-        ),
-      }),
-      columnHelper.display({
-        id: 'unitPrice',
-        header: 'Cena jedn.',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="text-gray-900 font-medium">
-              {formatCurrency(row.unitPrice, row.currencyCode, row.decimalPlaces)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'totalPrice',
-        header: 'Wartość łączna',
-        cell: (info) => {
-          const row = info.row.original;
-          return (
-            <span className="font-bold text-gray-900">
-              {formatCurrency(row.totalPrice, row.currencyCode, row.decimalPlaces)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('closeDate', {
-        header: 'Termin',
-        cell: (info) => (
-          <span className="text-gray-500 text-xs">
-            {format(new Date(info.getValue()), 'dd.MM.yyyy')}
-          </span>
-        ),
-      }),
-    ],
-    [unitSymbol],
-  );
-
   const table = useReactTable({
     data: desktopDeals,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta: { unitSymbol } satisfies ProductDealsTableMeta,
   });
 
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);

@@ -227,7 +227,7 @@ export default function CompanyList() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const activeError = queryError as ApiError | null;
+  const activeError = queryError as ApiError;
   const responseData = activeError?.response?.data;
 
   useEffect(() => {

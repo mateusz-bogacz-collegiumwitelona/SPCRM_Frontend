@@ -48,9 +48,8 @@ export function useSteelGradeMutations() {
   const queryClient = useQueryClient();
 
   const invalidateLists = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['steel-grades-list'] });
     await queryClient.invalidateQueries({ queryKey: steelGradeKeys.all });
-    await queryClient.invalidateQueries({ queryKey: steelGradeKeys.productSteelGrades() });
+    await queryClient.invalidateQueries({ queryKey: ['products', 'steel-grades'] });
   };
 
   const addMutation = useMutation({
@@ -67,7 +66,7 @@ export function useSteelGradeMutations() {
     mutationFn: (params: DeleteSteelGradeParams) => steelGradesApi.delete(params),
     onSuccess: async () => {
       await invalidateLists();
-      await queryClient.invalidateQueries({ queryKey: ['products-list'] });
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 

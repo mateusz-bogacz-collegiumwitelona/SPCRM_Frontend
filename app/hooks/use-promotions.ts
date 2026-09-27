@@ -11,7 +11,7 @@ import type {
 export const promotionKeys = {
   all: ['promotions'] as const,
   list: (params: Record<string, unknown>) => [...promotionKeys.all, 'list', params] as const,
-  details: (id?: string) => ['promotion-details', id] as const,
+  details: (id?: string) => [...promotionKeys.all, 'details', id] as const,
 };
 
 const parseIsActiveFilter = (filterValue: string): boolean | undefined => {
@@ -111,9 +111,7 @@ export function usePromotionHeaderMutations(promotionId: string) {
   const queryClient = useQueryClient();
 
   const invalidatePromotion = async () => {
-    await queryClient.invalidateQueries({ queryKey: promotionKeys.details(promotionId) });
     await queryClient.invalidateQueries({ queryKey: promotionKeys.all });
-    await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
   };
 
   const deactivateMutation = useMutation({
@@ -135,7 +133,6 @@ export function usePromotionHeaderMutations(promotionId: string) {
     mutationFn: () => promotionsApi.delete(promotionId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: promotionKeys.all });
-      await queryClient.invalidateQueries({ queryKey: ['promotions-list'] });
     },
   });
 

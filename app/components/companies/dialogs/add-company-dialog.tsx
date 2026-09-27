@@ -1,4 +1,4 @@
-import React, { type ComponentType, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,16 +7,14 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2, MapPin, MapPinned, Plus, Trash2, X } from 'lucide-react';
+import { AlertCircle, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import type { OSMMapClientProps } from '~/components/map/osm-map-client';
 import { forwardGeocode, reverseGeocode } from '~/api/geocoding.api';
-
 import { formatAddressType, getAddressTypeBadgeClass } from '~/constants/address-helpers';
 import type { AddCompanyAddressRequest, AddCompanyRequest } from '~/types/company';
 import { useCompanyAddressTypes } from '~/hooks/use-companies';
-
+import { LocationPickerMap } from '~/components/map/location-picker-map';
 interface FormAddressItem extends AddCompanyAddressRequest {
   id: string;
 }
@@ -56,24 +54,16 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
   const [activeAddressId, setActiveAddressId] = useState<string>(addresses[0].id);
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
-  const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-    if (isOpen) {
-      import('~/components/map/osm-map-client').then((module) => {
-        if (isMounted) setMapComponent(() => module.default as ComponentType<OSMMapClientProps>);
-      });
-    }
     return () => {
-      isMounted = false;
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [isOpen]);
+  }, []);
 
   const activeAddress =
     addresses.find((a) => a.id === activeAddressId) ??
@@ -523,20 +513,14 @@ export const AddCompanyDialog: React.FC<AddCompanyDialogProps> = ({
               </p>
 
               <div className="h-100 w-full border border-gray-300 rounded-lg overflow-hidden bg-gray-100 relative">
-                {MapComponent ? (
-                  <MapComponent
-                    center={[activeAddress.latitude, activeAddress.longitude]}
-                    zoom={13}
-                    className="h-full w-full"
-                    isPicker={true}
-                    selectedCoords={[activeAddress.latitude, activeAddress.longitude]}
-                    onLocationSelect={handleLocationPicked}
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm gap-2">
-                    <MapPinned className="animate-bounce text-brand" /> Ładowanie mapy...
-                  </div>
-                )}
+                <LocationPickerMap
+                  center={[activeAddress.latitude, activeAddress.longitude]}
+                  zoom={13}
+                  className="h-full w-full"
+                  isPicker={true}
+                  selectedCoords={[activeAddress.latitude, activeAddress.longitude]}
+                  onLocationSelect={handleLocationPicked}
+                />
               </div>
 
               <div className="text-xs text-gray-500 flex justify-between items-center">

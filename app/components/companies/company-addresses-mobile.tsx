@@ -79,7 +79,7 @@ export const CompanyAddressesMobile: React.FC<CompanyAddressesMobileProps> = ({
                 href={
                   addr.latitude && addr.longitude
                     ? `https://www.google.com/maps/dir/?api=1&destination=${addr.latitude},${addr.longitude}`
-                    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${addr.street} ${addr.city}`)}`
+                    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr.street + ' ' + addr.city)}`
                 }
                 target="_blank"
                 rel="noopener noreferrer"

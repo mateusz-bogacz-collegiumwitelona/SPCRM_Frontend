@@ -14,8 +14,8 @@ import {
   buildBasePromotionPayload,
   mapInitialDataToSharedForm,
   PromotionSharedFields,
-  resolvePromotionPricingPayload,
   usePromotionDictionaries,
+  validatePromotionForm,
 } from '~/components/promotion/dialogs/promotion-form-shared';
 import type {
   EditPromotionInitialData,
@@ -80,18 +80,14 @@ export const EditPromotionDialog: React.FC<EditPromotionDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    const validationErrors: string[] = [];
+    const { errors: validationErrors, pricing } = validatePromotionForm(name, sharedForm);
 
-    if (!name.trim()) {
-      validationErrors.push('Nazwa promocji jest wymagana.');
-    }
-    if (sharedForm.startDate && sharedForm.endDate && sharedForm.endDate < sharedForm.startDate) {
-      validationErrors.push('Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.');
-    }
-
-    const { pricing, error } = resolvePromotionPricingPayload(sharedForm);
-    if (error || !pricing) {
-      validationErrors.push(error ?? 'Nieprawidłowe warunki cenowe.');
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
+      return;
     }
 
     if (validationErrors.length > 0) {

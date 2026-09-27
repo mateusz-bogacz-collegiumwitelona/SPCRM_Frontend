@@ -406,7 +406,7 @@ export const CompanyContactsSection: React.FC<{
         }}
         onConfirm={() => {
           if (settingPrimaryId) {
-            handleSetPrimary(settingPrimaryId);
+            void handleSetPrimary(settingPrimaryId);
           }
         }}
         isLoading={setPrimaryMutation.isPending}

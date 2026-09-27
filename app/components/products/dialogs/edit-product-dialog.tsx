@@ -13,6 +13,7 @@ import type { ApiError, FormErrorState } from '~/types/api-error';
 import {
   ProductFormFields,
   useProductFormDictionaries,
+  validateProductForm,
 } from '~/components/products/dialogs/product-form-fields';
 import type { EditProductRequest, ProductFormData } from '~/types/product';
 import { useProductEditDetails } from '~/hooks/use-products';
@@ -95,18 +96,7 @@ export const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
     if (!productId) return;
 
-    const validationErrors: string[] = [];
-    if (!formData.name.trim()) validationErrors.push('Nazwa produktu jest wymagana.');
-    if (!formData.category) validationErrors.push('Kategoria produktu jest wymagana.');
-    if (!formData.steelGradeId) validationErrors.push('Gatunek stali jest wymagany.');
-    if (!formData.unitId) validationErrors.push('Jednostka miary jest wymagana.');
-    if (!formData.currencyId) validationErrors.push('Waluta jest wymagana.');
-    if (Number(formData.pricePerUnit) < 0)
-      validationErrors.push('Cena jednostkowa nie może być ujemna.');
-
-    if (isDiameterRequired && (formData.diameter === '' || Number(formData.diameter) <= 0)) {
-      validationErrors.push('Średnica jest wymagana dla kategorii Pipe oraz Wire.');
-    }
+    const validationErrors = validateProductForm(formData, { checkStock: true });
 
     if (validationErrors.length > 0) {
       setFormError({

@@ -64,148 +64,150 @@ export default function ConfirmRegistration() {
 
   const isLinkInvalid = !token.trim() || !email.trim();
 
+  let cardContent: React.ReactNode;
+
+  if (isLinkInvalid) {
+    cardContent = (
+      <div className="text-center py-6">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
+          <AlertCircle className="h-6 w-6 text-red-600" />
+        </div>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">Nieprawidłowy link aktywacyjny</h1>
+        <p className="text-sm text-gray-600 mb-6">
+          Link aktywacyjny jest niekompletny lub wygasł. Upewnij się, że skopiowano cały adres z
+          wiadomości e-mail.
+        </p>
+        <Button asChild className="bg-brand text-white hover:bg-brand/90">
+          <Link to="/">Przejdź do logowania</Link>
+        </Button>
+      </div>
+    );
+  } else if (isSuccess) {
+    cardContent = (
+      <div className="text-center py-6">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
+          <CheckCircle2 className="h-6 w-6 text-green-600" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Konto zostało aktywowane!</h1>
+        <p className="text-sm text-gray-600 mb-6">
+          Twój adres e-mail został potwierdzony, a nowe hasło zostało pomyślnie ustawione. Możesz
+          się teraz zalogować do systemu.
+        </p>
+        <Button
+          onClick={() => navigate('/')}
+          className="bg-brand text-white hover:bg-brand/90 w-full sm:w-auto px-8"
+        >
+          Zaloguj się
+        </Button>
+      </div>
+    );
+  } else {
+    cardContent = (
+      <>
+        <div className="text-center">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-brand mb-3">
+            <Lock className="h-5 w-5" />
+          </div>
+          <h1 className="text-[24px] font-semibold text-brand sm:text-[28px]">Aktywacja konta</h1>
+          <p className="mt-2 text-[14px] text-gray-600">
+            Dokończ konfigurację konta dla adresu:{' '}
+            <strong className="text-gray-900">{email}</strong>
+          </p>
+        </div>
+
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+          {formError && (
+            <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-xs transition-all text-left">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1 pr-3">
+                <p className="font-medium leading-tight">{formError.title}</p>
+                {formError.details && formError.details.length > 0 && (
+                  <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-[11px] text-red-700">
+                    {formError.details.map((detailErr, idx) => (
+                      <li key={`${detailErr}-${idx}`}>{detailErr}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormError(null)}
+                className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
+                title="Zamknij"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label
+              htmlFor="password"
+              className="block text-[13px] font-medium text-brand sm:text-[14px]"
+            >
+              Nowe hasło *
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Wpisz nowe hasło (min. 8 znaków)"
+                className="h-10 w-full rounded-[3px] border border-card-border-dark bg-white px-3 pr-10 text-[13px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-[13px] font-medium text-brand sm:text-[14px]"
+            >
+              Powtórz nowe hasło *
+            </label>
+            <input
+              id="confirmPassword"
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Wpisz ponownie hasło"
+              className="h-10 w-full rounded-[3px] border border-card-border-dark bg-white px-3 text-[13px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            disabled={confirmMutation.isPending}
+            className="mt-6 h-10 w-full rounded-[5px] bg-brand text-[13px] font-medium text-white hover:bg-brand/95 flex items-center justify-center gap-2"
+          >
+            {confirmMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Aktywowanie konta...
+              </>
+            ) : (
+              'Potwierdź i ustaw hasło'
+            )}
+          </Button>
+        </form>
+      </>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
       <section className="mx-auto max-w-300 px-4 pb-14 pt-8 lg:px-8 lg:pt-14">
         <Card className="mx-auto w-full max-w-170 rounded-2xl border border-card-border bg-white py-0 shadow-[0_4px_4px_rgba(0,0,0,0.25)] mt-12 sm:mt-20">
           <CardContent className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-            {isLinkInvalid ? (
-              <div className="text-center py-6">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
-                  <AlertCircle className="h-6 w-6 text-red-600" />
-                </div>
-                <h1 className="text-xl font-bold text-gray-900 mb-2">
-                  Nieprawidłowy link aktywacyjny
-                </h1>
-                <p className="text-sm text-gray-600 mb-6">
-                  Link aktywacyjny jest niekompletny lub wygasł. Upewnij się, że skopiowano cały
-                  adres z wiadomości e-mail.
-                </p>
-                <Button asChild className="bg-brand text-white hover:bg-brand/90">
-                  <Link to="/">Przejdź do logowania</Link>
-                </Button>
-              </div>
-            ) : isSuccess ? (
-              <div className="text-center py-6">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Konto zostało aktywowane!</h1>
-                <p className="text-sm text-gray-600 mb-6">
-                  Twój adres e-mail został potwierdzony, a nowe hasło zostało pomyślnie ustawione.
-                  Możesz się teraz zalogować do systemu.
-                </p>
-                <Button
-                  onClick={() => navigate('/')}
-                  className="bg-brand text-white hover:bg-brand/90 w-full sm:w-auto px-8"
-                >
-                  Zaloguj się
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="text-center">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-brand mb-3">
-                    <Lock className="h-5 w-5" />
-                  </div>
-                  <h1 className="text-[24px] font-semibold text-brand sm:text-[28px]">
-                    Aktywacja konta
-                  </h1>
-                  <p className="mt-2 text-[14px] text-gray-600">
-                    Dokończ konfigurację konta dla adresu:{' '}
-                    <strong className="text-gray-900">{email}</strong>
-                  </p>
-                </div>
-
-                <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
-                  {formError && (
-                    <div className="relative flex items-start gap-2.5 p-3 text-red-800 bg-red-50 border border-red-200 rounded-lg text-xs shadow-xs transition-all text-left">
-                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                      <div className="flex-1 pr-3">
-                        <p className="font-medium leading-tight">{formError.title}</p>
-                        {formError.details && formError.details.length > 0 && (
-                          <ul className="mt-1.5 list-disc list-inside space-y-0.5 text-[11px] text-red-700">
-                            {formError.details.map((detailErr, idx) => (
-                              <li key={`${detailErr}-${idx}`}>{detailErr}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setFormError(null)}
-                        className="text-red-400 hover:text-red-700 p-0.5 rounded transition-colors"
-                        title="Zamknij"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="password"
-                      className="block text-[13px] font-medium text-brand sm:text-[14px]"
-                    >
-                      Nowe hasło *
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Wpisz nowe hasło (min. 8 znaków)"
-                        className="h-10 w-full rounded-[3px] border border-card-border-dark bg-white px-3 pr-10 text-[13px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="confirmPassword"
-                      className="block text-[13px] font-medium text-brand sm:text-[14px]"
-                    >
-                      Powtórz nowe hasło *
-                    </label>
-                    <input
-                      id="confirmPassword"
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Wpisz ponownie hasło"
-                      className="h-10 w-full rounded-[3px] border border-card-border-dark bg-white px-3 text-[13px] text-card-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={confirmMutation.isPending}
-                    className="mt-6 h-10 w-full rounded-[5px] bg-brand text-[13px] font-medium text-white hover:bg-brand/95 flex items-center justify-center gap-2"
-                  >
-                    {confirmMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Aktywowanie konta...
-                      </>
-                    ) : (
-                      'Potwierdź i ustaw hasło'
-                    )}
-                  </Button>
-                </form>
-              </>
-            )}
+            {cardContent}
           </CardContent>
         </Card>
       </section>

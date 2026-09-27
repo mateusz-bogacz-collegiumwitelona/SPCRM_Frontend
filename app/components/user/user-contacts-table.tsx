@@ -1,19 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import {
   AlertCircle,
   ArrowDownWideNarrow,
   ArrowUpNarrowWide,
   Building2,
-  ChevronLeft,
-  ChevronRight,
   Filter,
-  Loader2,
   Search,
   Star,
   Users,
@@ -24,6 +16,7 @@ import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { UserContactItem } from '~/types/contact';
 import { useUserContacts } from '~/hooks/use-users';
+import { CompactTable } from '~/components/table/compact-table';
 
 const PAGE_SIZE = 5;
 
@@ -277,74 +270,17 @@ export const UserContactsTable = ({ userId }: { readonly userId: string }) => {
         </div>
       )}
 
-      <div className="relative min-h-63.75 flex flex-col justify-between">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center flex-1 py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-900 mb-2" />
-            <p className="text-xs text-gray-400">Wczytywanie kontaktów...</p>
-          </div>
-        ) : contacts.length === 0 ? (
-          <div className="flex items-center justify-center flex-1 text-xs text-gray-400 py-12">
-            Brak przypisanych kontaktów spełniających kryteria
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="border-b border-gray-100 text-[11px] uppercase tracking-wider text-gray-400 bg-gray-50/40">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th key={header.id} className="px-4 py-2 font-medium">
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-blue-50/40 transition-colors">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-2 text-xs">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="px-4 py-2.5 border-t border-gray-100 bg-gray-50/40 flex items-center justify-between text-xs text-gray-500 mt-auto">
-          <span>
-            Strona {pageNumber} z {totalPages}
-          </span>
-
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
-              disabled={pageNumber === 1 || isFetching}
-              className="h-7 w-7 border-gray-200"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => setPageNumber((prev) => Math.min(prev + 1, totalPages))}
-              disabled={pageNumber >= totalPages || isFetching}
-              className="h-7 w-7 border-gray-200"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <CompactTable
+        table={table}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        totalItems={totalItems}
+        pageNumber={pageNumber}
+        totalPages={totalPages}
+        onPageChange={setPageNumber}
+        emptyMessage="Brak przypisanych kontaktów spełniających kryteria"
+        loadingMessage="Wczytywanie kontaktów..."
+      />
     </div>
   );
 };

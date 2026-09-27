@@ -75,7 +75,7 @@ export default function AdminDashboard() {
       <div className="space-y-2.5">
         {recentUsers.map((u: SimpleUser) => {
           const displayName = getUserDisplayName(u);
-          const userRole = u.role || (u.roles && u.roles[0]) || 'Użytkownik';
+          const userRole = u.role || u.roles?.[0] || 'Użytkownik';
 
           return (
             <div

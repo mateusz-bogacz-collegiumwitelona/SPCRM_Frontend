@@ -11,6 +11,7 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { AddUnitRequestPayload } from '~/types/unit';
+import { UnitFormFields, validateUnitForm } from './unit-form-fields';
 
 interface AddUnitDialogProps {
   readonly isOpen: boolean;
@@ -36,11 +37,7 @@ export function AddUnitDialog({ isOpen, onClose, onSave, isLoading }: AddUnitDia
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setFormError(null);
-
-    const validationErrors: string[] = [];
-    if (!symbol.trim()) validationErrors.push('Symbol jednostki jest wymagany.');
-    if (!name.trim()) validationErrors.push('Pełna nazwa jednostki jest wymagana.');
-    if (Number(baseMultiplier) < 0) validationErrors.push('Mnożnik nie może być ujemny.');
+    const validationErrors = validateUnitForm(name, symbol, baseMultiplier);
 
     if (validationErrors.length > 0) {
       setFormError({
@@ -108,51 +105,16 @@ export function AddUnitDialog({ isOpen, onClose, onSave, isLoading }: AddUnitDia
             </div>
           )}
 
-          <div>
-            <label htmlFor="unit-symbol" className="block text-xs font-medium text-gray-700 mb-1">
-              Symbol (np. Kg, M3, dkg) *
-            </label>
-            <input
-              id="unit-symbol"
-              type="text"
-              maxLength={3}
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              placeholder="Kg"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 uppercase"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="unit-name" className="block text-xs font-medium text-gray-700 mb-1">
-              Pełna nazwa jednostki *
-            </label>
-            <input
-              id="unit-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Kilogram"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="currency-base-multiplier"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
-              Mnożnik (np. 1 dla podstawowej jednostki, 0.001 dla miligrama) *
-            </label>
-            <input
-              type="number"
-              min={0}
-              max={4}
-              value={baseMultiplier}
-              onChange={(e) => setBaseMultiplier(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-            />
-          </div>
+          <UnitFormFields
+            name={name}
+            symbol={symbol}
+            baseMultiplier={baseMultiplier}
+            onNameChange={setName}
+            onSymbolChange={setSymbol}
+            onBaseMultiplierChange={setBaseMultiplier}
+            disabled={isLoading}
+            idPrefix="add-unit"
+          />
 
           <DialogFooter className="pt-2">
             <Button

@@ -1,4 +1,4 @@
-import React, { type ComponentType, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,15 +7,14 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { Button } from '~/components/ui/button';
-import { AlertCircle, Loader2, MapPinned, X } from 'lucide-react';
-import type { OSMMapClientProps } from '~/components/map/osm-map-client';
+import { AlertCircle, Loader2, X } from 'lucide-react';
 import { forwardGeocode, reverseGeocode } from '~/api/geocoding.api';
 import { formatAddressType, getAddressTypeBadgeClass } from '~/constants/address-helpers';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { AddressItemToEdit, CompanyAddressFormData } from '~/types/company';
 import { useCompanyAddressTypes } from '~/hooks/use-companies';
-
+import { LocationPickerMap } from '~/components/map/location-picker-map';
 interface EditCompanyAddressDialogProps {
   readonly address: AddressItemToEdit | null;
   readonly isOpen: boolean;
@@ -34,35 +33,23 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
   isLoading = false,
 }) => {
   const isEditing = Boolean(address?.id);
-
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [type, setType] = useState('Branch');
   const [coords, setCoords] = useState<[number, number]>(DEFAULT_COORDS);
-
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
-  const [MapComponent, setMapComponent] = useState<ComponentType<OSMMapClientProps> | null>(null);
-
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isUpdatingFromMapRef = useRef(false);
 
   useEffect(() => {
-    let isMounted = true;
-    if (isOpen) {
-      import('~/components/map/osm-map-client').then((module) => {
-        if (isMounted) setMapComponent(() => module.default as ComponentType<OSMMapClientProps>);
-      });
-    }
-
     return () => {
-      isMounted = false;
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [isOpen]);
+  }, []);
 
   const { data: addressTypes = [], isLoading: isTypesLoading } = useCompanyAddressTypes(isOpen);
 
@@ -310,20 +297,14 @@ export const CompanyAddressDialog: React.FC<EditCompanyAddressDialogProps> = ({
               </div>
 
               <div className="h-64 w-full border border-gray-300 rounded-lg overflow-hidden bg-gray-100 relative">
-                {MapComponent ? (
-                  <MapComponent
-                    center={coords}
-                    zoom={13}
-                    className="h-full w-full"
-                    isPicker={true}
-                    selectedCoords={coords}
-                    onLocationSelect={handleLocationPicked}
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-gray-500 text-sm gap-2">
-                    <MapPinned className="animate-bounce text-brand" /> Ładowanie mapy...
-                  </div>
-                )}
+                <LocationPickerMap
+                  center={coords}
+                  zoom={13}
+                  className="h-full w-full"
+                  isPicker={true}
+                  selectedCoords={coords}
+                  onLocationSelect={handleLocationPicked}
+                />
               </div>
 
               <div className="text-[11px] text-gray-500 flex justify-between">

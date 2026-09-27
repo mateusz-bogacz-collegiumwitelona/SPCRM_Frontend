@@ -19,7 +19,7 @@ export const userKeys = {
   list: (params: Record<string, unknown>) => [...userKeys.all, 'list', params] as const,
   roles: () => [...userKeys.all, 'roles'] as const,
   simple: () => ['users-simple-list'] as const,
-  details: (id?: string) => ['user-detail', id] as const,
+  details: (id?: string) => [...userKeys.all, 'detail', id] as const,
   userCompanies: (userId?: string, params?: Record<string, unknown>) =>
     ['user-companies', userId, params] as const,
   userContacts: (userId?: string, params?: Record<string, unknown>) =>
@@ -213,8 +213,15 @@ export function useUserContacts({
   companyNameFilter,
   isPrimaryFilter,
 }: UseUserContactsProps) {
-  const isPrimary =
-    isPrimaryFilter === 'true' ? true : isPrimaryFilter === 'false' ? false : undefined;
+  let isPrimary: boolean | undefined;
+
+  if (isPrimaryFilter === 'true') {
+    isPrimary = true;
+  } else if (isPrimaryFilter === 'false') {
+    isPrimary = false;
+  } else {
+    isPrimary = undefined;
+  }
 
   const queryParams: UserContactsParams = {
     pageNumber,

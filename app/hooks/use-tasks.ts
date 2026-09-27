@@ -102,8 +102,6 @@ export function useCreateTask(options?: { onSuccess?: () => void }) {
     mutationFn: (payload: AddTaskRequestPayload) => tasksApi.createTask(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: ['my-upcoming-tasks'] });
       options?.onSuccess?.();
     },
   });
@@ -146,8 +144,6 @@ export function useContactTaskMutations(contactId: string) {
   const queryClient = useQueryClient();
 
   const invalidateTasks = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['contact-tasks'] });
-    await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
     await queryClient.invalidateQueries({ queryKey: taskKeys.all });
   };
 
@@ -187,8 +183,6 @@ export function useDealTaskMutations(dealId: string) {
   const queryClient = useQueryClient();
 
   const invalidateTasks = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['deal-tasks', dealId] });
-    await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
     await queryClient.invalidateQueries({ queryKey: taskKeys.all });
   };
 
@@ -221,9 +215,7 @@ export function useChangeTaskStatusMutation(options?: { onSuccess?: () => void }
   return useMutation({
     mutationFn: ({ taskId, status }: { taskId: string; status: string }) =>
       tasksApi.changeStatus({ taskId, status }),
-    onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: taskKeys.details(variables.taskId) });
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
       options?.onSuccess?.();
     },
@@ -252,8 +244,6 @@ export function useTaskInfoMutations(taskId: string) {
   const queryClient = useQueryClient();
 
   const invalidateTask = async () => {
-    await queryClient.invalidateQueries({ queryKey: taskKeys.details(taskId) });
-    await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
     await queryClient.invalidateQueries({ queryKey: taskKeys.all });
   };
 
@@ -266,7 +256,6 @@ export function useTaskInfoMutations(taskId: string) {
     mutationFn: () => tasksApi.deleteTask(taskId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['deal-tasks'] });
-      await queryClient.invalidateQueries({ queryKey: ['calendar-tasks'] });
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });

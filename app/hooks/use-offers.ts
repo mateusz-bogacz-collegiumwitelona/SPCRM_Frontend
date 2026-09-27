@@ -38,7 +38,7 @@ export function useOffersList({
   isExpiredFilter,
   dateRange,
 }: UseOffersListProps) {
-  const isExpired = isExpiredFilter !== '' ? isExpiredFilter === 'true' : undefined;
+  const isExpired = isExpiredFilter === '' ? undefined : isExpiredFilter === 'true';
 
   const validUntilFrom = dateRange?.from
     ? new Date(
@@ -118,7 +118,7 @@ export function useOfferDetailMutations(offerId?: string) {
   const invalidateOffer = async () => {
     await queryClient.invalidateQueries({ queryKey: offerKeys.details(offerId) });
     await queryClient.invalidateQueries({ queryKey: offerKeys.allowedActions(offerId) });
-    await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
+    await queryClient.invalidateQueries({ queryKey: offerKeys.all });
   };
 
   const updateProductsMutation = useMutation({
@@ -148,7 +148,7 @@ export function useOfferDetailMutations(offerId?: string) {
   const deleteOfferMutation = useMutation({
     mutationFn: () => offersApi.delete(offerId || ''),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['offers-list'] });
+      await queryClient.invalidateQueries({ queryKey: offerKeys.all });
     },
   });
 

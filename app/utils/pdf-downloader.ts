@@ -1,4 +1,4 @@
-import saveAs from 'file-saver';
+import { saveAs } from 'file-saver';
 import type { PdfFilePayload } from '~/types/pdf';
 
 export function downloadBase64Pdf(payload: PdfFilePayload, fallbackFileName = 'dokument.pdf') {
@@ -6,7 +6,7 @@ export function downloadBase64Pdf(payload: PdfFilePayload, fallbackFileName = 'd
     throw new Error('Nie udało się pobrać zawartości pliku PDF.');
   }
 
-  const byteCharacters = atob(payload.fileContents);
+  const byteCharacters = globalThis.atob(payload.fileContents);
   const byteNumbers = new Array(byteCharacters.length);
 
   for (let i = 0; i < byteCharacters.length; i++) {

@@ -8,7 +8,6 @@ export const noteKeys = {
   all: ['notes'] as const,
   dealNotes: (dealId?: string) => ['deal-notes', dealId] as const,
   taskNotes: (taskId?: string) => ['task-notes', taskId] as const,
-  contactNotes: (contactId?: string) => ['contact-notes', contactId] as const,
 };
 
 export function useDealNotes(dealId?: string) {

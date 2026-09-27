@@ -13,13 +13,10 @@ import { contactsApi } from '~/api/contact.api';
 export const companyKeys = {
   all: ['companies'] as const,
   list: (params: Record<string, unknown>) => [...companyKeys.all, 'list', params] as const,
-  simple: () => [...companyKeys.all, 'simple-list'] as const,
   details: (id?: string) => [...companyKeys.all, 'details', id] as const,
   editDetails: (id?: string) => [...companyKeys.all, 'edit-details', id] as const,
   addresses: (id?: string) => [...companyKeys.all, 'addresses', id] as const,
   addressTypes: () => ['company-address-types'] as const,
-  companyContacts: (id?: string, page?: number, size?: number) =>
-    ['company-contacts', id, page, size] as const,
   debtSummary: (id?: string) => ['company-debt-summary', id] as const,
   debts: (id?: string, page?: number, size?: number) =>
     ['company-debts', { clientId: id, page, pageSize: size }] as const,

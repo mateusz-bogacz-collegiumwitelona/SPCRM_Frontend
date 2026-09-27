@@ -11,6 +11,7 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import type { NoteEditData } from '~/types/note';
+import { NoteFormFields, validateNoteForm } from './note-form-fields';
 
 interface NoteEditDialogProps {
   isOpen: boolean;
@@ -49,13 +50,15 @@ export const EditNoteDialog: React.FC<NoteEditDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    const validationErrors: string[] = [];
-    if (!title.trim()) validationErrors.push('Tytuł notatki jest wymagany.');
-    if (title.trim().length > 50)
-      validationErrors.push('Tytuł notatki nie może przekraczać 50 znaków.');
-    if (!content.trim()) validationErrors.push('Treść notatki jest wymagana.');
-    if (content.trim().length > 500)
-      validationErrors.push('Treść notatki nie może przekraczać 500 znaków.');
+    const validationErrors = validateNoteForm(title, content);
+
+    if (validationErrors.length > 0) {
+      setFormError({
+        title: getErrorMessage('VALIDATION_ERROR'),
+        details: validationErrors,
+      });
+      return;
+    }
 
     if (validationErrors.length > 0) {
       setFormError({
@@ -124,36 +127,13 @@ export const EditNoteDialog: React.FC<NoteEditDialogProps> = ({
               </button>
             </div>
           )}
-          <div className="space-y-1.5">
-            <label htmlFor="title" className="text-sm font-medium text-gray-700">
-              Tytuł <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={50}
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-brand"
-              placeholder="Wprowadź tytuł"
-            />
-            <div className="text-right text-xs text-gray-500">{title.length}/50</div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="content" className="text-sm font-medium text-gray-700">
-              Treść notatki <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              maxLength={500}
-              className="flex min-h-40 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-brand resize-y"
-              placeholder="Wpisz treść notatki..."
-            />
-            <div className="text-right text-xs text-gray-500">{content.length}/500</div>
-          </div>
+          <NoteFormFields
+            title={title}
+            content={content}
+            onTitleChange={setTitle}
+            onContentChange={setContent}
+            disabled={isSubmitting}
+          />
 
           <DialogFooter className="pt-4 border-t border-gray-100 flex gap-2 sm:justify-end">
             <Button

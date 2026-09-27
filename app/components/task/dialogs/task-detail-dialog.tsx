@@ -171,7 +171,13 @@ export const TaskDetailDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onCl
             </div>
           </div>
 
-          {!isCompleted ? (
+          {isCompleted ? (
+            <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-800 text-xs">
+              <span>
+                Zadanie zostało sfinalizowane. Maszyna stanów blokuje dalszą zmianę statusu.
+              </span>
+            </div>
+          ) : (
             <form
               onSubmit={handleStatusSubmit}
               className="border border-gray-200 rounded-lg p-3.5 bg-white space-y-3"
@@ -220,12 +226,6 @@ export const TaskDetailDialog: React.FC<TaskDialogProps> = ({ task, isOpen, onCl
                 </div>
               )}
             </form>
-          ) : (
-            <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-800 text-xs">
-              <span>
-                Zadanie zostało sfinalizowane. Maszyna stanów blokuje dalszą zmianę statusu.
-              </span>
-            </div>
           )}
 
           {(task.contactId || task.dealId) && (

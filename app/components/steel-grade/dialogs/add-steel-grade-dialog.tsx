@@ -10,7 +10,10 @@ import {
 } from '~/components/ui/dialog';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { SteelGradeFormFields } from '~/components/steel-grade/dialogs/steel-grade-form-fields';
+import {
+  SteelGradeFormFields,
+  validateSteelGradeForm,
+} from '~/components/steel-grade/dialogs/steel-grade-form-fields';
 import type { AddSteelGradePayload, SteelGradeFormData } from '~/types/steel-grade';
 
 interface AddSteelGradeDialogProps {
@@ -51,17 +54,7 @@ export const AddSteelGradeDialog: React.FC<AddSteelGradeDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    const validationErrors: string[] = [];
-
-    if (!formData.name.trim()) {
-      validationErrors.push('Nazwa jest wymagana.');
-    }
-
-    if (formData.density === '') {
-      validationErrors.push('Gęstość jest wymagana.');
-    } else if (Number(formData.density) <= 0) {
-      validationErrors.push('Gęstość musi być większa od zera.');
-    }
+    const validationErrors = validateSteelGradeForm(formData, { isDensityRequired: true });
 
     if (validationErrors.length > 0) {
       setFormError({

@@ -283,12 +283,12 @@ const UserMobileCard = ({
 
       <div className="border-t border-gray-100 pt-3 flex justify-between items-center text-xs">
         <div>
-          {!isTargetAdmin ? (
+          {isTargetAdmin ? (
+            <span className="text-gray-400 text-xs italic">Konto administracyjne</span>
+          ) : (
             <Link to={`/user/${user.id}`} className="font-medium text-blue-900 hover:underline">
               Szczegóły profilu
             </Link>
-          ) : (
-            <span className="text-gray-400 text-xs italic">Konto administracyjne</span>
           )}
         </div>
 

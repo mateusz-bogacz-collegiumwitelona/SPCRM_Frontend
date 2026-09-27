@@ -10,6 +10,7 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
+import { NoteFormFields, validateNoteForm } from '~/components/note/dialogs/note-form-fields';
 
 interface NodeAddDialogProps {
   isOpen: boolean;
@@ -49,14 +50,7 @@ export const AddNoteDialog: React.FC<NodeAddDialogProps> = ({
     e.preventDefault();
     setFormError(null);
 
-    const validationErrors: string[] = [];
-    if (!title.trim()) validationErrors.push('Tytuł notatki jest wymagany.');
-    if (title.trim().length > 50)
-      validationErrors.push('Tytuł notatki nie może przekraczać 50 znaków.');
-    if (!content.trim()) validationErrors.push('Treść notatki jest wymagana.');
-    if (content.trim().length > 500)
-      validationErrors.push('Treść notatki nie może przekraczać 500 znaków.');
-
+    const validationErrors = validateNoteForm(title, content);
     if (validationErrors.length > 0) {
       setFormError({
         title: getErrorMessage('VALIDATION_ERROR'),
@@ -116,35 +110,14 @@ export const AddNoteDialog: React.FC<NodeAddDialogProps> = ({
               </button>
             </div>
           )}
-          <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium text-gray-700">
-              Tytuł
-            </label>
-            <input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-900"
-              placeholder="Wpisz tytuł notatki"
-              maxLength={50}
-              required
-            />
-          </div>
 
-          <div className="space-y-2">
-            <label htmlFor="content" className="text-sm font-medium text-gray-700">
-              Treść
-            </label>
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-900 min-h-30 resize-y"
-              placeholder="Wpisz treść notatki..."
-              maxLength={500}
-              required
-            />
-          </div>
+          <NoteFormFields
+            title={title}
+            content={content}
+            onTitleChange={setTitle}
+            onContentChange={setContent}
+            disabled={isLoading}
+          />
 
           <DialogFooter className="pt-4">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>

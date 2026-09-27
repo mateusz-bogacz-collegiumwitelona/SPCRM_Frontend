@@ -11,7 +11,6 @@ export const contactKeys = {
   editDetails: (id?: string) => ['contact-edit-detail', id] as const,
   ways: (id?: string) => ['contact-ways', id] as const,
   types: () => ['contact-types'] as const,
-  toDeals: (page: number, search?: string) => ['contacts-to-deal', page, search] as const,
 };
 
 const parseIsPrimaryFilter = (filterValue: string): boolean | undefined => {
