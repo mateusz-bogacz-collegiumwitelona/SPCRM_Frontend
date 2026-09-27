@@ -6,7 +6,6 @@ import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
-import type { CurrencyOption } from '~/types/currency';
 import type { ContactOption } from '~/types/contact';
 import type {
   EditPromotionInitialData,
@@ -15,6 +14,7 @@ import type {
 } from '~/types/promotion';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
 import { useMailingContacts } from '~/hooks/use-mailing';
+import type { CurrencySimple } from '~/types/currency';
 
 export const defaultPromotionSharedState: PromotionSharedFormData = {
   discountType: 'percentage',
@@ -95,7 +95,7 @@ export function usePromotionDictionaries(isOpen: boolean) {
   const { data: contacts = [] } = useMailingContacts('', 100, isOpen);
 
   return {
-    currencies: currencies as unknown as CurrencyOption[],
+    currencies: currencies as unknown as CurrencySimple[],
     contacts: contacts as unknown as ContactOption[],
   };
 }
@@ -159,7 +159,7 @@ interface PromotionSharedFieldsProps {
     field: K,
     value: PromotionSharedFormData[K],
   ) => void;
-  readonly currencies: CurrencyOption[];
+  readonly currencies: CurrencySimple[];
   readonly contacts: ContactOption[];
 }
 

@@ -10,10 +10,10 @@ import { Button } from '~/components/ui/button';
 import { AlertCircle, CheckCircle2, Loader2, Unlock, X } from 'lucide-react';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import type { UserToUnlock } from '~/types/user';
+import type { UserBaseActionData } from '~/types/user';
 
 interface UnlockUserDialogProps {
-  readonly user: UserToUnlock | null;
+  readonly user: UserBaseActionData | null;
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly onUnlock: (userId: string) => Promise<void>;

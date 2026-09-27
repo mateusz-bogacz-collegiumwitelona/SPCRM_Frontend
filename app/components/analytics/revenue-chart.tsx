@@ -10,13 +10,13 @@ import {
 } from 'recharts';
 import { formatCurrency } from '~/utils/data-formatters';
 import type { AnalyticsChartMetricResponse, AnalyticsPeriod } from '~/types/analytics';
-import type { CurrencyListResponse } from '~/types/currency';
+import type { CurrencySimple } from '~/types/currency';
 
 interface TeamRevenueChartProps {
   data: AnalyticsChartMetricResponse[];
   selectedPeriod: AnalyticsPeriod;
   onPeriodChange: (period: AnalyticsPeriod) => void;
-  currencies: CurrencyListResponse[];
+  currencies: CurrencySimple[];
   selectedCurrencyCode: string;
   onCurrencyChange: (code: string) => void;
   isLoading?: boolean;

@@ -13,13 +13,13 @@ import { AddCurrencyDialog } from '~/components/currency/dialogs/add-currency-di
 import { EditCurrencyDialog } from '~/components/currency/dialogs/edit-currency-dialog';
 import { ROLES } from '~/constants/roles';
 import { useCurrenciesList, useCurrencyMutations } from '~/hooks/use-currencies';
-import type { CurrencyListResponse } from '~/types/currency';
+import type { CurrencySimple } from '~/types/currency';
 
 interface CurrencyTableMeta {
   onEdit: (currency: { id: string; name: string; code: string; decimalPlace: number }) => void;
 }
 
-const columnHelper = createColumnHelper<CurrencyListResponse>();
+const columnHelper = createColumnHelper<CurrencySimple>();
 
 const columns = [
   columnHelper.accessor('code', {
@@ -78,7 +78,7 @@ const CurrencyMobileCard = ({
   currency,
   onEdit,
 }: {
-  readonly currency: CurrencyListResponse;
+  readonly currency: CurrencySimple;
   readonly onEdit: (currency: {
     id: string;
     name: string;
@@ -132,9 +132,9 @@ export default function CurrenciesList() {
     decimalPlace: number;
   } | null>(null);
 
-  const [accumulatedMobileCurrencies, setAccumulatedMobileCurrencies] = useState<
-    CurrencyListResponse[]
-  >([]);
+  const [accumulatedMobileCurrencies, setAccumulatedMobileCurrencies] = useState<CurrencySimple[]>(
+    [],
+  );
   const isMobileAppend = useRef(false);
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
@@ -169,7 +169,7 @@ export default function CurrenciesList() {
   const totalItems = data?.totalItems || data?.totalCount || desktopCurrencies.length;
 
   useEffect(() => {
-    const items: CurrencyListResponse[] = data?.items || [];
+    const items: CurrencySimple[] = data?.items || [];
     if (!items || items.length === 0) return;
 
     if (pageNumber === 1 || !isMobileAppend.current) {

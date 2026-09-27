@@ -14,20 +14,9 @@ export interface ChangeUserEmailPayload {
   newEmail: string;
 }
 
-export interface UserToChangeEmail {
-  id: string;
-  fullName: string;
-}
-
 export interface ChangeUserRolePayload {
   userId: string;
   role: string;
-}
-
-export interface UserToChangeRole {
-  id: string;
-  fullName: string;
-  currentRole: string;
 }
 
 export interface DeleteUserPayload {
@@ -58,17 +47,6 @@ export interface SetLockoutPayload {
   lockoutEnd?: string | null;
 }
 
-export interface UserToLockout {
-  id: string;
-  fullName: string;
-  role: string;
-}
-
-export interface UserToUnlock {
-  id: string;
-  fullName: string;
-}
-
 export interface UserDetailResponse {
   id: string;
   firstName: string;
@@ -84,12 +62,6 @@ export interface UserDetailResponse {
   activeTaskCount?: number | null;
   createdAt: string;
   updatedAt?: string | null;
-}
-
-export interface UserToDelete {
-  id: string;
-  fullName: string;
-  role: string;
 }
 
 export interface RoleConfig {
@@ -200,4 +172,13 @@ export interface PaginatedUserTasksResponse {
   totalPages: number;
   totalCount?: number;
   totalItems?: number;
+}
+
+export interface UserBaseActionData {
+  id: string;
+  fullName: string;
+}
+
+export interface UserRoleActionData extends UserBaseActionData {
+  role: string;
 }

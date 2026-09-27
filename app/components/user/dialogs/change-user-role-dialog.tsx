@@ -11,11 +11,11 @@ import { AlertCircle, AlertTriangle, Loader2, ShieldCheck, X } from 'lucide-reac
 import { getErrorMessage } from '~/utils/error-mapper';
 import { getRoleConfig } from '~/utils/role-translator';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import type { ChangeUserRolePayload, UserToChangeRole } from '~/types/user';
+import type { ChangeUserRolePayload, UserRoleActionData } from '~/types/user';
 import { useUserRoles } from '~/hooks/use-users';
 
 interface ChangeUserRoleDialogProps {
-  readonly user: UserToChangeRole | null;
+  readonly user: UserRoleActionData | null;
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly onSave: (payload: ChangeUserRolePayload) => Promise<void>;
@@ -36,7 +36,7 @@ export function ChangeUserRoleDialog({
 
   useEffect(() => {
     if (isOpen && user) {
-      setSelectedRole(user.currentRole || '');
+      setSelectedRole(user.role || '');
       setFormError(null);
     }
   }, [isOpen, user]);
@@ -60,7 +60,7 @@ export function ChangeUserRoleDialog({
       return;
     }
 
-    if (selectedRole.toLowerCase() === user.currentRole?.toLowerCase()) {
+    if (selectedRole.toLowerCase() === user.role?.toLowerCase()) {
       setFormError({
         title: getErrorMessage('VALIDATION_ERROR'),
         details: ['Użytkownik posiada już przypisaną tę rolę.'],
@@ -155,7 +155,7 @@ export function ChangeUserRoleDialog({
                 return (
                   <option key={r} value={r}>
                     {config.label}{' '}
-                    {r.toLowerCase() === user.currentRole?.toLowerCase() ? '(aktualna)' : ''}
+                    {r.toLowerCase() === user.role?.toLowerCase() ? '(aktualna)' : ''}
                   </option>
                 );
               })}

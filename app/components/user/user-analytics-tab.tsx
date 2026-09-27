@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { FileText, Loader2, TrendingUp } from 'lucide-react';
-import {
-  type AnalyticsPeriod,
-  type CurrencyListResponse,
-  RevenueChart,
-} from '~/components/analytics/revenue-chart';
+import { RevenueChart } from '~/components/analytics/revenue-chart';
 import { KpiCards } from '~/components/analytics/kpi-cards';
 import { Button } from '~/components/ui/button';
 import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
 import { useEmployeeChart, useEmployeeKpi } from '~/hooks/use-analytics';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
+import type { AnalyticsPeriod } from '~/types/analytics';
+import type { CurrencySimple } from '~/types/currency';
 
 export const UserAnalyticsTab = ({ userId }: { userId: string }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('CurrentMonth');
@@ -73,7 +71,7 @@ export const UserAnalyticsTab = ({ userId }: { userId: string }) => {
         data={chartData}
         selectedPeriod={selectedPeriod}
         onPeriodChange={setSelectedPeriod}
-        currencies={currencies as unknown as CurrencyListResponse[]}
+        currencies={currencies as unknown as CurrencySimple[]}
         selectedCurrencyCode={selectedCurrencyCode}
         onCurrencyChange={setSelectedCurrencyCode}
         isLoading={isChartLoading}

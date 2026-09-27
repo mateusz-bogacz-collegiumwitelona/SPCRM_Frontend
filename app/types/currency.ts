@@ -11,20 +11,6 @@ export interface EditCurrencyRequestPayload {
   decimalPlaces?: number;
 }
 
-export interface CurrencyOption {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
-export interface CurrencyListResponse {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
 export interface CurrencyListParams {
   pageNumber: number;
   pageSize: number;
@@ -34,7 +20,7 @@ export interface CurrencyListParams {
 }
 
 export interface PaginatedCurrenciesResponse {
-  items: CurrencyListResponse[];
+  items: CurrencySimple[];
   totalPages: number;
   totalItems?: number;
   totalCount?: number;

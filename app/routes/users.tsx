@@ -41,24 +41,21 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import type {
+  UserBaseActionData,
   UserListResponse,
-  UserToChangeEmail,
-  UserToChangeRole,
-  UserToDelete,
+  UserRoleActionData,
   UserToEdit,
-  UserToLockout,
-  UserToUnlock,
 } from '~/types/user';
 import { MANAGEMENT_ROLES, ROLES } from '~/constants/roles';
 import { useUserMutations, useUserRoles, useUsersList } from '~/hooks/use-users';
 
 interface UserTableMeta {
-  onLockout: (user: UserToLockout) => void;
-  onUnlock: (user: UserToUnlock) => void;
-  onDelete: (user: UserToDelete) => void;
+  onLockout: (user: UserRoleActionData) => void;
+  onUnlock: (user: UserBaseActionData) => void;
+  onDelete: (user: UserRoleActionData) => void;
   onEdit: (user: UserToEdit) => void;
-  onChangeEmail: (user: UserToChangeEmail) => void;
-  onChangeRole: (user: UserToChangeRole) => void;
+  onChangeEmail: (user: UserBaseActionData) => void;
+  onChangeRole: (user: UserRoleActionData) => void;
 }
 
 const columnHelper = createColumnHelper<UserListResponse>();
@@ -178,7 +175,7 @@ const columns = [
                       meta.onChangeRole({
                         id: user.id,
                         fullName,
-                        currentRole: user.role,
+                        role: user.role,
                       })
                     }
                     className="cursor-pointer text-xs text-indigo-700 focus:bg-indigo-50 flex items-center gap-2"
@@ -248,12 +245,12 @@ const UserMobileCard = ({
   onChangeRole,
 }: {
   readonly user: UserListResponse;
-  readonly onLockout: (user: UserToLockout) => void;
-  readonly onUnlock: (user: UserToUnlock) => void;
-  readonly onDelete: (user: UserToDelete) => void;
+  readonly onLockout: (user: UserRoleActionData) => void;
+  readonly onUnlock: (user: UserBaseActionData) => void;
+  readonly onDelete: (user: UserRoleActionData) => void;
   readonly onEdit: (user: UserToEdit) => void;
-  readonly onChangeEmail: (user: UserToChangeEmail) => void;
-  readonly onChangeRole: (user: UserToChangeRole) => void;
+  readonly onChangeEmail: (user: UserBaseActionData) => void;
+  readonly onChangeRole: (user: UserRoleActionData) => void;
 }) => {
   const roleConfig = getRoleConfig(user.role);
   const fullName = `${user.firstName} ${user.lastName}`;
@@ -345,7 +342,7 @@ const UserMobileCard = ({
                     onChangeRole({
                       id: user.id,
                       fullName,
-                      currentRole: user.role,
+                      role: user.role,
                     })
                   }
                   className="cursor-pointer text-xs text-indigo-700 focus:bg-indigo-50 flex items-center gap-2"
@@ -414,16 +411,16 @@ export default function UserList() {
   const [roleFilter, setRoleFilter] = useState<string>('');
   const [isBlockedFilter, setIsBlockedFilter] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
+  const [userToLockout, setUserToLockout] = useState<UserRoleActionData | null>(null);
+  const [userToUnlock, setUserToUnlock] = useState<UserBaseActionData | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UserRoleActionData | null>(null);
+  const [userToEdit, setUserToEdit] = useState<UserToEdit | null>(null);
+  const [userToChangeEmail, setUserToChangeEmail] = useState<UserBaseActionData | null>(null);
+  const [userToChangeRole, setUserToChangeRole] = useState<UserRoleActionData | null>(null);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
-  const [userToLockout, setUserToLockout] = useState<UserToLockout | null>(null);
+  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
   const [accumulatedMobileUsers, setAccumulatedMobileUsers] = useState<UserListResponse[]>([]);
   const isMobileAppend = useRef(false);
-  const [userToUnlock, setUserToUnlock] = useState<UserToUnlock | null>(null);
-  const [userToDelete, setUserToDelete] = useState<UserToDelete | null>(null);
-  const [userToEdit, setUserToEdit] = useState<UserToEdit | null>(null);
-  const [userToChangeEmail, setUserToChangeEmail] = useState<UserToChangeEmail | null>(null);
-  const [userToChangeRole, setUserToChangeRole] = useState<UserToChangeRole | null>(null);
-  const [isErrorDismissed, setIsErrorDismissed] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
@@ -494,12 +491,12 @@ export default function UserList() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: {
-      onLockout: (u: UserToLockout) => setUserToLockout(u),
-      onUnlock: (u: UserToUnlock) => setUserToUnlock(u),
-      onDelete: (u: UserToDelete) => setUserToDelete(u),
+      onLockout: (u: UserRoleActionData) => setUserToLockout(u),
+      onUnlock: (u: UserBaseActionData) => setUserToUnlock(u),
+      onDelete: (u: UserRoleActionData) => setUserToDelete(u),
       onEdit: (u: UserToEdit) => setUserToEdit(u),
-      onChangeEmail: (u: UserToChangeEmail) => setUserToChangeEmail(u),
-      onChangeRole: (u: UserToChangeRole) => setUserToChangeRole(u),
+      onChangeEmail: (u: UserBaseActionData) => setUserToChangeEmail(u),
+      onChangeRole: (u: UserRoleActionData) => setUserToChangeRole(u),
     },
   });
 
@@ -765,6 +762,7 @@ export default function UserList() {
             }}
             isLoading={unlockMutation.isPending}
           />
+
           <DeleteUserDialog
             user={userToDelete}
             isOpen={Boolean(userToDelete)}

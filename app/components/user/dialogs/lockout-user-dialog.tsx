@@ -15,10 +15,10 @@ import { pl } from 'date-fns/locale';
 import { cn } from '~/utils/utils';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import type { SetLockoutPayload, UserToLockout } from '~/types/user';
+import type { SetLockoutPayload, UserRoleActionData } from '~/types/user';
 
 interface LockoutUserDialogProps {
-  readonly user: UserToLockout | null;
+  readonly user: UserRoleActionData | null;
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly onLockout: (payload: SetLockoutPayload) => Promise<void>;

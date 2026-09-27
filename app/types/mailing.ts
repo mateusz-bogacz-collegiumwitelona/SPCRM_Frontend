@@ -15,13 +15,6 @@ export interface MailingProductResponse {
   promotionalPrice?: number;
 }
 
-export interface Currency {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
 export interface SendMailingPayload {
   to: string[];
   language: string;

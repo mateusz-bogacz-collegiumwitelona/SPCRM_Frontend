@@ -1,11 +1,11 @@
 import React from 'react';
 import type { SteelGradeOption } from '~/types/steel-grade';
 import type { UnitOption } from '~/types/unit';
-import type { CurrencyOption } from '~/types/currency';
 import type { ProductFormData } from '~/types/product';
 import { useProductCategories, useProductSteelGrades } from '~/hooks/use-products';
 import { useUnitsSimpleList } from '~/hooks/use-units';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
+import type { CurrencySimple } from '~/types/currency';
 
 export function useProductFormDictionaries(enabled: boolean) {
   const { data: categories = [] } = useProductCategories();
@@ -17,7 +17,7 @@ export function useProductFormDictionaries(enabled: boolean) {
     categories,
     steelGrades: steelGrades as unknown as SteelGradeOption[],
     units: units as unknown as UnitOption[],
-    currencies: currencies as unknown as CurrencyOption[],
+    currencies: currencies as unknown as CurrencySimple[],
   };
 }
 
@@ -27,7 +27,7 @@ interface ProductFormFieldsProps {
   readonly categories: string[];
   readonly steelGrades: SteelGradeOption[];
   readonly units: UnitOption[];
-  readonly currencies: CurrencyOption[];
+  readonly currencies: CurrencySimple[];
   readonly isDiameterRequired?: boolean;
   readonly showStockQuantity?: boolean;
 }

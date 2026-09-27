@@ -11,8 +11,8 @@ import {
 import { Button } from '~/components/ui/button';
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
-import type { AnalyticsPeriod } from '~/components/analytics/revenue-chart';
 import { downloadBase64Pdf } from '~/utils/pdf-downloader';
+import type { AnalyticsPeriod } from '~/types/analytics';
 
 interface DownloadAnalyticsReportDialogProps {
   readonly isOpen: boolean;

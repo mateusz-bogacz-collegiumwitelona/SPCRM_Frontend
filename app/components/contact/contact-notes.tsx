@@ -29,7 +29,7 @@ import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 
 import { getErrorMessage } from '~/utils/error-mapper';
 import type { ContactNote } from '~/types/contact';
-import { useAddNote, UseDeleteNote, useEditNote } from '~/hooks/use-notes';
+import { useAddNote, useDeleteNote, useEditNote } from '~/hooks/use-notes';
 
 interface NoteTableMeta {
   onSelect: (note: ContactNote) => void;
@@ -159,7 +159,7 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     },
   });
 
-  const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = UseDeleteNote({
+  const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = useDeleteNote({
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
       setDeletingNoteId(null);

@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '~/api/api';
-import {
-  type AnalyticsChartMetricResponse,
-  type AnalyticsPeriod,
-  type CurrencyListResponse,
-  RevenueChart,
-} from '~/components/analytics/revenue-chart';
+import { RevenueChart } from '~/components/analytics/revenue-chart';
 import { AlertCircle, FileText, Loader2, RefreshCw, X } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { getErrorMessage } from '~/utils/error-mapper';
-import type { LeaderboardItemResponse, TeamKpiSummaryResponse } from '~/types/analytics';
+import type {
+  AnalyticsChartMetricResponse,
+  AnalyticsPeriod,
+  LeaderboardItemResponse,
+  TeamKpiSummaryResponse,
+} from '~/types/analytics';
 import { LeaderboardTable } from '~/components/analytics/leaderboard-table';
 import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
 import { KpiCards } from '~/components/analytics/kpi-cards';
+import type { CurrencySimple } from '~/types/currency';
 
 export const TeamAnalyticsTab: React.FC = () => {
   const [isErrorDismissed, setIsErrorDismissed] = useState(false);
@@ -24,7 +25,7 @@ export const TeamAnalyticsTab: React.FC = () => {
   const [leaderboardPageSize, setLeaderboardPageSize] = useState(5);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
 
-  const { data: currencies } = useQuery<CurrencyListResponse[]>({
+  const { data: currencies } = useQuery<CurrencySimple[]>({
     queryKey: ['currencies-simple'],
     queryFn: async () => {
       const response = await api.get('/currency/simple');
