@@ -43,13 +43,6 @@ export interface AdminMetricsResponse {
 
 export type AnalyticsPeriod = 'CurrentMonth' | 'HalfYear' | 'CurrentYear';
 
-export interface CurrencyListResponse {
-  currencyId: string;
-  name: string;
-  code: string;
-  decimalPlace: number;
-}
-
 export interface AnalyticsChartMetricResponse {
   label: string;
   revenue: CurrencyAmountResponse[];
