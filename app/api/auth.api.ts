@@ -35,7 +35,7 @@ export const authApi = {
 
   getMe: async (): Promise<User | null> => {
     const response = await client.get('/auth/me');
-    if (response.data?.success) {
+    if (response.data?.isSuccess) {
       return response.data.data;
     }
     return null;
