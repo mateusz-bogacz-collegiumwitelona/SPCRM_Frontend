@@ -18,7 +18,7 @@ export const userKeys = {
   all: ['users'] as const,
   list: (params: Record<string, unknown>) => [...userKeys.all, 'list', params] as const,
   roles: () => [...userKeys.all, 'roles'] as const,
-  simple: () => ['users-simple-list'] as const,
+  simple: () => [...userKeys.all, 'simple-list'] as const,
   details: (id?: string) => [...userKeys.all, 'detail', id] as const,
   userCompanies: (userId?: string, params?: Record<string, unknown>) =>
     ['user-companies', userId, params] as const,
@@ -28,6 +28,7 @@ export const userKeys = {
     ['user-sales', userId, params] as const,
   userTasks: (userId?: string, params?: Record<string, unknown>) =>
     ['user-tasks', userId, params] as const,
+  recent: () => [...userKeys.all, 'recent'] as const,
 };
 
 const parseIsBlockedFilter = (value: string): boolean | undefined => {
@@ -100,46 +101,46 @@ export function useUsersSimpleList(enabled = true) {
 export function useUserMutations() {
   const queryClient = useQueryClient();
 
-  const invalidateUserLists = async () => {
+  const invalidateAllUsers = async () => {
     await queryClient.invalidateQueries({ queryKey: userKeys.all });
   };
 
   const addUserMutation = useMutation({
     mutationFn: (payload: AddUserRequestPayload) => usersApi.create(payload),
-    onSuccess: invalidateUserLists,
+    onSuccess: invalidateAllUsers,
   });
 
   const lockoutMutation = useMutation({
     mutationFn: (payload: SetLockoutPayload) => usersApi.lockout(payload),
-    onSuccess: invalidateUserLists,
+    onSuccess: invalidateAllUsers,
   });
 
   const unlockMutation = useMutation({
     mutationFn: (userId: string) => usersApi.unlock(userId),
-    onSuccess: invalidateUserLists,
+    onSuccess: invalidateAllUsers,
   });
 
   const deleteUserMutation = useMutation({
     mutationFn: (payload: DeleteUserPayload) => usersApi.delete(payload),
     onSuccess: async () => {
-      await invalidateUserLists();
+      await invalidateAllUsers();
       await queryClient.invalidateQueries({ queryKey: userKeys.simple() });
     },
   });
 
   const editUserMutation = useMutation({
     mutationFn: (payload: EditUserRequestPayload) => usersApi.edit(payload),
-    onSuccess: invalidateUserLists,
+    onSuccess: invalidateAllUsers,
   });
 
   const changeEmailMutation = useMutation({
     mutationFn: (payload: ChangeUserEmailPayload) => usersApi.changeEmail(payload),
-    onSuccess: invalidateUserLists,
+    onSuccess: invalidateAllUsers,
   });
 
   const changeRoleMutation = useMutation({
     mutationFn: (payload: ChangeUserRolePayload) => usersApi.changeRole(payload),
-    onSuccess: invalidateUserLists,
+    onSuccess: invalidateAllUsers,
   });
 
   return {
@@ -324,7 +325,7 @@ export function useUserTasks({
 
 export function useAdminRecentUsers(pageSize = 5) {
   return useQuery({
-    queryKey: ['admin-recent-users'],
+    queryKey: userKeys.recent(),
     queryFn: async () => {
       const res = await usersApi.getList({
         pageNumber: 1,

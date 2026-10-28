@@ -8,12 +8,12 @@ import type { InvoicePaymentsParams, InvoiceProductsParams } from '~/types/table
 export const invoiceKeys = {
   all: ['invoices'] as const,
   list: (params: Record<string, unknown>) => [...invoiceKeys.all, 'list', params] as const,
-  details: (id?: string) => ['invoice-detail', id] as const,
-  paymentSummary: (id?: string) => ['invoice-payment-summary', id] as const,
+  details: (id?: string) => [...invoiceKeys.all, 'detail', id] as const,
+  paymentSummary: (id?: string) => [...invoiceKeys.all, 'payment-summary', id] as const,
   payments: (id?: string, params?: Record<string, unknown>) =>
-    ['invoice-payments', id, params] as const,
+    [...invoiceKeys.all, 'payments', id, params] as const,
   products: (id?: string, params?: Record<string, unknown>) =>
-    ['invoice-products', id, params] as const,
+    [...invoiceKeys.all, 'products', id, params] as const,
 };
 
 const parseIsOverDueFilter = (filterValue: string): boolean | undefined => {
@@ -113,10 +113,10 @@ export function useAddInvoicePaymentMutation(
   return useMutation({
     mutationFn: (payload: AddInvoicePaymentPayload) => invoiceApi.addPayment(invoiceId, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['invoice-payments', invoiceId] });
-      await queryClient.invalidateQueries({ queryKey: invoiceKeys.paymentSummary(invoiceId) });
-      await queryClient.invalidateQueries({ queryKey: invoiceKeys.details(invoiceId) });
       await queryClient.invalidateQueries({ queryKey: invoiceKeys.all });
+      await queryClient.invalidateQueries({ queryKey: ['companies', 'debt-summary'] });
+      await queryClient.invalidateQueries({ queryKey: ['companies', 'debts'] });
+
       options?.onSuccess?.();
     },
   });

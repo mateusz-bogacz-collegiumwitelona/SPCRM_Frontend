@@ -16,12 +16,14 @@ export const companyKeys = {
   details: (id?: string) => [...companyKeys.all, 'details', id] as const,
   editDetails: (id?: string) => [...companyKeys.all, 'edit-details', id] as const,
   addresses: (id?: string) => [...companyKeys.all, 'addresses', id] as const,
-  addressTypes: () => ['company-address-types'] as const,
-  debtSummary: (id?: string) => ['company-debt-summary', id] as const,
+  addressTypes: () => [...companyKeys.all, 'address-types'] as const,
+  debtSummary: (id?: string) => [...companyKeys.all, 'debt-summary', id] as const,
   debts: (id?: string, page?: number, size?: number) =>
-    ['company-debts', { clientId: id, page, pageSize: size }] as const,
+    [...companyKeys.all, 'debts', id, page, size] as const,
   companySales: (id?: string, page?: number, size?: number) =>
-    ['company-sales', id, page, size] as const,
+    [...companyKeys.all, 'sales', id, page, size] as const,
+  contacts: (companyId?: string, page?: number, size?: number) =>
+    [...companyKeys.all, 'contacts', companyId, page, size] as const,
 };
 
 const parseIsYourFilter = (filterValue: string): boolean | undefined => {
@@ -129,8 +131,6 @@ export function useCompanyDetailMutations(companyId?: string) {
   const queryClient = useQueryClient();
 
   const invalidateCompany = async () => {
-    await queryClient.invalidateQueries({ queryKey: companyKeys.details(companyId) });
-    await queryClient.invalidateQueries({ queryKey: companyKeys.editDetails(companyId) });
     await queryClient.invalidateQueries({ queryKey: companyKeys.all });
   };
 
@@ -158,6 +158,9 @@ export function useCompanyDetailMutations(companyId?: string) {
   const deleteCompanyMutation = useMutation({
     mutationFn: () => companyApi.deleteCompany(companyId || ''),
     onSuccess: async () => {
+      if (companyId) {
+        queryClient.removeQueries({ queryKey: companyKeys.details(companyId) });
+      }
       await queryClient.invalidateQueries({ queryKey: companyKeys.all });
     },
   });
@@ -193,30 +196,27 @@ export function useCompanyContacts(companyId?: string, page = 1, pageSize = 4) {
 export function useCompanyContactSectionMutations(companyId?: string) {
   const queryClient = useQueryClient();
 
-  const invalidateCompanyContacts = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['company-contacts', companyId] });
+  const invalidateContacts = async () => {
+    await queryClient.invalidateQueries({ queryKey: companyKeys.contacts(companyId) });
+    await queryClient.invalidateQueries({ queryKey: ['contacts'] });
   };
 
   const addContactMutation = useMutation({
     mutationFn: (newContact: AddContactRequest) => contactsApi.create(newContact),
-    onSuccess: invalidateCompanyContacts,
+    onSuccess: invalidateContacts,
   });
 
   const editContactMutation = useMutation({
     mutationFn: (updatedContact: EditContactRequest) => contactsApi.edit(updatedContact),
-    onSuccess: invalidateCompanyContacts,
+    onSuccess: invalidateContacts,
   });
 
   const setPrimaryMutation = useMutation({
     mutationFn: (contactId: string) => contactsApi.setPrimary(contactId),
-    onSuccess: invalidateCompanyContacts,
+    onSuccess: invalidateContacts,
   });
 
-  return {
-    addContactMutation,
-    editContactMutation,
-    setPrimaryMutation,
-  };
+  return { addContactMutation, editContactMutation, setPrimaryMutation };
 }
 
 export function useCompanyDebtSummary(companyId?: string) {

@@ -12,11 +12,11 @@ export const productKeys = {
   list: (params: Record<string, unknown>) => [...productKeys.all, 'list', params] as const,
   categories: () => [...productKeys.all, 'categories'] as const,
   steelGrades: () => [...productKeys.all, 'steel-grades'] as const,
-  details: (id?: string) => ['product-details', id] as const,
-  forEdit: (id?: string) => ['product-for-edit', id] as const,
-  search: (query: string) => ['products-async-search', query] as const,
+  details: (id?: string) => [...productKeys.all, 'details', id] as const,
+  forEdit: (id?: string) => [...productKeys.all, 'for-edit', id] as const,
+  search: (query: string) => [...productKeys.all, 'search', query] as const,
   invoices: (productId?: string, params?: Record<string, unknown>) =>
-    ['product-invoices', productId, params] as const,
+    [...productKeys.all, 'invoices', productId, params] as const,
 };
 
 interface UseProductsListProps {
@@ -86,33 +86,29 @@ export function useProductDetails(productId?: string) {
 export function useProductMutations() {
   const queryClient = useQueryClient();
 
-  const invalidateProductLists = async () => {
+  const invalidateProducts = async () => {
     await queryClient.invalidateQueries({ queryKey: productKeys.all });
   };
 
   const addProductMutation = useMutation({
     mutationFn: (newProduct: AddProductRequest) => productsApi.create(newProduct),
-    onSuccess: invalidateProductLists,
+    onSuccess: invalidateProducts,
   });
 
   const editProductMutation = useMutation({
     mutationFn: (updatedProduct: EditProductRequest) => productsApi.edit(updatedProduct),
-    onSuccess: async (_, variables) => {
-      await invalidateProductLists();
-      await queryClient.invalidateQueries({ queryKey: productKeys.details(variables.productId) });
-      await queryClient.invalidateQueries({ queryKey: productKeys.forEdit(variables.productId) });
-    },
+    onSuccess: invalidateProducts,
   });
 
   const deleteProductMutation = useMutation({
     mutationFn: (productId: string) => productsApi.delete(productId),
-    onSuccess: invalidateProductLists,
+    onSuccess: invalidateProducts,
   });
 
   const addStockMutation = useMutation({
     mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) =>
       productsApi.addStock(productId, quantity),
-    onSuccess: invalidateProductLists,
+    onSuccess: invalidateProducts,
   });
 
   return {
