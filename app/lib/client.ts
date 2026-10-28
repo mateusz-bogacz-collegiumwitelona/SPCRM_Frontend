@@ -2,7 +2,7 @@ import type ApiError from '~/types/api-error';
 import axios from 'axios';
 
 const getBaseUrl = () => {
-  if (typeof window === 'undefined') {
+  if (globalThis.window === undefined) {
     const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
     return `${serverUrl.replace(/\/$/, '')}/api`;
   }
