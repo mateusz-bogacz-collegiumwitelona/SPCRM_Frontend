@@ -19,7 +19,7 @@ export const unitsApi = {
         SortDescending: params.sortDescending,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   create: async (payload: AddUnitRequestPayload) => {
@@ -34,6 +34,6 @@ export const unitsApi = {
 
   getSimpleList: async (): Promise<UnitOption[]> => {
     const res = await client.get('/unit/simple');
-    return (res.data?.value || res.data?.data || res.data || []) as UnitOption[];
+    return (res.data ?? []) as UnitOption[];
   },
 };

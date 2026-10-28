@@ -25,37 +25,37 @@ export const contactsApi = {
         OwnerId: params.ownerId,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getCompanies: async (): Promise<string[]> => {
     const response = await client.get('/contacts/companies');
-    return response.data?.value || response.data?.data || response.data || [];
+    return response.data ?? [];
   },
 
   getAvailableOwners: async (): Promise<OwnerOption[]> => {
     const response = await client.get('/contacts/available-owners');
-    return response.data?.data || [];
+    return response.data ?? [];
   },
 
   getDetails: async (contactId: string) => {
     const response = await client.get(`/contacts/${contactId}`);
-    return response.data.data;
+    return response.data;
   },
 
   getEditDetails: async (contactId: string) => {
     const response = await client.get(`/contacts/${contactId}/detail`);
-    return response.data.data;
+    return response.data;
   },
 
   getWays: async (contactId: string): Promise<Contact[]> => {
     const response = await client.get(`/contacts/${contactId}/ways`);
-    return response.data?.data || [];
+    return response.data ?? [];
   },
 
   getTypes: async (): Promise<string[]> => {
     const response = await client.get('/contacts/types');
-    return response.data?.data || [];
+    return response.data ?? [];
   },
 
   edit: async (payload: EditContactRequest) => {
@@ -95,7 +95,7 @@ export const contactsApi = {
         SearchTerm: params.searchTerm || undefined,
       },
     });
-    return res.data?.data || res.data?.value || res.data;
+    return res.data;
   },
 
   getContactTasks: async (
@@ -109,7 +109,7 @@ export const contactsApi = {
         SearchTerm: params.searchTerm || undefined,
       },
     });
-    return res.data?.value || res.data?.data || res.data;
+    return res.data;
   },
 
   addContactTask: async (contactId: string, payload: AddTaskRequestPayload) => {

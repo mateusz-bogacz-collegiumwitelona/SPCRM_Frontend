@@ -19,14 +19,14 @@ export const mailingApi = {
     const response = await client.get('/mailing/contacts', {
       params: { SearchTerm: searchTerm || undefined, PageSize: pageSize },
     });
-    return response.data?.data?.items || response.data?.items || [];
+    return response.data ?? [];
   },
 
   getProducts: async (searchTerm?: string): Promise<MailingProductResponse[]> => {
     const response = await client.get('/mailing/products', {
       params: { SearchTerm: searchTerm || undefined, PageSize: 50 },
     });
-    return response.data?.data?.items || response.data?.items || [];
+    return response.data ?? [];
   },
 
   sendMailing: async (payload: SendMailingPayload) => {

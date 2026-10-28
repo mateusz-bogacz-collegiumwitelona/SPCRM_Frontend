@@ -33,17 +33,17 @@ export const invoiceApi = {
         TotalAmountTo: params.totalAmountTo,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getDetails: async (invoiceId: string): Promise<InvoiceDetailResponse> => {
     const response = await client.get(`/invoice/${invoiceId}`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   getPaymentSummary: async (invoiceId: string): Promise<InvoicePaymentSummaryResponse> => {
     const response = await client.get(`/invoice/${invoiceId}/payment/summary`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   addPayment: async (invoiceId: string, payload: AddInvoicePaymentPayload) => {
@@ -55,7 +55,7 @@ export const invoiceApi = {
     const response = await client.get(`/invoice/${invoiceId}/pdf`, {
       params: { language },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getPayments: async (
@@ -69,7 +69,7 @@ export const invoiceApi = {
         SearchTerm: params.searchTerm || undefined,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getProducts: async (
@@ -83,6 +83,6 @@ export const invoiceApi = {
         SearchTerm: params.searchTerm || undefined,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 };

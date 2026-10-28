@@ -18,7 +18,7 @@ export const currenciesApi = {
         SortDescending: params.sortDescending,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   create: async (payload: AddCurrencyRequestPayload) => {
@@ -33,6 +33,6 @@ export const currenciesApi = {
 
   getSimpleList: async (): Promise<CurrencySimple[]> => {
     const res = await client.get('/currency/simple');
-    return res.data?.data || res.data?.value || res.data || [];
+    return res.data ?? [];
   },
 };

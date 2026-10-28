@@ -9,7 +9,7 @@ import type {
 export const analyticsApi = {
   getEmployeeKpi: async (userId: string): Promise<EmployeeKpiSummaryResponse> => {
     const response = await client.get(`/analytics/employees/${userId}/kpi`);
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getEmployeeChart: async (
@@ -19,16 +19,16 @@ export const analyticsApi = {
     const response = await client.get(`/analytics/employees/${userId}/chart`, {
       params: { Period: period },
     });
-    return response.data?.value || response.data?.data || response.data || [];
+    return response.data ?? [];
   },
 
   getMyKpi: async (): Promise<EmployeeKpiSummaryResponse> => {
     const response = await client.get('/analytics/me/kpi');
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getAdminMetrics: async (): Promise<AdminMetricsResponse> => {
     const response = await client.get('/analytics/admin/metrics');
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 };
