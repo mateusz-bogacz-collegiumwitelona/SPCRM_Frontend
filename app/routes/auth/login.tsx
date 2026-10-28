@@ -14,6 +14,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<FormErrorState | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const { login, user, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ export default function Login() {
     loginMutation.mutate({
       name: name.trim(),
       password,
+      rememberMe,
     });
   };
 
@@ -128,7 +130,9 @@ export default function Login() {
                 <label className="inline-flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="size-5 rounded-[1px] border border-card-border-dark accent-brand"
+                    checked={rememberMe}
+                    onChange={(event) => setRememberMe(event.target.checked)}
+                    className="size-5 rounded-[1px] border border-card-border-dark accent-brand cursor-pointer"
                   />
                   <span>Zapamietaj mnie</span>
                 </label>

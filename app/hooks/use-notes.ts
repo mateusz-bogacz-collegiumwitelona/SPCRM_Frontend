@@ -95,9 +95,14 @@ export const useAddNote = (options?: {
   onSuccess?: () => void;
   onError?: (error: unknown) => void;
 }) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: AddNotePayload) => notesApi.create(payload),
-    onSuccess: options?.onSuccess,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-notes'] });
+      await queryClient.invalidateQueries({ queryKey: ['task-notes'] });
+      options?.onSuccess?.();
+    },
     onError: options?.onError,
   });
 };
@@ -106,9 +111,14 @@ export const useEditNote = (options?: {
   onSuccess?: () => void;
   onError?: (error: unknown) => void;
 }) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: NoteEditData) => notesApi.edit(data),
-    onSuccess: options?.onSuccess,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-notes'] });
+      await queryClient.invalidateQueries({ queryKey: ['task-notes'] });
+      options?.onSuccess?.();
+    },
     onError: options?.onError,
   });
 };
@@ -117,9 +127,14 @@ export const useDeleteNote = (options?: {
   onSuccess?: () => void;
   onError?: (error: unknown) => void;
 }) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (noteId: string) => notesApi.delete(noteId),
-    onSuccess: options?.onSuccess,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['deal-notes'] });
+      await queryClient.invalidateQueries({ queryKey: ['task-notes'] });
+      options?.onSuccess?.();
+    },
     onError: options?.onError,
   });
 };

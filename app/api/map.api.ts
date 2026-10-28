@@ -10,12 +10,12 @@ interface MapApiResponse {
 }
 
 export const mapApi = {
-  getCompanies: async (searchTerm?: string): Promise<CompanyMapData[]> => {
+  getCompanies: async (searchTerm?: string): Promise<MapApiResponse> => {
     const endpoint = searchTerm
       ? `/company/map?searchTerm=${encodeURIComponent(searchTerm)}`
       : `/company/map`;
 
     const response = await client.get<MapApiResponse>(endpoint);
-    return response.data?.data || [];
+    return response.data ?? [];
   },
 };

@@ -29,17 +29,17 @@ export const dealsApi = {
         OwnerId: params.ownerId,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getStatuses: async (): Promise<string[]> => {
     const response = await client.get('/sales/statuses');
-    return response.data?.value || response.data?.data || response.data || [];
+    return response.data ?? [];
   },
 
   getDetails: async (dealId: string): Promise<SaleDetailResponse> => {
     const response = await client.get(`/sales/${dealId}`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   create: async (payload: AddDealPayload) => {
@@ -57,7 +57,7 @@ export const dealsApi = {
 
   getAssignableContacts: async (dealId: string): Promise<DealAssignableContactResponse[]> => {
     const response = await client.get(`/sales/${dealId}/assignable-contacts`);
-    return (response.data?.data || response.data?.value || []) as DealAssignableContactResponse[];
+    return (response.data ?? []) as DealAssignableContactResponse[];
   },
 
   changeStatus: async (
@@ -65,7 +65,7 @@ export const dealsApi = {
     payload: ChangeDealStatusPayload,
   ): Promise<ChangeStatusResponse> => {
     const response = await client.put(`/sales/${dealId}/status`, payload);
-    return (response.data?.data || response.data?.value || response.data) as ChangeStatusResponse;
+    return response.data as ChangeStatusResponse;
   },
 
   editDealProduct: async (
@@ -111,7 +111,7 @@ export const dealsApi = {
         SteelGrade: params.steelGrade || undefined,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   deleteDealProduct: async (dealId: string, dealProductId: string) => {
@@ -129,7 +129,7 @@ export const dealsApi = {
         Priority: params.priority || undefined,
       },
     });
-    return res.data?.value || res.data?.data || res.data;
+    return res.data;
   },
 
   addDealTask: async (dealId: string, payload: AddTaskRequestPayload) => {
@@ -139,7 +139,7 @@ export const dealsApi = {
 
   getDealNotes: async (dealId: string): Promise<Note[]> => {
     const response = await client.get(`/sales/${dealId}/notes`);
-    return response.data?.data || response.data?.value || response.data || [];
+    return response.data ?? [];
   },
 
   addDealNote: async (dealId: string, payload: { title: string; content: string }) => {

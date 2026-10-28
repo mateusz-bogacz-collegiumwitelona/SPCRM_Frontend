@@ -28,7 +28,7 @@ export const companyApi = {
         IsYour: params.isYour,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   create: async (payload: AddCompanyRequest) => {
@@ -38,24 +38,24 @@ export const companyApi = {
 
   getDetails: async (companyId: string): Promise<CompanyDetailResponse> => {
     const response = await client.get('/company', { params: { companyId } });
-    return response.data.data;
+    return response.data;
   },
 
   getEditDetails: async (companyId: string): Promise<EditCompanyDetailResponse> => {
     const response = await client.get(`/company/edit-detail/${companyId}`);
-    return response.data?.data ?? response.data;
+    return response.data;
   },
 
   getAddresses: async (companyId: string): Promise<PaginatedResponse<CompanyAddress>> => {
     const response = await client.get('/company/addresses', {
       params: { companyId, PageNumber: 1, PageSize: 100 },
     });
-    return response.data.data;
+    return response.data;
   },
 
   getAddressTypes: async (): Promise<string[]> => {
     const response = await client.get('/company/address/types');
-    return (response.data?.data || response.data?.value || []) as string[];
+    return (response.data ?? []) as string[];
   },
 
   edit: async (payload: EditCompanyRequest) => {
@@ -106,14 +106,14 @@ export const companyApi = {
         PageSize: params.pageSize,
       },
     });
-    return response.data?.data || response.data;
+    return response.data;
   },
 
   getDebtSummary: async (companyId: string): Promise<DebtSummary[]> => {
     const response = await client.get('/company/debts/summary', {
       params: { CompanyId: companyId },
     });
-    return response.data?.data || response.data?.value || [];
+    return response.data ?? [];
   },
 
   getDebts: async (params: {
@@ -128,7 +128,7 @@ export const companyApi = {
         PageSize: params.pageSize,
       },
     });
-    return response.data?.data || response.data?.value || null;
+    return response.data;
   },
 
   getSales: async (params: {
@@ -143,6 +143,6 @@ export const companyApi = {
         PageSize: params.pageSize,
       },
     });
-    return response.data?.data || response.data;
+    return response.data;
   },
 };

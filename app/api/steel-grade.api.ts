@@ -27,7 +27,7 @@ export const steelGradesApi = {
 
   getProducts: async (steelGradeId: string): Promise<SteelGradeProductItem[]> => {
     const res = await client.get(`/steel-grade/${steelGradeId}/products`);
-    return (res.data?.value || res.data?.data || res.data || []) as SteelGradeProductItem[];
+    return (res.data ?? []) as SteelGradeProductItem[];
   },
 
   create: async (payload: AddSteelGradePayload) => {

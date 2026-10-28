@@ -26,17 +26,17 @@ export const promotionsApi = {
         PromotionPriceTo: params.promotionPriceTo,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   create: async (payload: AddPromotionRequest): Promise<string> => {
     const response = await client.post('/promotion', payload);
-    return response.data?.data;
+    return response.data;
   },
 
   getDetails: async (promotionId: string): Promise<PromotionDetailResponse> => {
     const response = await client.get(`/promotion/${promotionId}`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   deactivate: async (promotionId: string) => {

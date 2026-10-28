@@ -14,14 +14,15 @@ import { dealsApi } from '~/api/deal.api';
 export const taskKeys = {
   all: ['tasks'] as const,
   calendar: (from?: string | null, to?: string | null, status?: string, priority?: string) =>
-    [...taskKeys.all, 'calendar', from, to, status, priority] as const,
+    [...taskKeys.all, 'calendar', { from, to, status, priority }] as const,
   dictionaries: () => [...taskKeys.all, 'dictionaries'] as const,
-  details: (id?: string) => ['task-core-details', id] as const,
-  contactTasks: (params: Record<string, unknown>) => ['contact-tasks', params] as const,
+  details: (id?: string) => [...taskKeys.all, 'details', id] as const,
+  contactTasks: (params: Record<string, unknown>) => [...taskKeys.all, 'contact', params] as const,
   dealTasks: (dealId?: string, params?: Record<string, unknown>) =>
-    ['deal-tasks', dealId, params] as const,
-  contact: (taskId?: string) => ['task-contact', taskId] as const,
-  deal: (taskId?: string) => ['task-deal', taskId] as const,
+    [...taskKeys.all, 'deal', dealId, params] as const,
+  contact: (taskId?: string) => [...taskKeys.all, 'task-contact', taskId] as const,
+  deal: (taskId?: string) => [...taskKeys.all, 'task-deal', taskId] as const,
+  upcoming: () => [...taskKeys.all, 'upcoming'] as const,
 };
 
 interface UseCalendarTasksProps {
@@ -255,7 +256,7 @@ export function useTaskInfoMutations(taskId: string) {
   const deleteTaskMutation = useMutation({
     mutationFn: () => tasksApi.deleteTask(taskId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['deal-tasks'] });
+      queryClient.removeQueries({ queryKey: taskKeys.details(taskId) });
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
   });
@@ -289,7 +290,7 @@ export function useUpcomingTasks(limit = 5) {
   const nextWeek = addDays(today, 7);
 
   return useQuery({
-    queryKey: ['my-upcoming-tasks'],
+    queryKey: taskKeys.upcoming(),
     queryFn: async () => {
       const list = await tasksApi.getCalendarTasks({
         dateFrom: format(today, 'yyyy-MM-dd'),

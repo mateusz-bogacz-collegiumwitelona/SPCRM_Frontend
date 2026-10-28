@@ -10,35 +10,32 @@ import type {
 export const authApi = {
   login: async (payload: LoginPayload) => {
     const response = await client.post('/auth/login', payload);
-    return response.data;
+    return response.data?.value || response.data?.data || response.data;
   },
 
   resetPassword: async (payload: ResetPasswordPayload) => {
     const response = await client.post('/auth/reset-password', payload);
-    return response.data;
+    return response.data?.value || response.data?.data || response.data;
   },
 
   forgotPassword: async (email: string) => {
     const response = await client.post('/auth/forgot-password', { email });
-    return response.data;
+    return response.data?.value || response.data?.data || response.data;
   },
 
   confirmEmail: async (payload: ConfirmEmailPayload) => {
     const response = await client.post('/user/confirm-email', payload);
-    return response.data;
+    return response.data?.value || response.data?.data || response.data;
   },
 
   confirmEmailChange: async (payload: ConfirmEmailChangePayload) => {
     const response = await client.post('/user/confirm-email-change', payload);
-    return response.data;
+    return response.data?.value || response.data?.data || response.data;
   },
 
   getMe: async (): Promise<User | null> => {
-    const response = await client.get('/auth/me');
-    if (response.data?.isSuccess) {
-      return response.data.data;
-    }
-    return null;
+    const response = await client.get<User>('/auth/me');
+    return response.data ?? null;
   },
 
   logout: async (): Promise<void> => {

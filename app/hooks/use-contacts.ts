@@ -7,10 +7,11 @@ export const contactKeys = {
   list: (params: Record<string, unknown>) => [...contactKeys.all, 'list', params] as const,
   companies: () => [...contactKeys.all, 'companies'] as const,
   availableOwners: () => [...contactKeys.all, 'available-owners'] as const,
-  details: (id?: string) => ['contact-details', id] as const,
-  editDetails: (id?: string) => ['contact-edit-detail', id] as const,
-  ways: (id?: string) => ['contact-ways', id] as const,
-  types: () => ['contact-types'] as const,
+  details: (id?: string) => [...contactKeys.all, 'details', id] as const,
+  editDetails: (id?: string) => [...contactKeys.all, 'edit-detail', id] as const,
+  ways: (id?: string) => [...contactKeys.all, 'ways', id] as const,
+  types: () => [...contactKeys.all, 'types'] as const,
+  toDeal: (page: number, search?: string) => [...contactKeys.all, 'to-deal', page, search] as const,
 };
 
 const parseIsPrimaryFilter = (filterValue: string): boolean | undefined => {
@@ -117,11 +118,8 @@ export function useContactMutations(contactId?: string) {
 
   const invalidateContacts = async () => {
     await queryClient.invalidateQueries({ queryKey: contactKeys.all });
-    if (contactId) {
-      await queryClient.invalidateQueries({ queryKey: contactKeys.details(contactId) });
-      await queryClient.invalidateQueries({ queryKey: contactKeys.editDetails(contactId) });
-      await queryClient.invalidateQueries({ queryKey: contactKeys.ways(contactId) });
-    }
+    await queryClient.invalidateQueries({ queryKey: ['companies', 'contacts'] });
+    await queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
   };
 
   const editContactMutation = useMutation({
@@ -143,8 +141,10 @@ export function useContactMutations(contactId?: string) {
   const deleteContactMutation = useMutation({
     mutationFn: () => contactsApi.delete(contactId || ''),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: contactKeys.all });
-      await queryClient.invalidateQueries({ queryKey: ['company-contacts'] });
+      if (contactId) {
+        queryClient.removeQueries({ queryKey: contactKeys.details(contactId) });
+      }
+      await invalidateContacts();
     },
   });
 

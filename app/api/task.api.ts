@@ -22,12 +22,12 @@ export const tasksApi = {
         TaskPriority: params.priority || undefined,
       },
     });
-    return res.data.data;
+    return res.data;
   },
 
   getDictionaries: async (): Promise<TaskDictionariesResponse> => {
     const res = await client.get('/tasks/dictionaries');
-    return res.data.data;
+    return res.data;
   },
 
   createTask: async (payload: AddTaskRequestPayload): Promise<void> => {
@@ -36,7 +36,7 @@ export const tasksApi = {
 
   getDetails: async (taskId: string) => {
     const res = await client.get(`/tasks/${taskId}`);
-    return res.data?.data || res.data?.value || res.data;
+    return res.data;
   },
 
   editTask: async (taskId: string, payload: EditTaskRequestPayload) => {
@@ -56,12 +56,12 @@ export const tasksApi = {
 
   getContact: async (taskId: string): Promise<TaskContactResponse> => {
     const response = await client.get(`/tasks/${taskId}/contact`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   getDeal: async (taskId: string): Promise<TaskDealResponse> => {
     const response = await client.get(`/tasks/${taskId}/deal`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   extendDueDate: async (taskId: string, payload: ExtendTaskDueDatePayload) => {
@@ -76,6 +76,6 @@ export const tasksApi = {
 
   getTaskNotes: async (taskId: string): Promise<Note[]> => {
     const response = await client.get(`/tasks/${taskId}/notes`);
-    return response.data?.data || response.data?.value || response.data || [];
+    return response.data ?? [];
   },
 };

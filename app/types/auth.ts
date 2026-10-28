@@ -1,6 +1,7 @@
 export interface LoginPayload {
   name: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 export interface ResetPasswordPayload {

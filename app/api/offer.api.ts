@@ -27,32 +27,32 @@ export const offersApi = {
         ValidUntilTo: params.validUntilTo,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getStatuses: async (): Promise<string[]> => {
     const response = await client.get('/offer/statuses');
-    return response.data?.data || response.data?.value || response.data || [];
+    return response.data ?? [];
   },
 
   getCompaniesSimpleList: async (): Promise<CompanySimpleListResponse[]> => {
     const response = await client.get('/company/simple-list');
-    return response.data?.value || response.data?.data || response.data || [];
+    return response.data ?? [];
   },
 
   getDetails: async (offerId: string) => {
     const response = await client.get(`/offer/detail/${offerId}`);
-    return response.data.data;
+    return response.data;
   },
 
   getAllowedActions: async (offerId: string): Promise<OfferAllowedActionsResponse> => {
     const response = await client.get(`/offer/${offerId}/allowed-actions`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   getClientDetail: async (offerId: string): Promise<OfferClientDetailResponse> => {
     const response = await client.get(`/offer/client/${offerId}`);
-    return response.data?.data || response.data?.value || response.data;
+    return response.data;
   },
 
   getOfferProducts: async (
@@ -66,7 +66,7 @@ export const offersApi = {
         SearchTerm: params.searchTerm || undefined,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   updateProducts: async (offerId: string, items: UpdateOfferProductItem[]) => {

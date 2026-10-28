@@ -35,6 +35,16 @@ export function useLoginMutation(options?: UseLoginOptions) {
         return;
       }
 
+      if (status === 423) {
+        options?.onError?.({
+          title: 'Konto zostało zablokowane.',
+          details: [
+            'Twoje konto jest tymczasowo lub na stałe zablokowane. Skontaktuj się z administratorem.',
+          ],
+        });
+        return;
+      }
+
       if (errorData?.errorCode) {
         options?.onError?.({
           title: getErrorMessage(errorData.errorCode, errorData.message),

@@ -27,27 +27,27 @@ export const productsApi = {
         HasActivePromotion: params.hasActivePromotion ? true : undefined,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getCategories: async (): Promise<string[]> => {
     const response = await client.get('/products/categories');
-    return response.data?.value || response.data?.data || response.data || [];
+    return response.data ?? [];
   },
 
   getSteelGrades: async (): Promise<SteelGradeResponse[]> => {
     const response = await client.get('/products/steel-grades');
-    return response.data?.value || response.data?.data || response.data || [];
+    return response.data ?? [];
   },
 
   getDetails: async (productId: string) => {
     const response = await client.get(`/products/${productId}`);
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getEditDetails: async (productId: string): Promise<EditProductDetailResponse> => {
     const res = await client.get(`/products/edit/${productId}`);
-    return (res.data?.value || res.data?.data || res.data) as EditProductDetailResponse;
+    return res.data as EditProductDetailResponse;
   },
 
   search: async (query: string, limit = 20): Promise<ProductSearchResult[]> => {
@@ -55,7 +55,7 @@ export const productsApi = {
     const response = await client.get('/products/search', {
       params: { Query: query, Limit: limit },
     });
-    return response.data?.data || response.data?.value || response.data || [];
+    return response.data ?? [];
   },
 
   create: async (payload: AddProductRequest) => {
@@ -90,6 +90,6 @@ export const productsApi = {
         SearchTerm: params.searchTerm || undefined,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 };

@@ -116,8 +116,9 @@ export function useCreateDealMutation(options?: { onSuccess?: () => void }) {
   return useMutation({
     mutationFn: (payload: AddDealPayload) => dealsApi.create(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: dealKeys.lists() });
       await queryClient.invalidateQueries({ queryKey: dealKeys.all });
+      await queryClient.invalidateQueries({ queryKey: ['companies', 'sales'] });
+      await queryClient.invalidateQueries({ queryKey: ['user-sales'] });
       options?.onSuccess?.();
     },
   });
@@ -178,8 +179,10 @@ export function useDealInfoMutations(dealId: string) {
   const deleteDealMutation = useMutation({
     mutationFn: () => dealsApi.delete(dealId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: dealKeys.lists() });
       queryClient.removeQueries({ queryKey: dealKeys.detail(dealId) });
+      await queryClient.invalidateQueries({ queryKey: dealKeys.all });
+      await queryClient.invalidateQueries({ queryKey: ['companies', 'sales'] });
+      await queryClient.invalidateQueries({ queryKey: ['user-sales'] });
     },
   });
 

@@ -34,22 +34,22 @@ export const usersApi = {
         IsBlocked: params.isBlocked,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getRoles: async (): Promise<string[]> => {
     const response = await client.get('/user/roles');
-    return response.data?.data || response.data?.value || response.data || [];
+    return response.data ?? [];
   },
 
   getDetails: async (userId: string): Promise<UserDetailResponse> => {
     const response = await client.get(`/user/${userId}`);
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getSimpleList: async (): Promise<UserSimpleListResponse[]> => {
     const response = await client.get('/user/simple');
-    const list = response.data?.data ?? response.data?.value ?? response.data;
+    const list = response.data;
     return Array.isArray(list) ? list : [];
   },
 
@@ -68,7 +68,7 @@ export const usersApi = {
         CreatedAtTo: params.createdAtTo,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   create: async (payload: AddUserRequestPayload) => {
@@ -121,7 +121,7 @@ export const usersApi = {
         IsPrimary: params.isPrimary,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getUserSales: async (
@@ -140,7 +140,7 @@ export const usersApi = {
         DateTo: params.dateTo,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getUserTasks: async (
@@ -158,11 +158,11 @@ export const usersApi = {
         Priority: params.priority || undefined,
       },
     });
-    return response.data?.value || response.data?.data || response.data;
+    return response.data;
   },
 
   getTeamUsers: async (): Promise<TeamUser[]> => {
     const response = await client.get('/users');
-    return response.data?.value || response.data?.data || response.data || [];
+    return response.data ?? [];
   },
 };
