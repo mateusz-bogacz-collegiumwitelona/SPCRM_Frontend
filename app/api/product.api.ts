@@ -4,6 +4,8 @@ import type {
   AddProductStockRequest,
   EditProductDetailResponse,
   EditProductRequest,
+  ProductDealItemResponse,
+  ProductDealsParams,
   ProductInvoiceItemResponse,
   ProductInvoicesParams,
   ProductListParams,
@@ -84,6 +86,20 @@ export const productsApi = {
     params: ProductInvoicesParams,
   ): Promise<PaginatedResponse<ProductInvoiceItemResponse>> => {
     const response = await client.get(`/products/${productId}/invoices`, {
+      params: {
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        SearchTerm: params.searchTerm || undefined,
+      },
+    });
+    return response.data;
+  },
+
+  getDeals: async (
+    productId: string,
+    params: ProductDealsParams,
+  ): Promise<PaginatedResponse<ProductDealItemResponse>> => {
+    const response = await client.get(`/products/${productId}/deals`, {
       params: {
         PageNumber: params.pageNumber,
         PageSize: params.pageSize,

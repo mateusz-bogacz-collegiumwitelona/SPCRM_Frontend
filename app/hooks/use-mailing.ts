@@ -28,10 +28,10 @@ export function useMailingContacts(searchTerm = '', pageSize = 50, enabled = tru
   });
 }
 
-export function useMailingProducts(searchTerm: string, enabled: boolean) {
+export function useMailingProducts(searchTerm = '', pageSize = 50, enabled = true) {
   return useQuery({
-    queryKey: mailingKeys.products(searchTerm),
-    queryFn: () => mailingApi.getProducts(searchTerm),
+    queryKey: [...mailingKeys.products(searchTerm), pageSize],
+    queryFn: () => mailingApi.getProducts({ searchTerm, pageSize }),
     enabled,
   });
 }

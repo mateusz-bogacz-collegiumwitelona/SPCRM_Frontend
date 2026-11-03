@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { client } from '~/lib/client';
+
 import {
   Dialog,
   DialogContent,
@@ -13,13 +12,7 @@ import { AlertCircle, Loader2, UserCog, X } from 'lucide-react';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { translateRole } from '~/constants/role-translator';
-
-interface OwnerResponse {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-}
+import { useAvailableOwners } from '~/hooks/use-contacts';
 
 interface ChangeContactOwnerDialogProps {
   isOpen: boolean;
@@ -41,14 +34,7 @@ export const ChangeContactOwnerDialog: React.FC<ChangeContactOwnerDialogProps> =
     data: owners = [],
     isLoading: isOwnersLoading,
     isError: isOwnersError,
-  } = useQuery({
-    queryKey: ['available-owners'],
-    queryFn: async () => {
-      const res = await client.get('/contacts/available-owners');
-      return res.data.data as OwnerResponse[];
-    },
-    enabled: isOpen,
-  });
+  } = useAvailableOwners(isOpen);
 
   useEffect(() => {
     if (!isOpen) {

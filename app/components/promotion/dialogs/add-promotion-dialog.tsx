@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { client } from '~/lib/client';
 import {
   Dialog,
   DialogContent,
@@ -20,13 +18,7 @@ import {
   validatePromotionForm,
 } from '~/components/promotion/dialogs/promotion-form-shared';
 import type { AddPromotionRequest, PromotionSharedFormData } from '~/types/promotion';
-
-interface ProductOption {
-  productId: string;
-  name: string;
-  dimension: string;
-  stockPrice: number;
-}
+import { useMailingProducts } from '~/hooks/use-mailing';
 
 interface AddPromotionDialogProps {
   readonly isOpen: boolean;
@@ -50,16 +42,7 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
 
   const { currencies, contacts } = usePromotionDictionaries(isOpen);
 
-  const { data: products = [] } = useQuery<ProductOption[]>({
-    queryKey: ['mailing-products-list'],
-    queryFn: async () => {
-      const res = await client.get('/mailing/products', {
-        params: { PageNumber: 1, PageSize: 100 },
-      });
-      return res.data?.data?.items || [];
-    },
-    enabled: isOpen,
-  });
+  const { data: products = [] } = useMailingProducts('', 100, isOpen);
 
   const handleClose = () => {
     setName('');
@@ -97,14 +80,6 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
     const { errors: validationErrors, pricing } = validatePromotionForm(name, sharedForm, {
       productId,
     });
-
-    if (validationErrors.length > 0) {
-      setFormError({
-        title: getErrorMessage('VALIDATION_ERROR'),
-        details: validationErrors,
-      });
-      return;
-    }
 
     if (validationErrors.length > 0) {
       setFormError({
@@ -203,7 +178,7 @@ export const AddPromotionDialog: React.FC<AddPromotionDialogProps> = ({
               <option value="">-- Wybierz produkt --</option>
               {products.map((p) => (
                 <option key={p.productId} value={p.productId}>
-                  {p.name} ({p.dimension})
+                  {p.name} ({p.dimmension})
                 </option>
               ))}
             </select>

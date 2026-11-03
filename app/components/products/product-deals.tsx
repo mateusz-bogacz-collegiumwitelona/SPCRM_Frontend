@@ -2,9 +2,7 @@ import { createColumnHelper, getCoreRowModel, useReactTable } from '@tanstack/re
 import { Link } from 'react-router';
 import { format } from 'date-fns';
 import { useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Briefcase } from 'lucide-react';
-import { client } from '~/lib/client';
 import { getStatusConfig } from '~/constants/sale-status';
 import { formatCurrency } from '~/utils/data-formatters';
 import { DataTable } from '~/components/table/data-table';
@@ -13,6 +11,7 @@ import { useDebounce } from '~/hooks/use-debounce';
 import { ProductDealMobileCard } from '~/components/products/mobile-card/product-deal-mobile-card';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
+import { useProductDeals } from '~/hooks/use-products';
 
 interface ProductDealsTableMeta {
   unitSymbol: string;
@@ -115,19 +114,11 @@ export const ProductDeals = ({
     isFetching,
     isError,
     error: queryError,
-  } = useQuery({
-    queryKey: ['product-deals', productId, { pageNumber, pageSize, debouncedSearch }],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-      };
-
-      const response = await client.get(`/products/${productId}/deals`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
+  } = useProductDeals({
+    productId,
+    pageNumber,
+    pageSize,
+    debouncedSearch,
   });
 
   const desktopDeals = useMemo(() => data?.items || [], [data]);

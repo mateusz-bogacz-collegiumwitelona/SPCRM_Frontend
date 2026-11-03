@@ -145,3 +145,9 @@ export interface ProductSearchResult {
 }
 
 export type ProductInvoicesParams = BasePaginationParams;
+
+export interface ProductDealsParams {
+  pageNumber: number;
+  pageSize: number;
+  searchTerm?: string;
+}

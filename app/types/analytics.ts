@@ -29,6 +29,12 @@ export interface LeaderboardItemResponse {
   winRatePercentageThisMonth: number;
 }
 
+export interface LeaderboardPagedResponse {
+  items: LeaderboardItemResponse[];
+  totalPages: number;
+  totalCount: number;
+}
+
 export interface EmployeeKpiSummaryResponse extends TeamKpiSummaryResponse {
   activeDealsPipelineValue?: CurrencyAmountResponse[];
   winRatePercentageThisMonth?: number;

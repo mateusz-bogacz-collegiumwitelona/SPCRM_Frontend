@@ -1,13 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '~/api/note.api';
 import type { AddNotePayload, NoteEditData } from '~/types/note';
 import { dealsApi } from '~/api/deal.api';
 import { tasksApi } from '~/api/task.api';
+import { contactsApi } from '~/api/contact.api';
 
 export const noteKeys = {
   all: ['notes'] as const,
   dealNotes: (dealId?: string) => ['deal-notes', dealId] as const,
   taskNotes: (taskId?: string) => ['task-notes', taskId] as const,
+  contactNotes: (contactId?: string, params?: Record<string, unknown>) =>
+    ['contact-notes', contactId, params] as const,
 };
 
 export function useDealNotes(dealId?: string) {
@@ -138,3 +141,57 @@ export const useDeleteNote = (options?: {
     onError: options?.onError,
   });
 };
+
+export function useContactNotes(
+  contactId: string,
+  params: { pageNumber: number; pageSize: number; debouncedSearch?: string },
+) {
+  return useQuery({
+    queryKey: noteKeys.contactNotes(contactId, params),
+    queryFn: () =>
+      contactsApi.getContactNotes(contactId, {
+        pageNumber: params.pageNumber,
+        pageSize: params.pageSize,
+        searchTerm: params.debouncedSearch,
+      }),
+    enabled: Boolean(contactId),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useContactNotesMutations(contactId: string) {
+  const queryClient = useQueryClient();
+
+  const invalidateContactNotes = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: ['contact-notes', contactId],
+    });
+  };
+
+  const addNoteMutation = useMutation({
+    mutationFn: (payload: { title: string; content: string }) =>
+      notesApi.create({
+        targetId: contactId,
+        title: payload.title,
+        content: payload.content,
+        noteType: 'Contact',
+      }),
+    onSuccess: invalidateContactNotes,
+  });
+
+  const editNoteMutation = useMutation({
+    mutationFn: (data: NoteEditData) => notesApi.edit(data),
+    onSuccess: invalidateContactNotes,
+  });
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: (noteId: string) => notesApi.delete(noteId),
+    onSuccess: invalidateContactNotes,
+  });
+
+  return {
+    addNoteMutation,
+    editNoteMutation,
+    deleteNoteMutation,
+  };
+}

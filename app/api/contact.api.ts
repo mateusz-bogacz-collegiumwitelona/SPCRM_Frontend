@@ -2,6 +2,7 @@ import type {
   AddContactRequest,
   Contact,
   ContactListParams,
+  ContactNote,
   ContactResponse,
   EditContactRequest,
   OwnerOption,
@@ -115,5 +116,19 @@ export const contactsApi = {
   addContactTask: async (contactId: string, payload: AddTaskRequestPayload) => {
     const res = await client.post(`/contacts/${contactId}/tasks`, payload);
     return res.data;
+  },
+
+  getContactNotes: async (
+    contactId: string,
+    params: { pageNumber: number; pageSize: number; searchTerm?: string },
+  ): Promise<PaginatedResponse<ContactNote>> => {
+    const response = await client.get(`/contacts/${contactId}/notes`, {
+      params: {
+        PageNumber: params.pageNumber,
+        PageSize: params.pageSize,
+        SearchTerm: params.searchTerm || undefined,
+      },
+    });
+    return response.data;
   },
 };

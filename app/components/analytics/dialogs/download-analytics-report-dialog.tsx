@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { AlertCircle, Calendar, Download, FileText, Loader2, X } from 'lucide-react';
-import { client } from '~/lib/client';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,7 @@ import { getErrorMessage } from '~/constants/error-mapper';
 import type { ApiError, FormErrorState } from '~/types/api-error';
 import { downloadBase64Pdf } from '~/utils/pdf-downloader';
 import type { AnalyticsPeriod } from '~/types/analytics';
+import { useDownloadAnalyticsReport } from '~/hooks/use-analytics';
 
 interface DownloadAnalyticsReportDialogProps {
   readonly isOpen: boolean;
@@ -30,26 +30,22 @@ export const DownloadAnalyticsReportDialog: React.FC<DownloadAnalyticsReportDial
   defaultPeriod = 'CurrentMonth',
 }) => {
   const [period, setPeriod] = useState<AnalyticsPeriod>(defaultPeriod);
-  const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<FormErrorState | null>(null);
 
+  const { mutateAsync: downloadReport, isPending } = useDownloadAnalyticsReport();
+
   const handleClose = () => {
-    if (isLoading) return;
+    if (isPending) return;
     setPeriod(defaultPeriod);
     setFormError(null);
     onClose();
   };
 
   const handleDownload = async () => {
-    setIsLoading(true);
     setFormError(null);
 
     try {
-      const response = await client.get(endpoint, {
-        params: { Period: period },
-      });
-
-      const payload = response.data?.value || response.data?.data || response.data;
+      const payload = await downloadReport({ endpoint, period });
       downloadBase64Pdf(payload, `Raport_${period}.pdf`);
       handleClose();
     } catch (err: unknown) {
@@ -66,8 +62,6 @@ export const DownloadAnalyticsReportDialog: React.FC<DownloadAnalyticsReportDial
         details:
           responseData?.errors && responseData.errors.length > 0 ? responseData.errors : undefined,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -187,7 +181,7 @@ export const DownloadAnalyticsReportDialog: React.FC<DownloadAnalyticsReportDial
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={isLoading}
+            disabled={isPending}
             className="border-gray-300 text-gray-700"
           >
             Anuluj
@@ -195,10 +189,10 @@ export const DownloadAnalyticsReportDialog: React.FC<DownloadAnalyticsReportDial
           <Button
             type="button"
             onClick={handleDownload}
-            disabled={isLoading}
+            disabled={isPending}
             className="bg-blue-900 text-white hover:bg-blue-800 flex items-center gap-2"
           >
-            {isLoading ? (
+            {isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" /> Generowanie PDF...
               </>

@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { client } from '~/lib/client';
 import { RevenueChart } from '~/components/analytics/revenue-chart';
 import { FileText, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import type {
-  AnalyticsChartMetricResponse,
-  AnalyticsPeriod,
-  LeaderboardItemResponse,
-  TeamKpiSummaryResponse,
-} from '~/types/analytics';
+import type { AnalyticsPeriod } from '~/types/analytics';
 import { LeaderboardTable } from '~/components/analytics/leaderboard-table';
 import { DownloadAnalyticsReportDialog } from '~/components/analytics/dialogs/download-analytics-report-dialog';
 import { KpiCards } from '~/components/analytics/kpi-cards';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 import { useCurrenciesSimpleList } from '~/hooks/use-currencies';
+import { useTeamChart, useTeamKpi, useTeamLeaderboard } from '~/hooks/use-analytics';
 
 export const TeamAnalyticsTab: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('CurrentMonth');
@@ -38,51 +32,24 @@ export const TeamAnalyticsTab: React.FC = () => {
     isFetching: isKpiFetching,
     error: kpiQueryError,
     refetch: refetchKpi,
-  } = useQuery<TeamKpiSummaryResponse>({
-    queryKey: ['team-kpi-summary'],
-    queryFn: async () => {
-      const response = await client.get('/analytics/team/kpi');
-      return response.data?.value || response.data?.data || response.data;
-    },
-  });
+  } = useTeamKpi();
 
   const {
-    data: chartData,
+    data: chartData = [],
     isLoading: isChartLoading,
     isFetching: isChartFetching,
     refetch: refetchChart,
-  } = useQuery<AnalyticsChartMetricResponse[]>({
-    queryKey: ['team-chart', selectedPeriod],
-    queryFn: async () => {
-      const response = await client.get('/analytics/team/chart', {
-        params: { Period: selectedPeriod },
-      });
-      return response.data?.value || response.data?.data || response.data || [];
-    },
-  });
+  } = useTeamChart(selectedPeriod);
 
   const {
     data: leaderboardData,
     isFetching: isLeaderboardFetching,
     refetch: refetchLeaderboard,
-  } = useQuery({
-    queryKey: ['team-leaderboard', leaderboardPage, leaderboardPageSize],
-    queryFn: async () => {
-      const response = await client.get('/analytics/team/leaderboard', {
-        params: {
-          PageNumber: leaderboardPage,
-          PageSize: leaderboardPageSize,
-        },
-      });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    placeholderData: keepPreviousData,
-  });
+  } = useTeamLeaderboard(leaderboardPage, leaderboardPageSize);
 
-  const pagedResult = leaderboardData?.data || leaderboardData;
-  const leaderboardItems: LeaderboardItemResponse[] = pagedResult?.items || [];
-  const leaderboardTotalPages: number = pagedResult?.totalPages || 1;
-  const leaderboardTotalCount: number = pagedResult?.totalCount || leaderboardItems.length;
+  const leaderboardItems = leaderboardData?.items || [];
+  const leaderboardTotalPages = leaderboardData?.totalPages || 1;
+  const leaderboardTotalCount = leaderboardData?.totalCount || leaderboardItems.length;
 
   const handleRefreshAll = () => {
     void Promise.all([refetchKpi(), refetchChart(), refetchLeaderboard()]);
@@ -117,7 +84,7 @@ export const TeamAnalyticsTab: React.FC = () => {
 
       <QueryErrorBanner
         error={kpiQueryError}
-        fallbackMessage="Nie udało się pobrać danych zamówienia."
+        fallbackMessage="Nie udało się pobrać danych zespołu."
         className="mb-6"
       />
 
@@ -131,7 +98,7 @@ export const TeamAnalyticsTab: React.FC = () => {
           {kpiData && <KpiCards data={kpiData} titlePrefix="zespołu" />}
 
           <RevenueChart
-            data={chartData ?? []}
+            data={chartData}
             selectedPeriod={selectedPeriod}
             onPeriodChange={setSelectedPeriod}
             currencies={currencies ?? []}

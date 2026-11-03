@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { client } from '~/lib/client';
 import { Button } from '~/components/ui/button';
 import { ChevronLeft, ChevronRight, Loader2, MessageSquare, Plus, Search } from 'lucide-react';
 import type { ApiError } from '~/types/api-error';
@@ -17,7 +15,7 @@ import { ActionGuard } from '~/components/guards/action-guard';
 import { DeleteNoteDialog } from '~/components/note/dialogs/delete-note-dialog';
 import { getErrorMessage } from '~/constants/error-mapper';
 import type { ContactNote } from '~/types/contact';
-import { useAddNote, useDeleteNote, useEditNote } from '~/hooks/use-notes';
+import { useContactNotes, useContactNotesMutations } from '~/hooks/use-notes';
 import { QueryErrorBanner } from '~/components/ui/query-error-banner';
 import { useDebounce } from '~/hooks/use-debounce';
 import { useAccumulatedMobileList } from '~/hooks/use-accumulated-mobile-list';
@@ -107,8 +105,6 @@ const columns = [
 ];
 
 export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => {
-  const queryClient = useQueryClient();
-
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
@@ -117,57 +113,6 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
   const [editingNote, setEditingNote] = useState<ContactNote | null>(null);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
 
-  const { mutateAsync: editNoteAsync } = useEditNote({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (error as Error)?.message || 'Nie udało się edytować notatki.';
-      alert(getErrorMessage(code, fallback));
-    },
-  });
-
-  const { mutateAsync: addNoteAsync, isPending: isAdding } = useAddNote({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
-      setSearchTerm('');
-      setPageNumber(1);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (error as Error)?.message || 'Nie udało się dodać notatki.';
-      alert(getErrorMessage(code, fallback));
-    },
-  });
-
-  const { mutateAsync: deleteNoteAsync, isPending: isDeleting } = useDeleteNote({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['contact-notes'] });
-      setDeletingNoteId(null);
-    },
-    onError: (error: unknown) => {
-      const apiError = error as ApiError;
-      const code = apiError.response?.data?.errorCode;
-      const fallback = (error as Error)?.message || 'Nie udało się usunąć notatki.';
-      alert(getErrorMessage(code, fallback));
-    },
-  });
-
-  const handleDeleteConfirm = async () => {
-    if (deletingNoteId) await deleteNoteAsync(deletingNoteId);
-  };
-
-  const handleSaveNewNote = async (title: string, content: string) => {
-    await addNoteAsync({
-      targetId: contactId,
-      title,
-      content,
-      noteType: 'Contact',
-    });
-  };
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   const {
@@ -175,20 +120,47 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
     isLoading,
     isFetching,
     error: queryError,
-  } = useQuery({
-    queryKey: ['contact-notes', { contactId, pageNumber, pageSize, debouncedSearch }],
-    queryFn: async () => {
-      const params = {
-        PageNumber: pageNumber,
-        PageSize: pageSize,
-        SearchTerm: debouncedSearch || undefined,
-      };
-      const response = await client.get(`/contacts/${contactId}/notes`, { params });
-      return response.data?.value || response.data?.data || response.data;
-    },
-    enabled: !!contactId,
-    placeholderData: keepPreviousData,
+  } = useContactNotes(contactId, {
+    pageNumber,
+    pageSize,
+    debouncedSearch,
   });
+
+  const { addNoteMutation, editNoteMutation, deleteNoteMutation } =
+    useContactNotesMutations(contactId);
+
+  const handleSaveNewNote = async (title: string, content: string) => {
+    try {
+      await addNoteMutation.mutateAsync({ title, content });
+      setSearchTerm('');
+      setPageNumber(1);
+      setIsAddModalOpen(false);
+    } catch (error) {
+      const apiError = error as ApiError;
+      alert(getErrorMessage(apiError.response?.data?.errorCode, (error as Error)?.message));
+    }
+  };
+
+  const handleEditNote = async (editData: { id: string; title: string; content: string }) => {
+    try {
+      await editNoteMutation.mutateAsync(editData);
+      setEditingNote(null);
+    } catch (error) {
+      const apiError = error as ApiError;
+      alert(getErrorMessage(apiError.response?.data?.errorCode, (error as Error)?.message));
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingNoteId) return;
+    try {
+      await deleteNoteMutation.mutateAsync(deletingNoteId);
+      setDeletingNoteId(null);
+    } catch (error) {
+      const apiError = error as ApiError;
+      alert(getErrorMessage(apiError.response?.data?.errorCode, (error as Error)?.message));
+    }
+  };
 
   const desktopNotes = useMemo(() => data?.items || [], [data]);
   const totalPages = data?.totalPages || 1;
@@ -471,21 +443,21 @@ export const ContactNotes: React.FC<{ contactId: string }> = ({ contactId }) => 
         isOpen={!!editingNote}
         onClose={() => setEditingNote(null)}
         note={editingNote}
-        onSave={editNoteAsync}
+        onSave={handleEditNote}
       />
 
       <AddNoteDialog
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSaveNewNote}
-        isLoading={isAdding}
+        isLoading={addNoteMutation.isPending}
       />
 
       <DeleteNoteDialog
         isOpen={!!deletingNoteId}
         onClose={() => setDeletingNoteId(null)}
         onConfirm={handleDeleteConfirm}
-        isLoading={isDeleting}
+        isLoading={deleteNoteMutation.isPending}
       />
     </>
   );
